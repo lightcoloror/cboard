@@ -18,6 +18,7 @@ import HelpIcon from '@material-ui/icons/Help';
 import IconButton from '../UI/IconButton';
 import LiveHelpIcon from '@material-ui/icons/LiveHelp';
 import SymbolsIcon from '@material-ui/icons/EmojiSymbols';
+import ChatIcon from '@material-ui/icons/Chat';
 
 import messages from './Settings.messages';
 import SettingsSection from './SettingsSection.component';
@@ -36,6 +37,7 @@ import {
   ADSENSE_CLIENT,
   ADD_SLOT_SETTINGS_TOP
 } from '../../constants';
+import { COMMUNICATION_SUPPORT_ROUTE_SEGMENTS } from '../../common/communicationSupport/legacy';
 
 const propTypes = {
   isLogged: PropTypes.bool.isRequired,
@@ -160,6 +162,16 @@ export class Settings extends PureComponent {
       {
         subheader: messages.system,
         settings: systemSettings
+      },
+      {
+        subheader: messages.communicationSupport,
+        settings: [
+          {
+            icon: <ChatIcon />,
+            text: messages.communicationSupport,
+            url: `/settings/${COMMUNICATION_SUPPORT_ROUTE_SEGMENTS.default}`
+          }
+        ]
       },
       {
         subheader: messages.help,

@@ -218,5 +218,13 @@ export default defineMessages({
   symbols: {
     id: 'cboard.components.Settings.symbols',
     defaultMessage: 'Symbols'
+  },
+  communicationSupport: {
+    id: 'cboard.components.Settings.communicationSupport',
+    defaultMessage: 'Communication Support'
+  },
+  tuyujia: {
+    id: 'cboard.components.Settings.tuyujia',
+    defaultMessage: 'TuYuJia'
   }
 });

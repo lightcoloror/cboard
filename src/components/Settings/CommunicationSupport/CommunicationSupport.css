@@ -1,0 +1,17 @@
+.CommunicationSupportSettings {
+  margin: 16px;
+  padding: 16px;
+}
+
+.CommunicationSupportSettings__summary {
+  color: #516072;
+  font-size: 14px;
+  margin-bottom: 16px;
+}
+
+.CommunicationSupportSettings__actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}

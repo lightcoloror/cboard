@@ -1,0 +1,149 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`CommunicationSupport settings default renderer 1`] = `
+<WithStyles(FullScreenDialog)
+  onClose={[Function]}
+  open={true}
+  title={
+    <FormattedMessage
+      defaultMessage="Communication Support"
+      id="cboard.components.Settings.CommunicationSupport.title"
+      values={Object {}}
+    />
+  }
+>
+  <WithStyles(ForwardRef(Paper))
+    className="CommunicationSupportSettings"
+  >
+    <div
+      className="CommunicationSupportSettings__summary"
+    >
+      <FormattedMessage
+        defaultMessage="Manage communication support data."
+        id="cboard.components.Settings.CommunicationSupport.summary"
+        values={Object {}}
+      />
+    </div>
+    <WithStyles(ForwardRef(List))>
+      <StatRow
+        count={2}
+        label={
+          <FormattedMessage
+            defaultMessage="Saved phrases"
+            id="cboard.components.Settings.CommunicationSupport.savedPhrases"
+            values={Object {}}
+          />
+        }
+      />
+      <WithStyles(ForwardRef(Divider)) />
+      <StatRow
+        count={3}
+        label={
+          <FormattedMessage
+            defaultMessage="Receiver history"
+            id="cboard.components.Settings.CommunicationSupport.history"
+            values={Object {}}
+          />
+        }
+      />
+      <WithStyles(ForwardRef(Divider)) />
+      <WithStyles(ForwardRef(ListItem))>
+        <WithStyles(ForwardRef(ListItemText))
+          primary={
+            <FormattedMessage
+              defaultMessage="Sync state"
+              id="cboard.components.Settings.CommunicationSupport.syncState"
+              values={Object {}}
+            />
+          }
+          secondary={
+            <FormattedMessage
+              defaultMessage="Guest mode"
+              id="cboard.components.Settings.CommunicationSupport.syncGuest"
+              values={Object {}}
+            />
+          }
+        />
+      </WithStyles(ForwardRef(ListItem))>
+    </WithStyles(ForwardRef(List))>
+    <div
+      className="CommunicationSupportSettings__actions"
+    >
+      <WithStyles(ForwardRef(Button))
+        color="primary"
+        disabled={true}
+        onClick={[Function]}
+        variant="contained"
+      >
+        <FormattedMessage
+          defaultMessage="Sync now"
+          id="cboard.components.Settings.CommunicationSupport.syncNow"
+          values={Object {}}
+        />
+      </WithStyles(ForwardRef(Button))>
+      <WithStyles(ForwardRef(Button))
+        color="primary"
+        disabled={true}
+        onClick={[Function]}
+        variant="outlined"
+      >
+        <FormattedMessage
+          defaultMessage="Upload local to cloud"
+          id="cboard.components.Settings.CommunicationSupport.uploadLocal"
+          values={Object {}}
+        />
+      </WithStyles(ForwardRef(Button))>
+      <WithStyles(ForwardRef(Button))
+        color="primary"
+        onClick={[Function]}
+        variant="outlined"
+      >
+        <FormattedMessage
+          defaultMessage="Export JSON"
+          id="cboard.components.Settings.CommunicationSupport.exportJson"
+          values={Object {}}
+        />
+      </WithStyles(ForwardRef(Button))>
+      <WithStyles(ForwardRef(Button))
+        color="primary"
+        component="label"
+        variant="outlined"
+      >
+        <FormattedMessage
+          defaultMessage="Import JSON"
+          id="cboard.components.Settings.CommunicationSupport.importJson"
+          values={Object {}}
+        />
+        <input
+          accept="application/json"
+          hidden={true}
+          onChange={[Function]}
+          type="file"
+        />
+      </WithStyles(ForwardRef(Button))>
+      <WithStyles(ForwardRef(Button))
+        color="primary"
+        onClick={[Function]}
+        variant="outlined"
+      >
+        <FormattedMessage
+          defaultMessage="Clear saved phrases"
+          id="cboard.components.Settings.CommunicationSupport.clearSaved"
+          values={Object {}}
+        />
+      </WithStyles(ForwardRef(Button))>
+      <WithStyles(ForwardRef(Button))
+        color="secondary"
+        onClick={[Function]}
+        variant="outlined"
+      >
+        <FormattedMessage
+          defaultMessage="Clear history"
+          id="cboard.components.Settings.CommunicationSupport.clearHistory"
+          values={Object {}}
+        />
+      </WithStyles(ForwardRef(Button))>
+    </div>
+  </WithStyles(ForwardRef(Paper))>
+</WithStyles(FullScreenDialog)>
+`;

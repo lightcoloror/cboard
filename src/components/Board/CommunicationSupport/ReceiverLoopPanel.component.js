@@ -307,8 +307,8 @@ export default function ReceiverLoopPanel({
         <TextField
           fullWidth
           multiline
-          rowsMin={2}
-          rowsMax={4}
+          minRows={2}
+          maxRows={4}
           value={isListening ? speechState.interimText || inputText : inputText}
           variant="outlined"
           placeholder={isListening ? copy.listening : copy.receivePlaceholder}

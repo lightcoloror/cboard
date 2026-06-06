@@ -35,7 +35,9 @@ import BoardTour from './BoardTour/BoardTour';
 import ScrollButtons from '../ScrollButtons';
 import { NAVIGATION_BUTTONS_STYLE_SIDES } from '../Settings/Navigation/Navigation.constants';
 import ImprovePhraseOutput from './ImprovePhraseOutput';
+import CommunicationSupportFeature from './CommunicationSupport';
 import { resolveTileLabel, resolveBoardName } from '../../helpers';
+import { COMMUNICATION_SUPPORT_VARIANTS } from '../../common/communicationSupport/legacy';
 
 export class Board extends Component {
   static propTypes = {
@@ -370,6 +372,11 @@ export class Board extends Component {
               <OutputContainer />
             </div>
           </Scannable>
+          <div className="Board__communicationSupport">
+            <CommunicationSupportFeature
+              variant={COMMUNICATION_SUPPORT_VARIANTS.tuyujia}
+            />
+          </div>
 
           <Navbar
             className="Board__navbar"
