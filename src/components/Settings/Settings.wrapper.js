@@ -14,6 +14,9 @@ import Scanning from './Scanning';
 import Navigation from './Navigation';
 import Help from './Help';
 import Symbols from './Symbols';
+import CommunicationSupport from './CommunicationSupport';
+import Tuyujia from './Tuyujia';
+import { COMMUNICATION_SUPPORT_ROUTE_SEGMENTS } from '../../common/communicationSupport/legacy';
 
 const SettingsWrapper = ({ match }) => (
   <Fragment>
@@ -31,6 +34,14 @@ const SettingsWrapper = ({ match }) => (
       <Route path={`${match.url}/scanning`} component={Scanning} />
       <Route path={`${match.url}/navigation`} component={Navigation} />
       <Route path={`${match.url}/symbols`} component={Symbols} />
+      <Route
+        path={`${match.url}/${COMMUNICATION_SUPPORT_ROUTE_SEGMENTS.default}`}
+        component={CommunicationSupport}
+      />
+      <Route
+        path={`${match.url}/${COMMUNICATION_SUPPORT_ROUTE_SEGMENTS.tuyujia}`}
+        component={Tuyujia}
+      />
     </Switch>
   </Fragment>
 );

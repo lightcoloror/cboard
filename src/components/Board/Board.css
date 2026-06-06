@@ -31,6 +31,13 @@
   z-index: 2;
 }
 
+.Board__communicationSupport {
+  position: relative;
+  right: 0;
+  width: 100%;
+  z-index: 2;
+}
+
 .Board__loading {
   color: rgb(121, 22, 254);
   position: fixed;

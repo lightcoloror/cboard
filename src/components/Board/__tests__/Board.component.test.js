@@ -2,6 +2,7 @@ import React from 'react';
 import { shallow } from 'enzyme';
 
 import Board from '../Board.component';
+jest.mock('../CommunicationSupport', () => 'CommunicationSupportFeature');
 jest.mock('../Board.messages', () => ({
   editTitle: {
     id: 'cboard.components.Board.editTitle',
@@ -30,6 +31,7 @@ it('renders without crashing', () => {
     intl: intlMock,
     onAddRemoveColumn: () => {},
     onAddRemoveRow: () => {},
+    disableTour: () => {},
     board: {
       id: 'root',
       name: 'home',
@@ -55,5 +57,7 @@ it('renders without crashing', () => {
       ]
     }
   };
-  shallow(<Board {...props} />);
+  const wrapper = shallow(<Board {...props} />);
+  expect(wrapper.find('CommunicationSupportFeature').exists()).toBe(true);
+  expect(wrapper.find('.Board__communicationSupport').exists()).toBe(true);
 });
