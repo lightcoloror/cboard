@@ -4,6 +4,7 @@ import { act } from 'react-dom/test-utils';
 import CommunicationSupportPanel from './CommunicationSupportPanel.component';
 import * as symbolMatching from '../../../common/communicationSupport/symbolMatching';
 import * as localData from '../../../common/communicationSupport/localData';
+import API from '../../../api';
 
 const mockedOutput = [
   {
@@ -183,6 +184,8 @@ describe('CommunicationSupportPanel receiver flow', () => {
     jest.useFakeTimers();
     onApplyOutput.mockClear();
     mockAppendCommunicationHistory.mockClear();
+    API.getSettings.mockResolvedValue({});
+    API.updateSettings.mockResolvedValue({});
     symbolMatching.buildCommunicationTileCatalog.mockReturnValue([
       {
         id: 'want',
@@ -348,5 +351,58 @@ describe('CommunicationSupportPanel receiver flow', () => {
     expect(wrapper.text()).toContain('文字转图片');
     expect(wrapper.text()).toContain('生成图片序列');
     expect(wrapper.text()).not.toContain('候选句播报');
+  });
+
+  test('loads legacy tuyujia remote settings and syncs them back through communicationSupport', async () => {
+    localData.loadCommunicationSavedPhrases.mockReturnValue([]);
+    localData.loadCommunicationHistory.mockReturnValue([]);
+    localData.mergeCommunicationSettings.mockImplementation(
+      (localValue, remoteValue) => ({
+        savedPhrases: [
+          ...(localValue.savedPhrases || []),
+          ...(remoteValue.savedPhrases || [])
+        ],
+        history: [...(localValue.history || []), ...(remoteValue.history || [])]
+      })
+    );
+    API.getSettings.mockResolvedValue({
+      tuyujia: {
+        savedPhrases: [
+          {
+            sentence: '我要休息',
+            output: [{ id: 'rest', label: '休息' }],
+            createdAt: 300
+          }
+        ],
+        history: []
+      }
+    });
+
+    await act(async () => {
+      mount(<CommunicationSupportPanel {...props} isLogged />);
+    });
+
+    expect(localData.overwriteCommunicationSettings).toHaveBeenCalledWith({
+      savedPhrases: [
+        {
+          sentence: '我要休息',
+          output: [{ id: 'rest', label: '休息' }],
+          createdAt: 300
+        }
+      ],
+      history: []
+    });
+    expect(API.updateSettings).toHaveBeenCalledWith(
+      expect.objectContaining({
+        communicationSupport: expect.objectContaining({
+          savedPhrases: expect.any(Array),
+          history: expect.any(Array)
+        }),
+        tuyujia: expect.objectContaining({
+          savedPhrases: expect.any(Array),
+          history: expect.any(Array)
+        })
+      })
+    );
   });
 });
