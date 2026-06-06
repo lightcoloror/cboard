@@ -21,6 +21,33 @@ export default defineMessages({
     id: 'cboard.components.Board.TileEditor.vocalization',
     defaultMessage: 'Vocalization'
   },
+  matchingSynonyms: {
+    id: 'cboard.components.Board.TileEditor.matchingSynonyms',
+    defaultMessage: 'Matching synonyms'
+  },
+  excludeTokens: {
+    id: 'cboard.components.Board.TileEditor.excludeTokens',
+    defaultMessage: 'Exclude tokens'
+  },
+  semanticCategory: {
+    id: 'cboard.components.Board.TileEditor.semanticCategory',
+    defaultMessage: 'Semantic category'
+  },
+  matchingSynonymsHelper: {
+    id: 'cboard.components.Board.TileEditor.matchingSynonymsHelper',
+    defaultMessage:
+      'Comma-separated optional matching hints for the receiver workflow'
+  },
+  excludeTokensHelper: {
+    id: 'cboard.components.Board.TileEditor.excludeTokensHelper',
+    defaultMessage:
+      'Optional tokens that should not resolve to this tile during matching'
+  },
+  semanticCategoryHelper: {
+    id: 'cboard.components.Board.TileEditor.semanticCategoryHelper',
+    defaultMessage:
+      'Optional category override used to improve receiver-side matching'
+  },
   voiceRecorder: {
     id: 'cboard.components.Board.TileEditor.voiceRecorder',
     defaultMessage: 'Voice Recorder'
