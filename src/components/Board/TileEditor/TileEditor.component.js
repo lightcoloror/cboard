@@ -36,6 +36,11 @@ import ImageEditor from '../ImageEditor';
 
 import API from '../../../api';
 import {
+  COMMUNICATION_TILE_METADATA_KEYS,
+  getCommunicationTileMetadata,
+  setCommunicationTileMetadata
+} from '../../../common/communicationSupport/tileMetadata';
+import {
   isAndroid,
   isCordova,
   requestCvaPermissions
@@ -150,16 +155,57 @@ export class TileEditor extends Component {
 
   updateEditingTile(id, property, value) {
     return state => {
-      const editingTiles = state.editingTiles.map(b =>
-        b.id === id ? { ...b, ...{ [property]: value } } : b
-      );
+      const editingTiles = state.editingTiles.map(b => {
+        if (b.id !== id) {
+          return b;
+        }
+
+        if (
+          property === COMMUNICATION_TILE_METADATA_KEYS.synonyms ||
+          property === COMMUNICATION_TILE_METADATA_KEYS.excludeTokens ||
+          property === COMMUNICATION_TILE_METADATA_KEYS.category
+        ) {
+          const metadata = getCommunicationTileMetadata(b);
+          if (property === COMMUNICATION_TILE_METADATA_KEYS.synonyms) {
+            metadata.synonyms = value;
+          }
+          if (property === COMMUNICATION_TILE_METADATA_KEYS.excludeTokens) {
+            metadata.excludeTokens = value;
+          }
+          if (property === COMMUNICATION_TILE_METADATA_KEYS.category) {
+            metadata.category = value;
+          }
+          return setCommunicationTileMetadata(b, metadata);
+        }
+
+        return { ...b, ...{ [property]: value } };
+      });
       return { ...state, editingTiles };
     };
   }
 
   updateNewTile(property, value) {
     return state => {
-      const tile = { ...state.tile, [property]: value };
+      let tile = { ...state.tile, [property]: value };
+
+      if (
+        property === COMMUNICATION_TILE_METADATA_KEYS.synonyms ||
+        property === COMMUNICATION_TILE_METADATA_KEYS.excludeTokens ||
+        property === COMMUNICATION_TILE_METADATA_KEYS.category
+      ) {
+        const metadata = getCommunicationTileMetadata(tile);
+        if (property === COMMUNICATION_TILE_METADATA_KEYS.synonyms) {
+          metadata.synonyms = value;
+        }
+        if (property === COMMUNICATION_TILE_METADATA_KEYS.excludeTokens) {
+          metadata.excludeTokens = value;
+        }
+        if (property === COMMUNICATION_TILE_METADATA_KEYS.category) {
+          metadata.category = value;
+        }
+        tile = setCommunicationTileMetadata(tile, metadata);
+      }
+
       return { ...state, tile };
     };
   }
@@ -334,6 +380,24 @@ export class TileEditor extends Component {
 
   handleVocalizationChange = event => {
     this.updateTileProperty('vocalization', event.target.value);
+  };
+  handleCommunicationSynonymsChange = event => {
+    this.updateTileProperty(
+      COMMUNICATION_TILE_METADATA_KEYS.synonyms,
+      event.target.value
+    );
+  };
+  handleCommunicationExcludeTokensChange = event => {
+    this.updateTileProperty(
+      COMMUNICATION_TILE_METADATA_KEYS.excludeTokens,
+      event.target.value
+    );
+  };
+  handleCommunicationCategoryChange = event => {
+    this.updateTileProperty(
+      COMMUNICATION_TILE_METADATA_KEYS.category,
+      event.target.value
+    );
   };
   handleSoundChange = sound => {
     this.updateTileProperty('sound', sound);
@@ -514,6 +578,7 @@ export class TileEditor extends Component {
     const tileInView = this.editingTile()
       ? this.editingTile()
       : this.state.tile;
+    const communicationMetadata = getCommunicationTileMetadata(tileInView);
 
     const loadBoard = this.currentTileProp('loadBoard');
     const haveLoadBoard = loadBoard?.length > 0;
@@ -629,6 +694,42 @@ export class TileEditor extends Component {
                       onChange={this.handleVocalizationChange}
                       fullWidth
                     />
+                    {this.currentTileProp('type') !== 'board' && (
+                      <>
+                        <TextField
+                          multiline
+                          id="communicationSynonyms"
+                          label={intl.formatMessage(messages.matchingSynonyms)}
+                          value={communicationMetadata.synonyms}
+                          onChange={this.handleCommunicationSynonymsChange}
+                          fullWidth
+                          helperText={intl.formatMessage(
+                            messages.matchingSynonymsHelper
+                          )}
+                        />
+                        <TextField
+                          multiline
+                          id="communicationExcludeTokens"
+                          label={intl.formatMessage(messages.excludeTokens)}
+                          value={communicationMetadata.excludeTokens}
+                          onChange={this.handleCommunicationExcludeTokensChange}
+                          fullWidth
+                          helperText={intl.formatMessage(
+                            messages.excludeTokensHelper
+                          )}
+                        />
+                        <TextField
+                          id="communicationCategory"
+                          label={intl.formatMessage(messages.semanticCategory)}
+                          value={communicationMetadata.category}
+                          onChange={this.handleCommunicationCategoryChange}
+                          fullWidth
+                          helperText={intl.formatMessage(
+                            messages.semanticCategoryHelper
+                          )}
+                        />
+                      </>
+                    )}
                     {!this.editingTile() && (
                       <div className="TileEditor__radiogroup">
                         <FormControl fullWidth>
