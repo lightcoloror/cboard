@@ -1,6 +1,7 @@
 import {
   buildReceiverHistoryEntry,
   buildReceiverLoopState,
+  buildReceiverMatchQuality,
   deleteReceiverReviewItem,
   moveReceiverReviewItem,
   replaceReceiverReviewItem
@@ -94,10 +95,62 @@ describe('receiverPipeline', () => {
     expect(trimmed.map(item => item.token)).toEqual(['水']);
 
     const historyEntry = buildReceiverHistoryEntry('我想喝水', replaced);
-    expect(historyEntry).toEqual({
-      direction: 'receive',
-      inputText: '我想喝水',
-      labels: ['饮料', '想']
+    expect(historyEntry).toEqual(
+      expect.objectContaining({
+        contractVersion: 1,
+        direction: 'receive',
+        inputText: '我想喝水',
+        labels: ['饮料', '想'],
+        output: expect.any(Array),
+        pictogramSequence: [
+          expect.objectContaining({
+            pictogramId: 'drink',
+            label: '饮料',
+            matchType: 'manual',
+            confidence: 1,
+            originalToken: '水'
+          }),
+          expect.objectContaining({
+            pictogramId: 'want',
+            label: '想',
+            matchType: 'exact',
+            confidence: 1,
+            originalToken: '想'
+          })
+        ]
+      })
+    );
+  });
+
+  test('reports unresolved and partial matches as needing caregiver review', () => {
+    const quality = buildReceiverMatchQuality([
+      { tile: { id: 'exact' }, matchType: 'exact' },
+      { tile: { id: 'partial' }, matchType: 'partial' },
+      { tile: null, matchType: 'none' }
+    ]);
+
+    expect(quality).toEqual({
+      totalCount: 3,
+      matchedCount: 2,
+      missingCount: 1,
+      partialCount: 1,
+      matchRate: 2 / 3,
+      needsReview: true
     });
+
+    expect(
+      buildReceiverMatchQuality([{ tile: { id: 'exact' }, matchType: 'exact' }])
+        .needsReview
+    ).toBe(false);
+  });
+
+  test('ignores invalid review items when building confirmed history', () => {
+    expect(buildReceiverHistoryEntry('空值保护', [null, undefined])).toEqual(
+      expect.objectContaining({
+        labels: [],
+        output: [],
+        pictogramSequence: []
+      })
+    );
   });
 });

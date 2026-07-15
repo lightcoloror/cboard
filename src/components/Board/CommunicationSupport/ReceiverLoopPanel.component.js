@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 import Button from '@material-ui/core/Button';
 import Dialog from '@material-ui/core/Dialog';
@@ -7,30 +7,25 @@ import DialogContent from '@material-ui/core/DialogContent';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import TextField from '@material-ui/core/TextField';
 import Symbol from '../Symbol';
+import ReceiverDisplay from './ReceiverDisplay.component';
+import { CBOARD_COMMUNICATION_EXAMPLE_PHRASES } from '../../../common/communicationSupport/cboardConceptProfiles';
 import { buildCommunicationTileCatalog } from '../../../common/communicationSupport/symbolMatching';
 import {
   buildReceiverHistoryEntry,
   buildReceiverLoopState,
+  buildReceiverMatchQuality,
   buildReceiverOutputPreview,
   deleteReceiverReviewItem,
   moveReceiverReviewItem,
+  normalizeReceiverMatchType,
   replaceReceiverReviewItem
 } from '../../../common/communicationSupport/receiverPipeline';
-
-const EXAMPLE_PHRASES = [
-  '我想喝水',
-  '我要去厕所',
-  '我不舒服',
-  '你头晕吗',
-  '需要吃药吗',
-  '我们要去医院'
-];
 
 const DEFAULT_COPY = {
   receiveSectionTitle: '文字转图片',
   receiveHint: '使用当前已加载 boards 内的 tiles 做匹配',
   listening: '聆听中...',
-  receivePlaceholder: '例如：我想喝水、我要去厕所、我不舒服',
+  receivePlaceholder: '例如：想喝水、想要苹果、头疼',
   generateSequence: '生成图片序列',
   matching: '匹配中...',
   stopRecording: '停止录音',
@@ -54,9 +49,35 @@ const DEFAULT_COPY = {
   moveRight: '右移',
   remove: '删除',
   unmatched: '未匹配',
+  matchSummaryLabel: '匹配结果',
+  reviewRecommended: '请重点复核未匹配或部分匹配项',
+  reviewReady: '已全部匹配，发送前请确认',
+  voiceUnavailable: '当前环境不支持浏览器语音输入，请使用文字输入。',
+  matchTypeExact: '精确匹配',
+  matchTypeSynonym: '同义词匹配',
+  matchTypeLexicon: '词典匹配',
+  matchTypePartial: '部分匹配',
+  matchTypeOnline: '在线补图',
+  matchTypeAi: '智能重分词',
+  matchTypeManual: '手工选择',
+  matchTypeMissing: '未匹配',
   expressHistoryLabel: '表达',
   receiveHistoryLabel: '接收'
 };
+
+function getCatalogItemDisplayLabel(item) {
+  return (item && (item.displayLabel || (item.tile && item.tile.label))) || '';
+}
+
+function getMatchTypeLabel(matchType, copy) {
+  const normalizedMatchType = normalizeReceiverMatchType(matchType);
+  const copyKey =
+    'matchType' +
+    normalizedMatchType.charAt(0).toUpperCase() +
+    normalizedMatchType.slice(1);
+
+  return copy[copyKey] || copy.matchTypeMissing;
+}
 
 function HistoryRow({ item, copy }) {
   const title =
@@ -97,6 +118,7 @@ function MatchRow({
   copy
 }) {
   const hasMatch = Boolean(match.tile);
+  const matchedLabel = getCatalogItemDisplayLabel(match.tile);
 
   return (
     <div className="CommunicationSupportPanel__matchRow">
@@ -104,9 +126,10 @@ function MatchRow({
         <div className="CommunicationSupportPanel__matchPreview">
           {hasMatch ? (
             <Symbol
+              className="CommunicationSupportPanel__symbol CommunicationSupportPanel__symbol--preview"
               image={match.tile.tile.image}
               keyPath={match.tile.tile.keyPath}
-              label={match.tile.tile.label}
+              label={matchedLabel}
               labelpos="Below"
             />
           ) : (
@@ -124,11 +147,12 @@ function MatchRow({
                 : 'CommunicationSupportPanel__status CommunicationSupportPanel__status--miss'
             }
           >
-            {hasMatch ? match.tile.tile.label : copy.unmatched}
+            {hasMatch ? matchedLabel : copy.unmatched}
           </span>
           {hasMatch && (
             <span className="CommunicationSupportPanel__meta">
-              {match.matchType} · {match.tile.boardName}
+              {getMatchTypeLabel(match.matchType, copy)} ·{' '}
+              {match.tile.boardName}
             </span>
           )}
         </div>
@@ -168,6 +192,7 @@ MatchRow.propTypes = {
     tile: PropTypes.shape({
       boardId: PropTypes.string,
       boardName: PropTypes.string,
+      displayLabel: PropTypes.string,
       tile: PropTypes.shape({
         label: PropTypes.string
       })
@@ -198,6 +223,17 @@ export default function ReceiverLoopPanel({
   const [showSwapId, setShowSwapId] = useState(null);
   const [swapQuery, setSwapQuery] = useState('');
   const [showDisplay, setShowDisplay] = useState(false);
+  const pendingMatchTimerRef = useRef(null);
+  const matchGenerationRef = useRef(0);
+
+  useEffect(() => {
+    return () => {
+      matchGenerationRef.current += 1;
+      if (pendingMatchTimerRef.current !== null) {
+        window.clearTimeout(pendingMatchTimerRef.current);
+      }
+    };
+  }, []);
 
   const tileCatalog = useMemo(
     () => buildCommunicationTileCatalog(boards, intl),
@@ -231,6 +267,10 @@ export default function ReceiverLoopPanel({
     [reviewItems]
   );
 
+  const matchQuality = useMemo(() => buildReceiverMatchQuality(reviewItems), [
+    reviewItems
+  ]);
+
   const receiveOutputPreview = useMemo(
     () => {
       return buildReceiverOutputPreview(reviewItems);
@@ -242,18 +282,52 @@ export default function ReceiverLoopPanel({
   const isListening = Boolean(speechState && speechState.isListening);
   const speechError = speechState ? speechState.error : '';
 
+  function invalidatePendingMatch() {
+    matchGenerationRef.current += 1;
+
+    if (pendingMatchTimerRef.current !== null) {
+      window.clearTimeout(pendingMatchTimerRef.current);
+      pendingMatchTimerRef.current = null;
+    }
+
+    return matchGenerationRef.current;
+  }
+
   function openReviewForText(text) {
     const result = buildReceiverLoopState(text, boards, { intl });
     setReviewItems(result.reviewItems);
     setReceivePhase('review');
   }
 
-  function handleMatch() {
+  function scheduleReviewForText(text) {
+    const normalizedText = String(text || '').trim();
+
+    if (!normalizedText) {
+      return;
+    }
+
+    const generation = invalidatePendingMatch();
     setReceivePhase('matching');
 
-    window.setTimeout(() => {
-      openReviewForText(inputText);
+    pendingMatchTimerRef.current = window.setTimeout(() => {
+      if (matchGenerationRef.current !== generation) {
+        return;
+      }
+
+      pendingMatchTimerRef.current = null;
+      openReviewForText(normalizedText);
     }, 30);
+  }
+
+  function handleInputTextChange(nextText) {
+    invalidatePendingMatch();
+    setInputText(nextText);
+    setReviewItems([]);
+    setReceivePhase('idle');
+  }
+
+  function handleMatch() {
+    scheduleReviewForText(inputText);
   }
 
   function handleApplyReceiveOutput() {
@@ -289,6 +363,10 @@ export default function ReceiverLoopPanel({
   }
 
   function handleResetReceive() {
+    invalidatePendingMatch();
+    if (isListening && speechState) {
+      speechState.stopListening();
+    }
     setReceivePhase('idle');
     setReviewItems([]);
     setInputText('');
@@ -314,7 +392,7 @@ export default function ReceiverLoopPanel({
           placeholder={isListening ? copy.listening : copy.receivePlaceholder}
           onChange={event => {
             if (!isListening) {
-              setInputText(event.target.value);
+              handleInputTextChange(event.target.value);
             }
           }}
           InputProps={{ readOnly: isListening }}
@@ -324,13 +402,15 @@ export default function ReceiverLoopPanel({
             color="primary"
             variant="contained"
             onClick={handleMatch}
-            disabled={!inputText.trim() || isListening}
+            disabled={
+              !inputText.trim() || isListening || receivePhase === 'matching'
+            }
           >
             {receivePhase === 'matching'
               ? copy.matching
               : copy.generateSequence}
           </Button>
-          {speechState && (
+          {speechState && speechState.isAvailable && (
             <Button
               color="primary"
               variant="outlined"
@@ -340,13 +420,17 @@ export default function ReceiverLoopPanel({
                   return;
                 }
 
+                const speechGeneration = invalidatePendingMatch();
                 setInputText('');
+                setReviewItems([]);
+                setReceivePhase('idle');
                 speechState.startListening(finalText => {
+                  if (matchGenerationRef.current !== speechGeneration) {
+                    return;
+                  }
+
                   setInputText(finalText);
-                  setReceivePhase('matching');
-                  window.setTimeout(() => {
-                    openReviewForText(finalText);
-                  }, 30);
+                  scheduleReviewForText(finalText);
                 });
               }}
             >
@@ -361,17 +445,25 @@ export default function ReceiverLoopPanel({
             {copy.resetInput}
           </Button>
         </div>
+        {speechState && !speechState.isAvailable && (
+          <div
+            className="CommunicationSupportPanel__environmentNotice"
+            role="status"
+          >
+            {copy.voiceUnavailable}
+          </div>
+        )}
         {speechError && (
           <div className="CommunicationSupportPanel__missing">
             {speechError}
           </div>
         )}
         <div className="CommunicationSupportPanel__examples">
-          {EXAMPLE_PHRASES.map(phrase => (
+          {CBOARD_COMMUNICATION_EXAMPLE_PHRASES.map(phrase => (
             <button
               key={phrase}
               className="CommunicationSupportPanel__example"
-              onClick={() => setInputText(phrase)}
+              onClick={() => handleInputTextChange(phrase)}
             >
               {phrase}
             </button>
@@ -379,6 +471,24 @@ export default function ReceiverLoopPanel({
         </div>
         {receivePhase === 'review' && (
           <div className="CommunicationSupportPanel__results">
+            <div
+              className={
+                matchQuality.needsReview
+                  ? 'CommunicationSupportPanel__quality CommunicationSupportPanel__quality--review'
+                  : 'CommunicationSupportPanel__quality CommunicationSupportPanel__quality--ready'
+              }
+              role="status"
+              aria-live="polite"
+            >
+              <strong>{copy.matchSummaryLabel}：</strong>
+              {matchQuality.matchedCount}/{matchQuality.totalCount}
+              <span>
+                {' · '}
+                {matchQuality.needsReview
+                  ? copy.reviewRecommended
+                  : copy.reviewReady}
+              </span>
+            </div>
             <div className="CommunicationSupportPanel__resultMeta">
               {copy.previewLabel}：
               {receiveOutputPreview.map(item => item.label).join(' / ') ||
@@ -472,9 +582,10 @@ export default function ReceiverLoopPanel({
                 onClick={() => handleSwapPick(candidate)}
               >
                 <Symbol
+                  className="CommunicationSupportPanel__symbol CommunicationSupportPanel__symbol--swap"
                   image={candidate.tile.image}
                   keyPath={candidate.tile.keyPath}
-                  label={candidate.tile.label}
+                  label={getCatalogItemDisplayLabel(candidate)}
                   labelpos="Below"
                 />
                 <span className="CommunicationSupportPanel__meta">
@@ -491,41 +602,12 @@ export default function ReceiverLoopPanel({
         </DialogActions>
       </Dialog>
 
-      <Dialog
+      <ReceiverDisplay
         open={showDisplay}
+        title={copy.fullscreenTitle}
+        items={receiveOutputPreview}
         onClose={() => setShowDisplay(false)}
-        fullScreen
-      >
-        <DialogTitle>{copy.fullscreenTitle}</DialogTitle>
-        <DialogContent className="CommunicationSupportPanel__displayOverlay">
-          {receiveOutputPreview.map(item => (
-            <div
-              className="CommunicationSupportPanel__displayItem"
-              key={item.id || item.label}
-            >
-              <Symbol
-                image={item.image}
-                keyPath={item.keyPath}
-                label={item.label}
-                labelpos="Below"
-              />
-            </div>
-          ))}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setShowDisplay(false)} color="primary">
-            {copy.close}
-          </Button>
-          <Button
-            onClick={handleApplyReceiveOutput}
-            color="primary"
-            variant="contained"
-            disabled={!receiveOutputPreview.length}
-          >
-            {copy.sendToOutput}
-          </Button>
-        </DialogActions>
-      </Dialog>
+      />
     </div>
   );
 }
@@ -538,6 +620,7 @@ ReceiverLoopPanel.propTypes = {
   onAppendHistory: PropTypes.func,
   historyItems: PropTypes.arrayOf(PropTypes.object),
   speech: PropTypes.shape({
+    isAvailable: PropTypes.bool,
     isListening: PropTypes.bool,
     interimText: PropTypes.string,
     error: PropTypes.string,

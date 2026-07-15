@@ -9,9 +9,10 @@ export const CHINESE_COMMUNICATION_LEXICON = [
   { zh: '谢谢', synonyms: ['感谢', '多谢'], category: 'emotions' },
   {
     zh: '想',
-    synonyms: ['要', '想要', '希望', '需要', '需'],
+    synonyms: ['希望'],
     category: 'actions'
   },
+  { zh: '要', synonyms: ['想要', '需要', '需'], category: 'actions' },
   { zh: '去', synonyms: ['走', '出去'], category: 'actions' },
   { zh: '来', synonyms: ['过来'], category: 'actions' },
   { zh: '吃', synonyms: ['进食', '用餐', '吃饭'], category: 'actions' },
@@ -43,17 +44,10 @@ export const CHINESE_COMMUNICATION_LEXICON = [
     synonyms: [
       '疼',
       '疼痛',
-      '难受',
-      '头疼',
-      '头痛',
-      '肚子疼',
-      '肚子痛',
       '腰疼',
       '腰痛',
       '牙疼',
       '牙痛',
-      '胸疼',
-      '胸痛',
       '背疼',
       '背痛',
       '腿疼',
@@ -61,13 +55,26 @@ export const CHINESE_COMMUNICATION_LEXICON = [
     ],
     category: 'medical'
   },
+  { zh: '头痛', synonyms: ['头疼'], category: 'medical' },
+  {
+    zh: '肚子疼',
+    synonyms: ['肚子痛', '胃痛'],
+    category: 'medical'
+  },
+  {
+    zh: '胸口疼',
+    synonyms: ['胸疼', '胸痛'],
+    category: 'medical'
+  },
+  { zh: '难受', synonyms: [], category: 'medical' },
+  { zh: '不舒服', synonyms: [], category: 'medical' },
   { zh: '饿', synonyms: ['肚子饿', '饥饿'], category: 'emotions' },
   { zh: '渴', synonyms: ['口渴'], category: 'emotions' },
   { zh: '冷', synonyms: ['寒冷', '好冷'], category: 'emotions' },
   { zh: '热', synonyms: ['好热', '很热'], category: 'emotions' },
   {
     zh: '生病',
-    synonyms: ['病了', '不舒服', '感冒', '着凉'],
+    synonyms: ['病了', '感冒', '着凉'],
     category: 'medical'
   },
   {
@@ -95,7 +102,7 @@ export const CHINESE_COMMUNICATION_LEXICON = [
   { zh: '哥哥', synonyms: ['兄弟'], category: 'people' },
   { zh: '姐姐', synonyms: ['大姐', '姐'], category: 'people' },
   { zh: '妹妹', synonyms: ['小妹', '妹'], category: 'people' },
-  { zh: '医生', synonyms: ['大夫', '看病'], category: 'people' },
+  { zh: '医生', synonyms: ['大夫'], category: 'people' },
   { zh: '老师', synonyms: [], category: 'people' },
   { zh: '朋友', synonyms: [], category: 'people' },
   { zh: '家', synonyms: ['房子'], category: 'places' },
@@ -117,8 +124,14 @@ export const CHINESE_COMMUNICATION_LEXICON = [
   { zh: '饼干', synonyms: [], category: 'food' },
   { zh: '糖', synonyms: ['糖果'], category: 'food' },
   { zh: '冰淇淋', synonyms: ['雪糕'], category: 'food' },
-  { zh: '药', synonyms: ['吃药', '服药', '药物'], category: 'objects' },
-  { zh: '手机', synonyms: ['电话', '打电话'], category: 'objects' },
+  { zh: '药', synonyms: ['药物'], category: 'objects' },
+  { zh: '吃药', synonyms: ['服药'], category: 'actions' },
+  { zh: '手机', synonyms: ['电话'], category: 'objects' },
+  {
+    zh: '打电话',
+    synonyms: ['通电话', '电话联系'],
+    category: 'actions'
+  },
   { zh: '钱', synonyms: ['付钱'], category: 'objects' },
   { zh: '车', synonyms: ['汽车', '开车'], category: 'objects' },
   { zh: '花', synonyms: [], category: 'objects' },

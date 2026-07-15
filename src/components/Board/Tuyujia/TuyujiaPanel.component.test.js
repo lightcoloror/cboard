@@ -9,7 +9,9 @@ const COMPONENT_PROPS = {
   intl: null,
   isLogged: false,
   onApplyOutput: () => {},
-  onJumpBoard: () => {}
+  onJumpBoard: () => {},
+  onSpeak: () => {},
+  onCancelSpeech: () => {}
 };
 
 describe('TuyujiaPanel wrapper', () => {

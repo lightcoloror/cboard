@@ -4,6 +4,7 @@ import { act } from 'react-dom/test-utils';
 import CommunicationSupportPanel from './CommunicationSupportPanel.component';
 import * as symbolMatching from '../../../common/communicationSupport/symbolMatching';
 import * as localData from '../../../common/communicationSupport/localData';
+import * as browserSpeech from '../../../common/communicationSupport/browserSpeech';
 import API from '../../../api';
 
 const mockedOutput = [
@@ -96,6 +97,8 @@ const mockedEditableMatches = [
 ];
 
 const mockAppendCommunicationHistory = jest.fn();
+const mockStopListening = jest.fn();
+const mockStartListening = jest.fn();
 
 jest.mock('../../../api', () => ({
   getSettings: jest.fn(),
@@ -119,13 +122,7 @@ jest.mock('../../../common/communicationSupport/localData', () => ({
 }));
 
 jest.mock('../../../common/communicationSupport/browserSpeech', () => ({
-  useBrowserSpeechRecognition: () => ({
-    isListening: false,
-    interimText: '',
-    error: '',
-    stopListening: jest.fn(),
-    startListening: jest.fn()
-  })
+  useBrowserSpeechRecognition: jest.fn()
 }));
 
 jest.mock('../Symbol', () => {
@@ -175,6 +172,8 @@ describe('CommunicationSupportPanel receiver flow', () => {
     activeBoardId: 'home',
     onApplyOutput,
     onJumpBoard: jest.fn(),
+    onSpeak: jest.fn((text, onend) => onend()),
+    onCancelSpeech: jest.fn(),
     intl: null,
     isLogged: false,
     copyOverrides: null
@@ -184,6 +183,16 @@ describe('CommunicationSupportPanel receiver flow', () => {
     jest.useFakeTimers();
     onApplyOutput.mockClear();
     mockAppendCommunicationHistory.mockClear();
+    mockStopListening.mockClear();
+    mockStartListening.mockClear();
+    browserSpeech.useBrowserSpeechRecognition.mockReturnValue({
+      isAvailable: true,
+      isListening: false,
+      interimText: '',
+      error: '',
+      stopListening: mockStopListening,
+      startListening: mockStartListening
+    });
     API.getSettings.mockResolvedValue({});
     API.updateSettings.mockResolvedValue({});
     symbolMatching.buildCommunicationTileCatalog.mockReturnValue([
@@ -404,5 +413,28 @@ describe('CommunicationSupportPanel receiver flow', () => {
         })
       })
     );
+  });
+  test('stops active speech input when leaving receive mode', () => {
+    browserSpeech.useBrowserSpeechRecognition.mockReturnValue({
+      isAvailable: true,
+      isListening: true,
+      interimText: '正在识别',
+      error: '',
+      stopListening: mockStopListening,
+      startListening: mockStartListening
+    });
+    const wrapper = mount(
+      <CommunicationSupportPanel {...props} initialMode="receive" />
+    );
+
+    wrapper
+      .find('button')
+      .filterWhere(node => node.text() === '患者表达')
+      .first()
+      .simulate('click');
+    wrapper.update();
+
+    expect(mockStopListening).toHaveBeenCalledTimes(1);
+    wrapper.unmount();
   });
 });

@@ -3,6 +3,30 @@ import {
   matchTextToCommunicationTiles
 } from './symbolMatching';
 
+import {
+  RECEIVER_PIPELINE_CONTRACT_VERSION,
+  getReceiverMatchConfidence,
+  normalizeReceiverMatchType
+} from './receiverContract';
+
+export {
+  RECEIVER_LOW_CONFIDENCE_THRESHOLD,
+  RECEIVER_PIPELINE_CONTRACT_VERSION,
+  buildReceiverMatchQuality,
+  getReceiverMatchConfidence,
+  normalizeReceiverMatchType
+} from './receiverContract';
+function getReceiverItemDisplayLabel(item) {
+  if (!item || !item.tile) {
+    return '';
+  }
+
+  return (
+    item.tile.displayLabel ||
+    (item.tile.tile && (item.tile.tile.label || item.tile.tile.vocalization)) ||
+    ''
+  );
+}
 export function createReceiverReviewId(prefix = 'review') {
   return (
     prefix +
@@ -87,11 +111,31 @@ export function buildReceiverOutputPreview(reviewItems) {
 }
 
 export function buildReceiverHistoryEntry(inputText, reviewItems) {
-  const outputItems = buildReceiverOutputPreview(reviewItems);
+  const safeReviewItems = Array.isArray(reviewItems)
+    ? reviewItems.filter(item => item && typeof item === 'object')
+    : [];
+  const outputItems = buildReceiverOutputPreview(safeReviewItems);
+  const pictogramSequence = safeReviewItems.map(item => {
+    const matchType = normalizeReceiverMatchType(item && item.matchType);
+    const tile = item && item.tile;
+
+    return {
+      pictogramId: tile ? tile.id : null,
+      label: getReceiverItemDisplayLabel(item) || String(item.token || ''),
+      source: tile ? 'local_dict' : 'unresolved',
+      boardId: (tile && tile.boardId) || '',
+      matchType,
+      confidence: getReceiverMatchConfidence(matchType),
+      originalToken: String((item && item.token) || '')
+    };
+  });
 
   return {
+    contractVersion: RECEIVER_PIPELINE_CONTRACT_VERSION,
     direction: 'receive',
     inputText,
-    labels: outputItems.map(item => item.label).filter(Boolean)
+    labels: outputItems.map(item => item.label).filter(Boolean),
+    output: outputItems,
+    pictogramSequence
   };
 }

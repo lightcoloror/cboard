@@ -1,4 +1,5 @@
 import { resolveBoardName, resolveTileLabel } from '../../helpers';
+import { getCboardCommunicationConceptProfile } from './cboardConceptProfiles';
 import { findChineseCommunicationEntry } from './chineseLexicon';
 import { segmentChineseCommunicationText } from './segmentation';
 import { getCommunicationTileMetadata } from './tileMetadata';
@@ -20,6 +21,14 @@ function parseHintList(value) {
     .split(/[,\n]/)
     .map(item => item.trim())
     .filter(Boolean);
+}
+
+function uniqueStrings(values) {
+  return Array.from(
+    new Set(
+      (values || []).map(value => String(value || '').trim()).filter(Boolean)
+    )
+  );
 }
 
 function inferSemanticDomain(board, boardName) {
@@ -66,19 +75,37 @@ function normalizeTile(tile, board, intl) {
   const resolvedBoardName = resolveBoardName(board, intl);
   const tileMetadata = getCommunicationTileMetadata(tile);
   const boardMetadata = getCommunicationTileMetadata(board);
-  const labels = [resolvedLabel, tile.label, tile.vocalization]
-    .map(value => (value || '').trim())
-    .filter(Boolean);
+  const conceptProfile = tile.label
+    ? null
+    : getCboardCommunicationConceptProfile(tile.labelKey);
+  const displayLabel = conceptProfile
+    ? conceptProfile.label
+    : resolvedLabel || tile.label || tile.vocalization;
+  const labels = uniqueStrings(
+    conceptProfile
+      ? [conceptProfile.label, tile.vocalization]
+      : [resolvedLabel, tile.label, tile.vocalization]
+  );
+  const synonyms = uniqueStrings([
+    ...parseHintList(tileMetadata.synonyms),
+    ...((conceptProfile && conceptProfile.synonyms) || [])
+  ]);
+  const excludeTokens = uniqueStrings([
+    ...parseHintList(tileMetadata.excludeTokens),
+    ...((conceptProfile && conceptProfile.excludeTokens) || [])
+  ]);
 
   return {
     id: tile.id,
     tile,
     boardId: board.id,
     boardName: resolvedBoardName,
+    displayLabel,
     labels,
-    synonyms: parseHintList(tileMetadata.synonyms),
-    excludeTokens: parseHintList(tileMetadata.excludeTokens),
+    synonyms,
+    excludeTokens,
     semanticDomain:
+      (conceptProfile && conceptProfile.category) ||
       tileMetadata.category ||
       boardMetadata.category ||
       inferSemanticDomain(board, resolvedBoardName)
@@ -354,12 +381,19 @@ export function matchTextToCommunicationTiles(text, boards, options = {}) {
 export function createCommunicationOutputFromMatches(matches) {
   return (matches || [])
     .filter(item => item.tile)
-    .map(item => ({
-      id: item.tile.id,
-      image: item.tile.tile.image,
-      label: item.tile.tile.label,
-      vocalization: item.tile.tile.vocalization,
-      keyPath: item.tile.tile.keyPath,
-      backgroundColor: item.tile.tile.backgroundColor
-    }));
+    .map(item => {
+      const displayLabel =
+        item.tile.displayLabel ||
+        item.tile.tile.label ||
+        item.tile.tile.vocalization;
+
+      return {
+        id: item.tile.id,
+        image: item.tile.tile.image,
+        label: displayLabel,
+        vocalization: item.tile.tile.vocalization || displayLabel,
+        keyPath: item.tile.tile.keyPath,
+        backgroundColor: item.tile.tile.backgroundColor
+      };
+    });
 }

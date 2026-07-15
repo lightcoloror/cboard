@@ -1,10 +1,22 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+export function isWeChatWebView(
+  userAgent = typeof navigator === 'undefined' ? '' : navigator.userAgent
+) {
+  return /MicroMessenger/i.test(userAgent || '');
+}
+
+export function shouldUseBrowserSpeechRecognition(userAgent) {
+  return !isWeChatWebView(userAgent);
+}
+
 export function useBrowserSpeechRecognition(language = 'zh-CN') {
   const SpeechRecognitionImpl =
     (typeof window !== 'undefined' &&
       (window.SpeechRecognition || window.webkitSpeechRecognition)) ||
     null;
+  const isAvailable =
+    Boolean(SpeechRecognitionImpl) && shouldUseBrowserSpeechRecognition();
 
   const [isListening, setIsListening] = useState(false);
   const [interimText, setInterimText] = useState('');
@@ -26,12 +38,13 @@ export function useBrowserSpeechRecognition(language = 'zh-CN') {
 
   const startListening = useCallback(
     onResult => {
-      if (!SpeechRecognitionImpl) {
+      if (!isAvailable) {
         return;
       }
 
       if (recognitionRef.current) {
         recognitionRef.current.abort();
+        recognitionRef.current = null;
       }
 
       setError(null);
@@ -39,18 +52,23 @@ export function useBrowserSpeechRecognition(language = 'zh-CN') {
       onResultRef.current = onResult;
 
       const recognition = new SpeechRecognitionImpl();
+      const isCurrentRecognition = () => recognitionRef.current === recognition;
       recognition.lang = language;
       recognition.interimResults = true;
       recognition.maxAlternatives = 1;
       recognition.continuous = false;
 
       recognition.onstart = () => {
-        if (mountedRef.current) {
+        if (mountedRef.current && isCurrentRecognition()) {
           setIsListening(true);
         }
       };
 
       recognition.onresult = event => {
+        if (!mountedRef.current || !isCurrentRecognition()) {
+          return;
+        }
+
         let interim = '';
         let finalText = '';
 
@@ -67,10 +85,6 @@ export function useBrowserSpeechRecognition(language = 'zh-CN') {
           }
         }
 
-        if (!mountedRef.current) {
-          return;
-        }
-
         setInterimText(interim);
 
         if (finalText) {
@@ -82,7 +96,7 @@ export function useBrowserSpeechRecognition(language = 'zh-CN') {
       };
 
       recognition.onerror = event => {
-        if (!mountedRef.current) {
+        if (!mountedRef.current || !isCurrentRecognition()) {
           return;
         }
 
@@ -90,16 +104,16 @@ export function useBrowserSpeechRecognition(language = 'zh-CN') {
         setInterimText('');
 
         if (event.error === 'not-allowed') {
-          setError('麦克风权限被拒绝');
+          setError('麦克风权限被拒绝，请在浏览器设置中允许访问麦克风');
         } else if (event.error === 'no-speech') {
-          setError('未检测到语音');
+          setError('未检测到语音，请重试');
         } else if (event.error !== 'aborted') {
-          setError('语音识别失败');
+          setError('语音识别失败，请重试');
         }
       };
 
       recognition.onend = () => {
-        if (!mountedRef.current) {
+        if (!mountedRef.current || !isCurrentRecognition()) {
           return;
         }
 
@@ -109,16 +123,26 @@ export function useBrowserSpeechRecognition(language = 'zh-CN') {
       };
 
       recognitionRef.current = recognition;
-      recognition.start();
+
+      try {
+        recognition.start();
+      } catch (error) {
+        recognitionRef.current = null;
+        setIsListening(false);
+        setInterimText('');
+        setError('无法启动语音识别，请重试');
+      }
     },
-    [SpeechRecognitionImpl, language]
+    [SpeechRecognitionImpl, isAvailable, language]
   );
 
   const stopListening = useCallback(() => {
-    if (recognitionRef.current) {
-      recognitionRef.current.stop();
-    }
+    const recognition = recognitionRef.current;
     recognitionRef.current = null;
+
+    if (recognition) {
+      recognition.stop();
+    }
 
     if (mountedRef.current) {
       setIsListening(false);
@@ -127,7 +151,7 @@ export function useBrowserSpeechRecognition(language = 'zh-CN') {
   }, []);
 
   return {
-    isAvailable: Boolean(SpeechRecognitionImpl),
+    isAvailable,
     isListening,
     interimText,
     error,

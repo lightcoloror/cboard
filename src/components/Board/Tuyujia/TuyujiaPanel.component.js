@@ -21,7 +21,9 @@ TuyujiaPanel.propTypes = {
   intl: PropTypes.object,
   isLogged: PropTypes.bool,
   onApplyOutput: PropTypes.func.isRequired,
-  onJumpBoard: PropTypes.func.isRequired
+  onJumpBoard: PropTypes.func.isRequired,
+  onSpeak: PropTypes.func.isRequired,
+  onCancelSpeech: PropTypes.func.isRequired
 };
 
 TuyujiaPanel.defaultProps = {

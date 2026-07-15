@@ -1,3 +1,7 @@
+import {
+  getReceiverMatchConfidence,
+  normalizeReceiverMatchType
+} from './receiverContract';
 const MAX_COMMUNICATION_ITEMS = 20;
 
 function normalizeTimestamp(value) {
@@ -12,29 +16,78 @@ function normalizeLabelList(value) {
     : [];
 }
 
-function normalizeSavedPhraseEntry(entry) {
-  if (!entry || !entry.sentence) {
-    return null;
-  }
-
-  const output = Array.isArray(entry.output)
-    ? entry.output
+function normalizeOutputList(value) {
+  return Array.isArray(value)
+    ? value
         .filter(item => item && item.label)
         .map(item => ({
           ...item,
           label: String(item.label).trim()
         }))
+        .filter(item => item.label)
     : [];
+}
+
+function normalizeReceiverSequence(value) {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value
+    .filter(item => item && typeof item === 'object')
+    .map(item => {
+      const originalToken = String(item.originalToken || '').trim();
+      const label = String(item.label || originalToken).trim();
+      const requestedMatchType = String(item.matchType || '').trim();
+      const matchType = normalizeReceiverMatchType(requestedMatchType);
+      const rawConfidence = Number(item.confidence);
+      const confidence = Number.isFinite(rawConfidence)
+        ? Math.max(0, Math.min(1, rawConfidence))
+        : getReceiverMatchConfidence(matchType);
+
+      return {
+        pictogramId: item.pictogramId ? String(item.pictogramId).trim() : null,
+        label,
+        source: String(item.source || '').trim(),
+        boardId: String(item.boardId || '').trim(),
+        matchType,
+        confidence,
+        originalToken
+      };
+    })
+    .filter(item => item.originalToken || item.label);
+}
+
+function preserveContractVersion(target, entry) {
+  if (
+    Number.isInteger(entry && entry.contractVersion) &&
+    entry.contractVersion > 0
+  ) {
+    target.contractVersion = entry.contractVersion;
+  }
+
+  return target;
+}
+
+function normalizeSavedPhraseEntry(entry) {
+  if (!entry || !entry.sentence) {
+    return null;
+  }
+
+  const output = normalizeOutputList(entry.output);
 
   if (!output.length) {
     return null;
   }
 
-  return {
-    sentence: String(entry.sentence).trim(),
-    output,
-    createdAt: normalizeTimestamp(entry.createdAt)
-  };
+  return preserveContractVersion(
+    {
+      sentence: String(entry.sentence).trim(),
+      output,
+      createdAt: normalizeTimestamp(entry.createdAt)
+    },
+    entry
+  );
 }
 
 function normalizeHistoryEntry(entry) {
@@ -43,6 +96,9 @@ function normalizeHistoryEntry(entry) {
   }
 
   const labels = normalizeLabelList(entry.labels);
+  const output = normalizeOutputList(entry.output);
+  const pictogramSequence = normalizeReceiverSequence(entry.pictogramSequence);
+  const candidateSentences = normalizeLabelList(entry.candidateSentences);
   const sentence = entry.sentence ? String(entry.sentence).trim() : '';
   const inputText = entry.inputText ? String(entry.inputText).trim() : '';
 
@@ -50,13 +106,27 @@ function normalizeHistoryEntry(entry) {
     return null;
   }
 
-  return {
+  const normalized = {
     direction: String(entry.direction),
     sentence,
     inputText,
     labels,
     createdAt: normalizeTimestamp(entry.createdAt)
   };
+
+  if (output.length) {
+    normalized.output = output;
+  }
+
+  if (pictogramSequence.length) {
+    normalized.pictogramSequence = pictogramSequence;
+  }
+
+  if (candidateSentences.length) {
+    normalized.candidateSentences = candidateSentences;
+  }
+
+  return preserveContractVersion(normalized, entry);
 }
 
 function dedupeBy(list, getKey) {

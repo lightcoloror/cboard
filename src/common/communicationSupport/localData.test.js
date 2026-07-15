@@ -123,6 +123,87 @@ describe('communication support local data', () => {
     ).toBe('我要去厕所');
   });
 
+  test('preserves the expression snapshot and candidates in history', () => {
+    overwriteCommunicationSettings({
+      savedPhrases: [],
+      history: [
+        {
+          contractVersion: 1,
+          direction: 'express',
+          sentence: '我想喝水。',
+          labels: ['想', '水'],
+          output: [{ id: 'want', label: '想' }, { id: 'water', label: '水' }],
+          candidateSentences: ['想水。', '我想喝水。']
+        }
+      ]
+    });
+
+    expect(loadCommunicationHistory()[0]).toEqual(
+      expect.objectContaining({
+        contractVersion: 1,
+        sentence: '我想喝水。',
+        output: [{ id: 'want', label: '想' }, { id: 'water', label: '水' }],
+        candidateSentences: ['想水。', '我想喝水。']
+      })
+    );
+  });
+
+  test('preserves confirmed receiver match provenance in local history', () => {
+    overwriteCommunicationSettings({
+      savedPhrases: [],
+      history: [
+        {
+          contractVersion: 1,
+          direction: 'receive',
+          inputText: '我想喝水',
+          labels: ['想', '水'],
+          output: [{ id: 'want', label: '想' }, { id: 'water', label: '水' }],
+          pictogramSequence: [
+            {
+              pictogramId: 'want',
+              label: '想',
+              source: 'local_dict',
+              boardId: 'home',
+              matchType: 'lexicon',
+              confidence: 0.8,
+              originalToken: '想'
+            },
+            {
+              pictogramId: null,
+              label: '水',
+              source: 'unresolved',
+              boardId: '',
+              matchType: 'missing',
+              confidence: 0,
+              originalToken: '水'
+            }
+          ]
+        }
+      ]
+    });
+
+    expect(loadCommunicationHistory()[0]).toEqual(
+      expect.objectContaining({
+        contractVersion: 1,
+        direction: 'receive',
+        pictogramSequence: [
+          expect.objectContaining({
+            pictogramId: 'want',
+            matchType: 'lexicon',
+            confidence: 0.8,
+            originalToken: '想'
+          }),
+          expect.objectContaining({
+            pictogramId: null,
+            matchType: 'missing',
+            confidence: 0,
+            originalToken: '水'
+          })
+        ]
+      })
+    );
+  });
+
   test('loadCommunicationSavedPhrases falls back to legacy storage when neutral keys are absent', () => {
     window.localStorage.setItem(
       'cboard_tuyujia_saved_phrases',
@@ -136,5 +217,38 @@ describe('communication support local data', () => {
     );
 
     expect(loadCommunicationSavedPhrases()[0].sentence).toBe('旧常用语');
+  });
+  test('normalizes legacy receiver match aliases and stage confidence', () => {
+    overwriteCommunicationSettings({
+      savedPhrases: [],
+      history: [
+        {
+          direction: 'receive',
+          inputText: '希望头疼',
+          labels: ['想', '痛'],
+          pictogramSequence: [
+            {
+              pictogramId: 'want',
+              label: '想',
+              source: 'local_dict',
+              matchType: 'lexicon-synonym',
+              originalToken: '希望'
+            },
+            {
+              pictogramId: 'pain',
+              label: '痛',
+              source: 'local_dict',
+              matchType: 'partial',
+              originalToken: '头疼'
+            }
+          ]
+        }
+      ]
+    });
+
+    expect(loadCommunicationHistory()[0].pictogramSequence).toEqual([
+      expect.objectContaining({ matchType: 'lexicon', confidence: 0.8 }),
+      expect.objectContaining({ matchType: 'partial', confidence: 0.6 })
+    ]);
   });
 });

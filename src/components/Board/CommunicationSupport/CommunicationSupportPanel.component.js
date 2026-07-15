@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 import Button from '@material-ui/core/Button';
 import API from '../../../api';
@@ -6,7 +6,6 @@ import {
   createCommunicationSupportSettingsPatch,
   getCommunicationSupportSettings
 } from '../../../common/communicationSupport/settingsAdapter';
-import { generateCommunicationCandidateSentences } from '../../../common/communicationSupport/phraseSuggestions';
 import {
   appendCommunicationHistory,
   buildCommunicationSettingsPayload,
@@ -17,6 +16,7 @@ import {
   saveCommunicationPhrase
 } from '../../../common/communicationSupport/localData';
 import { useBrowserSpeechRecognition } from '../../../common/communicationSupport/browserSpeech';
+import ExpressionLoopPanel from './ExpressionLoopPanel.component';
 import ReceiverLoopPanel from './ReceiverLoopPanel.component';
 import './CommunicationSupportPanel.css';
 
@@ -34,11 +34,9 @@ const DEFAULT_COPY = {
   selectSymbolsFirst: '请先选图',
   generateAndSpeak: '生成并播报',
   stopSpeech: '停止播报',
-  speechUnavailable: '当前浏览器无法完成语音播报，候选句仍可继续使用。',
-  generating: '正在生成候选句...',
+  speechUnavailable: '当前语音引擎无法完成播报，候选句仍可继续使用。',
   replayAll: '全部重播',
   savePhrase: '收藏此句',
-  saveHistory: '记录本轮',
   savedPhrasesTitle: '常用短句',
   savedPhrasesHint: '本地保存最近 20 条',
   reuse: '重用',
@@ -46,7 +44,7 @@ const DEFAULT_COPY = {
   receiveSectionTitle: '文字转图片',
   receiveHint: '使用当前已加载 boards 内的 tiles 做匹配',
   listening: '聆听中...',
-  receivePlaceholder: '例如：我想喝水、我要去厕所、我不舒服',
+  receivePlaceholder: '例如：想喝水、想要苹果、头疼',
   generateSequence: '生成图片序列',
   matching: '匹配中...',
   stopRecording: '停止录音',
@@ -74,67 +72,14 @@ const DEFAULT_COPY = {
   receiveHistoryLabel: '接收'
 };
 
-function stopSpeaking() {
-  if (typeof window !== 'undefined' && window.speechSynthesis) {
-    window.speechSynthesis.cancel();
-  }
-}
-
-function speakSentence(text) {
-  return new Promise(resolve => {
-    if (
-      typeof window === 'undefined' ||
-      !window.speechSynthesis ||
-      typeof window.SpeechSynthesisUtterance === 'undefined'
-    ) {
-      resolve(false);
-      return;
-    }
-
-    const utterance = new window.SpeechSynthesisUtterance(text);
-    utterance.lang = 'zh-CN';
-    utterance.rate = 0.95;
-    utterance.onend = () => resolve(true);
-    utterance.onerror = () => resolve(false);
-
-    window.speechSynthesis.cancel();
-    window.speechSynthesis.speak(utterance);
-  });
-}
-
-function SavedPhraseRow({ item, onApply, reuseLabel }) {
-  return (
-    <div className="CommunicationSupportPanel__savedRow">
-      <div className="CommunicationSupportPanel__savedContent">
-        <div className="CommunicationSupportPanel__savedSentence">
-          {item.sentence}
-        </div>
-        <div className="CommunicationSupportPanel__meta">
-          {item.output.map(outputItem => outputItem.label).join(' / ')}
-        </div>
-      </div>
-      <Button color="primary" size="small" onClick={() => onApply(item)}>
-        {reuseLabel}
-      </Button>
-    </div>
-  );
-}
-
-SavedPhraseRow.propTypes = {
-  item: PropTypes.shape({
-    sentence: PropTypes.string.isRequired,
-    output: PropTypes.arrayOf(PropTypes.object).isRequired
-  }).isRequired,
-  onApply: PropTypes.func.isRequired,
-  reuseLabel: PropTypes.string.isRequired
-};
-
 export default function CommunicationSupportPanel({
   boards,
   output,
   activeBoardId,
   onApplyOutput,
   onJumpBoard,
+  onSpeak,
+  onCancelSpeech,
   intl,
   isLogged,
   copyOverrides,
@@ -143,15 +88,21 @@ export default function CommunicationSupportPanel({
   const copy = { ...DEFAULT_COPY, ...(copyOverrides || {}) };
   const [isExpanded, setIsExpanded] = useState(true);
   const [activeMode, setActiveMode] = useState(initialMode);
-  const [candidatePhase, setCandidatePhase] = useState('idle');
-  const [candidateSentences, setCandidateSentences] = useState([]);
-  const [playIndex, setPlayIndex] = useState(0);
   const [savedPhrases, setSavedPhrases] = useState([]);
   const [historyItems, setHistoryItems] = useState([]);
-  const [speechAvailable, setSpeechAvailable] = useState(true);
 
   const speech = useBrowserSpeechRecognition();
-  const playRunRef = useRef(0);
+  const speechIsListening = speech.isListening;
+  const stopSpeechListening = speech.stopListening;
+
+  useEffect(
+    () => {
+      if ((!isExpanded || activeMode !== 'receive') && speechIsListening) {
+        stopSpeechListening();
+      }
+    },
+    [activeMode, isExpanded, speechIsListening, stopSpeechListening]
+  );
   const latestSavedRef = useRef([]);
   const latestHistoryRef = useRef([]);
 
@@ -173,12 +124,6 @@ export default function CommunicationSupportPanel({
     },
     [historyItems]
   );
-
-  useEffect(() => {
-    return () => {
-      stopSpeaking();
-    };
-  }, []);
 
   useEffect(
     () => {
@@ -252,47 +197,6 @@ export default function CommunicationSupportPanel({
     }
   }
 
-  const draftCandidateSentences = useMemo(
-    () => {
-      return generateCommunicationCandidateSentences(
-        (output || []).map(item => item.label).filter(Boolean)
-      );
-    },
-    [output]
-  );
-
-  async function playCandidates(startIndex, sentences = candidateSentences) {
-    if (!sentences.length) {
-      return;
-    }
-
-    const runId = playRunRef.current + 1;
-    playRunRef.current = runId;
-    setCandidatePhase('playing');
-    setSpeechAvailable(true);
-
-    for (let index = startIndex; index < sentences.length; index += 1) {
-      if (playRunRef.current !== runId) {
-        return;
-      }
-
-      setPlayIndex(index);
-      const success = await speakSentence(sentences[index]);
-
-      if (playRunRef.current !== runId) {
-        return;
-      }
-
-      if (!success) {
-        setSpeechAvailable(false);
-      }
-    }
-
-    if (playRunRef.current === runId) {
-      setCandidatePhase('done');
-    }
-  }
-
   function refreshSavedPhrases() {
     const nextSavedPhrases = loadCommunicationSavedPhrases();
     setSavedPhrases(nextSavedPhrases);
@@ -308,74 +212,14 @@ export default function CommunicationSupportPanel({
     persistCommunicationSupportSettings(latestSavedRef.current, nextHistory);
   }
 
-  function handlePrepareCandidates() {
-    if (!draftCandidateSentences.length) {
-      return;
-    }
-
-    setCandidateSentences(draftCandidateSentences);
-    setPlayIndex(0);
-    setCandidatePhase('generating');
-
-    window.setTimeout(() => {
-      const nextSentences = generateCommunicationCandidateSentences(
-        (output || []).map(item => item.label).filter(Boolean)
-      );
-      setCandidateSentences(nextSentences);
-      playCandidates(0, nextSentences);
-    }, 50);
-  }
-
-  function handleStopPlayback() {
-    playRunRef.current += 1;
-    stopSpeaking();
-    setCandidatePhase('done');
-  }
-
-  function handleReplayAll() {
-    playCandidates(0);
-  }
-
-  function handlePlayOne(index) {
-    setPlayIndex(index);
-    playCandidates(index);
-  }
-
-  function handleSavePhrase() {
-    const sentence = candidateSentences[playIndex] || candidateSentences[0];
-
-    if (!sentence) {
-      return;
-    }
-
-    saveCommunicationPhrase({
-      sentence,
-      output
-    });
+  function handleSavePhrase(entry) {
+    saveCommunicationPhrase(entry);
     refreshSavedPhrases();
   }
 
-  function handleDoneExpression() {
-    const sentence = candidateSentences[playIndex] || candidateSentences[0];
-
-    appendCommunicationHistory({
-      direction: 'express',
-      sentence,
-      labels: output.map(item => item.label).filter(Boolean)
-    });
+  function handleAppendExpressionHistory(entry) {
+    appendCommunicationHistory(entry);
     refreshHistory();
-  }
-
-  function handleApplySavedPhrase(item) {
-    onApplyOutput(item.output);
-    setActiveMode('express');
-    setCandidateSentences(
-      generateCommunicationCandidateSentences(
-        item.output.map(entry => entry.label)
-      )
-    );
-    setCandidatePhase('done');
-    setPlayIndex(0);
   }
 
   function handleAppendReceiveHistory(entry) {
@@ -427,120 +271,17 @@ export default function CommunicationSupportPanel({
           </div>
 
           {activeMode === 'express' && (
-            <div className="CommunicationSupportPanel__content">
-              <div className="CommunicationSupportPanel__section">
-                <div className="CommunicationSupportPanel__sectionHeader">
-                  <h4>{copy.expressSectionTitle}</h4>
-                  <span className="CommunicationSupportPanel__hint">
-                    {copy.currentBoard}：{activeBoardId || copy.noBoard}
-                  </span>
-                </div>
-                <div className="CommunicationSupportPanel__resultMeta">
-                  {copy.currentOutput}：
-                  {output.map(item => item.label).join(' / ') ||
-                    copy.selectSymbolsFirst}
-                </div>
-                <div className="CommunicationSupportPanel__actions">
-                  <Button
-                    color="primary"
-                    variant="contained"
-                    onClick={handlePrepareCandidates}
-                    disabled={!output.length}
-                  >
-                    {copy.generateAndSpeak}
-                  </Button>
-                  <Button
-                    color="primary"
-                    variant="outlined"
-                    onClick={handleStopPlayback}
-                    disabled={candidatePhase !== 'playing'}
-                  >
-                    {copy.stopSpeech}
-                  </Button>
-                </div>
-                {!speechAvailable && (
-                  <div className="CommunicationSupportPanel__missing">
-                    {copy.speechUnavailable}
-                  </div>
-                )}
-                {candidatePhase === 'generating' && (
-                  <div className="CommunicationSupportPanel__empty">
-                    {copy.generating}
-                  </div>
-                )}
-                <div className="CommunicationSupportPanel__candidates">
-                  {(candidateSentences.length
-                    ? candidateSentences
-                    : draftCandidateSentences
-                  ).map((sentence, index) => (
-                    <button
-                      key={sentence}
-                      className={
-                        index === playIndex &&
-                        (candidatePhase === 'playing' ||
-                          candidatePhase === 'done')
-                          ? 'CommunicationSupportPanel__candidate CommunicationSupportPanel__candidate--active'
-                          : 'CommunicationSupportPanel__candidate'
-                      }
-                      onClick={() => handlePlayOne(index)}
-                    >
-                      {sentence}
-                    </button>
-                  ))}
-                </div>
-                <div className="CommunicationSupportPanel__actions">
-                  <Button
-                    color="primary"
-                    variant="outlined"
-                    onClick={handleReplayAll}
-                    disabled={!candidateSentences.length}
-                  >
-                    {copy.replayAll}
-                  </Button>
-                  <Button
-                    color="primary"
-                    variant="outlined"
-                    onClick={handleSavePhrase}
-                    disabled={!candidateSentences.length}
-                  >
-                    {copy.savePhrase}
-                  </Button>
-                  <Button
-                    color="primary"
-                    variant="outlined"
-                    onClick={handleDoneExpression}
-                    disabled={!candidateSentences.length}
-                  >
-                    {copy.saveHistory}
-                  </Button>
-                </div>
-              </div>
-
-              <div className="CommunicationSupportPanel__section">
-                <div className="CommunicationSupportPanel__sectionHeader">
-                  <h4>{copy.savedPhrasesTitle}</h4>
-                  <span className="CommunicationSupportPanel__hint">
-                    {copy.savedPhrasesHint}
-                  </span>
-                </div>
-                <div className="CommunicationSupportPanel__savedList">
-                  {savedPhrases.length ? (
-                    savedPhrases.map(item => (
-                      <SavedPhraseRow
-                        key={item.sentence}
-                        item={item}
-                        onApply={handleApplySavedPhrase}
-                        reuseLabel={copy.reuse}
-                      />
-                    ))
-                  ) : (
-                    <div className="CommunicationSupportPanel__empty">
-                      {copy.noSavedPhrases}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
+            <ExpressionLoopPanel
+              output={output}
+              activeBoardId={activeBoardId}
+              savedPhrases={savedPhrases}
+              onApplyOutput={onApplyOutput}
+              onSpeak={onSpeak}
+              onCancelSpeech={onCancelSpeech}
+              onSavePhrase={handleSavePhrase}
+              onAppendHistory={handleAppendExpressionHistory}
+              copyOverrides={copy}
+            />
           )}
 
           {activeMode === 'receive' && (
@@ -569,6 +310,8 @@ CommunicationSupportPanel.propTypes = {
   isLogged: PropTypes.bool,
   onApplyOutput: PropTypes.func.isRequired,
   onJumpBoard: PropTypes.func.isRequired,
+  onSpeak: PropTypes.func.isRequired,
+  onCancelSpeech: PropTypes.func.isRequired,
   copyOverrides: PropTypes.object,
   initialMode: PropTypes.oneOf(['express', 'receive'])
 };

@@ -12,9 +12,10 @@ const mockedMatches = [
       id: 'want',
       boardId: 'home',
       boardName: '首页',
+      displayLabel: '想',
       tile: {
         id: 'want',
-        label: '想',
+        label: '我想',
         image: '/want.png'
       }
     }
@@ -57,7 +58,9 @@ jest.mock('../../../common/communicationSupport/symbolMatching', () => ({
 
 jest.mock('../Symbol', () => {
   return function MockSymbol(props) {
-    return <div className="MockSymbol">{props.label}</div>;
+    return (
+      <div className={`MockSymbol ${props.className || ''}`}>{props.label}</div>
+    );
   };
 });
 
@@ -92,6 +95,7 @@ describe('ReceiverLoopPanel', () => {
         }
       }
     ]);
+    symbolMatching.matchTextToCommunicationTiles.mockClear();
     symbolMatching.matchTextToCommunicationTiles.mockReturnValue({
       matches: mockedMatches,
       matchRate: 1
@@ -102,7 +106,7 @@ describe('ReceiverLoopPanel', () => {
           .filter(item => item.tile && item.tile.tile)
           .map(item => ({
             id: item.tile.tile.id,
-            label: item.tile.tile.label,
+            label: item.tile.displayLabel || item.tile.tile.label,
             image: item.tile.tile.image
           }))
     );
@@ -138,7 +142,19 @@ describe('ReceiverLoopPanel', () => {
     });
     wrapper.update();
 
+    expect(wrapper.text()).toContain('匹配结果：3/3');
+    expect(wrapper.text()).toContain('已全部匹配，发送前请确认');
+    expect(wrapper.text()).toContain('精确匹配');
     expect(wrapper.text()).toContain('预览图片：想 / 喝 / 水');
+    expect(
+      wrapper.find('div.MockSymbol.CommunicationSupportPanel__symbol--preview')
+    ).toHaveLength(3);
+    expect(
+      wrapper
+        .find('div.MockSymbol.CommunicationSupportPanel__symbol--preview')
+        .at(0)
+        .text()
+    ).toBe('想');
 
     wrapper
       .find('ForwardRef(Button)')
@@ -155,6 +171,11 @@ describe('ReceiverLoopPanel', () => {
       .at(2)
       .simulate('click');
     wrapper.update();
+
+    expect(
+      wrapper.find('div.MockSymbol.CommunicationSupportPanel__symbol--swap')
+        .length
+    ).toBeGreaterThan(0);
 
     wrapper
       .find('button')
@@ -188,10 +209,88 @@ describe('ReceiverLoopPanel', () => {
         image: '/drink.png'
       }
     ]);
-    expect(onAppendHistory).toHaveBeenCalledWith({
-      direction: 'receive',
-      inputText: '我想喝水',
-      labels: ['喝', '想', '饮料']
+    expect(onAppendHistory).toHaveBeenCalledWith(
+      expect.objectContaining({
+        contractVersion: 1,
+        direction: 'receive',
+        inputText: '我想喝水',
+        labels: ['喝', '想', '饮料'],
+        output: expect.any(Array),
+        pictogramSequence: expect.arrayContaining([
+          expect.objectContaining({
+            pictogramId: 'drink',
+            matchType: 'manual',
+            originalToken: '水'
+          })
+        ])
+      })
+    );
+  });
+
+  test('cancels a delayed match when the caregiver resets the input', async () => {
+    const wrapper = mount(
+      <ReceiverLoopPanel
+        boards={[]}
+        intl={null}
+        onApplyOutput={onApplyOutput}
+        onJumpBoard={jest.fn()}
+        onAppendHistory={onAppendHistory}
+        historyItems={[]}
+      />
+    );
+
+    await setInput(wrapper, '我想喝水');
+
+    wrapper
+      .find('ForwardRef(Button)')
+      .filterWhere(node => node.text() === '生成图片序列')
+      .first()
+      .simulate('click');
+
+    wrapper
+      .find('ForwardRef(Button)')
+      .filterWhere(node => node.text() === '重新输入')
+      .first()
+      .simulate('click');
+
+    await act(async () => {
+      jest.runAllTimers();
     });
+    wrapper.update();
+
+    expect(symbolMatching.matchTextToCommunicationTiles).not.toHaveBeenCalled();
+    expect(wrapper.text()).not.toContain('预览图片：');
+    wrapper.unmount();
+  });
+
+  test('hides unsupported browser speech and keeps text input available', () => {
+    const wrapper = mount(
+      <ReceiverLoopPanel
+        boards={[]}
+        intl={null}
+        onApplyOutput={onApplyOutput}
+        onJumpBoard={jest.fn()}
+        historyItems={[]}
+        speech={{
+          isAvailable: false,
+          isListening: false,
+          interimText: '',
+          error: '',
+          startListening: jest.fn(),
+          stopListening: jest.fn()
+        }}
+      />
+    );
+
+    expect(wrapper.text()).toContain(
+      '当前环境不支持浏览器语音输入，请使用文字输入。'
+    );
+    expect(
+      wrapper
+        .find('ForwardRef(Button)')
+        .filterWhere(node => node.text() === '语音输入')
+    ).toHaveLength(0);
+    expect(wrapper.find('ForwardRef(TextField)')).toHaveLength(1);
+    wrapper.unmount();
   });
 });

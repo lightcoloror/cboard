@@ -15,6 +15,11 @@ const boards = [
         image: '/want.png'
       },
       {
+        id: 'need',
+        label: '要',
+        image: '/need.png'
+      },
+      {
         id: 'water',
         label: '水',
         image: '/water.png'
@@ -93,22 +98,33 @@ describe('tuyujia matcher', () => {
     expect(catalog[0].boardName).toBe('快速表达');
   });
 
-  test('matches lexicon synonym to board tile label', () => {
+  test('keeps need separate from want in the receiver phrase', () => {
     const result = matchTextToTiles('我要喝水', boards, { intl });
     const matchedLabels = result.matches
       .filter(item => item.tile)
       .map(item => item.tile.tile.label);
 
-    expect(matchedLabels).toContain('想');
+    expect(matchedLabels).toContain('要');
+    expect(matchedLabels).not.toContain('想');
     expect(matchedLabels).toContain('水');
     expect(
       result.matches.some(
         item =>
           item.tile &&
-          item.tile.tile.label === '想' &&
-          item.matchType === 'lexicon-synonym'
+          item.tile.tile.label === '要' &&
+          item.matchType === 'exact'
       )
     ).toBe(true);
+  });
+
+  test('still maps a safe want synonym to want', () => {
+    const result = matchTextToTiles('希望', boards, {
+      intl,
+      preSegmented: ['希望']
+    });
+
+    expect(result.matches[0].tile.tile.label).toBe('想');
+    expect(result.matches[0].matchType).toBe('lexicon-synonym');
   });
 
   test('supports safe partial matching for longer symptom tokens', () => {
@@ -131,8 +147,8 @@ describe('tuyujia matcher', () => {
     const output = createOutputFromMatches(result.matches);
     expect(output[0]).toEqual(
       expect.objectContaining({
-        id: 'want',
-        label: '想'
+        id: 'need',
+        label: '要'
       })
     );
     expect(output[1]).toEqual(
