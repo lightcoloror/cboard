@@ -31,7 +31,8 @@ const propTypes = {
   onSubscribeCancel: PropTypes.func.isRequired,
   onCancelSubscription: PropTypes.func.isRequired,
   cancelSubscriptionStatus: PropTypes.string.isRequired,
-  updatingStatus: PropTypes.bool.isRequired
+  updatingStatus: PropTypes.bool.isRequired,
+  userId: PropTypes.string.isRequired
 };
 
 const defaultProps = {
@@ -49,7 +50,8 @@ const Subscribe = ({
   onPaypalApprove,
   onCancelSubscription,
   cancelSubscriptionStatus,
-  updatingStatus
+  updatingStatus,
+  userId
 }) => {
   return (
     <div className="Subscribe">
@@ -71,6 +73,7 @@ const Subscribe = ({
             onSubscribe={onSubscribe}
             onSubscribeCancel={onSubscribeCancel}
             onPaypalApprove={onPaypalApprove}
+            userId={userId}
           />
         ) : (
           <SubscriptionInfo

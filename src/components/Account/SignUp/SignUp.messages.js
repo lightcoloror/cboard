@@ -13,6 +13,39 @@ export default defineMessages({
     id: 'cboard.components.SignUp.email',
     defaultMessage: 'Email'
   },
+  phoneOptional: {
+    id: 'cboard.components.SignUp.phoneOptional',
+    defaultMessage: 'Mainland China phone (optional)'
+  },
+  sendPhoneCode: {
+    id: 'cboard.components.SignUp.sendPhoneCode',
+    defaultMessage: 'Send code'
+  },
+  phoneVerificationCode: {
+    id: 'cboard.components.SignUp.phoneVerificationCode',
+    defaultMessage: '6-digit phone verification code'
+  },
+  confirmPhoneCode: {
+    id: 'cboard.components.SignUp.confirmPhoneCode',
+    defaultMessage: 'Verify phone'
+  },
+  phoneCodeSent: {
+    id: 'cboard.components.SignUp.phoneCodeSent',
+    defaultMessage: 'A verification code was sent to {phone}.'
+  },
+  phoneVerified: {
+    id: 'cboard.components.SignUp.phoneVerified',
+    defaultMessage: 'Phone number verified.'
+  },
+  phoneVerificationUnavailable: {
+    id: 'cboard.components.SignUp.phoneVerificationUnavailable',
+    defaultMessage:
+      'Phone verification is required but not configured on the server.'
+  },
+  phoneVerificationInvalid: {
+    id: 'cboard.components.SignUp.phoneVerificationInvalid',
+    defaultMessage: 'Enter a valid phone number before requesting a code.'
+  },
   createYourPassword: {
     id: 'cboard.components.SignUp.createYourPassword',
     defaultMessage: 'Create your password'

@@ -1,4 +1,5 @@
 import * as yup from 'yup';
+import { isValidMainlandChinaPhone } from '../../../common/communicationSupport/accountPhone';
 
 const validationSchema = yup.object().shape({
   password: yup
@@ -14,6 +15,13 @@ const validationSchema = yup.object().shape({
     .string()
     .email('Invalid email')
     .required('Required'),
+  phone: yup
+    .string()
+    .test(
+      'mainland-china-phone',
+      'Use an 11-digit mainland China phone number',
+      value => !String(value || '').trim() || isValidMainlandChinaPhone(value)
+    ),
   isTermsAccepted: yup
     .bool()
     .oneOf([true], 'Accept Terms and Policy is required')

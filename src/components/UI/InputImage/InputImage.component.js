@@ -24,7 +24,13 @@ const configHQ = {
   debug: false,
   mimeType: 'image/png'
 };
-class InputImage extends Component {
+export function isAnimatedGifFile(file, imageName = '') {
+  const mediaType = String(file && file.type ? file.type : '').toLowerCase();
+  const fileName = String(imageName || (file && file.name) || '').toLowerCase();
+  return mediaType === 'image/gif' || fileName.endsWith('.gif');
+}
+
+export class InputImage extends Component {
   static propTypes = {
     /**
      * @ignore
@@ -44,9 +50,13 @@ class InputImage extends Component {
     //if you cancel the image uploaded, the event is dispached and the file is null
     try {
       const { onChange } = this.props;
+      const fileName = imageName || file.name;
+      if (isAnimatedGifFile(file, fileName)) {
+        onChange(file, fileName, file);
+        return;
+      }
       const resizedBlob = await readAndCompressImage(file, configLQ);
       const blobHQ = await readAndCompressImage(file, configHQ);
-      const fileName = imageName || file.name;
       onChange(resizedBlob, fileName, blobHQ);
     } catch (err) {
       console.error(err);

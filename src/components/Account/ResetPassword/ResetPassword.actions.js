@@ -44,3 +44,30 @@ export function forgot({ email }) {
     }
   };
 }
+
+export function resetPasswordWithPhone({
+  phone,
+  phoneVerificationToken,
+  password
+}) {
+  return async dispatch => {
+    try {
+      dispatch(forgotApiStarted());
+      const res = await API.resetPasswordWithPhone(
+        phone,
+        phoneVerificationToken,
+        password
+      );
+      dispatch(forgotApiSuccess(res));
+      return Promise.resolve(res);
+    } catch (err) {
+      dispatch(forgotApiFailure(err.message));
+      if (err.response != null) {
+        return Promise.reject(err.response.data);
+      }
+      return Promise.reject({
+        message: 'Unable to contact server. Try in a moment'
+      });
+    }
+  };
+}

@@ -1,1 +1,1 @@
-export { default } from './InputImage.component';
+export { default, isAnimatedGifFile } from './InputImage.component';

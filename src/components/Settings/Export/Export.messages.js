@@ -73,5 +73,106 @@ export default defineMessages({
   large: {
     id: 'cboard.components.Settings.Export.large',
     defaultMessage: 'Large'
+  },
+  structuredPictogramLibrary: {
+    id: 'cboard.components.Settings.Export.structuredPictogramLibrary',
+    defaultMessage: 'Structured AAC JSON'
+  },
+  pictureLibrary: {
+    id: 'cboard.components.Settings.Export.pictureLibrary',
+    defaultMessage: 'Picture library backup'
+  },
+  pictureLibrarySecondary: {
+    id: 'cboard.components.Settings.Export.pictureLibrarySecondary',
+    defaultMessage:
+      'Create a restorable ZIP with picture metadata and every referenced image. Device-private identity is not included.'
+  },
+  pictureLibraryScope: {
+    id: 'cboard.components.Settings.Export.pictureLibraryScope',
+    defaultMessage: 'Backup scope'
+  },
+  pictureLibraryCustom: {
+    id: 'cboard.components.Settings.Export.pictureLibraryCustom',
+    defaultMessage: 'Custom pictures only'
+  },
+  pictureLibraryFull: {
+    id: 'cboard.components.Settings.Export.pictureLibraryFull',
+    defaultMessage: 'Complete library'
+  },
+  privatePictureLibrary: {
+    id: 'cboard.components.Settings.Export.privatePictureLibrary',
+    defaultMessage: 'Private account picture backup'
+  },
+  privatePictureLibrarySecondary: {
+    id: 'cboard.components.Settings.Export.privatePictureLibrarySecondary',
+    defaultMessage:
+      'Encrypt custom pictures on this device before explicitly replacing the private backup for this account. The server stores ciphertext only and never receives the recovery password.'
+  },
+  uploadPrivatePictureLibrary: {
+    id: 'cboard.components.Settings.Export.uploadPrivatePictureLibrary',
+    defaultMessage: 'Back up private pictures'
+  },
+  privatePictureLibraryUploaded: {
+    id: 'cboard.components.Settings.Export.privatePictureLibraryUploaded',
+    defaultMessage:
+      'The end-to-end encrypted private account picture backup was replaced.'
+  },
+  privatePictureLibraryError: {
+    id: 'cboard.components.Settings.Export.privatePictureLibraryError',
+    defaultMessage: 'The private account picture backup could not be stored.'
+  },
+  privatePictureLibraryUnavailable: {
+    id: 'cboard.components.Settings.privatePictureLibraryUnavailable',
+    defaultMessage:
+      'This server has not configured private account picture storage. Local ZIP backup is still available.'
+  },
+  privateDeviceData: {
+    id: 'cboard.components.Settings.Export.privateDeviceData',
+    defaultMessage: 'Private account complete data backup'
+  },
+  privateDeviceDataSecondary: {
+    id: 'cboard.components.Settings.Export.privateDeviceDataSecondary',
+    defaultMessage:
+      'Encrypt a separate complete snapshot on this device before upload. The server stores ciphertext only and cannot read the password, custom pictures, saved phrases, communication history, confirmed receives, caregiver corrections, or feedback drafts.'
+  },
+  privateDeviceDataPassphrase: {
+    id: 'cboard.components.Settings.Export.privateDeviceDataPassphrase',
+    defaultMessage: 'Recovery password'
+  },
+  privateDeviceDataPassphraseConfirmation: {
+    id:
+      'cboard.components.Settings.Export.privateDeviceDataPassphraseConfirmation',
+    defaultMessage: 'Confirm recovery password'
+  },
+  privateDeviceDataPassphraseHelp: {
+    id: 'cboard.components.Settings.Export.privateDeviceDataPassphraseHelp',
+    defaultMessage:
+      'Use at least 12 characters. This password is never uploaded or saved and cannot be recovered.'
+  },
+  privateDeviceDataPassphraseTooShort: {
+    id: 'cboard.components.Settings.Export.privateDeviceDataPassphraseTooShort',
+    defaultMessage: 'Enter at least 12 characters.'
+  },
+  privateDeviceDataPassphraseTooLong: {
+    id: 'cboard.components.Settings.Export.privateDeviceDataPassphraseTooLong',
+    defaultMessage: 'Use no more than 256 characters.'
+  },
+  privateDeviceDataPassphraseMismatch: {
+    id: 'cboard.components.Settings.Export.privateDeviceDataPassphraseMismatch',
+    defaultMessage: 'The two recovery passwords do not match.'
+  },
+  uploadPrivateDeviceData: {
+    id: 'cboard.components.Settings.Export.uploadPrivateDeviceData',
+    defaultMessage: 'Back up complete data'
+  },
+  privateDeviceDataUploaded: {
+    id: 'cboard.components.Settings.Export.privateDeviceDataUploaded',
+    defaultMessage:
+      'The end-to-end encrypted complete data backup was replaced.'
+  },
+  privateDeviceDataError: {
+    id: 'cboard.components.Settings.Export.privateDeviceDataError',
+    defaultMessage:
+      'The private account complete data backup could not be stored.'
   }
 });

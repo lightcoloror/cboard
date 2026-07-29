@@ -4,14 +4,22 @@ import { connect } from 'react-redux';
 import { injectIntl, intlShape } from 'react-intl';
 import shortid from 'shortid';
 
-import { addBoards, changeBoard } from '../../Board/Board.actions';
+import { addBoards, changeBoard, updateBoard } from '../../Board/Board.actions';
 import { getVisibleBoards } from '../../Board/Board.selectors';
 import { pushCommunicator } from '../../Communicator/Communicator.actions';
 import { switchBoard } from '../../Board/Board.actions';
 import { showNotification } from '../../Notifications/Notifications.actions';
 import Import from './Import.component';
-import API from '../../../api';
+import API, {
+  isPrivateDeviceDataReencryptionRequiredError,
+  isPrivatePictureLibraryReencryptionRequiredError,
+  isPrivatePictureLibraryUnavailableError
+} from '../../../api';
 import messages from './Import.messages';
+import {
+  createBoardImportReview,
+  createPictureLibraryImportReview
+} from './Import.review';
 
 export class ImportContainer extends PureComponent {
   static propTypes = {
@@ -156,37 +164,140 @@ export class ImportContainer extends PureComponent {
     }
   }
 
-  async handleImportClick(e, doneCallback) {
+  async applyPictureLibraryImport(restored) {
+    const existingById = new Map(
+      this.props.boards.map(board => [board.id, board])
+    );
+    const updatedBoards = restored.boards.filter(board => {
+      const existing = existingById.get(board.id);
+      return existing && JSON.stringify(existing) !== JSON.stringify(board);
+    });
+    const addedBoards = restored.boards.filter(
+      board => !existingById.has(board.id)
+    );
+
+    updatedBoards.forEach(board => this.props.updateBoard(board));
+    if (addedBoards.length) {
+      await this.syncBoardsWithAPI(addedBoards);
+    }
+    const pictureLibrary = await import('../Export/PictureLibraryArchive.helpers');
+    pictureLibrary.persistPictureLibraryRestore(restored);
+    return {
+      ...restored.summary,
+      changedBoardCount: updatedBoards.length + addedBoards.length
+    };
+  }
+
+  async confirmImportReview(review) {
+    const { showNotification, intl } = this.props;
+    const importHelpers = await import('./Import.helpers');
+
+    if (review.kind === 'picture-library') {
+      if (review.imported.archive.scope === 'full') {
+        await importHelpers.requestQuota(review.imported.boards);
+      }
+      const summary = await this.applyPictureLibraryImport(review.imported);
+      showNotification(
+        summary.deviceDataStats
+          ? intl.formatMessage(messages.localDeviceDataSuccess, {
+              boards: summary.boardCount,
+              phrases: summary.deviceDataStats.savedPhraseCount,
+              records: summary.deviceDataStats.expressionCount,
+              corrections: summary.deviceDataStats.correctionCount,
+              drafts: summary.deviceDataStats.draftCount
+            })
+          : intl.formatMessage(messages.pictureLibrarySuccess, {
+              boards: summary.boardCount,
+              pictures: summary.customPictureCount
+            })
+      );
+      return;
+    }
+
+    if (!review.applicableBoards.length) {
+      showNotification(intl.formatMessage(messages.emptyImport));
+      return;
+    }
+    await importHelpers.requestQuota(review.applicableBoards);
+    await this.syncBoardsWithAPI(review.applicableBoards);
+    showNotification(
+      intl.formatMessage(messages.success, {
+        boards: review.applicableBoards.length
+      })
+    );
+  }
+
+  async handleConfirmImport(review, doneCallback) {
+    let succeeded = false;
+    try {
+      await this.confirmImportReview(review);
+      succeeded = true;
+    } catch (error) {
+      this.props.showNotification(
+        this.props.intl.formatMessage(messages.errorImport)
+      );
+      console.error(error);
+    } finally {
+      if (doneCallback) doneCallback(succeeded);
+    }
+  }
+
+  async handleImportClick(
+    e,
+    doneCallback,
+    conflictStrategy = 'merge',
+    onProgress,
+    onReview
+  ) {
     const { showNotification, intl, boards } = this.props;
 
     // Check for the various File API support.
     if (window.File && window.FileReader && window.FileList && window.Blob) {
       if (e.target.files.length > 0) {
         const file = e.target.files[0];
-        const ext = file.name.match(/\.([^.]+)$/)[1];
+        const extensionMatch = file.name.match(/\.([^.]+)$/);
+        const ext = extensionMatch ? extensionMatch[1] : '';
         const importConstants = await import('./Import.constants');
 
         const importCallback =
           importConstants.IMPORT_CONFIG_BY_EXTENSION[ext.toLowerCase()];
         if (importCallback) {
-          // TODO. Json format validation
           try {
-            const jsonFile = await importCallback(
+            const imported = await importCallback(
               file,
               this.props.intl,
-              boards
+              boards,
+              {
+                conflictStrategy,
+                onProgress,
+                includeConflicts: true,
+                deferMediaUpload: true
+              }
             );
-            if (jsonFile.length) {
-              const importHelpers = await import('./Import.helpers');
-              await importHelpers.requestQuota(jsonFile);
-              await this.syncBoardsWithAPI(jsonFile);
-              showNotification(
-                intl.formatMessage(messages.success, {
-                  boards: jsonFile.length
-                })
-              );
+            if (imported && imported.kind === 'picture-library') {
+              const review = createPictureLibraryImportReview({
+                restored: imported,
+                existingBoards: boards,
+                fileName: file.name,
+                format: ext.toUpperCase()
+              });
+              if (review.canApply || review.items.length) {
+                if (onReview) onReview(review);
+              } else {
+                showNotification(intl.formatMessage(messages.emptyImport));
+              }
             } else {
-              showNotification(intl.formatMessage(messages.emptyImport));
+              const review = createBoardImportReview({
+                boards: imported,
+                existingBoards: boards,
+                fileName: file.name,
+                format: ext.toUpperCase()
+              });
+              if (review.items.length || review.summary.skippedCount) {
+                if (onReview) onReview(review);
+              } else {
+                showNotification(intl.formatMessage(messages.emptyImport));
+              }
             }
           } catch (e) {
             showNotification(intl.formatMessage(messages.errorImport));
@@ -194,7 +305,9 @@ export class ImportContainer extends PureComponent {
           }
         } else {
           showNotification(intl.formatMessage(messages.invalidImport));
-          alert('Please, select a valid file: json, obz, obf');
+          alert(
+            'Please, select a valid file: json, zip, obz, obf, grd, gridset, sps, spb, ce'
+          );
         }
       } else {
         showNotification(intl.formatMessage(messages.noImport));
@@ -207,15 +320,188 @@ export class ImportContainer extends PureComponent {
     if (doneCallback) {
       doneCallback();
     }
+    if (e.target) e.target.value = '';
+  }
+
+  async handlePrivateLibraryImport(
+    doneCallback,
+    conflictStrategy = 'merge',
+    onProgress,
+    onReview,
+    passphrase
+  ) {
+    const { boards, intl, showNotification } = this.props;
+    try {
+      const encryptedArchive = await API.downloadPrivatePictureLibrary();
+      const encryption = await import('../Export/PrivateArchiveEncryption.browser');
+      const archive = await encryption.decryptPrivateArchiveBlob({
+        archive: encryptedArchive,
+        passphrase
+      });
+      const pictureLibrary = await import('../Export/PictureLibraryArchive.helpers');
+      const restored = await pictureLibrary.readPictureLibraryArchive({
+        file: archive,
+        existingBoards: boards,
+        conflictStrategy,
+        onProgress
+      });
+      const review = createPictureLibraryImportReview({
+        restored,
+        existingBoards: boards,
+        fileName: 'private-account-picture-library.zip',
+        format: 'PRIVATE ZIP'
+      });
+      if (review.canApply || review.items.length) {
+        if (onReview) onReview(review);
+      } else {
+        showNotification(intl.formatMessage(messages.emptyImport));
+      }
+    } catch (error) {
+      console.error(error);
+      let message = messages.privatePictureLibraryError;
+      if (isPrivatePictureLibraryUnavailableError(error)) {
+        message = messages.privatePictureLibraryUnavailable;
+      } else if (isPrivatePictureLibraryReencryptionRequiredError(error)) {
+        message = messages.privateDeviceDataReencryptionRequired;
+      } else if (error && error.code === 'PRIVATE_ARCHIVE_DECRYPTION_FAILED') {
+        message = messages.privateDeviceDataWrongPassphrase;
+      } else if (
+        error &&
+        [
+          'PRIVATE_ARCHIVE_INVALID_FORMAT',
+          'PRIVATE_ARCHIVE_UNSUPPORTED_VERSION',
+          'PRIVATE_ARCHIVE_UNSUPPORTED_KDF'
+        ].includes(error.code)
+      ) {
+        message = messages.privateDeviceDataUnsupportedBackup;
+      }
+      showNotification(intl.formatMessage(message));
+    } finally {
+      if (doneCallback) doneCallback();
+    }
+  }
+
+  async handlePrivateLibraryDelete(doneCallback) {
+    const { intl, showNotification } = this.props;
+    try {
+      await API.deletePrivatePictureLibrary();
+      showNotification(
+        intl.formatMessage(messages.privatePictureLibraryDeleted)
+      );
+    } catch (error) {
+      console.error(error);
+      showNotification(
+        intl.formatMessage(
+          isPrivatePictureLibraryUnavailableError(error)
+            ? messages.privatePictureLibraryUnavailable
+            : messages.privatePictureLibraryError
+        )
+      );
+    } finally {
+      if (doneCallback) doneCallback();
+    }
+  }
+
+  async handlePrivateDeviceDataImport(
+    doneCallback,
+    conflictStrategy = 'merge',
+    onProgress,
+    onReview,
+    passphrase
+  ) {
+    const { boards, intl, showNotification } = this.props;
+    try {
+      const encryptedArchive = await API.downloadPrivateDeviceData();
+      const encryption = await import('../Export/PrivateArchiveEncryption.browser');
+      const archive = await encryption.decryptPrivateArchiveBlob({
+        archive: encryptedArchive,
+        passphrase
+      });
+      const pictureLibrary = await import('../Export/PictureLibraryArchive.helpers');
+      const restored = await pictureLibrary.readPictureLibraryArchive({
+        file: archive,
+        existingBoards: boards,
+        conflictStrategy,
+        onProgress
+      });
+      const review = createPictureLibraryImportReview({
+        restored,
+        existingBoards: boards,
+        fileName: 'private-account-complete-data.zip',
+        format: 'PRIVATE DEVICE DATA ZIP'
+      });
+      if (review.canApply || review.items.length) {
+        if (onReview) onReview(review);
+      } else {
+        showNotification(intl.formatMessage(messages.emptyImport));
+      }
+    } catch (error) {
+      console.error(error);
+      let message = messages.privateDeviceDataError;
+      if (isPrivatePictureLibraryUnavailableError(error)) {
+        message = messages.privatePictureLibraryUnavailable;
+      } else if (isPrivateDeviceDataReencryptionRequiredError(error)) {
+        message = messages.privateDeviceDataReencryptionRequired;
+      } else if (error && error.code === 'PRIVATE_ARCHIVE_DECRYPTION_FAILED') {
+        message = messages.privateDeviceDataWrongPassphrase;
+      } else if (
+        error &&
+        [
+          'PRIVATE_ARCHIVE_INVALID_FORMAT',
+          'PRIVATE_ARCHIVE_UNSUPPORTED_VERSION',
+          'PRIVATE_ARCHIVE_UNSUPPORTED_KDF'
+        ].includes(error.code)
+      ) {
+        message = messages.privateDeviceDataUnsupportedBackup;
+      }
+      showNotification(intl.formatMessage(message));
+    } finally {
+      if (doneCallback) doneCallback();
+    }
+  }
+
+  async handlePrivateDeviceDataDelete(doneCallback) {
+    const { intl, showNotification } = this.props;
+    try {
+      await API.deletePrivateDeviceData();
+      showNotification(intl.formatMessage(messages.privateDeviceDataDeleted));
+    } catch (error) {
+      console.error(error);
+      showNotification(
+        intl.formatMessage(
+          isPrivatePictureLibraryUnavailableError(error)
+            ? messages.privatePictureLibraryUnavailable
+            : messages.privateDeviceDataError
+        )
+      );
+    } finally {
+      if (doneCallback) doneCallback();
+    }
   }
 
   render() {
-    const { boards, history } = this.props;
+    const { boards, history, userData } = this.props;
 
     return (
       <Import
         boards={boards}
         onImportClick={this.handleImportClick.bind(this)}
+        onConfirmImport={this.handleConfirmImport.bind(this)}
+        onPrivateLibraryImport={this.handlePrivateLibraryImport.bind(this)}
+        onPrivateLibraryDelete={this.handlePrivateLibraryDelete.bind(this)}
+        onPrivateDeviceDataImport={this.handlePrivateDeviceDataImport.bind(
+          this
+        )}
+        onPrivateDeviceDataDelete={this.handlePrivateDeviceDataDelete.bind(
+          this
+        )}
+        privateLibraryDeletePrompt={this.props.intl.formatMessage(
+          messages.privatePictureLibraryDeletePrompt
+        )}
+        privateDeviceDataDeletePrompt={this.props.intl.formatMessage(
+          messages.privateDeviceDataDeletePrompt
+        )}
+        isAuthenticated={Boolean(userData && userData.email)}
         onClose={history.goBack}
       />
     );
@@ -241,6 +527,7 @@ export const mapStateToProps = ({ board, communicator, app }) => {
 const mapDispatchToProps = {
   addBoards,
   changeBoard,
+  updateBoard,
   switchBoard,
   showNotification,
   pushCommunicator

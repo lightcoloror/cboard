@@ -7,7 +7,7 @@ import shortid from 'shortid';
 import API from '../../../api';
 import {
   deleteBoardCommunicator,
-  addBoardCommunicator,
+  verifyAndAddBoardCommunicator,
   verifyAndUpsertCommunicator,
   upsertApiCommunicator,
   pushCommunicator
@@ -59,7 +59,7 @@ const findBoards = (boards, criteria, page, search = '') => {
   };
 };
 
-class CommunicatorDialogContainer extends React.Component {
+export class CommunicatorDialogContainer extends React.Component {
   constructor(props) {
     super(props);
 
@@ -227,7 +227,21 @@ class CommunicatorDialogContainer extends React.Component {
   async copyBoard(board) {
     const { intl, showNotification } = this.props;
     try {
-      await this.createBoardsRecursively(board);
+      let rootBoard = board;
+      let bundledBoards;
+      try {
+        const bundle = await API.getPublicBoardBundle(board.id);
+        bundledBoards = new Map(bundle.data.map(item => [item.id, item]));
+        rootBoard = bundledBoards.get(bundle.rootBoardId) || board;
+      } catch (error) {
+        bundledBoards = new Map(
+          this.props.availableBoards
+            .filter(item => item.isPublic)
+            .map(item => [item.id, item])
+        );
+        bundledBoards.set(board.id, board);
+      }
+      await this.createBoardsRecursively(rootBoard, undefined, bundledBoards);
       showNotification(intl.formatMessage(messages.boardAddedToCommunicator));
     } catch (err) {
       console.log(err.message);
@@ -235,11 +249,10 @@ class CommunicatorDialogContainer extends React.Component {
     }
   }
 
-  async createBoardsRecursively(board, records) {
+  async createBoardsRecursively(board, records, bundledBoards) {
     const {
       createBoard,
-      addBoardCommunicator,
-      verifyAndUpsertCommunicator,
+      verifyAndAddBoardCommunicator,
       currentCommunicator,
       userData,
       updateApiObjectsNoChild,
@@ -281,8 +294,7 @@ class CommunicatorDialogContainer extends React.Component {
     }
     createBoard(newBoard);
     if (!records) {
-      verifyAndUpsertCommunicator({ ...currentCommunicator });
-      addBoardCommunicator(newBoard.id);
+      verifyAndAddBoardCommunicator({ ...currentCommunicator }, newBoard.id);
     }
 
     if (!records) {
@@ -312,6 +324,17 @@ class CommunicatorDialogContainer extends React.Component {
     //return condition
     for (const tile of board.tiles) {
       if (tile.loadBoard && !tile.linkedBoard) {
+        if (bundledBoards) {
+          const nextBoard = bundledBoards.get(tile.loadBoard);
+          if (nextBoard) {
+            await this.createBoardsRecursively(
+              nextBoard,
+              records,
+              bundledBoards
+            );
+          }
+          continue;
+        }
         try {
           const nextBoard = await API.getBoard(tile.loadBoard);
           await this.createBoardsRecursively(nextBoard, records);
@@ -613,7 +636,7 @@ const mapDispatchToProps = {
   deleteBoardCommunicator,
   createBoard,
   updateBoard,
-  addBoardCommunicator,
+  verifyAndAddBoardCommunicator,
   updateApiObjectsNoChild,
   updateApiBoard,
   disableTour,

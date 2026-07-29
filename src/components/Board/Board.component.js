@@ -38,6 +38,14 @@ import ImprovePhraseOutput from './ImprovePhraseOutput';
 import CommunicationSupportFeature from './CommunicationSupport';
 import { resolveTileLabel, resolveBoardName } from '../../helpers';
 import { COMMUNICATION_SUPPORT_VARIANTS } from '../../common/communicationSupport/legacy';
+import { applyPersonalImagePreferencesToItems } from '../../common/communicationSupport/personalImagePreferences';
+import { sortPictogramsForDisplay } from '../../common/communicationSupport/pictogramOrdering';
+import {
+  COMMUNICATION_PREFERENCES_CHANGED_EVENT,
+  loadCommunicationPreferences,
+  loadPictogramOrdering,
+  recordPictogramUsage
+} from '../../common/communicationSupport/localData';
 
 export class Board extends Component {
   static propTypes = {
@@ -104,7 +112,13 @@ export class Board extends Component {
     copiedTiles: PropTypes.arrayOf(PropTypes.object),
     setIsScroll: PropTypes.func,
     isScroll: PropTypes.bool,
-    totalRows: PropTypes.number
+    totalRows: PropTypes.number,
+    demoMode: PropTypes.bool,
+    personalImagePreferences: PropTypes.arrayOf(PropTypes.object),
+    personalImageIdentity: PropTypes.shape({
+      patientId: PropTypes.string,
+      workspaceId: PropTypes.string
+    })
   };
 
   static defaultProps = {
@@ -118,15 +132,21 @@ export class Board extends Component {
     scannerSettings: { active: false, delay: 2000, strategy: 'automatic' },
     selectedTileIds: [],
     emptyVoiceAlert: false,
-    userData: {}
+    userData: {},
+    demoMode: false,
+    personalImagePreferences: [],
+    personalImageIdentity: { patientId: '', workspaceId: '' }
   };
 
   constructor(props) {
     super(props);
+    const preferences = loadCommunicationPreferences();
 
     this.state = {
       openTitleDialog: false,
-      titleDialogValue: props.board && props.board.name ? props.board.name : ''
+      titleDialogValue: props.board && props.board.name ? props.board.name : '',
+      pictogramSortMode: preferences.pictogramSortMode,
+      pictogramOrdering: loadPictogramOrdering()
     };
 
     this.boardContainerRef = React.createRef();
@@ -137,10 +157,33 @@ export class Board extends Component {
     if (this.props.scannerSettings.active) {
       this.props.onScannerActive();
     }
+    window.addEventListener(
+      COMMUNICATION_PREFERENCES_CHANGED_EVENT,
+      this.handleCommunicationPreferencesChanged
+    );
   }
 
+  componentWillUnmount() {
+    window.removeEventListener(
+      COMMUNICATION_PREFERENCES_CHANGED_EVENT,
+      this.handleCommunicationPreferencesChanged
+    );
+  }
+
+  handleCommunicationPreferencesChanged = event => {
+    const preferences =
+      (event && event.detail) || loadCommunicationPreferences();
+    this.setState({ pictogramSortMode: preferences.pictogramSortMode });
+  };
+
+  handlePictogramUsed = (boardId, tileId) => {
+    const pictogramOrdering = recordPictogramUsage(boardId, tileId);
+    this.setState({ pictogramOrdering });
+    return pictogramOrdering;
+  };
+
   handleTileClick = tile => {
-    const { onTileClick, isSelecting } = this.props;
+    const { board, onTileClick, isSelecting } = this.props;
 
     if (tile.loadBoard && !isSelecting) {
       const boardComponentRef = this.props.board.isFixed
@@ -148,8 +191,47 @@ export class Board extends Component {
         : 'boardContainerRef';
       this[boardComponentRef].current.scrollTop = 0;
     }
+    if (!tile.loadBoard && !isSelecting) {
+      this.handlePictogramUsed(board.id, tile.id);
+    }
     onTileClick(tile);
   };
+
+  getManualBoardTiles(board) {
+    const sourceTiles = Array.isArray(board.tiles) ? board.tiles : [];
+    const byId = new Map(sourceTiles.map(tile => [tile.id, tile]));
+    const explicitIds =
+      board.grid && Array.isArray(board.grid.order)
+        ? board.grid.order.reduce(
+            (ids, row) =>
+              ids.concat(
+                (Array.isArray(row) ? row : []).filter(id => byId.has(id))
+              ),
+            []
+          )
+        : [];
+    const seen = new Set(explicitIds);
+    return explicitIds
+      .map(id => byId.get(id))
+      .concat(sourceTiles.filter(tile => !seen.has(tile.id)));
+  }
+
+  getDisplayBoardTiles(board, sortMode) {
+    return sortPictogramsForDisplay(
+      this.getManualBoardTiles(board),
+      sortMode,
+      this.state.pictogramOrdering,
+      board.id
+    );
+  }
+
+  buildFixedGridOrder(tiles, rows, columns) {
+    const firstPageIds = tiles.slice(0, rows * columns).map(tile => tile.id);
+    let tileIndex = 0;
+    return [...Array(rows)].map(() =>
+      [...Array(columns)].map(() => firstPageIds[tileIndex++] || null)
+    );
+  }
 
   handleTileFocus = tileId => {
     const { onFocusTile, board } = this.props;
@@ -208,6 +290,12 @@ export class Board extends Component {
         ...tileToRender,
         label: resolveTileLabel(tileToRender, this.props.intl)
       };
+      const displayTile =
+        applyPersonalImagePreferencesToItems(
+          [tile],
+          this.props.personalImagePreferences,
+          this.props.personalImageIdentity
+        )[0] || tile;
       const isSelected = selectedTileIds.includes(tile.id);
       const variant = Boolean(tile.loadBoard) ? 'folder' : 'button';
 
@@ -226,7 +314,10 @@ export class Board extends Component {
             }}
           >
             <Symbol
-              image={tile.image}
+              image={displayTile.image}
+              mediaType={displayTile.mediaType}
+              video={displayTile.video}
+              videoAutoPlay={displayTile.mediaType === 'video'}
               label={tile.label}
               keyPath={tile.keyPath}
               labelpos={displaySettings.labelPosition}
@@ -250,6 +341,12 @@ export class Board extends Component {
       ...tileToRender,
       label: resolveTileLabel(tileToRender, this.props.intl)
     };
+    const displayTile =
+      applyPersonalImagePreferencesToItems(
+        [tile],
+        this.props.personalImagePreferences,
+        this.props.personalImageIdentity
+      )[0] || tile;
     const {
       isSelecting,
       isSaving,
@@ -275,7 +372,10 @@ export class Board extends Component {
         id={tile.id}
       >
         <Symbol
-          image={tile.image}
+          image={displayTile.image}
+          mediaType={displayTile.mediaType}
+          video={displayTile.video}
+          videoAutoPlay={displayTile.mediaType === 'video'}
           label={tile.label}
           keyPath={tile.keyPath}
           labelpos={displaySettings.labelPosition}
@@ -335,7 +435,14 @@ export class Board extends Component {
       speak
     } = this.props;
 
-    const tiles = this.renderTiles(board.tiles);
+    const activePictogramSortMode = isSelecting
+      ? 'manual'
+      : this.state.pictogramSortMode;
+    const displayBoardTiles = this.getDisplayBoardTiles(
+      board,
+      activePictogramSortMode
+    );
+    const tiles = this.renderTiles(displayBoardTiles);
     const cols = DISPLAY_SIZE_GRID_COLS[this.props.displaySettings.uiSize];
     const isLoggedIn = !!userData.email;
     const isNavigationButtonsOnTheSide =
@@ -375,6 +482,9 @@ export class Board extends Component {
           <div className="Board__communicationSupport">
             <CommunicationSupportFeature
               variant={COMMUNICATION_SUPPORT_VARIANTS.tuyujia}
+              demoMode={this.props.demoMode}
+              pictogramOrdering={this.state.pictogramOrdering}
+              onPictogramUsed={this.handlePictogramUsed}
             />
           </div>
 
@@ -392,6 +502,7 @@ export class Board extends Component {
             userData={userData}
             publishBoard={publishBoard}
             showNotification={this.props.showNotification}
+            demoMode={this.props.demoMode}
           />
           {emptyVoiceAlert && (
             <Alert variant="filled" severity="error">
@@ -491,8 +602,24 @@ export class Board extends Component {
 
                 {board.isFixed && (
                   <FixedGrid
-                    order={board.grid ? board.grid.order : []}
-                    items={board.tiles}
+                    order={
+                      activePictogramSortMode === 'popularity'
+                        ? this.buildFixedGridOrder(
+                            displayBoardTiles,
+                            board.grid ? board.grid.rows : DEFAULT_ROWS_NUMBER,
+                            board.grid
+                              ? board.grid.columns
+                              : DEFAULT_COLUMNS_NUMBER
+                          )
+                        : board.grid
+                        ? board.grid.order
+                        : []
+                    }
+                    items={
+                      activePictogramSortMode === 'popularity'
+                        ? displayBoardTiles
+                        : board.tiles
+                    }
                     columns={
                       board.grid ? board.grid.columns : DEFAULT_COLUMNS_NUMBER
                     }

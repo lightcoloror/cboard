@@ -41,13 +41,88 @@ jest.mock('./Export.messages', () => {
     boards: {
       id: 'cboard.components.Settings.Export.boards',
       defaultMessage: 'Boards'
+    },
+    pictureLibrary: {
+      id: 'cboard.components.Settings.Export.pictureLibrary',
+      defaultMessage: 'Picture library backup'
+    },
+    pictureLibrarySecondary: {
+      id: 'cboard.components.Settings.Export.pictureLibrarySecondary',
+      defaultMessage: 'Backup metadata and pictures'
+    },
+    pictureLibraryScope: {
+      id: 'cboard.components.Settings.Export.pictureLibraryScope',
+      defaultMessage: 'Backup scope'
+    },
+    pictureLibraryCustom: {
+      id: 'cboard.components.Settings.Export.pictureLibraryCustom',
+      defaultMessage: 'Custom pictures only'
+    },
+    pictureLibraryFull: {
+      id: 'cboard.components.Settings.Export.pictureLibraryFull',
+      defaultMessage: 'Complete library'
+    },
+    privatePictureLibrary: {
+      id: 'privatePictureLibrary',
+      defaultMessage: 'Private account picture backup'
+    },
+    privatePictureLibrarySecondary: {
+      id: 'privatePictureLibrarySecondary',
+      defaultMessage: 'Account-protected backup'
+    },
+    uploadPrivatePictureLibrary: {
+      id: 'uploadPrivatePictureLibrary',
+      defaultMessage: 'Back up private pictures'
+    },
+    privateDeviceData: {
+      id: 'privateDeviceData',
+      defaultMessage: 'Private account complete data backup'
+    },
+    privateDeviceDataSecondary: {
+      id: 'privateDeviceDataSecondary',
+      defaultMessage: 'Complete private backup'
+    },
+    privateDeviceDataPassphrase: {
+      id: 'privateDeviceDataPassphrase',
+      defaultMessage: 'Recovery password'
+    },
+    privateDeviceDataPassphraseConfirmation: {
+      id: 'privateDeviceDataPassphraseConfirmation',
+      defaultMessage: 'Confirm recovery password'
+    },
+    privateDeviceDataPassphraseHelp: {
+      id: 'privateDeviceDataPassphraseHelp',
+      defaultMessage: 'Use at least 12 characters'
+    },
+    privateDeviceDataPassphraseTooShort: {
+      id: 'privateDeviceDataPassphraseTooShort',
+      defaultMessage: 'Too short'
+    },
+    privateDeviceDataPassphraseTooLong: {
+      id: 'privateDeviceDataPassphraseTooLong',
+      defaultMessage: 'Too long'
+    },
+    privateDeviceDataPassphraseMismatch: {
+      id: 'privateDeviceDataPassphraseMismatch',
+      defaultMessage: 'Passwords do not match'
+    },
+    uploadPrivateDeviceData: {
+      id: 'uploadPrivateDeviceData',
+      defaultMessage: 'Back up complete data'
+    },
+    structuredPictogramLibrary: {
+      id: 'cboard.components.Settings.Export.structuredPictogramLibrary',
+      defaultMessage: 'Structured AAC JSON'
     }
   };
 });
 
 const COMPONENT_PROPS = {
   onExportClick: () => {},
+  onPrivateLibraryUpload: () => {},
+  onPrivateDeviceDataUpload: () => {},
   onClose: () => {},
+  isAuthenticated: false,
   intl: {
     formatMessage: jest.fn(),
     locale: 'en-US'
@@ -97,10 +172,106 @@ describe('Export tests', () => {
     expect(onExportClick).toHaveBeenCalled();
   });
 
+  test('offers structured AAC JSON for one board or the full library', () => {
+    const wrapper = shallow(<Export {...COMPONENT_PROPS} />);
+    const structuredOptions = wrapper.findWhere(
+      node => node.prop('value') === 'structured'
+    );
+
+    expect(structuredOptions).toHaveLength(2);
+  });
+
   test('sets boardError when export single is clicked without selecting a board', () => {
     const wrapper = shallow(<Export {...COMPONENT_PROPS} />);
     wrapper.setState({ exportSingleBoard: 'pdf' });
     wrapper.instance().handleSingleExport();
     expect(wrapper.state('boardError')).toBe(true);
+  });
+
+  test('exports the selected picture library scope and receives progress', () => {
+    const onExportClick = jest.fn();
+    const wrapper = shallow(
+      <Export {...COMPONENT_PROPS} onExportClick={onExportClick} />
+    );
+    wrapper.setState({ pictureLibraryScope: 'full' });
+    wrapper.instance().handlePictureLibraryExport();
+
+    expect(onExportClick).toHaveBeenCalledWith(
+      'pictureLibrary',
+      'full',
+      '',
+      expect.any(Function),
+      expect.any(Function)
+    );
+    const onProgress = onExportClick.mock.calls[0][4];
+    onProgress({ percent: 25, detail: 'Reading pictures' });
+    expect(wrapper.state('pictureLibraryProgress')).toEqual({
+      percent: 25,
+      detail: 'Reading pictures'
+    });
+  });
+
+  test('requires login and explicitly uploads only when requested', () => {
+    const onPrivateLibraryUpload = jest.fn();
+    const guest = shallow(
+      <Export
+        {...COMPONENT_PROPS}
+        onPrivateLibraryUpload={onPrivateLibraryUpload}
+      />
+    );
+    expect(
+      guest.find('#private-picture-library-upload-button').prop('disabled')
+    ).toBe(true);
+
+    const authenticated = shallow(
+      <Export
+        {...COMPONENT_PROPS}
+        isAuthenticated
+        onPrivateLibraryUpload={onPrivateLibraryUpload}
+      />
+    );
+    expect(
+      authenticated
+        .find('#private-picture-library-upload-button')
+        .prop('disabled')
+    ).toBe(true);
+    authenticated.setState({
+      privateLibraryPassphrase: 'correct-horse-battery-staple',
+      privateLibraryPassphraseConfirmation: 'correct-horse-battery-staple'
+    });
+    authenticated
+      .find('#private-picture-library-upload-button')
+      .simulate('click');
+    expect(onPrivateLibraryUpload).toHaveBeenCalledWith(
+      expect.any(Function),
+      expect.any(Function),
+      'correct-horse-battery-staple'
+    );
+  });
+
+  test('keeps complete account data backup separate and login-gated', () => {
+    const onPrivateDeviceDataUpload = jest.fn();
+    const guest = shallow(<Export {...COMPONENT_PROPS} />);
+    expect(
+      guest.find('#private-device-data-upload-button').prop('disabled')
+    ).toBe(true);
+
+    const authenticated = shallow(
+      <Export
+        {...COMPONENT_PROPS}
+        isAuthenticated
+        onPrivateDeviceDataUpload={onPrivateDeviceDataUpload}
+      />
+    );
+    authenticated.setState({
+      privateDeviceDataPassphrase: 'correct-horse-battery-staple',
+      privateDeviceDataPassphraseConfirmation: 'correct-horse-battery-staple'
+    });
+    authenticated.find('#private-device-data-upload-button').simulate('click');
+    expect(onPrivateDeviceDataUpload).toHaveBeenCalledWith(
+      expect.any(Function),
+      expect.any(Function),
+      'correct-horse-battery-staple'
+    );
   });
 });

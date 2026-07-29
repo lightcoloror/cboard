@@ -4,6 +4,7 @@ import { alpha3ToAlpha2 } from 'i18n-iso-countries';
 
 import { APP_LANGS, DEFAULT_LANG } from './components/App/App.constants';
 import { EMPTY_VOICES } from './providers/SpeechProvider/SpeechProvider.constants';
+import reviewedZhCnAacMessages from './translations/zh-CN.aac-review.json';
 
 const splitLangRgx = /[_-]+/;
 
@@ -22,7 +23,16 @@ APP_LANGS.forEach(lang => {
 });
 
 export async function importTranslation(lang) {
-  return await import(`./translations/${lang}.json`);
+  const importedMessages = await import(`./translations/${lang}.json`);
+
+  if (lang !== 'zh-CN') {
+    return importedMessages;
+  }
+
+  return {
+    ...(importedMessages.default || importedMessages),
+    ...reviewedZhCnAacMessages
+  };
 }
 
 export function stripRegionCode(lang) {

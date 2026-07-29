@@ -8,6 +8,7 @@ import {
 import localForage from 'localforage';
 import localStorage from 'redux-persist/lib/storage';
 import { appInsights } from './appInsights';
+import { createAsyncMemoryStorage } from './demoMode';
 
 import appReducer from './components/App/App.reducer';
 import languageProviderReducer from './providers/LanguageProvider/LanguageProvider.reducer';
@@ -139,22 +140,24 @@ export const boardSyncTransform = createTransform(
   { whitelist: ['board'] }
 );
 
-const config = {
-  key: 'root',
-  storage: migratingStorage,
-  blacklist: ['language'],
-  version: 1,
-  migrate: createMigrate(boardMigrations, { debug: false }),
-  transforms: [boardSyncTransform]
-};
+export default function createReducer({ demoMode = false } = {}) {
+  const persistenceStorage = demoMode
+    ? createAsyncMemoryStorage()
+    : migratingStorage;
+  const config = {
+    key: 'root',
+    storage: persistenceStorage,
+    blacklist: ['language'],
+    version: 1,
+    migrate: createMigrate(boardMigrations, { debug: false }),
+    transforms: [boardSyncTransform]
+  };
+  const languagePersistConfig = {
+    key: 'language',
+    storage: persistenceStorage,
+    blacklist: ['langsFetched']
+  };
 
-const languagePersistConfig = {
-  key: 'language',
-  storage: migratingStorage,
-  blacklist: ['langsFetched']
-};
-
-export default function createReducer() {
   return persistCombineReducers(config, {
     app: appReducer,
     language: persistReducer(languagePersistConfig, languageProviderReducer),

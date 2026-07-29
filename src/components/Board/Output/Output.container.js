@@ -4,6 +4,12 @@ import { injectIntl, intlShape } from 'react-intl';
 import { connect } from 'react-redux';
 import keycode from 'keycode';
 import shortid from 'shortid';
+import { loadPersonalImageRuntime } from '../../../common/communicationSupport/localData';
+import { applyPersonalImagePreferencesToItems } from '../../../common/communicationSupport/personalImagePreferences';
+import {
+  EXPRESSION_PLAYBACK_FRAME_TYPES,
+  createExpressionPlaybackFrames
+} from '../../../common/communicationSupport/expressionPlayback';
 import messages from '../Board.messages';
 import { showNotification } from '../../Notifications/Notifications.actions';
 import { isAndroid } from '../../../cordova-util';
@@ -74,18 +80,6 @@ export class OutputContainer extends Component {
     );
   }
 
-  outputReducer(accumulator, currentValue) {
-    const actionValue =
-      currentValue.action &&
-      currentValue.action.startsWith('+') &&
-      currentValue.action.slice(1);
-
-    const symbolValue = currentValue.vocalization || currentValue.label;
-    const value = actionValue || ` ${symbolValue}`;
-
-    return ` ${accumulator}${value}`;
-  }
-
   clearOutput() {
     const { changeOutput, isLiveMode } = this.props;
     const output = [];
@@ -123,26 +117,6 @@ export class OutputContainer extends Component {
     });
   }
 
-  groupOutputByType() {
-    const outputFrames = [[]];
-
-    this.state.translatedOutput.forEach((value, index, arr) => {
-      const prevValue = index ? arr[index - 1] : arr[0];
-      let frame;
-
-      if (Boolean(value.sound) !== Boolean(prevValue.sound)) {
-        frame = [];
-        outputFrames.push(frame);
-      } else {
-        frame = outputFrames[outputFrames.length - 1];
-      }
-
-      frame.push(value);
-    });
-
-    return outputFrames;
-  }
-
   playAudio(src) {
     return new Promise((resolve, reject) => {
       let audio = new Audio();
@@ -150,9 +124,13 @@ export class OutputContainer extends Component {
       audio.onended = () => {
         resolve();
       };
+      audio.onerror = reject;
 
       audio.src = src;
-      audio.play();
+      const playback = audio.play();
+      if (playback && typeof playback.catch === 'function') {
+        playback.catch(reject);
+      }
     });
   }
 
@@ -166,21 +144,22 @@ export class OutputContainer extends Component {
     if (liveText) {
       await this.speakOutput(liveText);
     } else {
-      const outputFrames = this.groupOutputByType();
+      const outputFrames = createExpressionPlaybackFrames(
+        this.state.translatedOutput
+      );
 
       await this.asyncForEach(outputFrames, async frame => {
-        if (!frame[0]?.sound) {
-          const text = frame.reduce(this.outputReducer, '');
-          await this.speakOutput(text);
+        if (frame.type === EXPRESSION_PLAYBACK_FRAME_TYPES.speech) {
+          await this.speakOutput(frame.text);
         } else {
-          await new Promise(resolve => {
-            this.asyncForEach(frame, async ({ sound }, index) => {
-              await this.playAudio(sound);
-
-              if (frame.length - 1 === index) {
-                resolve();
+          await this.asyncForEach(frame.clips, async clip => {
+            try {
+              await this.playAudio(clip.source);
+            } catch (error) {
+              if (clip.fallbackText) {
+                await this.speakOutput(clip.fallbackText);
               }
-            });
+            }
           });
         }
       });
@@ -347,8 +326,14 @@ export class OutputContainer extends Component {
 }
 
 const mapStateToProps = ({ board, app }) => {
+  const personalImageRuntime = loadPersonalImageRuntime();
+
   return {
-    output: board.output,
+    output: applyPersonalImagePreferencesToItems(
+      board.output,
+      personalImageRuntime.preferences,
+      personalImageRuntime.identity
+    ),
     isLiveMode: board.isLiveMode,
     navigationSettings: app.navigationSettings,
     increaseOutputButtons: app.displaySettings.increaseOutputButtons

@@ -37,8 +37,17 @@ export default function CommunicationSupportSettings({
   historyCount,
   isLogged,
   syncMessage,
+  serviceMessage,
+  serviceChecking,
+  aiMessage,
+  aiChecking,
+  aiTestMessage,
+  aiTesting,
   onSyncNow,
   onUploadLocal,
+  onCheckService,
+  onCheckAi,
+  onTestAi,
   onExportJson,
   onImportJson,
   onClearSaved,
@@ -80,6 +89,47 @@ export default function CommunicationSupportSettings({
               }
             />
           </ListItem>
+          <Divider />
+          <ListItem>
+            <ListItemText
+              primary={<FormattedMessage {...messages.aiTestState} />}
+              secondary={
+                aiTestMessage || (
+                  <FormattedMessage
+                    {...(isLogged
+                      ? messages.aiTestUnknown
+                      : messages.aiTestLoginRequired)}
+                  />
+                )
+              }
+            />
+          </ListItem>
+          <Divider />
+          <ListItem>
+            <ListItemText
+              primary={<FormattedMessage {...messages.serviceState} />}
+              secondary={
+                serviceMessage || (
+                  <FormattedMessage {...messages.serviceUnknown} />
+                )
+              }
+            />
+          </ListItem>
+          <Divider />
+          <ListItem>
+            <ListItemText
+              primary={<FormattedMessage {...messages.aiState} />}
+              secondary={
+                aiMessage || (
+                  <FormattedMessage
+                    {...(isLogged
+                      ? messages.aiUnknown
+                      : messages.aiLoginRequired)}
+                  />
+                )
+              }
+            />
+          </ListItem>
         </List>
 
         <div className="CommunicationSupportSettings__actions">
@@ -98,6 +148,38 @@ export default function CommunicationSupportSettings({
             disabled={!isLogged}
           >
             <FormattedMessage {...messages.uploadLocal} />
+          </Button>
+          <Button
+            color="primary"
+            variant="outlined"
+            onClick={onCheckService}
+            disabled={serviceChecking}
+          >
+            <FormattedMessage
+              {...(serviceChecking
+                ? messages.checkingService
+                : messages.checkService)}
+            />
+          </Button>
+          <Button
+            color="primary"
+            variant="outlined"
+            onClick={onCheckAi}
+            disabled={!isLogged || aiChecking}
+          >
+            <FormattedMessage
+              {...(aiChecking ? messages.checkingAi : messages.checkAi)}
+            />
+          </Button>
+          <Button
+            color="primary"
+            variant="outlined"
+            onClick={onTestAi}
+            disabled={!isLogged || aiTesting}
+          >
+            <FormattedMessage
+              {...(aiTesting ? messages.testingAi : messages.testAi)}
+            />
           </Button>
           <Button color="primary" variant="outlined" onClick={onExportJson}>
             <FormattedMessage {...messages.exportJson} />
@@ -129,8 +211,17 @@ CommunicationSupportSettings.propTypes = {
   historyCount: PropTypes.number.isRequired,
   isLogged: PropTypes.bool.isRequired,
   syncMessage: PropTypes.string,
+  serviceMessage: PropTypes.string,
+  serviceChecking: PropTypes.bool.isRequired,
+  aiMessage: PropTypes.string,
+  aiChecking: PropTypes.bool.isRequired,
+  aiTestMessage: PropTypes.string,
+  aiTesting: PropTypes.bool.isRequired,
   onSyncNow: PropTypes.func.isRequired,
   onUploadLocal: PropTypes.func.isRequired,
+  onCheckService: PropTypes.func.isRequired,
+  onCheckAi: PropTypes.func.isRequired,
+  onTestAi: PropTypes.func.isRequired,
   onExportJson: PropTypes.func.isRequired,
   onImportJson: PropTypes.func.isRequired,
   onClearSaved: PropTypes.func.isRequired,
@@ -141,6 +232,9 @@ CommunicationSupportSettings.propTypes = {
 
 CommunicationSupportSettings.defaultProps = {
   syncMessage: '',
+  serviceMessage: '',
+  aiMessage: '',
+  aiTestMessage: '',
   titleOverride: null,
   summaryOverride: null
 };

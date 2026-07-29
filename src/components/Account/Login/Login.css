@@ -17,3 +17,7 @@
 .Login__status--error {
   color: #f44336;
 }
+
+.Login__form > button {
+  margin-top: 0.75em;
+}

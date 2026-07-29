@@ -32,6 +32,15 @@
   color: #f44336;
 }
 
+.SignUp__phoneVerification {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.SignUp__phoneVerification > button {
+  justify-self: start;
+}
+
 .SignUp__termsError {
   margin: 0;
   font-size: 0.75rem;

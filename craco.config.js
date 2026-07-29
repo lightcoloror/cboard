@@ -9,6 +9,7 @@ module.exports = {
     },
     configure: (webpackConfig, { env, paths }) => {
       const isCordovaDebug = process.argv.includes('--cordova-debug');
+      const isWindows = process.platform === 'win32';
       if (isCordovaDebug) {
         webpackConfig.mode = 'development';
         webpackConfig.optimization = { minimize: false };
@@ -23,6 +24,31 @@ module.exports = {
           );
         }
       ];
+
+      if (env === 'production' && isWindows) {
+        webpackConfig.plugins = (webpackConfig.plugins || []).filter(
+          plugin => plugin?.constructor?.name !== 'ForkTsCheckerWebpackPlugin'
+        );
+
+        webpackConfig.optimization = webpackConfig.optimization || {};
+        webpackConfig.optimization.minimizer = (
+          webpackConfig.optimization.minimizer || []
+        ).map(plugin => {
+          const pluginName = plugin?.constructor?.name;
+
+          if (
+            pluginName === 'TerserPlugin' ||
+            pluginName === 'CssMinimizerPlugin'
+          ) {
+            plugin.options = {
+              ...(plugin.options || {}),
+              parallel: false
+            };
+          }
+
+          return plugin;
+        });
+      }
 
       return webpackConfig;
     }

@@ -49,7 +49,7 @@ export class PeopleContainer extends PureComponent {
 
   handleLogout = () => {
     if (isAndroid()) {
-      window.FirebasePlugin.unregister();
+      window.FirebasePlugin?.unregister?.();
       window.facebookConnectPlugin.logout(
         function(msg) {
           console.log('disconnect facebook msg' + msg);

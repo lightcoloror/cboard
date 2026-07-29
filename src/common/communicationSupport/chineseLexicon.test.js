@@ -34,4 +34,34 @@ describe('Chinese communication lexicon semantic boundaries', () => {
     expect(canonical('大夫')).toBe('医生');
     expect(canonical('看病')).toBe('医院');
   });
+
+  test.each([
+    ['感冒了', '生病'],
+    ['流感', '生病'],
+    ['精力不足', '累'],
+    ['发高烧', '发烧'],
+    ['体温高', '发烧'],
+    ['老是咳嗽', '咳嗽'],
+    ['头昏脑涨', '头晕'],
+    ['感觉晕', '头晕'],
+    ['干呕', '恶心'],
+    ['想呕吐', '恶心'],
+    ['呼吸不顺', '呼吸困难'],
+    ['在出血', '出血'],
+    ['换件衣服', '换衣服'],
+    ['换身衣服', '换衣服'],
+    ['活动一下', '运动'],
+    ['看个电视', '看电视'],
+    ['理头发', '理发'],
+    ['剪一下头', '理发'],
+    ['看一本书', '看书']
+  ])('ports the reviewed PicInterpreter spoken alias %s', (word, expected) => {
+    expect(canonical(word)).toBe(expected);
+  });
+
+  test('does not port unsafe broad aliases from the old lexicon', () => {
+    expect(canonical('受伤了')).toBeUndefined();
+    expect(canonical('不舒服')).toBe('不舒服');
+    expect(canonical('看病')).toBe('医院');
+  });
 });

@@ -50,7 +50,7 @@ import {
   setIsSaving
 } from './Board.actions';
 import {
-  addBoardCommunicator,
+  verifyAndAddBoardCommunicator,
   verifyAndUpsertCommunicator
 } from '../Communicator/Communicator.actions';
 import { disableTour, setUnauthEditModalDismissed } from '../App/App.actions';
@@ -78,6 +78,7 @@ import {
 import LoadingIcon from '../UI/LoadingIcon';
 import PinDialog from '../UI/PinDialog';
 import { resolveTileLabel } from '../../helpers';
+import { loadPersonalImageRuntime } from '../../common/communicationSupport/localData';
 //import { isAndroid } from '../../cordova-util';
 
 const ogv = require('ogv');
@@ -182,9 +183,9 @@ export class BoardContainer extends Component {
      */
     scannerSettings: PropTypes.object,
     /**
-     * Adds a Board to the Active Communicator
+     * Ensures ownership and adds a Board to the Active Communicator
      */
-    addBoardCommunicator: PropTypes.func.isRequired,
+    verifyAndAddBoardCommunicator: PropTypes.func.isRequired,
     downloadImages: PropTypes.func,
     lang: PropTypes.string,
     isRootBoardTourEnabled: PropTypes.bool,
@@ -200,7 +201,8 @@ export class BoardContainer extends Component {
     /**
      * Persist that the unauthenticated edit modal was dismissed
      */
-    setUnauthEditModalDismissed: PropTypes.func
+    setUnauthEditModalDismissed: PropTypes.func,
+    demoMode: PropTypes.bool
   };
 
   state = {
@@ -222,6 +224,26 @@ export class BoardContainer extends Component {
     pinError: false,
     showUnauthEditModal: false
   };
+
+  pushBoardLocation = (path, state) => {
+    if (!this.props.demoMode) {
+      if (state === undefined) {
+        this.props.history.push(path);
+      } else {
+        this.props.history.push(path, state);
+      }
+    }
+  };
+
+  replaceBoardLocation = (path, state) => {
+    if (!this.props.demoMode) {
+      if (state === undefined) {
+        this.props.history.replace(path);
+      } else {
+        this.props.history.replace(path, state);
+      }
+    }
+  };
   constructor(props) {
     super(props);
     this.boardRef = React.createRef();
@@ -238,8 +260,7 @@ export class BoardContainer extends Component {
       board,
       boards,
       communicator,
-      changeBoard,
-      history
+      changeBoard
       //downloadImages
     } = this.props;
 
@@ -291,7 +312,7 @@ export class BoardContainer extends Component {
     const boardId = boardExists.id;
     changeBoard(boardId);
     const goTo = id ? boardId : `board/${boardId}`;
-    history.replace(goTo);
+    this.replaceBoardLocation(goTo);
 
     //set board type
     this.setState({ isFixedBoard: !!boardExists.isFixed });
@@ -579,9 +600,10 @@ export class BoardContainer extends Component {
       board,
       createBoard,
       switchBoard,
-      addBoardCommunicator,
-      history
+      communicator,
+      verifyAndAddBoardCommunicator
     } = this.props;
+    const isLoggedIn = 'name' in userData && 'email' in userData;
     const boardData = {
       id: tile.loadBoard,
       name: tile.label,
@@ -594,8 +616,9 @@ export class BoardContainer extends Component {
     };
     if (tile.loadBoard && !tile.linkedBoard) {
       createBoard(boardData);
-      //TODO use verifyAndUpsertCommunicator before addBoardCommunicator
-      addBoardCommunicator(boardData.id);
+      if (!isLoggedIn) {
+        verifyAndAddBoardCommunicator(communicator, boardData.id);
+      }
     }
 
     if (tile.type !== 'board') {
@@ -604,7 +627,7 @@ export class BoardContainer extends Component {
     }
 
     // Loggedin user?
-    if ('name' in userData && 'email' in userData) {
+    if (isLoggedIn) {
       await this.handleApiUpdates(tile); // this function could mutate tthe tile
       return;
     }
@@ -612,7 +635,7 @@ export class BoardContainer extends Component {
     //if not and is adding an emptyBoard
     if (tile.type === 'board') {
       switchBoard(boardData.id);
-      history.replace(`/board/${boardData.id}`, []);
+      this.replaceBoardLocation(`/board/${boardData.id}`, []);
     }
   };
 
@@ -899,7 +922,7 @@ export class BoardContainer extends Component {
         boards.find(b => b.name === tile.label);
       if (nextBoard) {
         changeBoard(nextBoard.id);
-        this.props.history.push(nextBoard.id);
+        this.pushBoardLocation(nextBoard.id);
         if (navigationSettings.vocalizeFolders) {
           say();
         }
@@ -1096,6 +1119,7 @@ export class BoardContainer extends Component {
       communicator,
       board,
       intl,
+      verifyAndAddBoardCommunicator,
       verifyAndUpsertCommunicator,
       updateApiObjectsNoChild,
       updateApiObjects,
@@ -1161,7 +1185,10 @@ export class BoardContainer extends Component {
             locale: lang
           };
       //check if user has an own communicator
-      if (communicator.email !== userData.email) {
+      const createsLinkedBoard = tile && tile.loadBoard && !tile.linkedBoard;
+      if (createsLinkedBoard) {
+        verifyAndAddBoardCommunicator(communicator, tile.loadBoard);
+      } else if (communicator.email !== userData.email) {
         verifyAndUpsertCommunicator(communicator);
       }
       //check for a new  own board
@@ -1200,7 +1227,7 @@ export class BoardContainer extends Component {
         updateApiObjectsNoChild(childBoardData, true)
           .then(parentBoardId => {
             switchBoard(parentBoardId);
-            this.props.history.replace(`/board/${parentBoardId}`, []);
+            this.replaceBoardLocation(`/board/${parentBoardId}`, []);
             this.setState({ isSaving: false });
             this.props.setIsSaving(false);
           })
@@ -1252,7 +1279,7 @@ export class BoardContainer extends Component {
   };
 
   historyReplaceBoardId(boardId) {
-    this.props.history.replace(`/board/${boardId}`);
+    this.replaceBoardLocation(`/board/${boardId}`);
   }
 
   onRequestPreviousBoard = () => {
@@ -1275,13 +1302,7 @@ export class BoardContainer extends Component {
   };
 
   handleCopyRemoteBoard = async () => {
-    const {
-      intl,
-      showNotification,
-      history,
-      switchBoard,
-      setIsSaving
-    } = this.props;
+    const { intl, showNotification, switchBoard, setIsSaving } = this.props;
     try {
       this.setState({
         isSaving: true
@@ -1294,7 +1315,7 @@ export class BoardContainer extends Component {
         throw new Error('Board not copied correctly');
       }
       switchBoard(copiedBoard.id);
-      history.replace(`/board/${copiedBoard.id}`, []);
+      this.replaceBoardLocation(`/board/${copiedBoard.id}`, []);
       this.setState({
         copyPublicBoard: false,
         blockedPrivateBoard: false
@@ -1314,13 +1335,12 @@ export class BoardContainer extends Component {
   async createBoardsRecursively(board, records) {
     const {
       createBoard,
-      addBoardCommunicator,
       communicator,
       userData,
       updateApiObjectsNoChild,
       boards,
       intl,
-      verifyAndUpsertCommunicator
+      verifyAndAddBoardCommunicator
     } = this.props;
 
     //prevent shit
@@ -1357,8 +1377,7 @@ export class BoardContainer extends Component {
     }
     createBoard(newBoard);
     if (!records) {
-      verifyAndUpsertCommunicator(communicator);
-      addBoardCommunicator(newBoard.id);
+      verifyAndAddBoardCommunicator(communicator, newBoard.id);
     }
 
     if (!records) {
@@ -1719,6 +1738,9 @@ export class BoardContainer extends Component {
           changeDefaultBoard={this.props.changeDefaultBoard}
           improvedPhrase={improvedPhrase}
           speak={speak}
+          personalImagePreferences={this.props.personalImagePreferences}
+          personalImageIdentity={this.props.personalImageIdentity}
+          demoMode={this.props.demoMode}
         />
         <Dialog
           open={!!this.state.copyPublicBoard && !isPremiumRequiredModalOpen}
@@ -1902,11 +1924,14 @@ export const mapStateToProps = state => {
       ? false
       : true;
   const offlineVoiceAlert = !isConnected && speech.options.isCloud;
+  const personalImageRuntime = loadPersonalImageRuntime();
   return {
     communicator: currentCommunicator,
     board: getVisibleBoards(state).find(board => board.id === activeBoardId),
     boards: getVisibleBoards(state),
     output: board.output,
+    personalImagePreferences: personalImageRuntime.preferences,
+    personalImageIdentity: personalImageRuntime.identity,
     isLiveMode: board.isLiveMode,
     scannerSettings: scanner,
     navHistory: board.navHistory,
@@ -1948,7 +1973,7 @@ const mapDispatchToProps = {
   showNotification,
   hideNotification,
   deactivateScanner,
-  addBoardCommunicator,
+  verifyAndAddBoardCommunicator,
   updateApiObjects,
   updateApiObjectsNoChild,
   downloadImages,

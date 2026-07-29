@@ -104,7 +104,8 @@ export class Navbar extends React.Component {
       onBackClick,
       onDeactivateScannerClick,
       onLockClick,
-      onLockNotify
+      onLockNotify,
+      demoMode
     } = this.props;
 
     const isPublic = board && board.isPublic;
@@ -138,33 +139,41 @@ export class Navbar extends React.Component {
               </IconButton>
             </div>
           )}
-          {!isLocked && <HelpButton component={Link} to="/settings/help" />}
+          {!isLocked && !demoMode && (
+            <HelpButton component={Link} to="/settings/help" />
+          )}
         </div>
         <div className="Navbar__group Navbar__group--end">
           {!isLocked && (
             <React.Fragment>
               <PrintBoardButton />
               {!isCordova() && <FullScreenButton />}
-              <SettingsButton component={Link} to="/settings" />
-              <BoardShare
-                label={intl.formatMessage(messages.share)}
-                intl={this.props.intl}
-                isPublic={isPublic}
-                isOwnBoard={isOwnBoard}
-                isLogged={isLogged}
-                onShareClick={this.onShareClick}
-                onShareClose={this.onShareClose}
-                publishBoard={this.publishBoard}
-                onCopyLink={this.handleCopyLink}
-                open={this.state.openShareDialog}
-                url={this.getBoardToShare()}
-                fullScreen={false}
-              />
+              {!demoMode && (
+                <React.Fragment>
+                  <SettingsButton component={Link} to="/settings" />
+                  <BoardShare
+                    label={intl.formatMessage(messages.share)}
+                    intl={this.props.intl}
+                    isPublic={isPublic}
+                    isOwnBoard={isOwnBoard}
+                    isLogged={isLogged}
+                    onShareClick={this.onShareClick}
+                    onShareClose={this.onShareClose}
+                    publishBoard={this.publishBoard}
+                    onCopyLink={this.handleCopyLink}
+                    open={this.state.openShareDialog}
+                    url={this.getBoardToShare()}
+                    fullScreen={false}
+                  />
+                </React.Fragment>
+              )}
             </React.Fragment>
           )}
-          <div className={'personal__account'}>
-            <UserIcon onClick={this.onUserIconClick} />
-          </div>
+          {!demoMode && (
+            <div className={'personal__account'}>
+              <UserIcon onClick={this.onUserIconClick} />
+            </div>
+          )}
           <div className={'open__lock'}>
             <LockToggle
               locked={isLocked}
@@ -205,7 +214,12 @@ Navbar.propTypes = {
   onLockClick: PropTypes.func,
   isScannerActive: PropTypes.bool,
   onDeactivateScannerClick: PropTypes.func,
+  demoMode: PropTypes.bool,
   history: PropTypes.object.isRequired
+};
+
+Navbar.defaultProps = {
+  demoMode: false
 };
 
 export default withRouter(injectIntl(Navbar));

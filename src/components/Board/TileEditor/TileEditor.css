@@ -69,6 +69,56 @@
 .TileEditor__colorselect {
   margin-top: 15px;
 }
+
+.TileEditor__metadata-suggestion {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 12px;
+  padding: 10px;
+  border: 1px solid rgba(21, 63, 54, 0.22);
+  border-radius: 8px;
+  background: #f4efe4;
+}
+
+.TileEditor__metadata-suggestion-status {
+  color: #153f36;
+  font-weight: 600;
+}
+
+.TileEditor__background-removal {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin-top: 12px;
+  padding: 10px;
+  border: 1px solid rgba(30, 92, 77, 0.28);
+  border-radius: 8px;
+  background: linear-gradient(
+    135deg,
+    rgba(231, 244, 236, 0.96),
+    rgba(248, 242, 220, 0.94)
+  );
+}
+
+.TileEditor__background-removal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.TileEditor__background-removal-status {
+  color: #153f36;
+  font-weight: 600;
+}
+
+.TileEditor__input-video {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+}
+
 .TileEditor__voicerecorder {
   margin-top: 15px;
 }

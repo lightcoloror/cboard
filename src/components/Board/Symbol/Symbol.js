@@ -15,6 +15,11 @@ const propTypes = {
    * Image to display
    */
   image: PropTypes.string,
+  mediaType: PropTypes.oneOf(['image', 'gif', 'video']),
+  video: PropTypes.string,
+  videoAutoPlay: PropTypes.bool,
+  videoControls: PropTypes.bool,
+  videoLoop: PropTypes.bool,
   /**
    * Label to display
    */
@@ -39,6 +44,11 @@ function Symbol(props) {
     onWrite,
     intl,
     image,
+    mediaType,
+    video,
+    videoAutoPlay,
+    videoControls,
+    videoLoop,
     ...other
   } = props;
 
@@ -103,6 +113,9 @@ function Symbol(props) {
   );
 
   const symbolClassName = classNames('Symbol', className);
+  const videoSrc = video ? formatSrc(video) : '';
+  const shouldRenderVideo =
+    mediaType === 'video' && videoSrc && (videoAutoPlay || videoControls);
 
   const handleKeyPress = event => {
     if (event.key === 'Enter') {
@@ -141,7 +154,20 @@ function Symbol(props) {
         )}
 
       <div className="Symbol__image-container">
-        {src && <img className="Symbol__image" src={src} alt="" />}
+        {shouldRenderVideo ? (
+          <video
+            autoPlay={videoAutoPlay}
+            className="Symbol__image Symbol__video"
+            controls={videoControls}
+            loop={videoLoop}
+            muted
+            playsInline
+            poster={src}
+            src={videoSrc}
+          />
+        ) : (
+          src && <img className="Symbol__image" src={src} alt="" />
+        )}
       </div>
 
       {props.type !== 'live' &&
@@ -154,7 +180,10 @@ function Symbol(props) {
 }
 Symbol.propTypes = propTypes;
 Symbol.defaultProps = {
-  labelpos: LABEL_POSITION_BELOW
+  labelpos: LABEL_POSITION_BELOW,
+  videoAutoPlay: false,
+  videoControls: false,
+  videoLoop: true
 };
 
 export default Symbol;

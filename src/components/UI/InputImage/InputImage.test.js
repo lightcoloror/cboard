@@ -1,7 +1,14 @@
 import React from 'react';
 import { shallowMatchSnapshot } from '../../../common/test_utils';
 import { mount, shallow } from 'enzyme';
-import InputImage from './InputImage.component';
+import InputImage, {
+  InputImage as InputImageComponent
+} from './InputImage.component';
+import { readAndCompressImage } from 'browser-image-resizer';
+
+jest.mock('browser-image-resizer', () => ({
+  readAndCompressImage: jest.fn(file => Promise.resolve(file))
+}));
 
 jest.mock('../../../api/api');
 
@@ -15,6 +22,10 @@ jest.mock('./InputImage.messages', () => {
 });
 
 describe('InputImage tests', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
   test('default render ', () => {
     const onChange = jest.fn();
     const setIsLoadingImage = jest.fn();
@@ -44,5 +55,20 @@ describe('InputImage tests', () => {
       />
     );
     wrapper.find('input').prop('onChange')(event);
+  });
+
+  test('preserves an animated GIF instead of flattening it through canvas', async () => {
+    const onChange = jest.fn();
+    const gif = new File(['GIF89a'], 'drink.gif', { type: 'image/gif' });
+    const input = new InputImageComponent({
+      intl: { formatMessage: jest.fn() },
+      onChange,
+      setIsLoadingImage: jest.fn()
+    });
+
+    await input.resizeImage(gif);
+
+    expect(readAndCompressImage).not.toHaveBeenCalled();
+    expect(onChange).toHaveBeenCalledWith(gif, 'drink.gif', gif);
   });
 });

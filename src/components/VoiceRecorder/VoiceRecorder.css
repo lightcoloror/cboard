@@ -8,3 +8,9 @@
   width: 50%;
   padding: 12px;
 }
+
+.VoiceRecorder__error {
+  color: #b00020;
+  font-size: 0.875rem;
+  padding-left: 8px;
+}

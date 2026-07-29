@@ -35,6 +35,12 @@ const CBOARD_COMMUNICATION_CONCEPT_PROFILES = {
     excludeTokens: [],
     category: 'emotions'
   },
+  'cboard.symbol.toWatchTv': {
+    label: '看电视',
+    synonyms: ['电视', '开电视', '看个电视'],
+    excludeTokens: [],
+    category: 'actions'
+  },
   'cboard.symbol.iHavePainIn': {
     label: '痛',
     synonyms: ['疼', '疼痛'],
@@ -95,6 +101,30 @@ const CBOARD_COMMUNICATION_CONCEPT_PROFILES = {
     excludeTokens: [],
     category: 'food'
   },
+  'symbol.foodKitchenItems.fork': {
+    label: '叉子',
+    synonyms: ['分叉', '餐叉', '叉'],
+    excludeTokens: [],
+    category: 'food'
+  },
+  'symbol.foodKitchenItems.knife': {
+    label: '刀',
+    synonyms: ['刀具', '餐刀'],
+    excludeTokens: [],
+    category: 'food'
+  },
+  'symbol.foodKitchenItems.spoon': {
+    label: '勺子',
+    synonyms: ['勺', '汤匙'],
+    excludeTokens: [],
+    category: 'food'
+  },
+  'symbol.foodKitchenItems.bowl': {
+    label: '碗',
+    synonyms: ['饭碗'],
+    excludeTokens: [],
+    category: 'food'
+  },
   'symbol.drinkType.cranberryJuice': {
     label: '蔓越莓汁',
     synonyms: ['红莓汁'],
@@ -127,13 +157,43 @@ const CBOARD_COMMUNICATION_CONCEPT_PROFILES = {
   },
   'symbol.healthcareMedicalItems.medicine': {
     label: '药',
-    synonyms: ['药物'],
+    synonyms: ['药物', '吃药', '服药'],
+    excludeTokens: [],
+    category: 'medical'
+  },
+  'symbol.healthcareMedicalConditions.bloodPressure': {
+    label: '血压',
+    synonyms: ['量血压', '测血压'],
     excludeTokens: [],
     category: 'medical'
   },
   'symbol.peopleProfession.doctor': {
     label: '医生',
     synonyms: ['大夫'],
+    excludeTokens: [],
+    category: 'medical'
+  },
+  'symbol.peopleProfession.nurse': {
+    label: '护士',
+    synonyms: [],
+    excludeTokens: [],
+    category: 'people'
+  },
+  'symbol.peopleProfession.speechLanguageTherapist': {
+    label: '语言治疗师',
+    synonyms: ['治疗师', '康复师'],
+    excludeTokens: [],
+    category: 'people'
+  },
+  'symbol.electricalPhone.iphone': {
+    label: '手机',
+    synonyms: ['电话', 'iPhone'],
+    excludeTokens: [],
+    category: 'objects'
+  },
+  'symbol.healthcareMedicalConditions.toVomit': {
+    label: '想吐',
+    synonyms: ['恶心', '呕吐', '反胃', '吐', '干呕', '想呕吐'],
     excludeTokens: [],
     category: 'medical'
   }
@@ -150,6 +210,10 @@ export const CBOARD_COMMUNICATION_EXAMPLE_PHRASES = [
 
 export function getCboardCommunicationConceptProfile(labelKey) {
   return CBOARD_COMMUNICATION_CONCEPT_PROFILES[labelKey] || null;
+}
+
+export function getCboardCommunicationConceptProfileLabelKeys() {
+  return Object.keys(CBOARD_COMMUNICATION_CONCEPT_PROFILES);
 }
 
 export { CBOARD_COMMUNICATION_CONCEPT_PROFILES };

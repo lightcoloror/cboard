@@ -2,6 +2,7 @@ import { LEGACY_COMMUNICATION_TILE_METADATA_KEYS } from './legacy';
 
 export const COMMUNICATION_TILE_METADATA_KEYS = {
   synonyms: 'communicationSynonyms',
+  relatedTerms: 'communicationRelatedTerms',
   excludeTokens: 'communicationExcludeTokens',
   category: 'communicationCategory'
 };
@@ -20,20 +21,57 @@ function readFirstString(target, keys) {
   return '';
 }
 
+function readFirstHintList(target, keys) {
+  for (let index = 0; index < keys.length; index += 1) {
+    const key = keys[index];
+    const value = target && target[key];
+
+    if (Array.isArray(value)) {
+      const normalized = value
+        .map(item => String(item || '').trim())
+        .filter(Boolean)
+        .join(',');
+
+      if (normalized) {
+        return normalized;
+      }
+    }
+
+    if (typeof value === 'string' && value.length) {
+      return value;
+    }
+  }
+
+  return '';
+}
+
 export function getCommunicationTileMetadata(target = {}) {
+  const dtoMetadata =
+    target.communication && typeof target.communication === 'object'
+      ? target.communication
+      : {};
+
   return {
-    synonyms: readFirstString(target, [
-      COMMUNICATION_TILE_METADATA_KEYS.synonyms,
-      LEGACY_COMMUNICATION_TILE_METADATA_KEYS.synonyms
-    ]),
-    excludeTokens: readFirstString(target, [
-      COMMUNICATION_TILE_METADATA_KEYS.excludeTokens,
-      LEGACY_COMMUNICATION_TILE_METADATA_KEYS.excludeTokens
-    ]),
-    category: readFirstString(target, [
-      COMMUNICATION_TILE_METADATA_KEYS.category,
-      LEGACY_COMMUNICATION_TILE_METADATA_KEYS.category
-    ])
+    synonyms:
+      readFirstHintList(target, [
+        COMMUNICATION_TILE_METADATA_KEYS.synonyms,
+        LEGACY_COMMUNICATION_TILE_METADATA_KEYS.synonyms
+      ]) || readFirstHintList(dtoMetadata, ['synonyms']),
+    relatedTerms:
+      readFirstHintList(target, [
+        COMMUNICATION_TILE_METADATA_KEYS.relatedTerms,
+        LEGACY_COMMUNICATION_TILE_METADATA_KEYS.relatedTerms
+      ]) || readFirstHintList(dtoMetadata, ['relatedTerms']),
+    excludeTokens:
+      readFirstHintList(target, [
+        COMMUNICATION_TILE_METADATA_KEYS.excludeTokens,
+        LEGACY_COMMUNICATION_TILE_METADATA_KEYS.excludeTokens
+      ]) || readFirstHintList(dtoMetadata, ['excludeTokens']),
+    category:
+      readFirstString(target, [
+        COMMUNICATION_TILE_METADATA_KEYS.category,
+        LEGACY_COMMUNICATION_TILE_METADATA_KEYS.category
+      ]) || readFirstString(dtoMetadata, ['category'])
   };
 }
 
@@ -45,6 +83,13 @@ export function setCommunicationTileMetadata(target = {}, metadata = {}) {
       metadata.synonyms || '';
     nextTarget[LEGACY_COMMUNICATION_TILE_METADATA_KEYS.synonyms] =
       metadata.synonyms || '';
+  }
+
+  if (Object.prototype.hasOwnProperty.call(metadata, 'relatedTerms')) {
+    nextTarget[COMMUNICATION_TILE_METADATA_KEYS.relatedTerms] =
+      metadata.relatedTerms || '';
+    nextTarget[LEGACY_COMMUNICATION_TILE_METADATA_KEYS.relatedTerms] =
+      metadata.relatedTerms || '';
   }
 
   if (Object.prototype.hasOwnProperty.call(metadata, 'excludeTokens')) {

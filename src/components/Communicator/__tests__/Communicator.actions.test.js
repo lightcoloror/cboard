@@ -3,6 +3,7 @@ import * as types from '../Communicator.constants';
 import configureMockStore from 'redux-mock-store';
 import thunk from 'redux-thunk';
 import defaultBoards from '../../../api/boards.json';
+import API from '../../../api';
 
 const mockStore = configureMockStore([thunk]);
 
@@ -39,6 +40,10 @@ const initialState = {
 };
 
 describe('actions', () => {
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
   it('should create an action to import communicator', () => {
     const payload = {};
 
@@ -235,5 +240,184 @@ describe('actions', () => {
     // Should NOT contain any API push action
     expect(dispatchedTypes).not.toContain('CREATE_API_COMMUNICATOR_STARTED');
     expect(dispatchedTypes).not.toContain('UPDATE_API_COMMUNICATOR_STARTED');
+  });
+
+  it('atomically adds a board without mutating the source communicator', () => {
+    const source = { ...communicatorData, boards: ['root'] };
+    const store = mockStore({
+      ...initialState,
+      app: { userData: {} },
+      communicator: {
+        communicators: [source],
+        activeCommunicatorId: source.id
+      }
+    });
+
+    const result = store.dispatch(
+      actions.verifyAndAddBoardCommunicator(source, 'personal-board')
+    );
+
+    expect(source.boards).toEqual(['root']);
+    expect(result.boards).toEqual(['root', 'personal-board']);
+    expect(store.getActions()).toEqual([
+      expect.objectContaining({
+        type: types.EDIT_COMMUNICATOR,
+        payload: expect.objectContaining({
+          id: source.id,
+          boards: ['root', 'personal-board']
+        })
+      }),
+      { type: types.CHANGE_COMMUNICATOR, payload: source.id }
+    ]);
+  });
+
+  it('does not duplicate a board while taking communicator ownership', () => {
+    const source = {
+      ...communicatorData,
+      boards: ['root', 'personal-board']
+    };
+    const store = mockStore({
+      ...initialState,
+      app: {
+        userData: { name: 'Caregiver', email: 'caregiver@example.com' }
+      },
+      communicator: {
+        communicators: [source],
+        activeCommunicatorId: source.id
+      }
+    });
+
+    const result = store.dispatch(
+      actions.verifyAndAddBoardCommunicator(source, 'personal-board')
+    );
+
+    expect(source.boards).toEqual(['root', 'personal-board']);
+    expect(result.boards).toEqual(['root', 'personal-board']);
+    expect(result.email).toBe('caregiver@example.com');
+    expect(result.id).not.toBe(source.id);
+    expect(store.getActions()[0]).toEqual(
+      expect.objectContaining({
+        type: types.CREATE_COMMUNICATOR,
+        payload: expect.objectContaining({
+          boards: ['root', 'personal-board'],
+          email: 'caregiver@example.com'
+        })
+      })
+    );
+  });
+
+  it('shares one API create request for concurrent saves of a local communicator', async () => {
+    const localCommunicator = {
+      ...communicatorData,
+      id: 'local-comm',
+      email: 'caregiver@example.com'
+    };
+    const remoteCommunicator = {
+      ...localCommunicator,
+      id: 'remote-communicator-123456'
+    };
+    let resolveCreate;
+    const createSpy = jest
+      .spyOn(API, 'createCommunicator')
+      .mockImplementation(
+        () => new Promise(resolve => (resolveCreate = resolve))
+      );
+    const store = mockStore({
+      ...initialState,
+      app: {
+        userData: { name: 'Caregiver', email: 'caregiver@example.com' }
+      },
+      communicator: {
+        communicators: [localCommunicator],
+        activeCommunicatorId: localCommunicator.id
+      }
+    });
+
+    const first = store.dispatch(
+      actions.upsertApiCommunicator(localCommunicator)
+    );
+    const second = store.dispatch(
+      actions.upsertApiCommunicator(localCommunicator)
+    );
+
+    expect(createSpy).toHaveBeenCalledTimes(1);
+    resolveCreate(remoteCommunicator);
+    await expect(Promise.all([first, second])).resolves.toEqual([
+      remoteCommunicator,
+      remoteCommunicator
+    ]);
+    expect(
+      store
+        .getActions()
+        .filter(action => action.type === types.CREATE_API_COMMUNICATOR_STARTED)
+    ).toHaveLength(1);
+  });
+
+  it('clears a failed create so the same local communicator can retry', async () => {
+    const localCommunicator = {
+      ...communicatorData,
+      id: 'local-retry',
+      email: 'caregiver@example.com'
+    };
+    const remoteCommunicator = {
+      ...localCommunicator,
+      id: 'remote-communicator-123456'
+    };
+    const createSpy = jest
+      .spyOn(API, 'createCommunicator')
+      .mockRejectedValueOnce(new Error('network down'))
+      .mockResolvedValueOnce(remoteCommunicator);
+    const store = mockStore({
+      ...initialState,
+      app: {
+        userData: { name: 'Caregiver', email: 'caregiver@example.com' }
+      },
+      communicator: {
+        communicators: [localCommunicator],
+        activeCommunicatorId: localCommunicator.id
+      }
+    });
+
+    const first = store
+      .dispatch(actions.upsertApiCommunicator(localCommunicator))
+      .catch(error => error);
+    const second = store
+      .dispatch(actions.upsertApiCommunicator(localCommunicator))
+      .catch(error => error);
+    const failures = await Promise.all([first, second]);
+
+    expect(failures.every(error => error instanceof Error)).toBe(true);
+    await expect(
+      store.dispatch(actions.upsertApiCommunicator(localCommunicator))
+    ).resolves.toEqual(remoteCommunicator);
+    expect(createSpy).toHaveBeenCalledTimes(2);
+  });
+
+  it('does not merge concurrent updates of a remote communicator', async () => {
+    const remoteCommunicator = {
+      ...communicatorData,
+      id: 'remote-communicator-123456',
+      email: 'caregiver@example.com'
+    };
+    const updateSpy = jest
+      .spyOn(API, 'updateCommunicator')
+      .mockResolvedValue(remoteCommunicator);
+    const store = mockStore({
+      ...initialState,
+      app: {
+        userData: { name: 'Caregiver', email: 'caregiver@example.com' }
+      },
+      communicator: {
+        communicators: [remoteCommunicator],
+        activeCommunicatorId: remoteCommunicator.id
+      }
+    });
+
+    await Promise.all([
+      store.dispatch(actions.upsertApiCommunicator(remoteCommunicator)),
+      store.dispatch(actions.upsertApiCommunicator(remoteCommunicator))
+    ]);
+
+    expect(updateSpy).toHaveBeenCalledTimes(2);
   });
 });

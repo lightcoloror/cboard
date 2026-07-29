@@ -2,6 +2,7 @@ export const LEGACY_COMMUNICATION_SUPPORT_SETTINGS_KEY = 'tuyujia';
 
 export const LEGACY_COMMUNICATION_TILE_METADATA_KEYS = {
   synonyms: 'tuyujiaSynonyms',
+  relatedTerms: 'tuyujiaRelatedTerms',
   excludeTokens: 'tuyujiaExcludeTokens',
   category: 'tuyujiaCategory'
 };

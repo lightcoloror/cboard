@@ -1,5 +1,18 @@
 .Import__ButtonContainer {
+  display: grid;
   position: relative;
+  gap: 8px;
+}
+
+.Import__ConflictSelect {
+  min-width: 170px;
+}
+
+.Import__Progress {
+  max-width: 240px;
+  color: #455a64;
+  font-size: 0.8rem;
+  line-height: 1.35;
 }
 
 .Import__ListItem {
@@ -10,6 +23,85 @@
   max-width: 75%;
 }
 
+.Import__PrivateDeviceDataItem {
+  min-height: 210px;
+}
+
+.Import__PrivateDeviceDataItem .Import__ListItemText {
+  max-width: 55%;
+}
+
+.Import__PrivateDeviceDataAction {
+  width: min(340px, 42%);
+}
+
 .Import__ButtonContainer--spinner {
   vertical-align: middle;
+}
+
+.Import__Review {
+  box-sizing: border-box;
+  margin-top: 16px;
+  padding: 16px;
+}
+
+.Import__Review h2 {
+  margin-top: 0;
+}
+
+.Import__ReviewFile {
+  overflow-wrap: anywhere;
+  color: #455a64;
+}
+
+.Import__ReviewWarning {
+  border-left: 4px solid #f9a825;
+  padding: 8px 12px;
+  background: #fff8e1;
+}
+
+.Import__ReviewList {
+  max-height: 320px;
+  overflow: auto;
+  border: 1px solid #eceff1;
+}
+
+.Import__ReviewActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.Import__ReviewActions button {
+  min-height: 44px;
+}
+
+@media (max-width: 700px) {
+  .Import__ListItem.Import__PrivateDeviceDataItem {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    min-height: 0;
+    padding: 16px;
+  }
+
+  .Import__PrivateDeviceDataItem .Import__ListItemText {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .Import__ListItem.Import__PrivateDeviceDataItem
+    + .MuiListItemSecondaryAction-root.Import__PrivateDeviceDataAction {
+    position: static;
+    top: auto;
+    right: auto;
+    width: 100%;
+    padding: 0 16px 16px;
+    transform: none;
+  }
+
+  .Import__PrivateDeviceDataItem .Import__ButtonContainer {
+    width: 100%;
+  }
 }

@@ -1,4 +1,13 @@
+const path = require('path');
 const boards = require('./src/api/boards.json');
+
+const buildPath = process.env.BUILD_PATH
+  ? path
+      .resolve(process.env.BUILD_PATH)
+      .split(path.sep)
+      .join('/')
+  : 'build';
+const buildPrefix = `${buildPath}/`;
 
 function mapImagesToGlobs(boards, globPrefix) {
   let globs = [];
@@ -22,14 +31,14 @@ function mapImagesToGlobs(boards, globPrefix) {
   return globs;
 }
 
-const boardImages = mapImagesToGlobs(boards.advanced, 'build/');
+const boardImages = mapImagesToGlobs(boards.advanced, buildPrefix);
 
 module.exports = {
-  stripPrefix: 'build/',
+  stripPrefix: buildPrefix,
   staticFileGlobs: [
-    'build/*.html',
-    'build/manifest.json',
-    'build/static/**/!(*map*)',
+    `${buildPrefix}*.html`,
+    `${buildPrefix}manifest.json`,
+    `${buildPrefix}static/**/!(*map*)`,
     ...boardImages
   ],
   maximumFileSizeToCacheInBytes: 8 * 1024 * 1024, // 8 MB
@@ -65,7 +74,7 @@ module.exports = {
   navigateFallback: '/index.html',
   dontCacheBustUrlsMatching: /\.\w{8}\./,
   dynamicUrlToDependencies: {
-    '/': ['build/index.html']
+    '/': [`${buildPrefix}index.html`]
   },
-  swFilePath: 'build/service-worker.js'
+  swFilePath: `${buildPrefix}service-worker.js`
 };

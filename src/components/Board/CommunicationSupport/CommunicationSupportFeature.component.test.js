@@ -22,9 +22,13 @@ describe('CommunicationSupportFeature', () => {
   });
 
   test('configures the TuYuJia variant to open directly in receive mode', () => {
+    const onPictogramUsed = jest.fn();
+    const pictogramOrdering = { usageByTileKey: {} };
     const wrapper = shallow(
       <CommunicationSupportFeature
         variant={COMMUNICATION_SUPPORT_VARIANTS.tuyujia}
+        pictogramOrdering={pictogramOrdering}
+        onPictogramUsed={onPictogramUsed}
       />
     );
     const panel = wrapper.find('CommunicationSupportPanel');
@@ -34,5 +38,15 @@ describe('CommunicationSupportFeature', () => {
       TUYUJIA_COMMUNICATION_SUPPORT_COPY
     );
     expect(panel.prop('initialMode')).toBe('receive');
+    expect(panel.prop('pictogramOrdering')).toBe(pictogramOrdering);
+    expect(panel.prop('onPictogramUsed')).toBe(onPictogramUsed);
+  });
+
+  test('forwards isolated demo mode to the shared panel', () => {
+    const wrapper = shallow(<CommunicationSupportFeature demoMode />);
+
+    expect(wrapper.find('CommunicationSupportPanel').prop('demoMode')).toBe(
+      true
+    );
   });
 });

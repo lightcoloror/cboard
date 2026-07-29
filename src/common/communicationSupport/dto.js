@@ -1,4 +1,9 @@
+import { getCboardCommunicationConceptProfile } from './cboardConceptProfiles';
 import { getCommunicationTileMetadata } from './tileMetadata';
+import {
+  getPictogramAttribution,
+  normalizePictogramAttribution
+} from './pictogramAttribution';
 
 export const COMMUNICATION_DTO_VERSION = 1;
 export const BOARD_DTO_TYPE = 'BoardDTO';
@@ -7,6 +12,20 @@ export const DEFAULT_BOARD_DTO_COLUMNS = 4;
 
 function normalizeText(value) {
   return value === undefined || value === null ? '' : String(value).trim();
+}
+
+function normalizeTileMediaType(value, image, video) {
+  const explicit = normalizeText(value).toLocaleLowerCase();
+  if (['image', 'gif', 'video'].includes(explicit)) return explicit;
+  if (normalizeText(video)) return 'video';
+
+  const normalizedImage = normalizeText(image)
+    .toLocaleLowerCase()
+    .split(/[?#]/)[0];
+  return normalizedImage.endsWith('.gif') ||
+    normalizedImage.startsWith('data:image/gif')
+    ? 'gif'
+    : 'image';
 }
 
 function isNonEmptyString(value) {
@@ -99,26 +118,60 @@ function buildOrderedTileIds(source, tiles) {
 export function createTileDTO(source, options = {}) {
   const tile = source || {};
   const metadata = getCommunicationTileMetadata(tile);
-  const label = resolveText(tile, options.resolveLabel, [
+  const conceptProfile = getCboardCommunicationConceptProfile(tile.labelKey);
+  const pictogramAttribution = getPictogramAttribution(tile);
+  const resolvedLabel = resolveText(tile, options.resolveLabel, [
     'label',
     'vocalization',
     'labelKey'
   ]);
+  const preferConceptProfileLabel = Boolean(
+    conceptProfile &&
+      Array.isArray(options.conceptProfileLabelKeys) &&
+      options.conceptProfileLabelKeys.includes(tile.labelKey)
+  );
+  const synchronizeVocalization = Boolean(
+    Array.isArray(options.synchronizeVocalizationLabelKeys) &&
+      options.synchronizeVocalizationLabelKeys.includes(tile.labelKey)
+  );
+  const label = preferConceptProfileLabel
+    ? normalizeText(conceptProfile.label) || resolvedLabel
+    : resolvedLabel;
   const dto = {
     dtoType: TILE_DTO_TYPE,
     version: COMMUNICATION_DTO_VERSION,
     id: requireText(tile.id, 'TileDTO.id'),
     boardId: requireText(options.boardId || tile.boardId, 'TileDTO.boardId'),
     label: requireText(label, 'TileDTO.label'),
-    vocalization: normalizeText(tile.vocalization) || label,
+    vocalization:
+      preferConceptProfileLabel || synchronizeVocalization
+        ? label
+        : normalizeText(tile.vocalization) || label,
     image: normalizeText(tile.image),
+    mediaType: normalizeTileMediaType(tile.mediaType, tile.image, tile.video),
+    video: normalizeText(tile.video),
+    sound: normalizeText(tile.sound),
     backgroundColor: normalizeText(tile.backgroundColor),
-    keyPath: normalizeText(tile.keyPath),
+    keyPath: normalizeText(tile.keyPath || tile.labelKey),
     loadBoardId: normalizeText(tile.loadBoardId || tile.loadBoard),
+    ...(pictogramAttribution ? { pictogramAttribution } : {}),
     communication: {
-      synonyms: normalizeHintList(metadata.synonyms),
-      excludeTokens: normalizeHintList(metadata.excludeTokens),
-      category: normalizeText(metadata.category)
+      synonyms: normalizeHintList([
+        ...normalizeHintList(metadata.synonyms),
+        ...normalizeHintList(conceptProfile && conceptProfile.label),
+        ...normalizeHintList(conceptProfile && conceptProfile.synonyms)
+      ]),
+      relatedTerms: normalizeHintList([
+        ...normalizeHintList(metadata.relatedTerms),
+        ...normalizeHintList(conceptProfile && conceptProfile.relatedTerms)
+      ]),
+      excludeTokens: normalizeHintList([
+        ...normalizeHintList(metadata.excludeTokens),
+        ...normalizeHintList(conceptProfile && conceptProfile.excludeTokens)
+      ]),
+      category: normalizeText(
+        metadata.category || (conceptProfile && conceptProfile.category)
+      )
     }
   };
 
@@ -132,7 +185,9 @@ export function createBoardDTO(source, options = {}) {
   const tiles = sourceTiles.map(tile =>
     createTileDTO(tile, {
       boardId: id,
-      resolveLabel: options.resolveTileLabel
+      resolveLabel: options.resolveTileLabel,
+      conceptProfileLabelKeys: options.conceptProfileLabelKeys,
+      synchronizeVocalizationLabelKeys: options.synchronizeVocalizationLabelKeys
     })
   );
   const uniqueIds = new Set(tiles.map(tile => tile.id));
@@ -187,11 +242,25 @@ export function isTileDTO(value) {
       isNonEmptyString(value.label) &&
       typeof value.vocalization === 'string' &&
       typeof value.image === 'string' &&
+      (!Object.prototype.hasOwnProperty.call(value, 'mediaType') ||
+        ['image', 'gif', 'video'].includes(value.mediaType)) &&
+      (!Object.prototype.hasOwnProperty.call(value, 'video') ||
+        typeof value.video === 'string') &&
+      (value.mediaType !== 'video' || isNonEmptyString(value.video)) &&
+      (!Object.prototype.hasOwnProperty.call(value, 'sound') ||
+        typeof value.sound === 'string') &&
       typeof value.backgroundColor === 'string' &&
       typeof value.keyPath === 'string' &&
       typeof value.loadBoardId === 'string' &&
+      (!value.pictogramAttribution ||
+        Boolean(normalizePictogramAttribution(value.pictogramAttribution))) &&
       value.communication &&
       isStringArray(value.communication.synonyms) &&
+      (!Object.prototype.hasOwnProperty.call(
+        value.communication,
+        'relatedTerms'
+      ) ||
+        isStringArray(value.communication.relatedTerms)) &&
       isStringArray(value.communication.excludeTokens) &&
       typeof value.communication.category === 'string'
   );

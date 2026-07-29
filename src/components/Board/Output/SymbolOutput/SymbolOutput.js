@@ -114,38 +114,43 @@ class SymbolOutput extends PureComponent {
     return (
       <div className="SymbolOutput">
         <Scroll scrollContainerReference={this.scrollContainerRef} {...other}>
-          {symbols.map(({ image, label, type, keyPath }, index) => (
-            <div
-              className={
-                type === 'live'
-                  ? 'LiveSymbolOutput__value'
-                  : 'SymbolOutput__value'
-              }
-              key={index}
-            >
-              <Symbol
-                className="SymbolOutput__symbol"
-                image={image}
-                keyPath={keyPath}
-                label={label}
-                type={type}
-                labelpos="Below"
-                onWrite={onWriteSymbol(index)}
-                intl={intl}
-              />
-              <div className="SymbolOutput__value__IconButton">
-                <IconButton
-                  color="inherit"
-                  size={'small'}
-                  onClick={onRemoveClick(index)}
-                  disabled={!navigationSettings.removeOutputActive}
-                  style={removeButtonStyle}
-                >
-                  <ClearIcon />
-                </IconButton>
+          {symbols.map(
+            ({ image, label, type, keyPath, mediaType, video }, index) => (
+              <div
+                className={
+                  type === 'live'
+                    ? 'LiveSymbolOutput__value'
+                    : 'SymbolOutput__value'
+                }
+                key={index}
+              >
+                <Symbol
+                  className="SymbolOutput__symbol"
+                  image={image}
+                  mediaType={mediaType}
+                  video={video}
+                  videoAutoPlay={mediaType === 'video'}
+                  keyPath={keyPath}
+                  label={label}
+                  type={type}
+                  labelpos="Below"
+                  onWrite={onWriteSymbol(index)}
+                  intl={intl}
+                />
+                <div className="SymbolOutput__value__IconButton">
+                  <IconButton
+                    color="inherit"
+                    size={'small'}
+                    onClick={onRemoveClick(index)}
+                    disabled={!navigationSettings.removeOutputActive}
+                    style={removeButtonStyle}
+                  >
+                    <ClearIcon />
+                  </IconButton>
+                </div>
               </div>
-            </div>
-          ))}
+            )
+          )}
         </Scroll>
         <div
           style={{

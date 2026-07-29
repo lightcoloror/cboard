@@ -12,5 +12,10 @@ export default defineMessages({
   record: {
     id: 'cboard.components.VoiceRecorder.record',
     defaultMessage: 'Record'
+  },
+  recordingFailed: {
+    id: 'cboard.components.VoiceRecorder.recordingFailed',
+    defaultMessage:
+      'Unable to record. Check microphone permission and try again.'
   }
 });

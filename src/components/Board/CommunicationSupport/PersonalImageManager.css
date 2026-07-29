@@ -1,0 +1,125 @@
+.PersonalImageManager__privacy {
+  margin-bottom: 20px;
+  padding: 14px 16px;
+  border: 1px solid rgba(31, 111, 88, 0.28);
+  border-radius: 12px;
+  background: #edf7f1;
+  color: #245f4e;
+  font-weight: 700;
+}
+
+.PersonalImageManager__section {
+  margin-top: 24px;
+}
+
+.PersonalImageManager__list,
+.PersonalImageManager__catalog {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 12px;
+}
+
+.PersonalImageManager__card {
+  display: grid;
+  padding: 12px;
+  grid-template-columns: 82px minmax(0, 1fr);
+  gap: 12px;
+  border: 1px solid rgba(21, 63, 54, 0.16);
+  border-radius: 14px;
+  background: #fffdf7;
+}
+
+.PersonalImageManager__card--active {
+  border-color: #2c725b;
+  background: #f1f8f4;
+}
+
+.PersonalImageManager__card img,
+.PersonalImageManager__upload img {
+  width: 82px;
+  height: 82px;
+  border-radius: 10px;
+  background: #fff;
+  object-fit: contain;
+}
+
+.PersonalImageManager__card strong,
+.PersonalImageManager__card small,
+.PersonalImageManager__candidate span,
+.PersonalImageManager__candidate small {
+  display: block;
+}
+
+.PersonalImageManager__card small,
+.PersonalImageManager__candidate small,
+.PersonalImageManager__hint {
+  color: #657970;
+}
+
+.PersonalImageManager__actions {
+  display: flex;
+  grid-column: 1 / -1;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.PersonalImageManager__upload {
+  display: grid;
+  margin-top: 24px;
+  padding: 18px;
+  grid-template-columns: 100px minmax(0, 1fr);
+  gap: 18px;
+  border: 2px solid #2c725b;
+  border-radius: 16px;
+  background: #f1f8f4;
+}
+
+.PersonalImageManager__upload img {
+  width: 100px;
+  height: 100px;
+}
+
+.PersonalImageManager__metadata {
+  display: grid;
+  margin: 14px 0;
+  gap: 12px;
+}
+
+.PersonalImageManager__createBoard {
+  display: grid;
+  margin: 14px 0;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+}
+
+.PersonalImageManager__curated {
+  margin-top: 20px;
+}
+
+.PersonalImageManager__catalog {
+  margin-top: 14px;
+}
+
+.PersonalImageManager__candidate {
+  display: grid !important;
+  min-height: 112px;
+  padding: 10px !important;
+  grid-template-columns: 72px minmax(0, 1fr);
+  align-items: center;
+  text-align: left;
+}
+
+.PersonalImageManager__candidate img {
+  width: 64px;
+  height: 64px;
+  grid-row: 1 / span 2;
+  object-fit: contain;
+}
+
+@media (max-width: 600px) {
+  .PersonalImageManager__upload,
+  .PersonalImageManager__createBoard {
+    grid-template-columns: 1fr;
+  }
+}

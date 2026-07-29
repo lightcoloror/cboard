@@ -29,7 +29,7 @@ export function loginSuccess(payload) {
 
     if (isCordova() && !isElectron()) {
       try {
-        window.FirebasePlugin.setUserId(payload.id);
+        window.FirebasePlugin?.setUserId?.(payload.id);
       } catch (err) {
         console.error(err);
       }
@@ -57,7 +57,7 @@ async function firstLoginActions(dispatch, payload) {
 export function logout() {
   if (isCordova() && !isElectron())
     try {
-      window.FirebasePlugin.setUserId(undefined);
+      window.FirebasePlugin?.setUserId?.(undefined);
     } catch (err) {
       console.error(err);
     }
@@ -86,7 +86,10 @@ function logoutSuccess() {
   };
 }
 
-export function login({ email, password, activatedData }, type = 'local') {
+export function login(
+  { email, password, phone, phoneVerificationToken, activatedData },
+  type = 'local'
+) {
   const setAVoice = async ({ loginData, dispatch, getState }) => {
     const elevenLabsApiKey = loginData?.settings?.speech?.elevenLabsApiKey;
 
@@ -171,13 +174,15 @@ export function login({ email, password, activatedData }, type = 'local') {
       const apiMethod = type === 'local' ? 'login' : 'oAuthLogin';
       const loginData = activatedData
         ? activatedData
+        : type === 'phone'
+        ? await API.loginWithPhone(phone, phoneVerificationToken)
         : await API[apiMethod](email, password);
 
       const hasRemoteCommunicators =
         loginData.communicators && loginData.communicators.length > 0;
       const discardLocalChanges = hasRemoteCommunicators;
 
-      if (type === 'local') {
+      if (type === 'local' || type === 'phone') {
         dispatch(
           disableTour({
             isRootBoardTourEnabled: false,
@@ -201,4 +206,8 @@ export function login({ email, password, activatedData }, type = 'local') {
       return Promise.reject(disonnected);
     }
   };
+}
+
+export function loginWithPhone({ phone, phoneVerificationToken }) {
+  return login({ phone, phoneVerificationToken }, 'phone');
 }

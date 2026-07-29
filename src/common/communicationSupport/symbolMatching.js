@@ -1,8 +1,13 @@
-import { resolveBoardName, resolveTileLabel } from '../../helpers';
 import { getCboardCommunicationConceptProfile } from './cboardConceptProfiles';
 import { findChineseCommunicationEntry } from './chineseLexicon';
+import {
+  resolveCommunicationBoardName,
+  resolveCommunicationTileLabel
+} from './resolvers';
 import { segmentChineseCommunicationText } from './segmentation';
 import { getCommunicationTileMetadata } from './tileMetadata';
+import { applyWorkspaceCorrectionMemory } from './correctionMemory';
+import { getPictogramAttribution } from './pictogramAttribution';
 
 const NEGATION_PREFIXES = ['不', '没', '别', '勿', '莫', '未'];
 const MATCH_STAGE_GAP = 100;
@@ -71,8 +76,8 @@ function inferSemanticDomain(board, boardName) {
 }
 
 function normalizeTile(tile, board, intl) {
-  const resolvedLabel = resolveTileLabel(tile, intl);
-  const resolvedBoardName = resolveBoardName(board, intl);
+  const resolvedLabel = resolveCommunicationTileLabel(tile, intl);
+  const resolvedBoardName = resolveCommunicationBoardName(board, intl);
   const tileMetadata = getCommunicationTileMetadata(tile);
   const boardMetadata = getCommunicationTileMetadata(board);
   const conceptProfile = tile.label
@@ -83,7 +88,7 @@ function normalizeTile(tile, board, intl) {
     : resolvedLabel || tile.label || tile.vocalization;
   const labels = uniqueStrings(
     conceptProfile
-      ? [conceptProfile.label, tile.vocalization]
+      ? [conceptProfile.label, resolvedLabel, tile.label, tile.vocalization]
       : [resolvedLabel, tile.label, tile.vocalization]
   );
   const synonyms = uniqueStrings([
@@ -118,7 +123,13 @@ export function buildCommunicationTileCatalog(boards, intl) {
 
   (boards || []).forEach(board => {
     (board.tiles || []).forEach(tile => {
-      if (!tile || !tile.id || tile.loadBoard || seen.has(tile.id)) {
+      if (
+        !tile ||
+        !tile.id ||
+        tile.loadBoard ||
+        tile.loadBoardId ||
+        seen.has(tile.id)
+      ) {
         return;
       }
 
@@ -233,6 +244,50 @@ function normalizeSegments(segments) {
   return normalized;
 }
 
+function mergeUnmatchedWithNextToken(matches, catalog) {
+  const merged = [];
+
+  for (let index = 0; index < matches.length; index += 1) {
+    const current = matches[index];
+    const next = matches[index + 1];
+
+    if (!current.tile && next) {
+      const combinedToken = current.token + next.token;
+      const lexiconEntry = findChineseCommunicationEntry(combinedToken);
+      const exactCandidates = catalog.filter(item =>
+        item.labels.includes(combinedToken)
+      );
+      const synonymCandidates = exactCandidates.length
+        ? []
+        : catalog.filter(item => item.synonyms.includes(combinedToken));
+      const matchType = exactCandidates.length ? 'exact' : 'synonym';
+      const candidate = pickBestCandidate(
+        combinedToken,
+        mapCandidates(
+          exactCandidates.length ? exactCandidates : synonymCandidates,
+          matchType,
+          combinedToken
+        ),
+        lexiconEntry
+      );
+
+      if (candidate) {
+        merged.push({
+          token: combinedToken,
+          tile: candidate.tile,
+          matchType: candidate.matchType
+        });
+        index += 1;
+        continue;
+      }
+    }
+
+    merged.push(current);
+  }
+
+  return merged;
+}
+
 export function matchTextToCommunicationTiles(text, boards, options = {}) {
   const rawSegmentation = options.preSegmented
     ? { segments: options.preSegmented, engine: 'intl-segmenter' }
@@ -242,7 +297,7 @@ export function matchTextToCommunicationTiles(text, boards, options = {}) {
     segments: normalizeSegments(rawSegmentation.segments)
   };
   const catalog = buildCommunicationTileCatalog(boards, options.intl);
-  const matches = segmentation.segments.map((token, index) => {
+  let matches = segmentation.segments.map((token, index) => {
     const previousToken = index > 0 ? segmentation.segments[index - 1] : '';
     const negatedToken = NEGATION_PREFIXES.includes(previousToken)
       ? previousToken + token
@@ -368,6 +423,16 @@ export function matchTextToCommunicationTiles(text, boards, options = {}) {
     };
   });
 
+  if (!options.preSegmented) {
+    matches = mergeUnmatchedWithNextToken(matches, catalog);
+    segmentation.segments = matches.map(match => match.token);
+  }
+
+  matches = applyWorkspaceCorrectionMemory(
+    matches,
+    catalog,
+    options.correctionMemory
+  );
   const matchedCount = matches.filter(item => item.tile).length;
 
   return {
@@ -386,14 +451,18 @@ export function createCommunicationOutputFromMatches(matches) {
         item.tile.displayLabel ||
         item.tile.tile.label ||
         item.tile.tile.vocalization;
+      const attribution = getPictogramAttribution(item.tile);
 
       return {
         id: item.tile.id,
         image: item.tile.tile.image,
+        mediaType: item.tile.tile.mediaType,
+        video: item.tile.tile.video,
         label: displayLabel,
         vocalization: item.tile.tile.vocalization || displayLabel,
         keyPath: item.tile.tile.keyPath,
-        backgroundColor: item.tile.tile.backgroundColor
+        backgroundColor: item.tile.tile.backgroundColor,
+        ...(attribution ? { attribution } : {})
       };
     });
 }

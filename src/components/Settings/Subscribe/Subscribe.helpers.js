@@ -18,3 +18,18 @@ export const formatTitle = title => {
   if (!title) return '';
   return title.replace('(Cboard AAC)', '');
 };
+
+export const buildSubscriberProduct = product => ({
+  title: formatTitle(product.title),
+  billingPeriod: product.billingPeriod,
+  price: product.price,
+  tag: product.tag,
+  subscriptionId: product.subscriptionId,
+  planId: product.id || product.planId,
+  paypalId: product.paypalId
+});
+
+export const buildPaypalSubscriptionPayload = (product, userId) => ({
+  plan_id: product.paypalId,
+  custom_id: userId
+});

@@ -1,7 +1,7 @@
 export function createUnavailableKeyValueStore() {
   return {
     getItem: () => null,
-    setItem: () => {},
+    setItem: () => false,
     removeItem: () => {}
   };
 }
@@ -37,8 +37,9 @@ export function createBrowserKeyValueStore(browserWindow) {
       setItem: (key, value) => {
         try {
           storage.setItem(key, value);
+          return true;
         } catch (error) {
-          // Treat runtime storage denial as unavailable storage.
+          return false;
         }
       },
       removeItem: key => {

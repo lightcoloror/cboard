@@ -7,6 +7,9 @@ import {
   buildExpressionSavedPhraseEntry,
   createExpressionPipelineInput,
   getSelectedExpressionSentence,
+  moveExpressionOutputItem,
+  persistExpressionHistoryEntry,
+  removeExpressionOutputItem,
   runExpressionPipeline,
   selectExpressionCandidate
 } from './expressionPipeline';
@@ -50,6 +53,21 @@ describe('expressionPipeline', () => {
     });
   });
 
+  test('removes and moves selected images without mutating the source', () => {
+    const output = [
+      ...createOutput(),
+      { id: 'rest', label: '休息', image: '/rest.png' }
+    ];
+    const moved = moveExpressionOutputItem(output, 2, -1);
+    const removed = removeExpressionOutputItem(moved, 0);
+
+    expect(output.map(item => item.id)).toEqual(['want', 'water', 'rest']);
+    expect(moved.map(item => item.id)).toEqual(['want', 'rest', 'water']);
+    expect(removed.map(item => item.id)).toEqual(['rest', 'water']);
+    expect(moveExpressionOutputItem(output, 0, -1)).toBe(output);
+    expect(removeExpressionOutputItem(output, 99)).toBe(output);
+  });
+
   test('uses the selected candidate for saved phrases and confirmed history', () => {
     const state = selectExpressionCandidate(
       buildExpressionLoopState(createOutput()),
@@ -74,7 +92,11 @@ describe('expressionPipeline', () => {
         { id: 'want', label: '想', image: '/want.png' },
         { id: 'water', label: '水', image: '/water.png' }
       ],
-      candidateSentences: state.candidateSentences
+      candidateSentences: state.candidateSentences,
+      candidates: state.candidateSentences.map(sentence => ({
+        sentence,
+        feedback: null
+      }))
     });
   });
 
@@ -127,5 +149,23 @@ describe('expressionPipeline', () => {
     expect(() =>
       runExpressionPipeline({ contractVersion: 2, output: createOutput() })
     ).toThrow('Unsupported expression pipeline version');
+  });
+
+  test('only reports expression history confirmation after persistence succeeds', () => {
+    const entry = buildExpressionHistoryEntry(
+      buildExpressionLoopState(createOutput())
+    );
+    const persist = jest.fn(value => ({ ...value, id: 'history-1' }));
+
+    expect(persistExpressionHistoryEntry(entry, persist)).toEqual(
+      expect.objectContaining({ id: 'history-1' })
+    );
+    expect(persistExpressionHistoryEntry(entry, () => null)).toBeNull();
+    expect(
+      persistExpressionHistoryEntry(entry, () => {
+        throw new Error('quota exceeded');
+      })
+    ).toBeNull();
+    expect(entry).not.toHaveProperty('id');
   });
 });

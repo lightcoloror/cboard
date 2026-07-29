@@ -2,6 +2,61 @@
   height: 100%;
 }
 
+.App.is-demo {
+  box-sizing: border-box;
+  padding-top: 52px;
+}
+
+.App__demoBanner {
+  position: fixed;
+  /* Stay above board chrome but below Material UI dialogs (1300). */
+  z-index: 1250;
+  top: 0;
+  right: 0;
+  left: 0;
+  display: flex;
+  min-height: 52px;
+  padding: 6px 18px;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  gap: 14px;
+  background: #153f36;
+  color: #fffdf6;
+  font-size: 16px;
+  line-height: 1.35;
+}
+
+.App__demoBanner a {
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: 999px;
+  background: #ffda6f;
+  color: #153f36;
+  font-weight: 700;
+  line-height: 44px;
+  text-decoration: none;
+}
+
+@media (max-width: 600px) {
+  .App.is-demo {
+    padding-top: 76px;
+  }
+
+  .App__demoBanner {
+    min-height: 76px;
+    padding: 6px 10px;
+    flex-wrap: wrap;
+    gap: 4px 10px;
+    font-size: 14px;
+  }
+
+  .App__demoBanner a {
+    min-height: 44px;
+    line-height: 44px;
+  }
+}
+
 .Cboard__FontSize__Standard {
   font-size: 14px;
 }

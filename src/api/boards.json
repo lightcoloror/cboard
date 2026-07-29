@@ -24,6 +24,149 @@
           "backgroundColor": "rgb(255, 241, 118)"
         },
         {
+          "label": "要",
+          "vocalization": "要",
+          "image": "/symbols/arasaac/picinterpreter-care/37160.png",
+          "id": "pi-home-want",
+          "backgroundColor": "rgb(255, 241, 118)",
+          "communicationSynonyms": "想要,需要",
+          "communicationCategory": "core",
+          "communicationExcludeTokens": "要不要",
+          "pictogramProvider": "arasaac",
+          "pictogramOriginalId": "37160"
+        },
+        {
+          "label": "不要",
+          "vocalization": "不要",
+          "image": "/symbols/arasaac/picinterpreter-care/11595.png",
+          "id": "pi-home-dont-want",
+          "backgroundColor": "rgb(255, 241, 118)",
+          "communicationSynonyms": "不想,不需要,不用",
+          "communicationCategory": "core",
+          "communicationExcludeTokens": "要不要",
+          "pictogramProvider": "arasaac",
+          "pictogramOriginalId": "11595"
+        },
+        {
+          "label": "帮帮我",
+          "vocalization": "帮帮我",
+          "image": "/symbols/arasaac/picinterpreter-care/32648.png",
+          "id": "pi-home-help",
+          "backgroundColor": "rgb(255, 205, 210)",
+          "communicationSynonyms": "帮我,帮助,求助",
+          "communicationCategory": "emergency",
+          "pictogramProvider": "arasaac",
+          "pictogramOriginalId": "32648"
+        },
+        {
+          "label": "停止",
+          "vocalization": "停止",
+          "image": "/symbols/arasaac/picinterpreter-care/7196.png",
+          "id": "pi-home-stop",
+          "backgroundColor": "rgb(255, 205, 210)",
+          "communicationSynonyms": "停,停下",
+          "communicationCategory": "emergency",
+          "pictogramProvider": "arasaac",
+          "pictogramOriginalId": "7196"
+        },
+        {
+          "label": "再说一次",
+          "vocalization": "再说一次",
+          "image": "/symbols/arasaac/picinterpreter-care/11752.png",
+          "id": "pi-home-repeat",
+          "backgroundColor": "rgb(255, 241, 118)",
+          "communicationSynonyms": "重复一遍,再说一遍",
+          "communicationCategory": "repair",
+          "pictogramProvider": "arasaac",
+          "pictogramOriginalId": "11752"
+        },
+        {
+          "label": "我痛",
+          "vocalization": "我痛",
+          "image": "/symbols/arasaac/picinterpreter-care/2367.png",
+          "id": "pi-home-pain",
+          "backgroundColor": "rgb(255, 205, 210)",
+          "communicationSynonyms": "痛,疼,疼痛",
+          "communicationCategory": "medical",
+          "pictogramProvider": "arasaac",
+          "pictogramOriginalId": "2367"
+        },
+        {
+          "label": "我不舒服",
+          "vocalization": "我不舒服",
+          "image": "/symbols/arasaac/picinterpreter-care/32528.png",
+          "id": "pi-home-uncomfortable",
+          "backgroundColor": "rgb(255, 205, 210)",
+          "communicationSynonyms": "不舒服,难受",
+          "communicationCategory": "medical",
+          "pictogramProvider": "arasaac",
+          "pictogramOriginalId": "32528"
+        },
+        {
+          "label": "我要喝水",
+          "vocalization": "我要喝水",
+          "image": "/symbols/arasaac/picinterpreter-care/37207.png",
+          "id": "pi-home-drink-water",
+          "backgroundColor": "rgb(255, 241, 118)",
+          "communicationSynonyms": "喝水,想喝水",
+          "communicationCategory": "daily",
+          "pictogramProvider": "arasaac",
+          "pictogramOriginalId": "37207"
+        },
+        {
+          "label": "我想上厕所",
+          "vocalization": "我想上厕所",
+          "image": "/symbols/arasaac/picinterpreter-care/37331.png",
+          "id": "pi-home-toilet",
+          "backgroundColor": "rgb(255, 241, 118)",
+          "communicationSynonyms": "上厕所,厕所,卫生间,洗手间",
+          "communicationCategory": "daily",
+          "pictogramProvider": "arasaac",
+          "pictogramOriginalId": "37331"
+        },
+        {
+          "label": "请叫医生",
+          "vocalization": "请叫医生",
+          "image": "/symbols/arasaac/picinterpreter-care/32085.png",
+          "id": "pi-home-call-doctor",
+          "backgroundColor": "rgb(255, 205, 210)",
+          "communicationSynonyms": "叫医生,找医生",
+          "communicationCategory": "medical",
+          "pictogramProvider": "arasaac",
+          "pictogramOriginalId": "32085"
+        },
+        {
+          "label": "请叫家人",
+          "vocalization": "请叫家人",
+          "image": "/symbols/arasaac/picinterpreter-care/39610.png",
+          "id": "pi-home-call-family",
+          "backgroundColor": "rgb(255, 205, 210)",
+          "communicationSynonyms": "叫家人,找家人",
+          "communicationCategory": "people",
+          "pictogramProvider": "arasaac",
+          "pictogramOriginalId": "39610"
+        },
+        {
+          "label": "核心词",
+          "vocalization": "核心词",
+          "image": "/symbols/arasaac/picinterpreter-care/6632.png",
+          "loadBoard": "pi-core-words-v1",
+          "id": "pi-home-core-words",
+          "backgroundColor": "rgb(187, 222, 251)",
+          "pictogramProvider": "arasaac",
+          "pictogramOriginalId": "6632"
+        },
+        {
+          "label": "修正澄清",
+          "vocalization": "修正澄清",
+          "image": "/symbols/arasaac/picinterpreter-care/22198.png",
+          "loadBoard": "pi-repair-v1",
+          "id": "pi-home-repair",
+          "backgroundColor": "rgb(187, 222, 251)",
+          "pictogramProvider": "arasaac",
+          "pictogramOriginalId": "22198"
+        },
+        {
           "labelKey": "cboard.symbol.quickChat",
           "image": "/symbols/cboard/speech_bubble.svg",
           "loadBoard": "BJgYav2vp-",
@@ -277,6 +420,105 @@
           "image": "/symbols/arasaac/please.png",
           "id": "ryYBzCcpmqFZ",
           "backgroundColor": "rgb(255, 241, 118)"
+        },
+        {
+          "label": "帮帮我",
+          "vocalization": "帮帮我",
+          "image": "/symbols/arasaac/picinterpreter-care/32648.png",
+          "id": "pi-quick-help",
+          "backgroundColor": "rgb(255, 205, 210)",
+          "communicationSynonyms": "帮我,帮助,求助",
+          "communicationCategory": "emergency",
+          "pictogramProvider": "arasaac",
+          "pictogramOriginalId": "32648"
+        },
+        {
+          "label": "停止",
+          "vocalization": "停止",
+          "image": "/symbols/arasaac/picinterpreter-care/7196.png",
+          "id": "pi-quick-stop",
+          "backgroundColor": "rgb(255, 205, 210)",
+          "communicationSynonyms": "停,停下",
+          "communicationCategory": "emergency",
+          "pictogramProvider": "arasaac",
+          "pictogramOriginalId": "7196"
+        },
+        {
+          "label": "再说一次",
+          "vocalization": "再说一次",
+          "image": "/symbols/arasaac/picinterpreter-care/11752.png",
+          "id": "pi-quick-repeat",
+          "backgroundColor": "rgb(255, 241, 118)",
+          "communicationSynonyms": "重复一遍,再说一遍",
+          "communicationCategory": "repair",
+          "pictogramProvider": "arasaac",
+          "pictogramOriginalId": "11752"
+        },
+        {
+          "label": "我痛",
+          "vocalization": "我痛",
+          "image": "/symbols/arasaac/picinterpreter-care/2367.png",
+          "id": "pi-quick-pain",
+          "backgroundColor": "rgb(255, 205, 210)",
+          "communicationSynonyms": "痛,疼,疼痛",
+          "communicationCategory": "medical",
+          "pictogramProvider": "arasaac",
+          "pictogramOriginalId": "2367"
+        },
+        {
+          "label": "我不舒服",
+          "vocalization": "我不舒服",
+          "image": "/symbols/arasaac/picinterpreter-care/32528.png",
+          "id": "pi-quick-uncomfortable",
+          "backgroundColor": "rgb(255, 205, 210)",
+          "communicationSynonyms": "不舒服,难受",
+          "communicationCategory": "medical",
+          "pictogramProvider": "arasaac",
+          "pictogramOriginalId": "32528"
+        },
+        {
+          "label": "我要喝水",
+          "vocalization": "我要喝水",
+          "image": "/symbols/arasaac/picinterpreter-care/37207.png",
+          "id": "pi-quick-drink-water",
+          "backgroundColor": "rgb(255, 241, 118)",
+          "communicationSynonyms": "喝水,想喝水",
+          "communicationCategory": "daily",
+          "pictogramProvider": "arasaac",
+          "pictogramOriginalId": "37207"
+        },
+        {
+          "label": "我想上厕所",
+          "vocalization": "我想上厕所",
+          "image": "/symbols/arasaac/picinterpreter-care/37331.png",
+          "id": "pi-quick-toilet",
+          "backgroundColor": "rgb(255, 241, 118)",
+          "communicationSynonyms": "上厕所,厕所,卫生间,洗手间",
+          "communicationCategory": "daily",
+          "pictogramProvider": "arasaac",
+          "pictogramOriginalId": "37331"
+        },
+        {
+          "label": "请叫医生",
+          "vocalization": "请叫医生",
+          "image": "/symbols/arasaac/picinterpreter-care/32085.png",
+          "id": "pi-quick-call-doctor",
+          "backgroundColor": "rgb(255, 205, 210)",
+          "communicationSynonyms": "叫医生,找医生",
+          "communicationCategory": "medical",
+          "pictogramProvider": "arasaac",
+          "pictogramOriginalId": "32085"
+        },
+        {
+          "label": "请叫家人",
+          "vocalization": "请叫家人",
+          "image": "/symbols/arasaac/picinterpreter-care/39610.png",
+          "id": "pi-quick-call-family",
+          "backgroundColor": "rgb(255, 205, 210)",
+          "communicationSynonyms": "叫家人,找家人",
+          "communicationCategory": "people",
+          "pictogramProvider": "arasaac",
+          "pictogramOriginalId": "39610"
         }
       ]
     },
@@ -5480,6 +5722,262 @@
         }
       ],
       "caption": "https://cboardgroupdiag483.blob.core.windows.net/cblob/1536763764_9b1b336c1684_birds.png"
+    },
+    {
+      "id": "pi-core-words-v1",
+      "name": "核心词",
+      "author": "PicInterpreter / CBoard",
+      "description": "面向中文成人照护的高频生成性核心词",
+      "email": "support@cboard.io",
+      "isPublic": false,
+      "hidden": true,
+      "caption": "/symbols/arasaac/picinterpreter-care/6632.png",
+      "tiles": [
+        {
+          "label": "我",
+          "vocalization": "我",
+          "image": "/symbols/arasaac/picinterpreter-care/6632.png",
+          "id": "pi-core-i",
+          "backgroundColor": "rgb(255, 241, 118)",
+          "communicationSynonyms": "自己,本人",
+          "communicationCategory": "core",
+          "pictogramProvider": "arasaac",
+          "pictogramOriginalId": "6632"
+        },
+        {
+          "label": "你",
+          "vocalization": "你",
+          "image": "/symbols/arasaac/picinterpreter-care/6625.png",
+          "id": "pi-core-you",
+          "backgroundColor": "rgb(255, 241, 118)",
+          "communicationSynonyms": "您",
+          "communicationCategory": "core",
+          "pictogramProvider": "arasaac",
+          "pictogramOriginalId": "6625"
+        },
+        {
+          "label": "他/她",
+          "vocalization": "他或她",
+          "image": "/symbols/arasaac/picinterpreter-care/6480.png",
+          "id": "pi-core-they",
+          "backgroundColor": "rgb(255, 241, 118)",
+          "communicationSynonyms": "他,她",
+          "communicationCategory": "core",
+          "pictogramProvider": "arasaac",
+          "pictogramOriginalId": "6480"
+        },
+        {
+          "label": "要",
+          "vocalization": "要",
+          "image": "/symbols/arasaac/picinterpreter-care/37160.png",
+          "id": "pi-core-want",
+          "backgroundColor": "rgb(255, 241, 118)",
+          "communicationSynonyms": "想要,需要",
+          "communicationCategory": "core",
+          "communicationExcludeTokens": "要不要",
+          "pictogramProvider": "arasaac",
+          "pictogramOriginalId": "37160"
+        },
+        {
+          "label": "可以",
+          "vocalization": "可以",
+          "image": "/symbols/arasaac/picinterpreter-care/6544.png",
+          "id": "pi-core-can",
+          "backgroundColor": "rgb(255, 241, 118)",
+          "communicationSynonyms": "能,能够",
+          "communicationCategory": "core",
+          "pictogramProvider": "arasaac",
+          "pictogramOriginalId": "6544"
+        },
+        {
+          "label": "不",
+          "labelKey": "symbol.descriptiveState.no",
+          "vocalization": "不",
+          "image": "/symbols/mulberry/no.svg",
+          "id": "pi-core-no",
+          "backgroundColor": "rgb(255, 241, 118)",
+          "communicationSynonyms": "没,否",
+          "communicationCategory": "core"
+        },
+        {
+          "label": "有",
+          "vocalization": "有",
+          "image": "/symbols/arasaac/picinterpreter-care/9001.png",
+          "id": "pi-core-have",
+          "backgroundColor": "rgb(255, 241, 118)",
+          "communicationSynonyms": "有的",
+          "communicationCategory": "core",
+          "pictogramProvider": "arasaac",
+          "pictogramOriginalId": "9001"
+        },
+        {
+          "labelKey": "symbol.peopleActions.toGo",
+          "image": "/symbols/mulberry/go_,_to.svg",
+          "id": "pi-core-go",
+          "backgroundColor": "rgb(255, 241, 118)",
+          "communicationSynonyms": "走,出去",
+          "communicationCategory": "core"
+        },
+        {
+          "labelKey": "symbol.peopleActions.toCome",
+          "image": "/symbols/mulberry/come_,_to.svg",
+          "id": "pi-core-come",
+          "backgroundColor": "rgb(255, 241, 118)",
+          "communicationSynonyms": "过来",
+          "communicationCategory": "core"
+        },
+        {
+          "labelKey": "symbol.peopleActions.toGive",
+          "image": "/symbols/mulberry/give_,_to.svg",
+          "id": "pi-core-give",
+          "backgroundColor": "rgb(255, 241, 118)",
+          "communicationCategory": "core"
+        },
+        {
+          "labelKey": "symbol.peopleActions.toWatch",
+          "image": "/symbols/mulberry/watch_,_to.svg",
+          "id": "pi-core-see",
+          "backgroundColor": "rgb(255, 241, 118)",
+          "communicationSynonyms": "看看,瞧",
+          "communicationCategory": "core"
+        },
+        {
+          "labelKey": "symbol.communicationConversation.toTalk",
+          "image": "/symbols/mulberry/talk_2_,_to.svg",
+          "id": "pi-core-say",
+          "backgroundColor": "rgb(255, 241, 118)",
+          "communicationSynonyms": "讲,告诉",
+          "communicationCategory": "core"
+        },
+        {
+          "labelKey": "symbol.question.where",
+          "image": "/symbols/mulberry/where.svg",
+          "id": "pi-core-where",
+          "backgroundColor": "rgb(255, 241, 118)",
+          "communicationCategory": "core"
+        },
+        {
+          "labelKey": "symbol.question.what",
+          "image": "/symbols/mulberry/what.svg",
+          "id": "pi-core-what",
+          "backgroundColor": "rgb(255, 241, 118)",
+          "communicationCategory": "core"
+        },
+        {
+          "labelKey": "symbol.question.why",
+          "image": "/symbols/mulberry/why.svg",
+          "id": "pi-core-why",
+          "backgroundColor": "rgb(255, 241, 118)",
+          "communicationCategory": "core"
+        }
+      ]
+    },
+    {
+      "id": "pi-repair-v1",
+      "name": "修正澄清",
+      "author": "PicInterpreter / CBoard",
+      "description": "在系统或照护者理解错误时快速修正和澄清",
+      "email": "support@cboard.io",
+      "isPublic": false,
+      "hidden": true,
+      "caption": "/symbols/arasaac/picinterpreter-care/22198.png",
+      "tiles": [
+        {
+          "label": "不对",
+          "vocalization": "不对",
+          "image": "/symbols/arasaac/picinterpreter-care/22198.png",
+          "id": "pi-repair-wrong",
+          "backgroundColor": "rgb(255, 205, 210)",
+          "communicationSynonyms": "错了,理解错了",
+          "communicationCategory": "repair",
+          "pictogramProvider": "arasaac",
+          "pictogramOriginalId": "22198"
+        },
+        {
+          "label": "不是这个",
+          "vocalization": "不是这个",
+          "image": "/symbols/arasaac/picinterpreter-care/29129.png",
+          "id": "pi-repair-not-this",
+          "backgroundColor": "rgb(255, 205, 210)",
+          "communicationCategory": "repair",
+          "pictogramProvider": "arasaac",
+          "pictogramOriginalId": "29129"
+        },
+        {
+          "label": "再说一次",
+          "vocalization": "再说一次",
+          "image": "/symbols/arasaac/picinterpreter-care/11752.png",
+          "id": "pi-repair-repeat",
+          "backgroundColor": "rgb(255, 241, 118)",
+          "communicationSynonyms": "重复一遍,再说一遍",
+          "communicationCategory": "repair",
+          "pictogramProvider": "arasaac",
+          "pictogramOriginalId": "11752"
+        },
+        {
+          "label": "说慢一点",
+          "vocalization": "请说慢一点",
+          "image": "/symbols/arasaac/picinterpreter-care/4676.png",
+          "id": "pi-repair-slowly",
+          "backgroundColor": "rgb(255, 241, 118)",
+          "communicationSynonyms": "慢一点,慢慢说",
+          "communicationCategory": "repair",
+          "pictogramProvider": "arasaac",
+          "pictogramOriginalId": "4676"
+        },
+        {
+          "label": "写下来",
+          "vocalization": "请写下来",
+          "image": "/symbols/arasaac/picinterpreter-care/2380.png",
+          "id": "pi-repair-write",
+          "backgroundColor": "rgb(255, 241, 118)",
+          "communicationCategory": "repair",
+          "pictogramProvider": "arasaac",
+          "pictogramOriginalId": "2380"
+        },
+        {
+          "label": "指给我看",
+          "vocalization": "请指给我看",
+          "image": "/symbols/arasaac/picinterpreter-care/6612.png",
+          "id": "pi-repair-point",
+          "backgroundColor": "rgb(255, 241, 118)",
+          "communicationCategory": "repair",
+          "pictogramProvider": "arasaac",
+          "pictogramOriginalId": "6612"
+        },
+        {
+          "label": "给我选项",
+          "vocalization": "请给我选项",
+          "image": "/symbols/arasaac/picinterpreter-care/14670.png",
+          "id": "pi-repair-choices",
+          "backgroundColor": "rgb(255, 241, 118)",
+          "communicationSynonyms": "让我选择,给我选择",
+          "communicationCategory": "repair",
+          "pictogramProvider": "arasaac",
+          "pictogramOriginalId": "14670"
+        },
+        {
+          "label": "等一下",
+          "vocalization": "请等一下",
+          "image": "/symbols/arasaac/picinterpreter-care/36914.png",
+          "id": "pi-repair-wait",
+          "backgroundColor": "rgb(255, 241, 118)",
+          "communicationSynonyms": "稍等,等等",
+          "communicationCategory": "repair",
+          "pictogramProvider": "arasaac",
+          "pictogramOriginalId": "36914"
+        },
+        {
+          "label": "我说不出话",
+          "labelKey": "cboard.symbol.iCantSpeak",
+          "vocalization": "我说不出话",
+          "image": "/symbols/mulberry/non_speaking.svg",
+          "id": "pi-repair-cannot-speak",
+          "backgroundColor": "rgb(255, 205, 210)",
+          "communicationSynonyms": "说不出来,表达不了",
+          "communicationCategory": "repair"
+        }
+      ]
     }
   ]
 }

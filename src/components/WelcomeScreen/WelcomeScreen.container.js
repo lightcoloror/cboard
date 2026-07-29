@@ -104,6 +104,10 @@ export class WelcomeScreen extends Component {
     const { intl } = this.props;
     if (isAndroid() || isIOS()) {
       const FirebasePlugin = window.FirebasePlugin;
+      if (!FirebasePlugin?.authenticateUserWithGoogle) {
+        alert(intl.formatMessage(messages.loginErrorAndroid));
+        return;
+      }
       FirebasePlugin.authenticateUserWithGoogle(
         GOOGLE_FIREBASE_WEB_CLIENT_ID,
         function(credential) {

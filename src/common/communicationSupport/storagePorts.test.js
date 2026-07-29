@@ -14,7 +14,7 @@ describe('communication support storage ports', () => {
     };
     const port = createBrowserStoragePort({ localStorage });
 
-    port.setItem('history', '[{"sentence":"我要喝水"}]');
+    expect(port.setItem('history', '[{"sentence":"我要喝水"}]')).toBe(true);
 
     expect(port.getItem('history')).toBe('[{"sentence":"我要喝水"}]');
     port.removeItem('history');
@@ -52,7 +52,7 @@ describe('communication support storage ports', () => {
     const port = createUnavailableStoragePort();
 
     expect(port.getItem('missing')).toBeNull();
-    expect(() => port.setItem('key', 'value')).not.toThrow();
+    expect(port.setItem('key', 'value')).toBe(false);
     expect(() => port.removeItem('key')).not.toThrow();
   });
   test('degrades safely when browser storage methods throw', () => {
@@ -70,7 +70,7 @@ describe('communication support storage ports', () => {
     const port = createBrowserStoragePort({ localStorage: deniedStorage });
 
     expect(port.getItem('history')).toBeNull();
-    expect(() => port.setItem('history', '[]')).not.toThrow();
+    expect(port.setItem('history', '[]')).toBe(false);
     expect(() => port.removeItem('history')).not.toThrow();
   });
 });

@@ -1,6 +1,18 @@
 import { AppContainer, resetSyncThrottle } from '../App.container';
+import { setDemoModeOverride } from '../../../demoMode';
 
 jest.mock('../App.component', () => () => null);
+jest.mock('../App.messages', () => ({
+  __esModule: true,
+  default: {
+    newContentAvailable: {
+      defaultMessage: 'New content is available; please refresh.'
+    },
+    contentIsCached: {
+      defaultMessage: 'Content is cached for offline use.'
+    }
+  }
+}));
 
 describe('AppContainer.handleDataRefresh', () => {
   const buildInstance = (props = {}) => {
@@ -17,6 +29,7 @@ describe('AppContainer.handleDataRefresh', () => {
 
   beforeEach(() => {
     resetSyncThrottle();
+    setDemoModeOverride(null);
     Object.defineProperty(window.navigator, 'onLine', {
       value: true,
       configurable: true
@@ -25,6 +38,7 @@ describe('AppContainer.handleDataRefresh', () => {
   });
 
   afterEach(() => {
+    setDemoModeOverride(null);
     Object.defineProperty(window.navigator, 'onLine', {
       value: originalOnLine,
       configurable: true
@@ -82,5 +96,49 @@ describe('AppContainer.handleDataRefresh', () => {
     instance.handleDataRefresh('App started');
 
     expect(getApiObjects).not.toHaveBeenCalled();
+  });
+
+  it('never syncs an authenticated browser while it is on the demo route', () => {
+    setDemoModeOverride(true);
+    const getApiObjects = jest.fn();
+    const instance = buildInstance({ isLogged: true, getApiObjects });
+
+    instance.handleDataRefresh('Demo opened');
+
+    expect(getApiObjects).not.toHaveBeenCalled();
+  });
+});
+
+describe('AppContainer service worker notifications', () => {
+  const buildInstance = () => {
+    const instance = new AppContainer();
+    instance.props = {
+      intl: {
+        formatMessage: descriptor => descriptor.defaultMessage
+      },
+      showNotification: jest.fn()
+    };
+    return instance;
+  };
+
+  it('offers a refresh action when a new PWA version is ready', () => {
+    const instance = buildInstance();
+
+    instance.handleNewContentAvailable();
+
+    expect(instance.props.showNotification).toHaveBeenCalledWith(
+      'New content is available; please refresh.',
+      'refresh'
+    );
+  });
+
+  it('announces when the application is cached for offline use', () => {
+    const instance = buildInstance();
+
+    instance.handleContentCached();
+
+    expect(instance.props.showNotification).toHaveBeenCalledWith(
+      'Content is cached for offline use.'
+    );
   });
 });

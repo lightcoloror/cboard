@@ -86,10 +86,34 @@
 }
 
 .SymbolSearch__Suggestion {
+  box-sizing: border-box;
   height: 100%;
   width: 100%;
   border: 2px solid transparent;
   cursor: pointer;
+}
+
+.SymbolSearch__Suggestion--attributed {
+  display: flex;
+  flex-direction: column;
+}
+
+.SymbolSearch__Suggestion--attributed > .Symbol {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.SymbolSearch__Attribution {
+  flex: 0 0 2.5em;
+  padding: 0 0.35em 0.2em;
+  color: #263238;
+  font-size: 0.625rem;
+  line-height: 1.2;
+  text-align: center;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
 }
 
 .SymbolSearch__Suggestion--highlighted {

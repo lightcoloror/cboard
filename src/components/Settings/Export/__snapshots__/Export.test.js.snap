@@ -99,6 +99,15 @@ exports[`Export tests default renderer 1`] = `
                       Cboard
                     </WithStyles(ForwardRef(MenuItem))>
                     <WithStyles(ForwardRef(MenuItem))
+                      value="structured"
+                    >
+                      <FormattedMessage
+                        defaultMessage="Structured AAC JSON"
+                        id="cboard.components.Settings.Export.structuredPictogramLibrary"
+                        values={Object {}}
+                      />
+                    </WithStyles(ForwardRef(MenuItem))>
+                    <WithStyles(ForwardRef(MenuItem))
                       value="openboard"
                     >
                       OpenBoard
@@ -199,6 +208,15 @@ exports[`Export tests default renderer 1`] = `
                       Cboard
                     </WithStyles(ForwardRef(MenuItem))>
                     <WithStyles(ForwardRef(MenuItem))
+                      value="structured"
+                    >
+                      <FormattedMessage
+                        defaultMessage="Structured AAC JSON"
+                        id="cboard.components.Settings.Export.structuredPictogramLibrary"
+                        values={Object {}}
+                      />
+                    </WithStyles(ForwardRef(MenuItem))>
+                    <WithStyles(ForwardRef(MenuItem))
                       value="openboard"
                     >
                       OpenBoard
@@ -229,6 +247,261 @@ exports[`Export tests default renderer 1`] = `
                   />
                 </WithStyles(ForwardRef(Button))>
               </div>
+            </div>
+          </WithStyles(ForwardRef(ListItemSecondaryAction))>
+        </WithStyles(ForwardRef(ListItem))>
+      </WithStyles(ForwardRef(List))>
+    </WithStyles(ForwardRef(Paper))>
+    <WithStyles(ForwardRef(Paper))
+      className="Export__section"
+    >
+      <WithStyles(ForwardRef(List))>
+        <WithStyles(ForwardRef(ListItem))
+          className="Export__ListItem"
+        >
+          <WithStyles(ForwardRef(ListItemText))
+            className="Export__ListItemText"
+            primary={
+              <FormattedMessage
+                defaultMessage="Picture library backup"
+                id="cboard.components.Settings.Export.pictureLibrary"
+                values={Object {}}
+              />
+            }
+            secondary={
+              <FormattedMessage
+                defaultMessage="Backup metadata and pictures"
+                id="cboard.components.Settings.Export.pictureLibrarySecondary"
+                values={Object {}}
+              />
+            }
+          />
+          <WithStyles(ForwardRef(ListItemSecondaryAction))>
+            <div
+              className="Export__SelectContainer"
+            >
+              <WithStyles(ForwardRef(FormControl))
+                className="Export__SelectContainer__Select"
+                disabled={false}
+                variant="standard"
+              >
+                <WithStyles(ForwardRef(InputLabel))
+                  id="picture-library-scope-label"
+                />
+                <WithStyles(ForwardRef(Select))
+                  id="picture-library-scope"
+                  labelId="picture-library-scope-label"
+                  onChange={[Function]}
+                  value="custom"
+                >
+                  <WithStyles(ForwardRef(MenuItem))
+                    value="custom"
+                  >
+                    <FormattedMessage
+                      defaultMessage="Custom pictures only"
+                      id="cboard.components.Settings.Export.pictureLibraryCustom"
+                      values={Object {}}
+                    />
+                  </WithStyles(ForwardRef(MenuItem))>
+                  <WithStyles(ForwardRef(MenuItem))
+                    value="full"
+                  >
+                    <FormattedMessage
+                      defaultMessage="Complete library"
+                      id="cboard.components.Settings.Export.pictureLibraryFull"
+                      values={Object {}}
+                    />
+                  </WithStyles(ForwardRef(MenuItem))>
+                </WithStyles(ForwardRef(Select))>
+              </WithStyles(ForwardRef(FormControl))>
+              <WithStyles(ForwardRef(Button))
+                color="primary"
+                disabled={false}
+                id="picture-library-export-button"
+                onClick={[Function]}
+                startIcon={<Memo />}
+                variant="contained"
+              >
+                <FormattedMessage
+                  defaultMessage="Export"
+                  id="cboard.components.Settings.Export.export"
+                  values={Object {}}
+                />
+              </WithStyles(ForwardRef(Button))>
+            </div>
+          </WithStyles(ForwardRef(ListItemSecondaryAction))>
+        </WithStyles(ForwardRef(ListItem))>
+      </WithStyles(ForwardRef(List))>
+    </WithStyles(ForwardRef(Paper))>
+    <WithStyles(ForwardRef(Paper))
+      className="Export__section"
+    >
+      <WithStyles(ForwardRef(List))>
+        <WithStyles(ForwardRef(ListItem))
+          className="Export__ListItem Export__PrivateDeviceDataItem"
+        >
+          <WithStyles(ForwardRef(ListItemText))
+            className="Export__ListItemText"
+            primary={
+              <FormattedMessage
+                defaultMessage="Private account picture backup"
+                id="privatePictureLibrary"
+                values={Object {}}
+              />
+            }
+            secondary={
+              <FormattedMessage
+                defaultMessage="Account-protected backup"
+                id="privatePictureLibrarySecondary"
+                values={Object {}}
+              />
+            }
+          />
+          <WithStyles(ForwardRef(ListItemSecondaryAction))
+            className="Export__PrivateDeviceDataAction"
+          >
+            <div
+              className="Export__SelectContainer"
+            >
+              <WithStyles(ForwardRef(TextField))
+                autoComplete="new-password"
+                error={false}
+                helperText={
+                  <FormattedMessage
+                    defaultMessage="Use at least 12 characters"
+                    id="privateDeviceDataPassphraseHelp"
+                    values={Object {}}
+                  />
+                }
+                id="private-picture-library-passphrase"
+                label={
+                  <FormattedMessage
+                    defaultMessage="Recovery password"
+                    id="privateDeviceDataPassphrase"
+                    values={Object {}}
+                  />
+                }
+                onChange={[Function]}
+                type="password"
+                value=""
+              />
+              <WithStyles(ForwardRef(TextField))
+                autoComplete="new-password"
+                error={false}
+                helperText={null}
+                id="private-picture-library-passphrase-confirmation"
+                label={
+                  <FormattedMessage
+                    defaultMessage="Confirm recovery password"
+                    id="privateDeviceDataPassphraseConfirmation"
+                    values={Object {}}
+                  />
+                }
+                onChange={[Function]}
+                type="password"
+                value=""
+              />
+              <WithStyles(ForwardRef(Button))
+                color="primary"
+                disabled={true}
+                id="private-picture-library-upload-button"
+                onClick={[Function]}
+                startIcon={<Memo />}
+                variant="contained"
+              >
+                <FormattedMessage
+                  defaultMessage="Back up private pictures"
+                  id="uploadPrivatePictureLibrary"
+                  values={Object {}}
+                />
+              </WithStyles(ForwardRef(Button))>
+            </div>
+          </WithStyles(ForwardRef(ListItemSecondaryAction))>
+        </WithStyles(ForwardRef(ListItem))>
+      </WithStyles(ForwardRef(List))>
+    </WithStyles(ForwardRef(Paper))>
+    <WithStyles(ForwardRef(Paper))
+      className="Export__section"
+    >
+      <WithStyles(ForwardRef(List))>
+        <WithStyles(ForwardRef(ListItem))
+          className="Export__ListItem Export__PrivateDeviceDataItem"
+        >
+          <WithStyles(ForwardRef(ListItemText))
+            className="Export__ListItemText"
+            primary={
+              <FormattedMessage
+                defaultMessage="Private account complete data backup"
+                id="privateDeviceData"
+                values={Object {}}
+              />
+            }
+            secondary={
+              <FormattedMessage
+                defaultMessage="Complete private backup"
+                id="privateDeviceDataSecondary"
+                values={Object {}}
+              />
+            }
+          />
+          <WithStyles(ForwardRef(ListItemSecondaryAction))
+            className="Export__PrivateDeviceDataAction"
+          >
+            <div
+              className="Export__SelectContainer"
+            >
+              <WithStyles(ForwardRef(TextField))
+                autoComplete="new-password"
+                error={false}
+                helperText={
+                  <FormattedMessage
+                    defaultMessage="Use at least 12 characters"
+                    id="privateDeviceDataPassphraseHelp"
+                    values={Object {}}
+                  />
+                }
+                id="private-device-data-passphrase"
+                label={
+                  <FormattedMessage
+                    defaultMessage="Recovery password"
+                    id="privateDeviceDataPassphrase"
+                    values={Object {}}
+                  />
+                }
+                onChange={[Function]}
+                type="password"
+                value=""
+              />
+              <WithStyles(ForwardRef(TextField))
+                autoComplete="new-password"
+                error={false}
+                helperText={null}
+                id="private-device-data-passphrase-confirmation"
+                label={
+                  <FormattedMessage
+                    defaultMessage="Confirm recovery password"
+                    id="privateDeviceDataPassphraseConfirmation"
+                    values={Object {}}
+                  />
+                }
+                onChange={[Function]}
+                type="password"
+                value=""
+              />
+              <WithStyles(ForwardRef(Button))
+                color="primary"
+                disabled={true}
+                id="private-device-data-upload-button"
+                onClick={[Function]}
+                startIcon={<Memo />}
+                variant="contained"
+              >
+                <FormattedMessage
+                  defaultMessage="Back up complete data"
+                  id="uploadPrivateDeviceData"
+                  values={Object {}}
+                />
+              </WithStyles(ForwardRef(Button))>
             </div>
           </WithStyles(ForwardRef(ListItemSecondaryAction))>
         </WithStyles(ForwardRef(ListItem))>

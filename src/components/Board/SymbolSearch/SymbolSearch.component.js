@@ -14,6 +14,7 @@ import {
   searchCboardSymbols,
   mapArasaacToCboardSkinTone
 } from '../../../api/cboard-symbols';
+import { formatPictogramAttribution } from '../../../common/communicationSupport/pictogramAttribution';
 import { ARASAAC_BASE_PATH_API } from '../../../constants';
 import { getArasaacDB } from '../../../idb/arasaac/arasaacdb';
 import FullScreenDialog from '../../UI/FullScreenDialog';
@@ -309,6 +310,7 @@ export class SymbolSearch extends PureComponent {
             id: symbolText,
             src: element.picto.image_url,
             translatedId: symbolText,
+            pictogramAttribution: element.pictogramAttribution || null,
             fromGlobalsymbols: true
           });
         });
@@ -453,7 +455,8 @@ export class SymbolSearch extends PureComponent {
       image: symbolImage,
       keyPath: keyPath,
       label: label,
-      labelKey: undefined
+      labelKey: undefined,
+      pictogramAttribution: suggestion.pictogramAttribution || null
     }).then(() => onClose());
   };
 
@@ -464,8 +467,12 @@ export class SymbolSearch extends PureComponent {
   };
 
   renderSuggestion(suggestion, { query, isHighlighted }) {
+    const attributionText = formatPictogramAttribution(
+      suggestion.pictogramAttribution
+    );
     const suggestionClassName = classNames('SymbolSearch__Suggestion', {
-      'SymbolSearch__Suggestion--highlighted': isHighlighted
+      'SymbolSearch__Suggestion--highlighted': isHighlighted,
+      'SymbolSearch__Suggestion--attributed': Boolean(attributionText)
     });
 
     return (
@@ -476,6 +483,11 @@ export class SymbolSearch extends PureComponent {
           keyPath={suggestion.keyPath}
           labelpos={LABEL_POSITION_BELOW}
         />
+        {attributionText && (
+          <div className="SymbolSearch__Attribution" title={attributionText}>
+            {attributionText}
+          </div>
+        )}
       </div>
     );
   }

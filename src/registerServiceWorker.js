@@ -18,6 +18,15 @@ const isLocalhost = Boolean(
     )
 );
 
+export function runWhenPageLoaded(callback) {
+  if (document.readyState === 'complete') {
+    callback();
+    return;
+  }
+
+  window.addEventListener('load', callback, { once: true });
+}
+
 export default function register(onNewContentAvailable, onContentCached) {
   if (process.env.NODE_ENV === 'production' && 'serviceWorker' in navigator) {
     // The URL constructor is available in all browsers that support SW.
@@ -29,7 +38,7 @@ export default function register(onNewContentAvailable, onContentCached) {
       return;
     }
 
-    window.addEventListener('load', () => {
+    runWhenPageLoaded(() => {
       const swUrl = `${process.env.PUBLIC_URL}/service-worker.js`;
 
       if (!isLocalhost) {

@@ -3,6 +3,7 @@ import { LOGIN_SUCCESS, LOGOUT } from './Login.constants';
 import { CHANGE_VOICE } from './../../../providers/SpeechProvider/SpeechProvider.constants';
 import configureMockStore from 'redux-mock-store';
 import thunk from 'redux-thunk';
+import API from '../../../api';
 const middlewares = [thunk];
 const mockStore = configureMockStore(middlewares);
 
@@ -133,6 +134,25 @@ describe('actions', () => {
       .catch(e => {
         throw new Error(e.message);
       });
+  });
+  it('should reuse the login success flow for phone verification login', async () => {
+    const loginWithPhone = jest.spyOn(API, 'loginWithPhone');
+    const store = mockStore(initialState);
+    const credentials = {
+      phone: '13800138000',
+      phoneVerificationToken: 'a'.repeat(64)
+    };
+
+    await store.dispatch(actions.loginWithPhone(credentials));
+
+    expect(loginWithPhone).toHaveBeenCalledWith(
+      credentials.phone,
+      credentials.phoneVerificationToken
+    );
+    expect(
+      store.getActions().some(action => action.type === LOGIN_SUCCESS)
+    ).toBe(true);
+    loginWithPhone.mockRestore();
   });
   it('should log in and don t change voice', async () => {
     const initialSpeech = {

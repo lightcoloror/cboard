@@ -254,6 +254,26 @@ describe('reducer', () => {
       ]
     });
   });
+  it('should add a board without mutating state or adding duplicates', () => {
+    const active = { ...mockComm, boards: [...mockComm.boards] };
+    const state = {
+      ...initialState,
+      communicators: [active],
+      activeCommunicatorId: active.id
+    };
+    const action = {
+      type: ADD_BOARD_COMMUNICATOR,
+      boardId: '4'
+    };
+
+    const updated = communicatorReducer(state, action);
+
+    expect(state.communicators[0].boards).toEqual(['1', '2', '3']);
+    expect(updated.communicators).not.toBe(state.communicators);
+    expect(updated.communicators[0]).not.toBe(active);
+    expect(updated.communicators[0].boards).toEqual(['1', '2', '3', '4']);
+    expect(communicatorReducer(updated, action)).toBe(updated);
+  });
   it('should handle addBoardCommunicator', () => {
     const addBoardCommunicator = {
       type: CHANGE_COMMUNICATOR,
@@ -313,6 +333,23 @@ describe('reducer', () => {
       activeCommunicatorId: '123',
       communicators: [...initialState.communicators, mockComm]
     });
+  });
+  it('should edit a communicator without mutating the previous state', () => {
+    const active = { ...mockComm, name: 'Before' };
+    const state = {
+      ...initialState,
+      communicators: [active],
+      activeCommunicatorId: active.id
+    };
+
+    const updated = communicatorReducer(state, {
+      type: EDIT_COMMUNICATOR,
+      payload: { ...active, name: 'After' }
+    });
+
+    expect(state.communicators[0].name).toBe('Before');
+    expect(updated.communicators).not.toBe(state.communicators);
+    expect(updated.communicators[0].name).toBe('After');
   });
   it('should handle createCommunicator', () => {
     const createCommunicator = {

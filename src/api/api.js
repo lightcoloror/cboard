@@ -17,6 +17,11 @@ import {
 } from '../helpers';
 import { logout } from '../components/Account/Login/Login.actions.js';
 import { cvaFileToBlob, isAndroid } from '../cordova-util';
+import { buildConfirmedReceiverSyncPayload } from '../common/communicationSupport/receiverSync';
+import {
+  buildCommunicationSavedPhraseSyncPayload,
+  normalizeSavedPhraseTombstones
+} from '../common/communicationSupport/savedPhraseSync';
 
 const BASE_URL = API_URL;
 const LOCAL_COMMUNICATOR_ID = 'cboard_default';
@@ -26,6 +31,36 @@ const FILE_ENCODING_ERR = 5;
 const isUnrecoverableFileError = error =>
   !!error &&
   (error.code === FILE_NOT_FOUND_ERR || error.code === FILE_ENCODING_ERR);
+
+const resolveTrustedApiMediaUrl = value => {
+  try {
+    const apiUrl = new URL(BASE_URL, window.location.href);
+    const mediaUrl = new URL(String(value || ''), apiUrl);
+    return mediaUrl.origin === apiUrl.origin ? mediaUrl.href : '';
+  } catch (error) {
+    return '';
+  }
+};
+export const isPrivatePictureLibraryUnavailableError = error =>
+  Boolean(error && error.response && Number(error.response.status) === 503);
+export const isPrivatePictureLibraryReencryptionRequiredError = error =>
+  Boolean(
+    error &&
+      error.response &&
+      (Number(error.response.status) === 409 ||
+        (error.response.data &&
+          error.response.data.code ===
+            'PRIVATE_PICTURE_LIBRARY_REENCRYPTION_REQUIRED'))
+  );
+export const isPrivateDeviceDataReencryptionRequiredError = error =>
+  Boolean(
+    error &&
+      error.response &&
+      (Number(error.response.status) === 409 ||
+        (error.response.data &&
+          error.response.data.code ===
+            'PRIVATE_DEVICE_DATA_REENCRYPTION_REQUIRED'))
+  );
 export let improvePhraseAbortController;
 
 const getUserData = () => {
@@ -70,7 +105,7 @@ class API {
           error.config?.baseURL === BASE_URL
         ) {
           if (isAndroid()) {
-            window.FirebasePlugin.unregister();
+            window.FirebasePlugin?.unregister?.();
             window.facebookConnectPlugin.logout(
               function(msg) {
                 console.log('disconnect facebook msg' + msg);
@@ -148,13 +183,34 @@ class API {
     if (locale.length === 2) {
       language = alpha2ToAlpha3T(locale);
     }
-    const pictogSearchTextPath = `${GLOBALSYMBOLS_BASE_PATH_API}labels/search/?query=${searchText}&language=${language}&language_iso_format=639-3&limit=20`;
     try {
-      const { status, data } = await this.axiosInstance.get(
-        pictogSearchTextPath
+      const { status, data } = await this.axiosInstance.post(
+        '/pictograms/globalsymbols/search',
+        { query: searchText, language, limit: 20 }
       );
-      if (status === 200) return data;
-      return [];
+      if (status === 200 && Array.isArray(data && data.results)) {
+        return data.results
+          .map(result => {
+            const imageUrl = resolveTrustedApiMediaUrl(
+              result && result.picto && result.picto.image_url
+            );
+            return imageUrl
+              ? {
+                  ...result,
+                  picto: { ...result.picto, image_url: imageUrl }
+                }
+              : null;
+          })
+          .filter(Boolean);
+      }
+    } catch (err) {
+      // Older cboard-api deployments do not expose the v2 proxy yet.
+    }
+
+    const legacyPath = `${GLOBALSYMBOLS_BASE_PATH_API}labels/search/?query=${searchText}&language=${language}&language_iso_format=639-3&limit=20`;
+    try {
+      const { status, data } = await this.axiosInstance.get(legacyPath);
+      return status === 200 && Array.isArray(data) ? data : [];
     } catch (err) {
       return [];
     }
@@ -164,6 +220,15 @@ class API {
     const { data } = await this.axiosInstance.post('/user/login', {
       email,
       password
+    });
+
+    return data;
+  }
+
+  async loginWithPhone(phone, phoneVerificationToken) {
+    const { data } = await this.axiosInstance.post('/user/login/phone', {
+      phone,
+      phoneVerificationToken
     });
 
     return data;
@@ -183,6 +248,19 @@ class API {
       token: url,
       password: password
     });
+
+    return data;
+  }
+
+  async resetPasswordWithPhone(phone, phoneVerificationToken, password) {
+    const { data } = await this.axiosInstance.post(
+      '/user/store-password/phone',
+      {
+        phone,
+        phoneVerificationToken,
+        password
+      }
+    );
 
     return data;
   }
@@ -381,6 +459,707 @@ class API {
     return data;
   }
 
+  async generateCommunicationSentences(request = {}, options = {}) {
+    const authToken = getAuthToken();
+    if (!(authToken && authToken.length)) {
+      throw new Error('Need to be authenticated to perform this request');
+    }
+
+    const requestConfig = {
+      headers: { Authorization: `Bearer ${authToken}` }
+    };
+    const timeout = Number(options.timeout);
+    if (Number.isFinite(timeout) && timeout > 0) {
+      requestConfig.timeout = Math.min(Math.round(timeout), 60000);
+    }
+
+    const { data } = await this.axiosInstance.post(
+      '/gpt/communication/sentences',
+      request,
+      requestConfig
+    );
+    return data;
+  }
+
+  async generateCommunicationPictogram(request = {}, options = {}) {
+    const authToken = getAuthToken();
+    if (!(authToken && authToken.length)) {
+      throw new Error('Need to be authenticated to perform this request');
+    }
+
+    const requestConfig = {
+      headers: { Authorization: `Bearer ${authToken}` }
+    };
+    const timeout = Number(options.timeout);
+    if (Number.isFinite(timeout) && timeout > 0) {
+      requestConfig.timeout = Math.min(Math.round(timeout), 180000);
+    }
+
+    const { data } = await this.axiosInstance.post(
+      '/gpt/communication/pictogram-generation',
+      request,
+      requestConfig
+    );
+    const imageBase64 = String((data && data.imageBase64) || '');
+    const provider = String((data && data.provider) || '').trim();
+    const model = String((data && data.model) || '').trim();
+    const generationId = String((data && data.generationId) || '').trim();
+    if (
+      !/^[A-Za-z0-9+/]+={0,2}$/.test(imageBase64) ||
+      imageBase64.length > 2796208 ||
+      !data ||
+      data.mimeType !== 'image/png' ||
+      !provider ||
+      provider.length > 80 ||
+      !model ||
+      model.length > 160 ||
+      !generationId ||
+      generationId.length > 128 ||
+      data.useScope !== 'device-private' ||
+      data.sourceStored !== false ||
+      data.publicLicenseDeclared !== false ||
+      data.providerTermsApply !== true
+    ) {
+      throw new Error('Invalid pictogram generation response');
+    }
+
+    const blob = dataURLtoBlob(`data:image/png;base64,${imageBase64}`);
+    if (!blob.size || blob.size > 2 * 1024 * 1024) {
+      throw new Error('Invalid generated pictogram image size');
+    }
+    return {
+      ...data,
+      blob,
+      fileName: `generated-pictogram-${generationId}.png`
+    };
+  }
+
+  async getCommunicationAiHealth() {
+    const authToken = getAuthToken();
+    if (!(authToken && authToken.length)) {
+      throw new Error('Need to be authenticated to perform this request');
+    }
+
+    const { data } = await this.axiosInstance.get('/gpt/communication/health', {
+      headers: { Authorization: `Bearer ${authToken}` }
+    });
+    return data;
+  }
+
+  async getCommunicationAiUsage() {
+    const authToken = getAuthToken();
+    if (!(authToken && authToken.length)) {
+      throw new Error('Need to be authenticated to perform this request');
+    }
+
+    const { data } = await this.axiosInstance.get('/gpt/communication/usage', {
+      headers: { Authorization: `Bearer ${authToken}` }
+    });
+    return data;
+  }
+
+  async getCommunicationServiceHealth() {
+    const { data } = await this.axiosInstance.get('/health', {
+      validateStatus: status => status === 200 || status === 503
+    });
+    return data;
+  }
+
+  async resegmentCommunicationText(request = {}) {
+    const authToken = getAuthToken();
+    if (!(authToken && authToken.length)) {
+      throw new Error('Need to be authenticated to perform this request');
+    }
+
+    const { data } = await this.axiosInstance.post(
+      '/gpt/communication/resegment',
+      request,
+      { headers: { Authorization: `Bearer ${authToken}` } }
+    );
+    return data;
+  }
+
+  async normalizeCommunicationDialectText(request = {}) {
+    const authToken = getAuthToken();
+    if (!(authToken && authToken.length)) {
+      throw new Error('Need to be authenticated to perform this request');
+    }
+
+    const { data } = await this.axiosInstance.post(
+      '/gpt/communication/dialect-normalization',
+      request,
+      { headers: { Authorization: `Bearer ${authToken}` } }
+    );
+    return data;
+  }
+
+  async recognizeCommunicationDialectAudio(file) {
+    const authToken = getAuthToken();
+    if (!(authToken && authToken.length)) {
+      throw new Error('Need to be authenticated to perform this request');
+    }
+    if (!file) {
+      throw new Error('Need audio to perform this request');
+    }
+
+    const formData = new FormData();
+    formData.append(
+      'audio',
+      file,
+      file.name || 'communication-cantonese-audio'
+    );
+    const { data } = await this.axiosInstance.post(
+      '/gpt/communication/dialect-asr',
+      formData,
+      {
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+          'Content-Type': 'multipart/form-data'
+        }
+      }
+    );
+    return data;
+  }
+
+  async recognizeCommunicationImageText(file) {
+    const authToken = getAuthToken();
+    if (!(authToken && authToken.length)) {
+      throw new Error('Need to be authenticated to perform this request');
+    }
+    if (!file) {
+      throw new Error('Need an image to perform this request');
+    }
+
+    const formData = new FormData();
+    formData.append('image', file, file.name || 'communication-ocr-image');
+    const { data } = await this.axiosInstance.post(
+      '/gpt/communication/ocr',
+      formData,
+      {
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+          'Content-Type': 'multipart/form-data'
+        }
+      }
+    );
+    return data;
+  }
+
+  async suggestCommunicationPictogramMetadata(file) {
+    const authToken = getAuthToken();
+    if (!(authToken && authToken.length)) {
+      throw new Error('Need to be authenticated to perform this request');
+    }
+    if (!file) {
+      throw new Error('Need an image to perform this request');
+    }
+
+    const formData = new FormData();
+    formData.append(
+      'image',
+      file,
+      file.name || 'communication-pictogram-image'
+    );
+    const { data } = await this.axiosInstance.post(
+      '/gpt/communication/pictogram-metadata',
+      formData,
+      {
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+          'Content-Type': 'multipart/form-data'
+        }
+      }
+    );
+    return data;
+  }
+
+  async removeCommunicationImageBackground(file) {
+    const authToken = getAuthToken();
+    if (!(authToken && authToken.length)) {
+      throw new Error('Need to be authenticated to perform this request');
+    }
+    if (!file) {
+      throw new Error('Need an image to perform this request');
+    }
+
+    const formData = new FormData();
+    formData.append(
+      'image',
+      file,
+      file.name || 'communication-background-removal-image'
+    );
+    const { data } = await this.axiosInstance.post(
+      '/gpt/communication/background-removal',
+      formData,
+      {
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+          'Content-Type': 'multipart/form-data'
+        }
+      }
+    );
+    const imageBase64 = String((data && data.imageBase64) || '');
+    const width = Number(data && data.width);
+    const height = Number(data && data.height);
+    if (
+      !/^[A-Za-z0-9+/]+={0,2}$/.test(imageBase64) ||
+      imageBase64.length > 5592408 ||
+      !data ||
+      data.mimeType !== 'image/png' ||
+      data.sourceStored !== false ||
+      data.originalRetained !== true ||
+      !Number.isInteger(width) ||
+      !Number.isInteger(height) ||
+      width < 1 ||
+      height < 1 ||
+      width > 8192 ||
+      height > 8192
+    ) {
+      throw new Error('Invalid background removal response');
+    }
+
+    const blob = dataURLtoBlob(`data:image/png;base64,${imageBase64}`);
+    if (!blob.size || blob.size > 4 * 1024 * 1024) {
+      throw new Error('Invalid background removal image size');
+    }
+    return {
+      ...data,
+      blob,
+      fileName: 'pictogram-no-background.png'
+    };
+  }
+
+  async searchCommunicationPictograms(tokens = []) {
+    const normalizedTokens = Array.from(
+      new Set(
+        (Array.isArray(tokens) ? tokens : [])
+          .map(token => String(token || '').trim())
+          .filter(token => token && token.length <= 24)
+      )
+    ).slice(0, 12);
+
+    if (!normalizedTokens.length) return [];
+
+    const { data } = await this.axiosInstance.post('/pictograms/search', {
+      tokens: normalizedTokens
+    });
+    const results = data && Array.isArray(data.results) ? data.results : [];
+
+    return results
+      .map(result => {
+        const pictogram = result && result.pictogram;
+        const imageUrl = resolveTrustedApiMediaUrl(
+          pictogram && (pictogram.imageUrl || pictogram.image)
+        );
+        if (!result || !result.token || !pictogram || !imageUrl) return null;
+        return {
+          token: String(result.token).trim(),
+          pictogram: {
+            ...pictogram,
+            image: imageUrl,
+            imageUrl
+          }
+        };
+      })
+      .filter(Boolean);
+  }
+
+  async getPrivatePictureLibraryMetadata() {
+    const authToken = getAuthToken();
+    if (!(authToken && authToken.length)) {
+      throw new Error('Need to be authenticated to perform this request');
+    }
+    const { data } = await this.axiosInstance.get(
+      '/communication/private-library',
+      { headers: { Authorization: `Bearer ${authToken}` } }
+    );
+    return data;
+  }
+
+  async convertCommunicationAacFile(file, format, locale = 'zh-CN') {
+    const authToken = getAuthToken();
+    if (!(authToken && authToken.length)) {
+      throw new Error('Need to be authenticated to perform this request');
+    }
+    const normalizedFormat = String(format || '').toLowerCase();
+    if (!['snap', 'touchchat'].includes(normalizedFormat)) {
+      throw new Error('AAC import format must be snap or touchchat');
+    }
+    if (
+      !file ||
+      !Number.isFinite(file.size) ||
+      file.size <= 0 ||
+      file.size > 20 * 1024 * 1024
+    ) {
+      throw new Error('AAC import file must be no larger than 20 MiB');
+    }
+
+    const formData = new FormData();
+    formData.append('file', file, file.name || `imported.${normalizedFormat}`);
+    const { data } = await this.axiosInstance.post(
+      '/communication/aac-import/convert',
+      formData,
+      {
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+          'Content-Type': 'multipart/form-data'
+        },
+        params: {
+          format: normalizedFormat,
+          locale: String(locale || 'zh-CN')
+        }
+      }
+    );
+    if (
+      !data ||
+      data.format !== 'picinterpreter-aac-conversion' ||
+      data.contractVersion !== 1 ||
+      !Array.isArray(data.documents) ||
+      !data.documents.length
+    ) {
+      throw new Error('Invalid AAC import conversion response');
+    }
+    return data;
+  }
+
+  async uploadPrivatePictureLibrary(archive) {
+    const authToken = getAuthToken();
+    if (!(authToken && authToken.length)) {
+      throw new Error('Need to be authenticated to perform this request');
+    }
+    if (
+      !archive ||
+      !Number.isFinite(archive.size) ||
+      archive.size <= 0 ||
+      archive.size > 20 * 1024 * 1024
+    ) {
+      throw new Error(
+        'Private picture library must be an encrypted backup up to 20 MiB'
+      );
+    }
+
+    const formData = new FormData();
+    formData.append(
+      'file',
+      archive,
+      'picinterpreter-private-picture-library.pijenc'
+    );
+    const { data } = await this.axiosInstance.post(
+      '/communication/private-library',
+      formData,
+      {
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+          'Content-Type': 'multipart/form-data'
+        }
+      }
+    );
+    return data;
+  }
+
+  async downloadPrivatePictureLibrary() {
+    const authToken = getAuthToken();
+    if (!(authToken && authToken.length)) {
+      throw new Error('Need to be authenticated to perform this request');
+    }
+    const { data } = await this.axiosInstance.get(
+      '/communication/private-library/download',
+      {
+        headers: { Authorization: `Bearer ${authToken}` },
+        responseType: 'blob'
+      }
+    );
+    if (
+      !data ||
+      !Number.isFinite(data.size) ||
+      data.size <= 0 ||
+      data.size > 20 * 1024 * 1024
+    ) {
+      throw new Error('Invalid private picture library download');
+    }
+    return data;
+  }
+
+  async deletePrivatePictureLibrary() {
+    const authToken = getAuthToken();
+    if (!(authToken && authToken.length)) {
+      throw new Error('Need to be authenticated to perform this request');
+    }
+    const { data } = await this.axiosInstance.delete(
+      '/communication/private-library',
+      { headers: { Authorization: `Bearer ${authToken}` } }
+    );
+    return data;
+  }
+
+  async getPrivateDeviceDataMetadata() {
+    const authToken = getAuthToken();
+    if (!(authToken && authToken.length)) {
+      throw new Error('Need to be authenticated to perform this request');
+    }
+    const { data } = await this.axiosInstance.get(
+      '/communication/private-device-data',
+      { headers: { Authorization: `Bearer ${authToken}` } }
+    );
+    return data;
+  }
+
+  async uploadPrivateDeviceData(archive) {
+    const authToken = getAuthToken();
+    if (!(authToken && authToken.length)) {
+      throw new Error('Need to be authenticated to perform this request');
+    }
+    if (
+      !archive ||
+      !Number.isFinite(archive.size) ||
+      archive.size <= 0 ||
+      archive.size > 20 * 1024 * 1024
+    ) {
+      throw new Error(
+        'Private device data must be an encrypted backup up to 20 MiB'
+      );
+    }
+
+    const formData = new FormData();
+    formData.append(
+      'file',
+      archive,
+      'picinterpreter-private-device-data.pijenc'
+    );
+    const { data } = await this.axiosInstance.post(
+      '/communication/private-device-data',
+      formData,
+      {
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+          'Content-Type': 'multipart/form-data'
+        }
+      }
+    );
+    return data;
+  }
+
+  async downloadPrivateDeviceData() {
+    const authToken = getAuthToken();
+    if (!(authToken && authToken.length)) {
+      throw new Error('Need to be authenticated to perform this request');
+    }
+    const { data } = await this.axiosInstance.get(
+      '/communication/private-device-data/download',
+      {
+        headers: { Authorization: `Bearer ${authToken}` },
+        responseType: 'blob'
+      }
+    );
+    if (
+      !data ||
+      !Number.isFinite(data.size) ||
+      data.size <= 0 ||
+      data.size > 20 * 1024 * 1024
+    ) {
+      throw new Error('Invalid private device-data download');
+    }
+    return data;
+  }
+
+  async deletePrivateDeviceData() {
+    const authToken = getAuthToken();
+    if (!(authToken && authToken.length)) {
+      throw new Error('Need to be authenticated to perform this request');
+    }
+    const { data } = await this.axiosInstance.delete(
+      '/communication/private-device-data',
+      { headers: { Authorization: `Bearer ${authToken}` } }
+    );
+    return data;
+  }
+
+  async syncConfirmedReceiverRecords(records = []) {
+    const authToken = getAuthToken();
+    if (!(authToken && authToken.length)) {
+      throw new Error('Need to be authenticated to perform this request');
+    }
+
+    const { data } = await this.axiosInstance.post(
+      '/communication/receiver-records/sync',
+      { records: buildConfirmedReceiverSyncPayload(records) },
+      { headers: { Authorization: `Bearer ${authToken}` } }
+    );
+    const deletedRecords =
+      data && Array.isArray(data.deletedRecords)
+        ? data.deletedRecords
+            .map(record => ({
+              id: String((record && record.id) || '').trim(),
+              deletedAt: Number(record && record.deletedAt) || 0,
+              deletedBy: String((record && record.deletedBy) || '').trim(),
+              serverVersion: Number(record && record.serverVersion) || 1
+            }))
+            .filter(record => record.id && record.deletedAt && record.deletedBy)
+        : [];
+    const deletedRecordIds = Array.from(
+      new Set([
+        ...(data && Array.isArray(data.deletedRecordIds)
+          ? data.deletedRecordIds
+          : []),
+        ...deletedRecords.map(record => record.id)
+      ])
+    )
+      .map(value => String(value || '').trim())
+      .filter(Boolean);
+    return {
+      acceptedCount: Number(data && data.acceptedCount) || 0,
+      conflictCount: Number(data && data.conflictCount) || 0,
+      conflictedRecordIds:
+        data && Array.isArray(data.conflictedRecordIds)
+          ? data.conflictedRecordIds
+              .map(value => String(value || '').trim())
+              .filter(Boolean)
+          : [],
+      records: data && Array.isArray(data.records) ? data.records : [],
+      deletedRecordIds,
+      deletedRecords
+    };
+  }
+
+  async deleteConfirmedReceiverRecords(recordIds = [], options = {}) {
+    const authToken = getAuthToken();
+    if (!(authToken && authToken.length)) {
+      throw new Error('Need to be authenticated to perform this request');
+    }
+
+    const normalizedIds = Array.from(
+      new Set(
+        (Array.isArray(recordIds) ? recordIds : [])
+          .map(value => String(value || '').trim())
+          .filter(Boolean)
+      )
+    ).slice(0, 100);
+    const data = options.deleteAll
+      ? { deleteAll: true }
+      : { recordIds: normalizedIds };
+    if (!options.deleteAll && !normalizedIds.length) {
+      return { deletedCount: 0, deletedRecordIds: [] };
+    }
+
+    const response = await this.axiosInstance.delete(
+      '/communication/receiver-records',
+      {
+        data,
+        headers: { Authorization: `Bearer ${authToken}` }
+      }
+    );
+    const deletedRecords =
+      response.data && Array.isArray(response.data.deletedRecords)
+        ? response.data.deletedRecords
+        : [];
+    return {
+      deletedCount: Number(response.data && response.data.deletedCount) || 0,
+      deletedRecordIds: Array.from(
+        new Set([
+          ...(response.data && Array.isArray(response.data.deletedRecordIds)
+            ? response.data.deletedRecordIds
+            : normalizedIds),
+          ...deletedRecords.map(record => record && record.id)
+        ])
+      )
+        .map(value => String(value || '').trim())
+        .filter(Boolean),
+      deletedRecords
+    };
+  }
+
+  async syncCommunicationSavedPhrases(phrases = []) {
+    const authToken = getAuthToken();
+    if (!(authToken && authToken.length)) {
+      throw new Error('Need to be authenticated to perform this request');
+    }
+
+    const { data } = await this.axiosInstance.post(
+      '/communication/saved-phrases/sync',
+      {
+        phrases: buildCommunicationSavedPhraseSyncPayload(phrases)
+      },
+      { headers: { Authorization: `Bearer ${authToken}` } }
+    );
+    const deletedPhrases = normalizeSavedPhraseTombstones(
+      data && data.deletedPhrases
+    );
+    const deletedPhraseIds = Array.from(
+      new Set([
+        ...(data && Array.isArray(data.deletedPhraseIds)
+          ? data.deletedPhraseIds
+          : []),
+        ...deletedPhrases.map(phrase => phrase.id)
+      ])
+    )
+      .map(value => String(value || '').trim())
+      .filter(Boolean);
+
+    return {
+      acceptedCount: Number(data && data.acceptedCount) || 0,
+      conflictCount: Number(data && data.conflictCount) || 0,
+      conflictedPhraseIds:
+        data && Array.isArray(data.conflictedPhraseIds)
+          ? data.conflictedPhraseIds
+              .map(value => String(value || '').trim())
+              .filter(Boolean)
+          : [],
+      phrases: data && Array.isArray(data.phrases) ? data.phrases : [],
+      deletedPhraseIds,
+      deletedPhrases
+    };
+  }
+
+  async deleteCommunicationSavedPhrases(phraseIds = [], options = {}) {
+    const authToken = getAuthToken();
+    if (!(authToken && authToken.length)) {
+      throw new Error('Need to be authenticated to perform this request');
+    }
+
+    const normalizedIds = Array.from(
+      new Set(
+        (Array.isArray(phraseIds) ? phraseIds : [])
+          .map(value => String(value || '').trim())
+          .filter(Boolean)
+      )
+    ).slice(0, 100);
+    const data = options.deleteAll
+      ? { deleteAll: true }
+      : { phraseIds: normalizedIds };
+    if (!options.deleteAll && !normalizedIds.length) {
+      return {
+        deletedCount: 0,
+        deletedPhraseIds: [],
+        deletedPhrases: []
+      };
+    }
+
+    const response = await this.axiosInstance.delete(
+      '/communication/saved-phrases',
+      {
+        data,
+        headers: { Authorization: `Bearer ${authToken}` }
+      }
+    );
+    const deletedPhrases = normalizeSavedPhraseTombstones(
+      response.data && response.data.deletedPhrases
+    );
+    return {
+      deletedCount: Number(response.data && response.data.deletedCount) || 0,
+      deletedPhraseIds: Array.from(
+        new Set([
+          ...(response.data && Array.isArray(response.data.deletedPhraseIds)
+            ? response.data.deletedPhraseIds
+            : normalizedIds),
+          ...deletedPhrases.map(phrase => phrase.id)
+        ])
+      )
+        .map(value => String(value || '').trim())
+        .filter(Boolean),
+      deletedPhrases
+    };
+  }
+
   async updateUser(user) {
     const authToken = getAuthToken();
     if (!(authToken && authToken.length)) {
@@ -395,6 +1174,11 @@ class API {
       headers
     });
 
+    return data;
+  }
+
+  async getPublicBoardBundle(id) {
+    const { data } = await this.axiosInstance.get(`/board/public/${id}/bundle`);
     return data;
   }
 
@@ -557,6 +1341,19 @@ class API {
     return { attempted: false, url: null, unrecoverable: false };
   }
 
+  async uploadBoardCaptionMedia(board) {
+    if (isDataURL(board?.caption)) {
+      const { url, unrecoverable } = await this.tryUploadDataURL(
+        board.caption,
+        board.id,
+        true
+      );
+      return { attempted: true, url, unrecoverable };
+    }
+
+    return { attempted: false, url: null, unrecoverable: false };
+  }
+
   async uploadBoardLocalMedia(board) {
     const tiles = board?.tiles || [];
     const targets = tiles.filter(
@@ -566,12 +1363,25 @@ class API {
         isDataURL(tile?.sound)
     );
 
-    if (!targets.length) {
+    const captionIsTarget = isDataURL(board?.caption);
+
+    if (!targets.length && !captionIsTarget) {
       return { board, hadFailure: false };
     }
 
     const tileUpdates = {};
     let hadFailure = false;
+
+    const applyMedia = (result, apply) => {
+      if (!result.attempted) return;
+      if (result.url) apply(result.url);
+      else if (result.unrecoverable) apply('');
+      else hadFailure = true;
+    };
+
+    const captionPromise = captionIsTarget
+      ? this.uploadBoardCaptionMedia(board)
+      : null;
 
     const uploadTarget = async tile => {
       try {
@@ -581,25 +1391,8 @@ class API {
         ]);
 
         const update = {};
-        if (image.attempted) {
-          if (image.url) {
-            update.image = image.url;
-          } else if (image.unrecoverable) {
-            update.image = '';
-          } else {
-            hadFailure = true;
-          }
-        }
-
-        if (sound.attempted) {
-          if (sound.url) {
-            update.sound = sound.url;
-          } else if (sound.unrecoverable) {
-            update.sound = '';
-          } else {
-            hadFailure = true;
-          }
-        }
+        applyMedia(image, url => (update.image = url));
+        applyMedia(sound, url => (update.sound = url));
 
         if (Object.keys(update).length) {
           tileUpdates[tile.id] = update;
@@ -621,6 +1414,10 @@ class API {
         return update ? { ...tile, ...update } : tile;
       })
     };
+
+    if (captionPromise) {
+      applyMedia(await captionPromise, url => (sanitizedBoard.caption = url));
+    }
 
     return { board: sanitizedBoard, hadFailure };
   }
@@ -658,6 +1455,15 @@ class API {
       Authorization: `Bearer ${authToken}`
     };
 
+    const clientCreationKey = communicator && communicator.id;
+    if (
+      typeof clientCreationKey === 'string' &&
+      clientCreationKey.length < 15 &&
+      /^[A-Za-z0-9_-]+$/.test(clientCreationKey)
+    ) {
+      headers['Idempotency-Key'] = clientCreationKey;
+    }
+
     const communicatorToPost = { ...communicator };
     delete communicatorToPost.id;
     const { name, email } = getUserData();
@@ -688,17 +1494,7 @@ class API {
       communicator.id && communicator.id === LOCAL_COMMUNICATOR_ID;
 
     if (isLocalCommunicator) {
-      const communicatorToPost = { ...communicator };
-      delete communicatorToPost.id;
-      const { name, email } = getUserData();
-      communicatorToPost.email = email;
-      communicatorToPost.author = name;
-      response = await this.axiosInstance.post(
-        `/communicator`,
-        communicatorToPost,
-        { headers }
-      );
-      data = response.data.communicator;
+      return this.createCommunicator(communicator);
     } else {
       response = await this.axiosInstance.put(
         `/communicator/${communicator.id}`,

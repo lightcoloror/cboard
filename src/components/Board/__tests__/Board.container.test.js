@@ -128,4 +128,147 @@ describe('Board.container', () => {
       expect(typeof instance.setState.mock.calls[0][0]).toBe('function');
     });
   });
+
+  describe('demo route isolation', () => {
+    const buildInstance = demoMode => {
+      const board = { id: 'root', isFixed: false, tiles: [] };
+      const props = {
+        demoMode,
+        match: { params: {} },
+        board,
+        boards: [board],
+        communicator: { rootBoard: 'root' },
+        changeBoard: jest.fn(),
+        history: {
+          push: jest.fn(),
+          replace: jest.fn()
+        }
+      };
+      const instance = new BoardContainer(props);
+      instance.setState = jest.fn();
+      return { instance, props };
+    };
+
+    it('keeps the dedicated demo URL when loading the initial board', async () => {
+      const { instance, props } = buildInstance(true);
+
+      await instance.componentDidMount();
+
+      expect(props.changeBoard).toHaveBeenCalledWith('root');
+      expect(props.history.replace).not.toHaveBeenCalled();
+    });
+
+    it('keeps the dedicated demo URL during internal board navigation', () => {
+      const { instance, props } = buildInstance(true);
+
+      instance.pushBoardLocation('food');
+      instance.replaceBoardLocation('/board/food');
+
+      expect(props.history.push).not.toHaveBeenCalled();
+      expect(props.history.replace).not.toHaveBeenCalled();
+    });
+
+    it('preserves normal CBoard routing outside demo mode', async () => {
+      const { instance, props } = buildInstance(false);
+
+      await instance.componentDidMount();
+      instance.pushBoardLocation('food');
+
+      expect(props.history.replace).toHaveBeenCalledWith('board/root');
+      expect(props.history.push).toHaveBeenCalledWith('food');
+    });
+  });
+
+  describe('new linked board ownership', () => {
+    const tile = {
+      id: 'tile-1',
+      type: 'board',
+      label: 'Personal board',
+      loadBoard: 'personal-board',
+      linkedBoard: false
+    };
+
+    const buildInstance = userData => {
+      const props = {
+        userData,
+        board: {
+          id: 'parent-board-123456',
+          name: 'Parent',
+          tiles: [],
+          email: 'support@cboard.io',
+          author: 'Cboard Team'
+        },
+        communicator: {
+          id: 'cboard_default',
+          email: 'support@cboard.io',
+          boards: ['parent-board-123456']
+        },
+        createTile: jest.fn(),
+        createBoard: jest.fn(),
+        switchBoard: jest.fn(),
+        verifyAndAddBoardCommunicator: jest.fn(),
+        history: { replace: jest.fn() },
+        setIsSaving: jest.fn()
+      };
+      const instance = new BoardContainer(props);
+      instance.setState = jest.fn();
+      return { instance, props };
+    };
+
+    it('associates a guest board locally before navigating to it', async () => {
+      const { instance, props } = buildInstance({});
+
+      await instance.handleAddTileEditorSubmit(tile);
+
+      expect(props.createBoard).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 'personal-board' })
+      );
+      expect(props.verifyAndAddBoardCommunicator).toHaveBeenCalledWith(
+        props.communicator,
+        'personal-board'
+      );
+      expect(props.switchBoard).toHaveBeenCalledWith('personal-board');
+    });
+
+    it('defers a logged-in board association to the API save flow', async () => {
+      const { instance, props } = buildInstance({
+        name: 'Caregiver',
+        email: 'caregiver@example.com'
+      });
+      instance.handleApiUpdates = jest.fn().mockResolvedValue(undefined);
+
+      await instance.handleAddTileEditorSubmit(tile);
+
+      expect(props.verifyAndAddBoardCommunicator).not.toHaveBeenCalled();
+      expect(instance.handleApiUpdates).toHaveBeenCalledWith(tile);
+    });
+
+    it('associates a logged-in board before starting API persistence', async () => {
+      const { instance, props } = buildInstance({
+        name: 'Caregiver',
+        email: 'caregiver@example.com'
+      });
+      Object.assign(props, {
+        intl: { formatMessage: jest.fn(() => 'My board') },
+        lang: 'zh-CN',
+        updateBoard: jest.fn(),
+        verifyAndUpsertCommunicator: jest.fn(),
+        updateApiObjectsNoChild: jest.fn().mockResolvedValue('server-board'),
+        updateApiObjects: jest.fn(),
+        replaceBoard: jest.fn()
+      });
+
+      await instance.handleApiUpdates(tile);
+
+      expect(props.verifyAndAddBoardCommunicator).toHaveBeenCalledWith(
+        props.communicator,
+        'personal-board'
+      );
+      expect(props.verifyAndUpsertCommunicator).not.toHaveBeenCalled();
+      expect(props.updateApiObjectsNoChild).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 'personal-board' }),
+        true
+      );
+    });
+  });
 });

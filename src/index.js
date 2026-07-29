@@ -20,9 +20,14 @@ import configureStore, { getStore } from './store';
 import SubscriptionProvider from './providers/SubscriptionProvider';
 import { PAYPAL_CLIENT_ID } from './constants';
 import { initializeAppInsights } from './appInsights';
+import { isDemoMode, setDemoModeOverride } from './demoMode';
 
-initializeAppInsights();
-const { persistor } = configureStore();
+const demoMode = isDemoMode();
+setDemoModeOverride(demoMode ? true : null);
+if (!demoMode) {
+  initializeAppInsights();
+}
+const { persistor } = configureStore({}, { demoMode });
 const store = getStore();
 const dndOptions = {
   enableTouchEvents: true,

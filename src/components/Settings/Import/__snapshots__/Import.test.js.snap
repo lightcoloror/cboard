@@ -56,6 +56,46 @@ exports[`Import tests default renderer 1`] = `
             <div
               className="Import__ButtonContainer"
             >
+              <WithStyles(ForwardRef(FormControl))
+                className="Import__ConflictSelect"
+                disabled={false}
+                variant="standard"
+              >
+                <WithStyles(ForwardRef(InputLabel))
+                  id="picture-library-conflict-label"
+                >
+                  <FormattedMessage
+                    defaultMessage="Duplicate IDs"
+                    id="cboard.components.Settings.Import.conflictStrategy"
+                    values={Object {}}
+                  />
+                </WithStyles(ForwardRef(InputLabel))>
+                <WithStyles(ForwardRef(Select))
+                  id="picture-library-conflict"
+                  labelId="picture-library-conflict-label"
+                  onChange={[Function]}
+                  value="merge"
+                >
+                  <WithStyles(ForwardRef(MenuItem))
+                    value="merge"
+                  >
+                    <FormattedMessage
+                      defaultMessage="Use archive version"
+                      id="cboard.components.Settings.Import.conflictMerge"
+                      values={Object {}}
+                    />
+                  </WithStyles(ForwardRef(MenuItem))>
+                  <WithStyles(ForwardRef(MenuItem))
+                    value="skip"
+                  >
+                    <FormattedMessage
+                      defaultMessage="Keep local version"
+                      id="cboard.components.Settings.Import.conflictSkip"
+                      values={Object {}}
+                    />
+                  </WithStyles(ForwardRef(MenuItem))>
+                </WithStyles(ForwardRef(Select))>
+              </WithStyles(ForwardRef(FormControl))>
               <WithStyles(ForwardRef(Button))
                 color="primary"
                 component="span"
@@ -73,6 +113,7 @@ exports[`Import tests default renderer 1`] = `
                   />
                 </label>
                 <input
+                  accept=".json,.zip,.obz,.obf,.grd,.gridset,.sps,.spb,.ce"
                   id="file"
                   onChange={[Function]}
                   style={
@@ -81,6 +122,172 @@ exports[`Import tests default renderer 1`] = `
                     }
                   }
                   type="file"
+                />
+              </WithStyles(ForwardRef(Button))>
+            </div>
+          </WithStyles(ForwardRef(ListItemSecondaryAction))>
+        </WithStyles(ForwardRef(ListItem))>
+      </WithStyles(ForwardRef(List))>
+    </WithStyles(ForwardRef(Paper))>
+    <WithStyles(ForwardRef(Paper))
+      className="Import__PrivateLibrary"
+    >
+      <WithStyles(ForwardRef(List))>
+        <WithStyles(ForwardRef(ListItem))
+          className="Import__ListItem Import__PrivateDeviceDataItem"
+        >
+          <WithStyles(ForwardRef(ListItemText))
+            className="Import__ListItemText"
+            primary={
+              <FormattedMessage
+                defaultMessage="Private account picture backup"
+                id="privatePictureLibrary"
+                values={Object {}}
+              />
+            }
+            secondary={
+              <FormattedMessage
+                defaultMessage="Review before restoring"
+                id="privatePictureLibrarySecondary"
+                values={Object {}}
+              />
+            }
+          />
+          <WithStyles(ForwardRef(ListItemSecondaryAction))
+            className="Import__PrivateDeviceDataAction"
+          >
+            <div
+              className="Import__ButtonContainer"
+            >
+              <WithStyles(ForwardRef(TextField))
+                autoComplete="current-password"
+                error={false}
+                helperText={
+                  <FormattedMessage
+                    defaultMessage="Enter the backup password"
+                    id="privateDeviceDataPassphraseHelp"
+                    values={Object {}}
+                  />
+                }
+                id="private-picture-library-passphrase"
+                label={
+                  <FormattedMessage
+                    defaultMessage="Recovery password"
+                    id="privateDeviceDataPassphrase"
+                    values={Object {}}
+                  />
+                }
+                onChange={[Function]}
+                type="password"
+                value=""
+              />
+              <WithStyles(ForwardRef(Button))
+                color="primary"
+                disabled={true}
+                id="private-picture-library-download-button"
+                onClick={[Function]}
+                startIcon={<Memo />}
+                variant="contained"
+              >
+                <FormattedMessage
+                  defaultMessage="Review cloud backup"
+                  id="restorePrivatePictureLibrary"
+                  values={Object {}}
+                />
+              </WithStyles(ForwardRef(Button))>
+              <WithStyles(ForwardRef(Button))
+                disabled={true}
+                id="private-picture-library-delete-button"
+                onClick={[Function]}
+                startIcon={<Memo />}
+              >
+                <FormattedMessage
+                  defaultMessage="Delete cloud backup"
+                  id="deletePrivatePictureLibrary"
+                  values={Object {}}
+                />
+              </WithStyles(ForwardRef(Button))>
+            </div>
+          </WithStyles(ForwardRef(ListItemSecondaryAction))>
+        </WithStyles(ForwardRef(ListItem))>
+      </WithStyles(ForwardRef(List))>
+    </WithStyles(ForwardRef(Paper))>
+    <WithStyles(ForwardRef(Paper))
+      className="Import__PrivateLibrary"
+    >
+      <WithStyles(ForwardRef(List))>
+        <WithStyles(ForwardRef(ListItem))
+          className="Import__ListItem Import__PrivateDeviceDataItem"
+        >
+          <WithStyles(ForwardRef(ListItemText))
+            className="Import__ListItemText"
+            primary={
+              <FormattedMessage
+                defaultMessage="Private account complete data backup"
+                id="privateDeviceData"
+                values={Object {}}
+              />
+            }
+            secondary={
+              <FormattedMessage
+                defaultMessage="Review complete data before restoring"
+                id="privateDeviceDataSecondary"
+                values={Object {}}
+              />
+            }
+          />
+          <WithStyles(ForwardRef(ListItemSecondaryAction))
+            className="Import__PrivateDeviceDataAction"
+          >
+            <div
+              className="Import__ButtonContainer"
+            >
+              <WithStyles(ForwardRef(TextField))
+                autoComplete="current-password"
+                error={false}
+                helperText={
+                  <FormattedMessage
+                    defaultMessage="Enter the backup password"
+                    id="privateDeviceDataPassphraseHelp"
+                    values={Object {}}
+                  />
+                }
+                id="private-device-data-passphrase"
+                label={
+                  <FormattedMessage
+                    defaultMessage="Recovery password"
+                    id="privateDeviceDataPassphrase"
+                    values={Object {}}
+                  />
+                }
+                onChange={[Function]}
+                type="password"
+                value=""
+              />
+              <WithStyles(ForwardRef(Button))
+                color="primary"
+                disabled={true}
+                id="private-device-data-download-button"
+                onClick={[Function]}
+                startIcon={<Memo />}
+                variant="contained"
+              >
+                <FormattedMessage
+                  defaultMessage="Review complete cloud backup"
+                  id="restorePrivateDeviceData"
+                  values={Object {}}
+                />
+              </WithStyles(ForwardRef(Button))>
+              <WithStyles(ForwardRef(Button))
+                disabled={true}
+                id="private-device-data-delete-button"
+                onClick={[Function]}
+                startIcon={<Memo />}
+              >
+                <FormattedMessage
+                  defaultMessage="Delete complete cloud backup"
+                  id="deletePrivateDeviceData"
+                  values={Object {}}
                 />
               </WithStyles(ForwardRef(Button))>
             </div>
@@ -148,6 +355,46 @@ exports[`Import tests loading behavior 1`] = `
             <div
               className="Import__ButtonContainer"
             >
+              <WithStyles(ForwardRef(FormControl))
+                className="Import__ConflictSelect"
+                disabled={false}
+                variant="standard"
+              >
+                <WithStyles(ForwardRef(InputLabel))
+                  id="picture-library-conflict-label"
+                >
+                  <FormattedMessage
+                    defaultMessage="Duplicate IDs"
+                    id="cboard.components.Settings.Import.conflictStrategy"
+                    values={Object {}}
+                  />
+                </WithStyles(ForwardRef(InputLabel))>
+                <WithStyles(ForwardRef(Select))
+                  id="picture-library-conflict"
+                  labelId="picture-library-conflict-label"
+                  onChange={[Function]}
+                  value="merge"
+                >
+                  <WithStyles(ForwardRef(MenuItem))
+                    value="merge"
+                  >
+                    <FormattedMessage
+                      defaultMessage="Use archive version"
+                      id="cboard.components.Settings.Import.conflictMerge"
+                      values={Object {}}
+                    />
+                  </WithStyles(ForwardRef(MenuItem))>
+                  <WithStyles(ForwardRef(MenuItem))
+                    value="skip"
+                  >
+                    <FormattedMessage
+                      defaultMessage="Keep local version"
+                      id="cboard.components.Settings.Import.conflictSkip"
+                      values={Object {}}
+                    />
+                  </WithStyles(ForwardRef(MenuItem))>
+                </WithStyles(ForwardRef(Select))>
+              </WithStyles(ForwardRef(FormControl))>
               <WithStyles(ForwardRef(Button))
                 color="primary"
                 component="span"
@@ -165,6 +412,7 @@ exports[`Import tests loading behavior 1`] = `
                   />
                 </label>
                 <input
+                  accept=".json,.zip,.obz,.obf,.grd,.gridset,.sps,.spb,.ce"
                   id="file"
                   onChange={[Function]}
                   style={
@@ -173,6 +421,172 @@ exports[`Import tests loading behavior 1`] = `
                     }
                   }
                   type="file"
+                />
+              </WithStyles(ForwardRef(Button))>
+            </div>
+          </WithStyles(ForwardRef(ListItemSecondaryAction))>
+        </WithStyles(ForwardRef(ListItem))>
+      </WithStyles(ForwardRef(List))>
+    </WithStyles(ForwardRef(Paper))>
+    <WithStyles(ForwardRef(Paper))
+      className="Import__PrivateLibrary"
+    >
+      <WithStyles(ForwardRef(List))>
+        <WithStyles(ForwardRef(ListItem))
+          className="Import__ListItem Import__PrivateDeviceDataItem"
+        >
+          <WithStyles(ForwardRef(ListItemText))
+            className="Import__ListItemText"
+            primary={
+              <FormattedMessage
+                defaultMessage="Private account picture backup"
+                id="privatePictureLibrary"
+                values={Object {}}
+              />
+            }
+            secondary={
+              <FormattedMessage
+                defaultMessage="Review before restoring"
+                id="privatePictureLibrarySecondary"
+                values={Object {}}
+              />
+            }
+          />
+          <WithStyles(ForwardRef(ListItemSecondaryAction))
+            className="Import__PrivateDeviceDataAction"
+          >
+            <div
+              className="Import__ButtonContainer"
+            >
+              <WithStyles(ForwardRef(TextField))
+                autoComplete="current-password"
+                error={false}
+                helperText={
+                  <FormattedMessage
+                    defaultMessage="Enter the backup password"
+                    id="privateDeviceDataPassphraseHelp"
+                    values={Object {}}
+                  />
+                }
+                id="private-picture-library-passphrase"
+                label={
+                  <FormattedMessage
+                    defaultMessage="Recovery password"
+                    id="privateDeviceDataPassphrase"
+                    values={Object {}}
+                  />
+                }
+                onChange={[Function]}
+                type="password"
+                value=""
+              />
+              <WithStyles(ForwardRef(Button))
+                color="primary"
+                disabled={true}
+                id="private-picture-library-download-button"
+                onClick={[Function]}
+                startIcon={<Memo />}
+                variant="contained"
+              >
+                <FormattedMessage
+                  defaultMessage="Review cloud backup"
+                  id="restorePrivatePictureLibrary"
+                  values={Object {}}
+                />
+              </WithStyles(ForwardRef(Button))>
+              <WithStyles(ForwardRef(Button))
+                disabled={true}
+                id="private-picture-library-delete-button"
+                onClick={[Function]}
+                startIcon={<Memo />}
+              >
+                <FormattedMessage
+                  defaultMessage="Delete cloud backup"
+                  id="deletePrivatePictureLibrary"
+                  values={Object {}}
+                />
+              </WithStyles(ForwardRef(Button))>
+            </div>
+          </WithStyles(ForwardRef(ListItemSecondaryAction))>
+        </WithStyles(ForwardRef(ListItem))>
+      </WithStyles(ForwardRef(List))>
+    </WithStyles(ForwardRef(Paper))>
+    <WithStyles(ForwardRef(Paper))
+      className="Import__PrivateLibrary"
+    >
+      <WithStyles(ForwardRef(List))>
+        <WithStyles(ForwardRef(ListItem))
+          className="Import__ListItem Import__PrivateDeviceDataItem"
+        >
+          <WithStyles(ForwardRef(ListItemText))
+            className="Import__ListItemText"
+            primary={
+              <FormattedMessage
+                defaultMessage="Private account complete data backup"
+                id="privateDeviceData"
+                values={Object {}}
+              />
+            }
+            secondary={
+              <FormattedMessage
+                defaultMessage="Review complete data before restoring"
+                id="privateDeviceDataSecondary"
+                values={Object {}}
+              />
+            }
+          />
+          <WithStyles(ForwardRef(ListItemSecondaryAction))
+            className="Import__PrivateDeviceDataAction"
+          >
+            <div
+              className="Import__ButtonContainer"
+            >
+              <WithStyles(ForwardRef(TextField))
+                autoComplete="current-password"
+                error={false}
+                helperText={
+                  <FormattedMessage
+                    defaultMessage="Enter the backup password"
+                    id="privateDeviceDataPassphraseHelp"
+                    values={Object {}}
+                  />
+                }
+                id="private-device-data-passphrase"
+                label={
+                  <FormattedMessage
+                    defaultMessage="Recovery password"
+                    id="privateDeviceDataPassphrase"
+                    values={Object {}}
+                  />
+                }
+                onChange={[Function]}
+                type="password"
+                value=""
+              />
+              <WithStyles(ForwardRef(Button))
+                color="primary"
+                disabled={true}
+                id="private-device-data-download-button"
+                onClick={[Function]}
+                startIcon={<Memo />}
+                variant="contained"
+              >
+                <FormattedMessage
+                  defaultMessage="Review complete cloud backup"
+                  id="restorePrivateDeviceData"
+                  values={Object {}}
+                />
+              </WithStyles(ForwardRef(Button))>
+              <WithStyles(ForwardRef(Button))
+                disabled={true}
+                id="private-device-data-delete-button"
+                onClick={[Function]}
+                startIcon={<Memo />}
+              >
+                <FormattedMessage
+                  defaultMessage="Delete complete cloud backup"
+                  id="deletePrivateDeviceData"
+                  values={Object {}}
                 />
               </WithStyles(ForwardRef(Button))>
             </div>
@@ -240,6 +654,46 @@ exports[`Import tests loading behavior 2`] = `
             <div
               className="Import__ButtonContainer"
             >
+              <WithStyles(ForwardRef(FormControl))
+                className="Import__ConflictSelect"
+                disabled={true}
+                variant="standard"
+              >
+                <WithStyles(ForwardRef(InputLabel))
+                  id="picture-library-conflict-label"
+                >
+                  <FormattedMessage
+                    defaultMessage="Duplicate IDs"
+                    id="cboard.components.Settings.Import.conflictStrategy"
+                    values={Object {}}
+                  />
+                </WithStyles(ForwardRef(InputLabel))>
+                <WithStyles(ForwardRef(Select))
+                  id="picture-library-conflict"
+                  labelId="picture-library-conflict-label"
+                  onChange={[Function]}
+                  value="merge"
+                >
+                  <WithStyles(ForwardRef(MenuItem))
+                    value="merge"
+                  >
+                    <FormattedMessage
+                      defaultMessage="Use archive version"
+                      id="cboard.components.Settings.Import.conflictMerge"
+                      values={Object {}}
+                    />
+                  </WithStyles(ForwardRef(MenuItem))>
+                  <WithStyles(ForwardRef(MenuItem))
+                    value="skip"
+                  >
+                    <FormattedMessage
+                      defaultMessage="Keep local version"
+                      id="cboard.components.Settings.Import.conflictSkip"
+                      values={Object {}}
+                    />
+                  </WithStyles(ForwardRef(MenuItem))>
+                </WithStyles(ForwardRef(Select))>
+              </WithStyles(ForwardRef(FormControl))>
               <WithStyles(ForwardRef(CircularProgress))
                 className="Import__ButtonContainer--spinner"
                 size={25}
@@ -262,6 +716,7 @@ exports[`Import tests loading behavior 2`] = `
                   />
                 </label>
                 <input
+                  accept=".json,.zip,.obz,.obf,.grd,.gridset,.sps,.spb,.ce"
                   id="file"
                   onChange={[Function]}
                   style={
@@ -270,6 +725,172 @@ exports[`Import tests loading behavior 2`] = `
                     }
                   }
                   type="file"
+                />
+              </WithStyles(ForwardRef(Button))>
+            </div>
+          </WithStyles(ForwardRef(ListItemSecondaryAction))>
+        </WithStyles(ForwardRef(ListItem))>
+      </WithStyles(ForwardRef(List))>
+    </WithStyles(ForwardRef(Paper))>
+    <WithStyles(ForwardRef(Paper))
+      className="Import__PrivateLibrary"
+    >
+      <WithStyles(ForwardRef(List))>
+        <WithStyles(ForwardRef(ListItem))
+          className="Import__ListItem Import__PrivateDeviceDataItem"
+        >
+          <WithStyles(ForwardRef(ListItemText))
+            className="Import__ListItemText"
+            primary={
+              <FormattedMessage
+                defaultMessage="Private account picture backup"
+                id="privatePictureLibrary"
+                values={Object {}}
+              />
+            }
+            secondary={
+              <FormattedMessage
+                defaultMessage="Review before restoring"
+                id="privatePictureLibrarySecondary"
+                values={Object {}}
+              />
+            }
+          />
+          <WithStyles(ForwardRef(ListItemSecondaryAction))
+            className="Import__PrivateDeviceDataAction"
+          >
+            <div
+              className="Import__ButtonContainer"
+            >
+              <WithStyles(ForwardRef(TextField))
+                autoComplete="current-password"
+                error={false}
+                helperText={
+                  <FormattedMessage
+                    defaultMessage="Enter the backup password"
+                    id="privateDeviceDataPassphraseHelp"
+                    values={Object {}}
+                  />
+                }
+                id="private-picture-library-passphrase"
+                label={
+                  <FormattedMessage
+                    defaultMessage="Recovery password"
+                    id="privateDeviceDataPassphrase"
+                    values={Object {}}
+                  />
+                }
+                onChange={[Function]}
+                type="password"
+                value=""
+              />
+              <WithStyles(ForwardRef(Button))
+                color="primary"
+                disabled={true}
+                id="private-picture-library-download-button"
+                onClick={[Function]}
+                startIcon={<Memo />}
+                variant="contained"
+              >
+                <FormattedMessage
+                  defaultMessage="Review cloud backup"
+                  id="restorePrivatePictureLibrary"
+                  values={Object {}}
+                />
+              </WithStyles(ForwardRef(Button))>
+              <WithStyles(ForwardRef(Button))
+                disabled={true}
+                id="private-picture-library-delete-button"
+                onClick={[Function]}
+                startIcon={<Memo />}
+              >
+                <FormattedMessage
+                  defaultMessage="Delete cloud backup"
+                  id="deletePrivatePictureLibrary"
+                  values={Object {}}
+                />
+              </WithStyles(ForwardRef(Button))>
+            </div>
+          </WithStyles(ForwardRef(ListItemSecondaryAction))>
+        </WithStyles(ForwardRef(ListItem))>
+      </WithStyles(ForwardRef(List))>
+    </WithStyles(ForwardRef(Paper))>
+    <WithStyles(ForwardRef(Paper))
+      className="Import__PrivateLibrary"
+    >
+      <WithStyles(ForwardRef(List))>
+        <WithStyles(ForwardRef(ListItem))
+          className="Import__ListItem Import__PrivateDeviceDataItem"
+        >
+          <WithStyles(ForwardRef(ListItemText))
+            className="Import__ListItemText"
+            primary={
+              <FormattedMessage
+                defaultMessage="Private account complete data backup"
+                id="privateDeviceData"
+                values={Object {}}
+              />
+            }
+            secondary={
+              <FormattedMessage
+                defaultMessage="Review complete data before restoring"
+                id="privateDeviceDataSecondary"
+                values={Object {}}
+              />
+            }
+          />
+          <WithStyles(ForwardRef(ListItemSecondaryAction))
+            className="Import__PrivateDeviceDataAction"
+          >
+            <div
+              className="Import__ButtonContainer"
+            >
+              <WithStyles(ForwardRef(TextField))
+                autoComplete="current-password"
+                error={false}
+                helperText={
+                  <FormattedMessage
+                    defaultMessage="Enter the backup password"
+                    id="privateDeviceDataPassphraseHelp"
+                    values={Object {}}
+                  />
+                }
+                id="private-device-data-passphrase"
+                label={
+                  <FormattedMessage
+                    defaultMessage="Recovery password"
+                    id="privateDeviceDataPassphrase"
+                    values={Object {}}
+                  />
+                }
+                onChange={[Function]}
+                type="password"
+                value=""
+              />
+              <WithStyles(ForwardRef(Button))
+                color="primary"
+                disabled={true}
+                id="private-device-data-download-button"
+                onClick={[Function]}
+                startIcon={<Memo />}
+                variant="contained"
+              >
+                <FormattedMessage
+                  defaultMessage="Review complete cloud backup"
+                  id="restorePrivateDeviceData"
+                  values={Object {}}
+                />
+              </WithStyles(ForwardRef(Button))>
+              <WithStyles(ForwardRef(Button))
+                disabled={true}
+                id="private-device-data-delete-button"
+                onClick={[Function]}
+                startIcon={<Memo />}
+              >
+                <FormattedMessage
+                  defaultMessage="Delete complete cloud backup"
+                  id="deletePrivateDeviceData"
+                  values={Object {}}
                 />
               </WithStyles(ForwardRef(Button))>
             </div>

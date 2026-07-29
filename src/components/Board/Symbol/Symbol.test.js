@@ -25,3 +25,36 @@ it('renders with label', () => {
   );
   expect(wrapper.find('.Symbol__label')).toHaveLength(1);
 });
+
+it('renders a video only when playback is requested', () => {
+  const poster = 'path/to/poster.png';
+  const video = 'path/to/action.mp4';
+  const wrapper = shallow(
+    <Symbol
+      label="dummy label"
+      image={poster}
+      mediaType="video"
+      video={video}
+      videoAutoPlay
+    />
+  );
+
+  expect(wrapper.find('video.Symbol__video')).toHaveLength(1);
+  expect(wrapper.find('video.Symbol__video').prop('src')).toBe(video);
+  expect(wrapper.find('video.Symbol__video').prop('poster')).toBe(poster);
+  expect(wrapper.find('img.Symbol__image')).toHaveLength(0);
+});
+
+it('uses the poster in lightweight video lists', () => {
+  const wrapper = shallow(
+    <Symbol
+      label="dummy label"
+      image="path/to/poster.png"
+      mediaType="video"
+      video="path/to/action.mp4"
+    />
+  );
+
+  expect(wrapper.find('video.Symbol__video')).toHaveLength(0);
+  expect(wrapper.find('img.Symbol__image')).toHaveLength(1);
+});

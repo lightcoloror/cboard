@@ -5,8 +5,8 @@ import googleAnalytics from './analytics';
 import createReducer from './reducers';
 let store;
 
-export default function configureStore(initialState = {}) {
-  const middlewares = [thunk, googleAnalytics];
+export default function configureStore(initialState = {}, options = {}) {
+  const middlewares = options.demoMode ? [thunk] : [thunk, googleAnalytics];
   const enhancers = [applyMiddleware(...middlewares)];
 
   // If Redux DevTools Extension is installed use it, otherwise use Redux compose
@@ -19,7 +19,7 @@ export default function configureStore(initialState = {}) {
       : compose;
 
   store = createStore(
-    createReducer(),
+    createReducer(options),
     initialState,
     composeEnhancers(...enhancers)
   );

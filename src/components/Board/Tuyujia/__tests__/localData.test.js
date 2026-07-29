@@ -11,7 +11,7 @@ describe('tuyujia localData', () => {
     window.localStorage.clear();
   });
 
-  test('buildTuyujiaSettingsPayload normalizes duplicates and invalid rows', () => {
+  test('normalizes invalid rows while preserving repeated history events', () => {
     const payload = buildTuyujiaSettingsPayload(
       [
         {
@@ -51,7 +51,8 @@ describe('tuyujia localData', () => {
 
     expect(payload.savedPhrases).toHaveLength(1);
     expect(payload.savedPhrases[0].sentence).toBe('我想喝水');
-    expect(payload.history).toHaveLength(1);
+    expect(payload.history).toHaveLength(2);
+    expect(payload.history.map(item => item.createdAt)).toEqual([7, 3]);
     expect(payload.history[0].labels).toEqual(['想', '水']);
   });
 

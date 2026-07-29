@@ -1,5 +1,4 @@
 import * as i18n from '../i18n';
-import { error } from 'console';
 
 describe('i18n', () => {
   it('should strip Region Code', () => {
@@ -12,5 +11,13 @@ describe('i18n', () => {
   it('should normalize Language Code for two', () => {
     expect(i18n.normalizeLanguageCode('ES')).toBe('es');
     expect(i18n.normalizeLanguageCode('es')).toBe('es');
+  });
+  it('should merge reviewed Chinese AAC labels', async () => {
+    const messages = await i18n.importTranslation('zh-CN');
+
+    expect(messages['symbol.foodEggs.boiledEgg']).toBe('煮鸡蛋');
+    expect(messages['symbol.healthcareGroomingItems.sanitaryTowel']).toBe(
+      '卫生巾'
+    );
   });
 });

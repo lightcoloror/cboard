@@ -9,8 +9,6 @@ import {
   CBOARD_OBF_CONSTANTS,
   CBOARD_COLUMNS,
   CBOARD_ROWS,
-  CBOARD_EXT_PREFIX,
-  CBOARD_EXT_PROPERTIES,
   CBOARD_ZIP_OPTIONS,
   NOT_FOUND_IMAGE,
   EMPTY_IMAGE,
@@ -40,24 +38,14 @@ import * as _ from 'lodash';
 import mime from 'mime-types';
 import mongoose from 'mongoose';
 import * as utils from '../../../components/FixedGrid/utils';
+import { getCboardOpenBoardExtensions } from './openBoardExtensions';
 
 pdfMake.vfs = pdfFonts.pdfMake.vfs;
 
 const imageElement = new Image();
 
-function toSnakeCase(str) {
-  const value = str.replace(/([A-Z])/g, $1 => '_' + $1.toLowerCase());
-  return value.startsWith('_') ? value.slice(1) : value;
-}
-
 function getOBFButtonProps(tile = {}, intl) {
-  const button = {};
-
-  const tileExtProps = CBOARD_EXT_PROPERTIES.filter(key => !!tile[key]);
-  tileExtProps.forEach(key => {
-    const keyWithPrefix = `${CBOARD_EXT_PREFIX}${toSnakeCase(key)}`;
-    button[keyWithPrefix] = tile[key];
-  });
+  const button = getCboardOpenBoardExtensions(tile);
 
   const label = tile.label || tile.labelKey || '';
   button.label = label.length ? intl.formatMessage({ id: label }) : label;
@@ -81,7 +69,7 @@ function getOBFButtonProps(tile = {}, intl) {
   return button;
 }
 
-function getBase64Image(base64Str = '') {
+function getBase64Media(base64Str = '') {
   const [prefix, base64Data] = base64Str.split(',');
   const contentType = prefix.split(':')[1].split(';')[0];
   const byteString = atob(base64Data);
@@ -98,6 +86,25 @@ function getBase64Image(base64Str = '') {
     data: base64Str,
     content_type: contentType
   };
+}
+
+function getSoundExtension(contentType) {
+  const normalized = String(contentType || '')
+    .split(';')[0]
+    .trim()
+    .toLocaleLowerCase();
+  const extensionByType = {
+    'audio/aac': 'aac',
+    'audio/mp4': 'm4a',
+    'audio/mpeg': 'mp3',
+    'audio/mp3': 'mp3',
+    'audio/ogg': 'ogg',
+    'audio/wav': 'wav',
+    'audio/webm': 'webm',
+    'audio/x-m4a': 'm4a',
+    'audio/x-wav': 'wav'
+  };
+  return extensionByType[normalized] || mime.extension(normalized) || 'mp3';
 }
 
 export async function getDataUri(url) {
@@ -123,7 +130,7 @@ export async function getDataUri(url) {
       data: `data:${contentType};base64,${encodedImage}`
     };
   } catch (e) {
-    console.error(`Failed to get image at ${url}.`, e);
+    console.error(`Failed to get media at ${url}.`, e);
   }
 }
 
@@ -138,16 +145,22 @@ export async function getDataUri(url) {
  *              be true when we're exporting a single board, as we won't generate
  *              an OBZ archive.
  */
-// TODO: Embed sounds as well.
-async function boardToOBF(boardsMap, board = {}, intl, { embed = false }) {
+export async function boardToOBF(
+  boardsMap,
+  board = {},
+  intl,
+  { embed = false }
+) {
   if (!board.tiles || board.tiles.length < 1) {
-    return { obf: null, images: null };
+    return { obf: null, images: null, sounds: null };
   }
   const columns =
     board.isFixed && board.grid ? board.grid.columns : CBOARD_COLUMNS;
 
   const images = {};
   const fetchedImages = {};
+  const sounds = {};
+  const fetchedSounds = {};
   const grid =
     board.isFixed && board.grid && board.grid.order
       ? board.grid.order
@@ -178,7 +191,7 @@ async function boardToOBF(boardsMap, board = {}, intl, { embed = false }) {
           let imageResponse = null;
           try {
             imageResponse = image.startsWith('data:')
-              ? getBase64Image(image)
+              ? getBase64Media(image)
               : await getDataUri(image);
           } catch (err) {
             console.warn(`Skipping image for tile ${tile.id}.`, err);
@@ -219,6 +232,40 @@ async function boardToOBF(boardsMap, board = {}, intl, { embed = false }) {
           }
         }
 
+        if (tile.sound && tile.sound.length) {
+          const sound = tile.sound;
+          let soundResponse = null;
+          try {
+            soundResponse = sound.startsWith('data:')
+              ? getBase64Media(sound)
+              : await getDataUri(sound);
+          } catch (err) {
+            console.warn(`Could not embed sound for tile ${tile.id}.`, err);
+          }
+
+          if (soundResponse || /^https:\/\//i.test(sound)) {
+            const soundID = new mongoose.Types.ObjectId().toString();
+            const extension = getSoundExtension(
+              soundResponse && soundResponse['content_type']
+            );
+            const path = `sounds/sound_${soundID}.${extension}`;
+            button['sound_id'] = soundID;
+            sounds[soundID] = {
+              id: soundID,
+              path: embed || !soundResponse ? undefined : path,
+              data: embed && soundResponse ? soundResponse.data : undefined,
+              url: sound.startsWith('data:') ? undefined : sound,
+              content_type: soundResponse && soundResponse['content_type']
+            };
+            if (soundResponse) {
+              fetchedSounds[soundID] = {
+                path,
+                ...soundResponse
+              };
+            }
+          }
+        }
+
         if (tile.loadBoard && boardsMap[tile.loadBoard]) {
           const loadBoardData = boardsMap[tile.loadBoard];
           button['load_board'] = {
@@ -250,7 +297,7 @@ async function boardToOBF(boardsMap, board = {}, intl, { embed = false }) {
       license: CBOARD_OBF_CONSTANTS.LICENSE,
       images: Object.values(images),
       buttons,
-      sounds: [],
+      sounds: Object.values(sounds),
       grid: {
         rows: grid.length,
         columns: columns,
@@ -261,17 +308,18 @@ async function boardToOBF(boardsMap, board = {}, intl, { embed = false }) {
         : ''
     };
 
-    const boardExtProps = CBOARD_EXT_PROPERTIES.filter(
-      key => typeof board[key] !== 'undefined'
+    Object.assign(
+      obf,
+      getCboardOpenBoardExtensions(board, { includeFalsy: true })
     );
-    boardExtProps.forEach(key => {
-      const keyWithPrefix = `${CBOARD_EXT_PREFIX}${toSnakeCase(key)}`;
-      obf[keyWithPrefix] = board[key];
-    });
 
-    return { obf, images: fetchedImages };
+    return {
+      obf,
+      images: fetchedImages,
+      sounds: fetchedSounds
+    };
   } else {
-    return { obf: null, images: null };
+    return { obf: null, images: null, sounds: null };
   }
 }
 
@@ -748,6 +796,7 @@ export async function openboardExportManyAdapter(boards = [], intl) {
   const boardsLength = boards.length;
   const boardsForManifest = {};
   const imagesMap = {};
+  const soundsMap = {};
   const zip = new JSZip();
 
   const boardsMap = boards.reduce((prev, current) => {
@@ -766,7 +815,7 @@ export async function openboardExportManyAdapter(boards = [], intl) {
       continue;
     }
 
-    const { obf, images } = result;
+    const { obf, images, sounds } = result;
     if (!obf) continue;
 
     zip.file(boardMapFilename, JSON.stringify(obf, null, 2));
@@ -777,6 +826,13 @@ export async function openboardExportManyAdapter(boards = [], intl) {
       const imageFilename = `images/${image.path}`;
       zip.file(imageFilename, image.ab);
       imagesMap[key] = imageFilename;
+    });
+
+    const soundsKeys = Object.keys(sounds);
+    soundsKeys.forEach(key => {
+      const sound = sounds[key];
+      zip.file(sound.path, sound.ab);
+      soundsMap[key] = sound.path;
     });
 
     boardsForManifest[board.id] = boardMapFilename;
@@ -791,30 +847,31 @@ export async function openboardExportManyAdapter(boards = [], intl) {
     root,
     paths: {
       boards: boardsForManifest,
-      images: imagesMap
+      images: imagesMap,
+      sounds: soundsMap
     }
   };
 
   zip.file('manifest.json', JSON.stringify(manifest, null, 2));
 
-  zip.generateAsync(CBOARD_ZIP_OPTIONS).then(content => {
-    if (content) {
-      let prefix = getDatetimePrefix();
-      if (boards.length === 1) {
-        prefix = prefix + boards[0].name + ' ';
-      } else {
-        prefix = prefix + 'boardsset ';
-      }
-      if (isAndroid() || isIOS()) {
-        requestCvaWritePermissions();
-        const name =
-          'Download/' + prefix + EXPORT_CONFIG_BY_TYPE.openboard.filename;
-        writeCvaFile(name, content);
-      } else {
-        saveAs(content, prefix + EXPORT_CONFIG_BY_TYPE.openboard.filename);
-      }
+  const content = await zip.generateAsync(CBOARD_ZIP_OPTIONS);
+  if (content) {
+    let prefix = getDatetimePrefix();
+    if (boards.length === 1) {
+      prefix = prefix + boards[0].name + ' ';
+    } else {
+      prefix = prefix + 'boardsset ';
     }
-  });
+    if (isAndroid() || isIOS()) {
+      requestCvaWritePermissions();
+      const name =
+        'Download/' + prefix + EXPORT_CONFIG_BY_TYPE.openboard.filename;
+      writeCvaFile(name, content);
+    } else {
+      saveAs(content, prefix + EXPORT_CONFIG_BY_TYPE.openboard.filename);
+    }
+  }
+  return content;
 }
 
 /**

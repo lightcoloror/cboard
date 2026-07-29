@@ -80,17 +80,18 @@ function communicatorReducer(state = initialState, action) {
       const communicatorIndex = state.communicators.findIndex(
         c => c.id === action.payload.id
       );
-      let newState = { ...state };
+      if (communicatorIndex < 0) return state;
 
-      if (communicatorIndex >= 0) {
-        const updatedCommunicator = {
-          ...action.payload,
-          lastEdited: moment().format()
-        };
-        newState.communicators[communicatorIndex] = updatedCommunicator;
-      }
-
-      return newState;
+      const updatedCommunicator = {
+        ...action.payload,
+        lastEdited: moment().format()
+      };
+      return {
+        ...state,
+        communicators: state.communicators.map((communicator, index) =>
+          index === communicatorIndex ? updatedCommunicator : communicator
+        )
+      };
 
     case DELETE_COMMUNICATOR:
       return {
@@ -113,17 +114,24 @@ function communicatorReducer(state = initialState, action) {
     case ADD_BOARD_COMMUNICATOR:
       if (activeCommunicator) {
         const index = state.communicators.indexOf(activeCommunicator);
-        if (index !== -1) {
-          const updatedCommunicators = [...state.communicators];
-          updatedCommunicators[index].boards.push(action.boardId);
-          updatedCommunicators[index].lastEdited = moment().format();
+        const boards = Array.isArray(activeCommunicator.boards)
+          ? activeCommunicator.boards
+          : [];
+        if (index !== -1 && !boards.includes(action.boardId)) {
+          const updatedCommunicator = {
+            ...activeCommunicator,
+            boards: [...boards, action.boardId],
+            lastEdited: moment().format()
+          };
           return {
             ...state,
-            communicators: updatedCommunicators
+            communicators: state.communicators.map((communicator, itemIndex) =>
+              itemIndex === index ? updatedCommunicator : communicator
+            )
           };
         }
       }
-      return { ...state };
+      return state;
 
     case DELETE_BOARD_COMMUNICATOR:
       if (activeCommunicator) {

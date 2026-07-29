@@ -15,7 +15,11 @@ import {
   ERROR,
   ON_TRIAL_PERIOD
 } from './Subscribe.constants';
-import { formatDuration, formatTitle } from './Subscribe.helpers';
+import {
+  buildPaypalSubscriptionPayload,
+  formatDuration,
+  formatTitle
+} from './Subscribe.helpers';
 import { isAndroid, isCordova, isElectron, isIOS } from '../../../cordova-util';
 import { CircularProgress } from '@material-ui/core';
 
@@ -46,7 +50,8 @@ const propTypes = {
   isLogged: PropTypes.bool.isRequired,
   onSubscribe: PropTypes.func.isRequired,
   onSubscribeCancel: PropTypes.func.isRequired,
-  onPaypalApprove: PropTypes.func.isRequired
+  onPaypalApprove: PropTypes.func.isRequired,
+  userId: PropTypes.string.isRequired
 };
 
 const useStyles = makeStyles({
@@ -69,7 +74,8 @@ const SubscriptionPlans = ({
   isLogged,
   onSubscribe,
   onSubscribeCancel,
-  onPaypalApprove
+  onPaypalApprove,
+  userId
 }) => {
   const {
     status,
@@ -282,9 +288,9 @@ const SubscriptionPlans = ({
                       disabled={!canPurchase}
                       fundingSource={undefined}
                       createSubscription={(data, actions) => {
-                        return actions.subscription.create({
-                          plan_id: product.paypalId
-                        });
+                        return actions.subscription.create(
+                          buildPaypalSubscriptionPayload(product, userId)
+                        );
                       }}
                       onClick={function(data, actions) {
                         onPaypalAction('onClick', product, data);

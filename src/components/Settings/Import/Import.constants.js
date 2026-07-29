@@ -1,7 +1,12 @@
 import {
+  astericsGridImportAdapter,
   cboardImportAdapter,
+  gridsetImportAdapter,
   obzImportAdapter,
-  obfImportAdapter
+  obfImportAdapter,
+  snapImportAdapter,
+  touchChatImportAdapter,
+  zipImportAdapter
 } from './Import.helpers';
 import {
   CBOARD_EXT_PROPERTIES as EXPORT_CBOARD_EXT_PROPERTIES,
@@ -9,15 +14,21 @@ import {
 } from '../Export/Export.constants';
 
 export const IMPORT_CONFIG_BY_EXTENSION = {
+  grd: astericsGridImportAdapter,
+  gridset: gridsetImportAdapter,
   json: cboardImportAdapter,
-  zip: obzImportAdapter,
+  sps: snapImportAdapter,
+  spb: snapImportAdapter,
+  ce: touchChatImportAdapter,
+  zip: zipImportAdapter,
   obz: obzImportAdapter,
   obf: obfImportAdapter
 };
 
 export const IMPORT_PATHS = {
   boards: '.obf',
-  images: 'images/'
+  images: 'images/',
+  sounds: 'sounds/'
 };
 
 export const CBOARD_EXT_PREFIX = EXPORT_CBOARD_EXT_PREFIX;

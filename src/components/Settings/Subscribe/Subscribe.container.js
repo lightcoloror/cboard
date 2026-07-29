@@ -24,7 +24,7 @@ import {
   ON_HOLD
 } from '../../../providers/SubscriptionProvider/SubscriptionProvider.constants';
 
-import { formatTitle } from './Subscribe.helpers';
+import { buildSubscriberProduct } from './Subscribe.helpers';
 
 export class SubscribeContainer extends PureComponent {
   static propTypes = {
@@ -115,12 +115,7 @@ export class SubscribeContainer extends PureComponent {
 
   handlePaypalApprove = async (product, data) => {
     const { updateSubscription } = this.props;
-    const {
-      facilitatorAccessToken,
-      orderID,
-      paymentSource,
-      subscriptionID
-    } = data;
+    const { orderID, paymentSource, subscriptionID } = data;
     const transaction = {
       className: 'Transaction',
       subscriptionId: subscriptionID,
@@ -133,8 +128,7 @@ export class SubscribeContainer extends PureComponent {
       purchaseDate: '',
       isPending: false,
       subscriptionState: ACTIVE,
-      expiryDate: '',
-      facilitatorAccessToken
+      expiryDate: ''
     };
     try {
       const res = await API.postTransaction(transaction);
@@ -176,13 +170,7 @@ export class SubscribeContainer extends PureComponent {
       product &&
       [NOT_SUBSCRIBED, EXPIRED, ON_HOLD].includes(subscription.status)
     ) {
-      const newProduct = {
-        title: formatTitle(product.title),
-        billingPeriod: product.billingPeriod,
-        price: product.price,
-        tag: product.tag,
-        subscriptionId: product.subscriptionId
-      };
+      const newProduct = buildSubscriberProduct(product);
       const apiProduct = {
         product: {
           ...newProduct
@@ -358,6 +346,7 @@ export class SubscribeContainer extends PureComponent {
         onCancelSubscription={this.handleCancelSubscription}
         cancelSubscriptionStatus={this.state.cancelSubscriptionStatus}
         updatingStatus={this.state.updatingStatus}
+        userId={this.props.user?.id || ''}
       />
     );
   }

@@ -1,4 +1,5 @@
 import { generateCommunicationCandidateSentences } from './phraseSuggestions';
+import { normalizeExpressionCandidates } from './candidateFeedback';
 
 export const EXPRESSION_PIPELINE_CONTRACT_VERSION = 1;
 export const DEFAULT_EXPRESSION_CANDIDATE_COUNT = 4;
@@ -50,6 +51,39 @@ export function buildExpressionOutputSignature(output) {
       item.label
     ])
   );
+}
+
+export function removeExpressionOutputItem(output, index) {
+  const items = Array.isArray(output) ? output : [];
+  if (!Number.isInteger(index) || index < 0 || index >= items.length) {
+    return items;
+  }
+  return items.filter((item, itemIndex) => itemIndex !== index);
+}
+
+export function moveExpressionOutputItem(output, index, offset) {
+  const items = Array.isArray(output) ? output : [];
+  const normalizedOffset = Number(offset);
+  if (
+    !Number.isInteger(index) ||
+    !Number.isInteger(normalizedOffset) ||
+    normalizedOffset === 0
+  ) {
+    return items;
+  }
+  const targetIndex = index + normalizedOffset;
+  if (
+    index < 0 ||
+    index >= items.length ||
+    targetIndex < 0 ||
+    targetIndex >= items.length
+  ) {
+    return items;
+  }
+  const nextItems = [...items];
+  const [movedItem] = nextItems.splice(index, 1);
+  nextItems.splice(targetIndex, 0, movedItem);
+  return nextItems;
 }
 
 export function createExpressionPipelineInput(
@@ -153,12 +187,17 @@ export function buildExpressionSavedPhraseEntry(state) {
   };
 }
 
-export function buildExpressionHistoryEntry(state) {
+export function buildExpressionHistoryEntry(state, candidates) {
   const savedPhrase = buildExpressionSavedPhraseEntry(state);
 
   if (!savedPhrase) {
     return null;
   }
+
+  const normalizedCandidates = normalizeExpressionCandidates(
+    candidates,
+    state.candidateSentences
+  );
 
   return {
     contractVersion: EXPRESSION_PIPELINE_CONTRACT_VERSION,
@@ -166,6 +205,21 @@ export function buildExpressionHistoryEntry(state) {
     sentence: savedPhrase.sentence,
     labels: savedPhrase.output.map(item => item.label),
     output: savedPhrase.output,
-    candidateSentences: [...state.candidateSentences]
+    candidateSentences: normalizedCandidates.map(
+      candidate => candidate.sentence
+    ),
+    candidates: normalizedCandidates
   };
+}
+
+export function persistExpressionHistoryEntry(entry, persist) {
+  if (!entry || typeof persist !== 'function') {
+    return null;
+  }
+
+  try {
+    return persist(entry) || null;
+  } catch (error) {
+    return null;
+  }
 }

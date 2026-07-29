@@ -162,7 +162,9 @@ export const cvaTrackEvent = (category, action, label) => {
       : {
           event_category: category
         };
-    if (!isElectron()) window.FirebasePlugin.logEvent(event_name, eventOptions);
+    if (!isElectron()) {
+      window.FirebasePlugin?.logEvent?.(event_name, eventOptions);
+    }
   } catch (err) {
     console.log(err.message);
   }

@@ -65,6 +65,63 @@ exports[`CommunicationSupport settings default renderer 1`] = `
           }
         />
       </WithStyles(ForwardRef(ListItem))>
+      <WithStyles(ForwardRef(Divider)) />
+      <WithStyles(ForwardRef(ListItem))>
+        <WithStyles(ForwardRef(ListItemText))
+          primary={
+            <FormattedMessage
+              defaultMessage="Live AI connection test"
+              id="cboard.components.Settings.CommunicationSupport.aiTestState"
+              values={Object {}}
+            />
+          }
+          secondary={
+            <FormattedMessage
+              defaultMessage="Sign in to run the live test."
+              id="cboard.components.Settings.CommunicationSupport.aiTestLoginRequired"
+              values={Object {}}
+            />
+          }
+        />
+      </WithStyles(ForwardRef(ListItem))>
+      <WithStyles(ForwardRef(Divider)) />
+      <WithStyles(ForwardRef(ListItem))>
+        <WithStyles(ForwardRef(ListItemText))
+          primary={
+            <FormattedMessage
+              defaultMessage="CBoard cloud service"
+              id="cboard.components.Settings.CommunicationSupport.serviceState"
+              values={Object {}}
+            />
+          }
+          secondary={
+            <FormattedMessage
+              defaultMessage="Check cloud service."
+              id="cboard.components.Settings.CommunicationSupport.serviceUnknown"
+              values={Object {}}
+            />
+          }
+        />
+      </WithStyles(ForwardRef(ListItem))>
+      <WithStyles(ForwardRef(Divider)) />
+      <WithStyles(ForwardRef(ListItem))>
+        <WithStyles(ForwardRef(ListItemText))
+          primary={
+            <FormattedMessage
+              defaultMessage="AI enhancement"
+              id="cboard.components.Settings.CommunicationSupport.aiState"
+              values={Object {}}
+            />
+          }
+          secondary={
+            <FormattedMessage
+              defaultMessage="Sign in to check AI."
+              id="cboard.components.Settings.CommunicationSupport.aiLoginRequired"
+              values={Object {}}
+            />
+          }
+        />
+      </WithStyles(ForwardRef(ListItem))>
     </WithStyles(ForwardRef(List))>
     <div
       className="CommunicationSupportSettings__actions"
@@ -90,6 +147,42 @@ exports[`CommunicationSupport settings default renderer 1`] = `
         <FormattedMessage
           defaultMessage="Upload local to cloud"
           id="cboard.components.Settings.CommunicationSupport.uploadLocal"
+          values={Object {}}
+        />
+      </WithStyles(ForwardRef(Button))>
+      <WithStyles(ForwardRef(Button))
+        color="primary"
+        disabled={false}
+        onClick={[Function]}
+        variant="outlined"
+      >
+        <FormattedMessage
+          defaultMessage="Check cloud service"
+          id="cboard.components.Settings.CommunicationSupport.checkService"
+          values={Object {}}
+        />
+      </WithStyles(ForwardRef(Button))>
+      <WithStyles(ForwardRef(Button))
+        color="primary"
+        disabled={true}
+        onClick={[Function]}
+        variant="outlined"
+      >
+        <FormattedMessage
+          defaultMessage="Check AI service"
+          id="cboard.components.Settings.CommunicationSupport.checkAi"
+          values={Object {}}
+        />
+      </WithStyles(ForwardRef(Button))>
+      <WithStyles(ForwardRef(Button))
+        color="primary"
+        disabled={true}
+        onClick={[Function]}
+        variant="outlined"
+      >
+        <FormattedMessage
+          defaultMessage="Run live AI test"
+          id="cboard.components.Settings.CommunicationSupport.testAi"
           values={Object {}}
         />
       </WithStyles(ForwardRef(Button))>

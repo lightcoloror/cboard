@@ -53,7 +53,7 @@ export class Settings extends PureComponent {
 
     function handleLogOutClick() {
       if (isAndroid()) {
-        window.FirebasePlugin.unregister();
+        window.FirebasePlugin?.unregister?.();
         window.facebookConnectPlugin.logout(
           function(msg) {
             console.log('disconnect facebook msg' + msg);
@@ -73,7 +73,9 @@ export class Settings extends PureComponent {
             <UserIcon link={false} accountIcon={PersonIcon} />
           </div>
         ),
-        secondary: isLogged ? user.name : null,
+        secondary: isLogged
+          ? [user.name, user.phoneMasked].filter(Boolean).join(' · ')
+          : null,
         text: isLogged ? messages.username : messages.guest,
         url: '/settings/people',
         rightContent: isLogged ? (

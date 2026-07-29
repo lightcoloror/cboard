@@ -27,6 +27,8 @@ import moment from 'moment';
 import { switchBoard } from '../Board/Board.actions';
 import history from './../../history';
 
+const pendingCommunicatorCreations = new Map();
+
 export function importCommunicator(communicator) {
   return {
     type: IMPORT_COMMUNICATOR,
@@ -68,16 +70,35 @@ export function upsertApiCommunicator(communicator) {
         message: 'Communicator not found on local state'
       });
 
-    return communicator.id.length < SHORT_ID_MAX_LENGTH ||
-      communicator.id === defaultCommunicatorID
-      ? dispatch(createApiCommunicator(communicator, communicator.id)).catch(
-          error => {
-            throw new Error(error);
-          }
-        )
-      : dispatch(updateApiCommunicator(communicator)).catch(error => {
-          throw new Error(error);
-        });
+    const needsCreate =
+      communicator.id.length < SHORT_ID_MAX_LENGTH ||
+      communicator.id === defaultCommunicatorID;
+
+    if (!needsCreate) {
+      return dispatch(updateApiCommunicator(communicator)).catch(error => {
+        throw new Error(error);
+      });
+    }
+
+    const userEmail = getState().app?.userData?.email || communicator.email;
+    const creationKey = `${communicator.id}:${userEmail || ''}`;
+    const pendingCreation = pendingCommunicatorCreations.get(creationKey);
+    if (pendingCreation) return pendingCreation;
+
+    const creation = dispatch(
+      createApiCommunicator(communicator, communicator.id)
+    ).catch(error => {
+      throw new Error(error);
+    });
+    pendingCommunicatorCreations.set(creationKey, creation);
+
+    try {
+      return await creation;
+    } finally {
+      if (pendingCommunicatorCreations.get(creationKey) === creation) {
+        pendingCommunicatorCreations.delete(creationKey);
+      }
+    }
   };
 }
 
@@ -229,6 +250,24 @@ export function verifyAndUpsertCommunicator(
       dispatch(changeCommunicator(updatedCommunicatorData.id));
 
     return updatedCommunicatorData;
+  };
+}
+
+export function verifyAndAddBoardCommunicator(communicator, boardId) {
+  return dispatch => {
+    const currentBoards = Array.isArray(communicator.boards)
+      ? communicator.boards
+      : [];
+    const boards = currentBoards.includes(boardId)
+      ? [...currentBoards]
+      : [...currentBoards, boardId];
+
+    return dispatch(
+      verifyAndUpsertCommunicator({
+        ...communicator,
+        boards
+      })
+    );
   };
 }
 
@@ -386,8 +425,6 @@ export function syncCommunicators(remoteCommunicators) {
     const lastRemoteSavedCommunicatorId = remoteCommunicators[0].id ?? null; //The last communicator saved on the server
     const needToChangeActiveCommunicator =
       activeCommunicatorId === defaultCommunicatorID &&
-      // activeCommunicatorId !== lastRemoteSavedCommunicatorId &&
-      // TODO - Fix mulitple communicators creation on the server
       updatedCommunicators.length &&
       lastRemoteSavedCommunicatorId &&
       updatedCommunicators.findIndex(

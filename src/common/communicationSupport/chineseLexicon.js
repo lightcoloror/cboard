@@ -28,7 +28,11 @@ export const CHINESE_COMMUNICATION_LEXICON = [
   { zh: '站', synonyms: ['站起来'], category: 'actions' },
   { zh: '走', synonyms: ['走路', '散步'], category: 'actions' },
   { zh: '跑', synonyms: ['跑步'], category: 'actions' },
-  { zh: '帮忙', synonyms: ['帮', '帮助', '请帮', '求助'], category: 'actions' },
+  {
+    zh: '帮忙',
+    synonyms: ['帮', '帮你', '帮助', '请帮', '求助'],
+    category: 'actions'
+  },
   { zh: '叫', synonyms: ['喊', '叫人', '找'], category: 'actions' },
   { zh: '买', synonyms: ['购买', '购物'], category: 'actions' },
   { zh: '洗手', synonyms: ['洗'], category: 'actions' },
@@ -74,35 +78,87 @@ export const CHINESE_COMMUNICATION_LEXICON = [
   { zh: '热', synonyms: ['好热', '很热'], category: 'emotions' },
   {
     zh: '生病',
-    synonyms: ['病了', '感冒', '着凉'],
+    synonyms: ['病了', '感冒', '感冒了', '流感', '着凉'],
     category: 'medical'
   },
   {
     zh: '累',
-    synonyms: ['疲惫', '疲劳', '很累', '好累', '没力气'],
+    synonyms: ['疲惫', '疲劳', '很累', '好累', '精力不足', '没力气'],
     category: 'medical'
   },
-  { zh: '发烧', synonyms: ['发热', '高烧', '烧'], category: 'medical' },
-  { zh: '咳嗽', synonyms: ['咳', '一直咳', '干咳'], category: 'medical' },
-  { zh: '头晕', synonyms: ['晕', '眩晕', '头昏'], category: 'medical' },
-  { zh: '恶心', synonyms: ['想吐', '呕吐', '反胃', '吐'], category: 'medical' },
+  {
+    zh: '发烧',
+    synonyms: ['发热', '高烧', '发高烧', '烧', '体温高'],
+    category: 'medical'
+  },
+  {
+    zh: '咳嗽',
+    synonyms: ['咳', '一直咳', '干咳', '老是咳嗽'],
+    category: 'medical'
+  },
+  {
+    zh: '头晕',
+    synonyms: ['晕', '眩晕', '头昏', '头昏脑涨', '感觉晕'],
+    category: 'medical'
+  },
+  {
+    zh: '恶心',
+    synonyms: ['想吐', '呕吐', '反胃', '吐', '干呕', '想呕吐'],
+    category: 'medical'
+  },
   {
     zh: '呼吸困难',
-    synonyms: ['喘不过气', '气促', '透不过气'],
+    synonyms: ['喘不过气', '气促', '透不过气', '呼吸不顺'],
     category: 'medical'
   },
-  { zh: '出血', synonyms: ['流血', '伤口流血'], category: 'medical' },
-  { zh: '换衣服', synonyms: ['换衣', '穿衣服'], category: 'daily' },
-  { zh: '运动', synonyms: ['锻炼', '健身', '做运动'], category: 'actions' },
-  { zh: '看电视', synonyms: ['电视', '开电视'], category: 'daily' },
-  { zh: '理发', synonyms: ['剪头发', '剪发'], category: 'daily' },
-  { zh: '看书', synonyms: ['读书', '阅读'], category: 'daily' },
+  {
+    zh: '出血',
+    synonyms: ['流血', '在出血', '伤口流血'],
+    category: 'medical'
+  },
+  {
+    zh: '换衣服',
+    synonyms: ['换衣', '换件衣服', '换身衣服', '穿衣服'],
+    category: 'daily'
+  },
+  {
+    zh: '运动',
+    synonyms: ['锻炼', '健身', '做运动', '活动一下'],
+    category: 'actions'
+  },
+  {
+    zh: '看电视',
+    synonyms: ['电视', '开电视', '看个电视'],
+    category: 'daily'
+  },
+  {
+    zh: '理发',
+    synonyms: ['剪头发', '剪发', '理头发', '剪一下头'],
+    category: 'daily'
+  },
+  {
+    zh: '看书',
+    synonyms: ['读书', '看一本书', '阅读'],
+    category: 'daily'
+  },
   { zh: '妈妈', synonyms: ['妈', '母亲'], category: 'people' },
   { zh: '爸爸', synonyms: ['爸', '父亲'], category: 'people' },
   { zh: '哥哥', synonyms: ['兄弟'], category: 'people' },
   { zh: '姐姐', synonyms: ['大姐', '姐'], category: 'people' },
   { zh: '妹妹', synonyms: ['小妹', '妹'], category: 'people' },
   { zh: '医生', synonyms: ['大夫'], category: 'people' },
+  { zh: '护士', synonyms: [], category: 'people' },
+  {
+    zh: '治疗师',
+    synonyms: ['康复师', '语言治疗师'],
+    category: 'people'
+  },
+  {
+    zh: '照护者',
+    synonyms: ['看护人', '家属'],
+    category: 'people'
+  },
+  { zh: '家人', synonyms: ['家里人'], category: 'people' },
   { zh: '老师', synonyms: [], category: 'people' },
   { zh: '朋友', synonyms: [], category: 'people' },
   { zh: '家', synonyms: ['房子'], category: 'places' },
@@ -133,7 +189,7 @@ export const CHINESE_COMMUNICATION_LEXICON = [
     category: 'actions'
   },
   { zh: '钱', synonyms: ['付钱'], category: 'objects' },
-  { zh: '车', synonyms: ['汽车', '开车'], category: 'objects' },
+  { zh: '车', synonyms: ['汽车', '开车', '坐车'], category: 'objects' },
   { zh: '花', synonyms: [], category: 'objects' },
   { zh: '今天', synonyms: [], category: 'time' },
   { zh: '明天', synonyms: [], category: 'time' },
@@ -148,6 +204,61 @@ export const CHINESE_COMMUNICATION_LEXICON = [
   { zh: '和', synonyms: ['跟', '与'], category: 'daily' }
 ];
 
+// These terms come from PicInterpreter's receiver fixtures and high-risk
+// vocabulary review. They must survive tokenization even when no picture is
+// available, otherwise partial matching can reverse or dilute the meaning.
+const SEGMENTATION_GUARD_TERMS = [
+  '苹果手机',
+  '开心果',
+  '要不要',
+  '好不好',
+  '等一下',
+  '一点点',
+  '吃完饭',
+  '视频通话',
+  '发消息',
+  '量血压',
+  '坐起来',
+  '停下来',
+  '动物园',
+  '一个人',
+  '听音乐',
+  '肚子',
+  '胸口',
+  '很痛',
+  '不冷',
+  '不热',
+  '尿片',
+  '衣服',
+  '枕头',
+  '被子',
+  '盖上',
+  '关掉',
+  '看你',
+  '画画',
+  '吃饱',
+  '还要',
+  '一点',
+  '还是',
+  '洗澡',
+  '洗脸',
+  '关灯',
+  '躺下',
+  '出门',
+  '生气',
+  '家人',
+  '走走'
+];
+
+// CBoard has useful standalone action and object tiles for these expressions.
+// Keeping the compound would hide those concepts from the receiver sequence.
+const SEGMENTATION_COMPOSITION_TERMS = new Set([
+  '吃饭',
+  '喝水',
+  '饮水',
+  '喝茶'
+]);
+
 const zhIndex = new Map();
 const synonymIndex = new Map();
 
@@ -160,4 +271,27 @@ CHINESE_COMMUNICATION_LEXICON.forEach(entry => {
 
 export function findChineseCommunicationEntry(word) {
   return zhIndex.get(word) || synonymIndex.get(word);
+}
+
+export function getChineseCommunicationSegmentationTerms() {
+  const terms = new Set(SEGMENTATION_GUARD_TERMS);
+
+  CHINESE_COMMUNICATION_LEXICON.forEach(entry => {
+    [entry.zh].concat(entry.synonyms || []).forEach(term => {
+      if (
+        term &&
+        term.length > 1 &&
+        !SEGMENTATION_COMPOSITION_TERMS.has(term)
+      ) {
+        terms.add(term);
+      }
+    });
+  });
+
+  return Array.from(terms).sort((left, right) => {
+    if (left.length !== right.length) {
+      return right.length - left.length;
+    }
+    return left.localeCompare(right, 'zh-CN');
+  });
 }

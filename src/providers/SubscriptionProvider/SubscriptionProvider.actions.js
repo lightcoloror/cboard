@@ -20,7 +20,7 @@ import {
 import API from '../../api';
 import { isLogged } from '../../components/App/App.selectors';
 import { isAndroid, isIOS } from '../../cordova-util';
-import { formatTitle } from '../../components/Settings/Subscribe/Subscribe.helpers';
+import { buildSubscriberProduct } from '../../components/Settings/Subscribe/Subscribe.helpers';
 import { updateNavigationSettings } from '../../components/App/App.actions';
 import { IS_PRODUCTION } from '../../constants';
 
@@ -164,13 +164,7 @@ export function updateIsSubscribed(requestOrigin = 'unkwnown') {
                 product => product.subscriptionId === transaction.productId
               );
 
-              const newProduct = {
-                title: formatTitle(product.title),
-                billingPeriod: product.billingPeriod,
-                price: product.price,
-                tag: product.tag,
-                subscriptionId: product.subscriptionId
-              };
+              const newProduct = buildSubscriberProduct(product);
               const apiProduct = {
                 product: {
                   ...newProduct

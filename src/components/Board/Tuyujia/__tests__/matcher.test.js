@@ -127,12 +127,20 @@ describe('tuyujia matcher', () => {
     expect(result.matches[0].matchType).toBe('lexicon-synonym');
   });
 
-  test('supports safe partial matching for longer symptom tokens', () => {
+  test('does not guess generic pain for a more specific missing symptom', () => {
     const result = matchTextToTiles('我肚子疼', boards, { intl });
     const painMatch = result.matches.find(
       item => item.tile && item.tile.tile.label === '痛'
     );
-    expect(painMatch).toBeTruthy();
+    const missingSymptom = result.matches.find(item => item.token === '肚子疼');
+
+    expect(painMatch).toBeUndefined();
+    expect(missingSymptom).toEqual(
+      expect.objectContaining({
+        tile: null,
+        matchType: 'none'
+      })
+    );
   });
 
   test('does not partial match negated tokens', () => {

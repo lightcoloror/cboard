@@ -138,4 +138,32 @@ describe('Settings component', () => {
 
     expect(sectionIds).toContain(messages.communicationSupport.id);
   });
+
+  test('shows only the masked account phone in settings', () => {
+    const wrapper = shallow(
+      <Settings
+        {...COMPONENT_PROPS}
+        isLogged
+        user={{
+          name: '照护者',
+          phoneMasked: '138****8000',
+          phone: '13800138000'
+        }}
+      />
+    );
+    const peopleSection = wrapper
+      .find('SettingsSection')
+      .findWhere(section =>
+        (section.prop('settings') || []).some(
+          item => item.url === '/settings/people'
+        )
+      )
+      .first();
+    const accountEntry = peopleSection
+      .prop('settings')
+      .find(item => item.url === '/settings/people');
+
+    expect(accountEntry.secondary).toBe('照护者 · 138****8000');
+    expect(accountEntry.secondary).not.toContain('13800138000');
+  });
 });

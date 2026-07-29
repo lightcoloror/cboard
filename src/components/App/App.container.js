@@ -24,6 +24,7 @@ import {
   cleanUpCvaOnResume
 } from '../../cordova-util';
 import { appInsights } from '../../appInsights';
+import { isDemoMode } from '../../demoMode';
 
 // Module-scoped so the sync throttle survives AppContainer remounts but still
 // resets on a real app launch.
@@ -67,6 +68,7 @@ export class AppContainer extends Component {
   };
 
   componentDidMount() {
+    const demoMode = isDemoMode();
     const localizeUser = () => {
       const {
         isLogged,
@@ -75,6 +77,7 @@ export class AppContainer extends Component {
         updateUnloggedUserLocation
       } = this.props;
 
+      if (demoMode) return;
       if (isLogged) return loggedActions();
       return updateUnloggedUserLocation();
 
@@ -85,13 +88,14 @@ export class AppContainer extends Component {
     };
 
     const initGoogleAnalytics = () => {
+      if (demoMode) return;
       const { isLogged, userId } = this.props;
       if (isCordova() && !isElectron()) {
         try {
           if (isLogged) {
-            window.FirebasePlugin.setUserId(userId);
+            window.FirebasePlugin?.setUserId?.(userId);
           }
-          window.FirebasePlugin.logEvent('page_view');
+          window.FirebasePlugin?.logEvent?.('page_view');
         } catch (err) {
           console.error(err);
         }
@@ -104,6 +108,7 @@ export class AppContainer extends Component {
     };
 
     const initAppInsightsUserContext = () => {
+      if (demoMode) return;
       const { isLogged, userId } = this.props;
       // The App Insights authenticated user context is per-session, so it must
       // be re-applied on each launch for returning users. Use the Mongo user
@@ -164,7 +169,7 @@ export class AppContainer extends Component {
   handleDataRefresh = (source = 'Unknown') => {
     const { isLogged } = this.props;
 
-    if (!isLogged) {
+    if (isDemoMode() || !isLogged) {
       return;
     }
 
@@ -227,6 +232,7 @@ export class AppContainer extends Component {
       displaySettings,
       isDownloadingLang
     } = this.props;
+    const demoMode = isDemoMode();
 
     const uiSize = displaySettings.uiSize || DISPLAY_SIZE_STANDARD;
     const fontSize = displaySettings.fontSize || DISPLAY_SIZE_STANDARD;
@@ -247,6 +253,7 @@ export class AppContainer extends Component {
         lang={lang}
         dark={displaySettings.darkThemeActive}
         isDownloadingLang={isDownloadingLang}
+        demoMode={demoMode}
       />
     );
   }

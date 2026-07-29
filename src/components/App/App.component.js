@@ -44,7 +44,11 @@ export class App extends Component {
     /**
      * If 'true', dark mode is enabled
      */
-    dark: PropTypes.bool
+    dark: PropTypes.bool,
+    /**
+     * If 'true', run the isolated no-login product demo
+     */
+    demoMode: PropTypes.bool
   };
 
   render() {
@@ -54,16 +58,29 @@ export class App extends Component {
       isFirstVisit,
       isLogged,
       dark,
-      isDownloadingLang
+      isDownloadingLang,
+      demoMode
     } = this.props;
 
     return (
-      <div className={classNames('App', { 'is-dark': dark })}>
+      <div
+        className={classNames('App', {
+          'is-dark': dark,
+          'is-demo': demoMode
+        })}
+      >
         <Helmet>
           <html lang={lang} dir={dir} />
         </Helmet>
 
         <Notifications />
+        {demoMode && (
+          <div className="App__demoBanner" role="status">
+            <strong>演示模式</strong>
+            <span>数据只保留在当前页面，刷新后会清空</span>
+            <a href="/">了解完整版</a>
+          </div>
+        )}
         <Switch>
           <RedirectIfLogged
             component={AuthScreen}
@@ -76,6 +93,11 @@ export class App extends Component {
           <Route path="/activate/:url" component={Activate} />
           <Route path="/reset/:userid/:url" component={ChangePassword} />
           <Route path="/login/:type/callback" component={OAuthLogin} />
+          <Route
+            exact
+            path="/demo"
+            render={routeProps => <BoardContainer {...routeProps} demoMode />}
+          />
           <Route path="/board/:id" component={BoardContainer} />
           {isDownloadingLang && (
             <Route exact path={'/'}>
@@ -85,18 +107,27 @@ export class App extends Component {
           <Route
             exact
             path="/"
-            component={
-              isFirstVisit && !isLogged ? WelcomeScreen : BoardContainer
-            }
+            render={routeProps => {
+              if (demoMode) {
+                return <BoardContainer {...routeProps} demoMode />;
+              }
+              const RootComponent =
+                isFirstVisit && !isLogged ? WelcomeScreen : BoardContainer;
+              return <RootComponent {...routeProps} />;
+            }}
           />
           <Route component={NotFound} />
         </Switch>
-        <PremiumRequiredModal />
-        <LoginRequiredModal />
+        {!demoMode && <PremiumRequiredModal />}
+        {!demoMode && <LoginRequiredModal />}
         <OfflineNotificationModal />
       </div>
     );
   }
 }
+
+App.defaultProps = {
+  demoMode: false
+};
 
 export default App;

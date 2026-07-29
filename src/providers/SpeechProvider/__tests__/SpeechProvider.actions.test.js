@@ -1,8 +1,18 @@
 import * as actions from '../SpeechProvider.actions';
 import * as types from '../SpeechProvider.constants';
+import tts from '../tts';
 
 import configureMockStore from 'redux-mock-store';
 import thunk from 'redux-thunk';
+
+jest.mock('../tts', () => ({
+  __esModule: true,
+  default: {
+    cancel: jest.fn(),
+    speak: jest.fn()
+  }
+}));
+
 const middlewares = [thunk];
 const mockStore = configureMockStore(middlewares);
 
@@ -70,6 +80,10 @@ let voices = [
 ];
 
 describe('actions', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
   it('should create an action to request voices', () => {
     const expectedAction = {
       type: types.REQUEST_VOICES
@@ -89,14 +103,17 @@ describe('actions', () => {
   it('should create an action to change voice', () => {
     const voiceURI = 'Shay Hebrew Voice';
     const lang = 'he';
+    const store = mockStore(initialState);
 
     const expectedAction = {
       type: types.CHANGE_VOICE,
       voiceURI,
-      lang
+      lang,
+      isCloud: false
     };
 
-    expect(actions.changeVoice(voiceURI, lang)).toEqual(expectedAction);
+    store.dispatch(actions.changeVoice(voiceURI, lang));
+    expect(store.getActions()).toEqual([expectedAction]);
   });
 
   it('should create an action to change pitch', () => {
@@ -119,11 +136,40 @@ describe('actions', () => {
   it('should create an action to cancelSpeech', () => {
     const dispatch = jest.fn();
     actions.cancelSpeech()(dispatch);
+    expect(dispatch).toHaveBeenCalledWith({
+      type: types.CANCEL_SPEECH,
+      isSpeaking: false
+    });
+    expect(tts.cancel).toHaveBeenCalledTimes(1);
   });
   it('should create an action to speak ', () => {
     const store = mockStore(initialState);
     const onend = jest.fn();
-    const dispatch = jest.fn();
-    store.dispatch(actions.speak('aaa', onend(dispatch)));
+    store.dispatch(actions.speak(' aaa ', onend));
+
+    expect(store.getActions()).toEqual([
+      {
+        type: types.START_SPEECH,
+        isSpeaking: true,
+        text: 'aaa'
+      }
+    ]);
+    expect(tts.speak).toHaveBeenCalledWith(
+      ' aaa ',
+      expect.objectContaining({
+        ...initialState.speech.options,
+        onend: expect.any(Function)
+      }),
+      expect.any(Function)
+    );
+
+    const speechOptions = tts.speak.mock.calls[0][1];
+    speechOptions.onend();
+
+    expect(onend).toHaveBeenCalledTimes(1);
+    expect(store.getActions()).toContainEqual({
+      type: types.END_SPEECH,
+      isSpeaking: false
+    });
   });
 });
