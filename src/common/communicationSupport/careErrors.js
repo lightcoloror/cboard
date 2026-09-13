@@ -19,5 +19,16 @@ export function careErrorMessage(error) {
   if (messages[code]) return messages[code];
   if (error?.status === 401 || error?.response?.status === 401)
     return '登录已失效，请重新登录；本地内容仍保留。';
+  if (
+    !error?.status &&
+    !error?.response?.status &&
+    [
+      'Failed to fetch',
+      'Network request failed',
+      'Load failed',
+      'NetworkError when attempting to fetch resource.'
+    ].includes(error?.message)
+  )
+    return '暂时无法连接云端；本地内容可继续使用，待同步修改会在恢复连接后上传。';
   return error?.message || '暂时无法连接；本地修改保留，联网后可继续同步。';
 }
