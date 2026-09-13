@@ -14,6 +14,7 @@ import OfflineNotificationModal from '../OfflineNotification';
 import Notifications from '../Notifications';
 import NotFound from '../NotFound';
 import Settings from '../Settings';
+import Care from '../Care/Care';
 import WelcomeScreen from '../WelcomeScreen';
 import Analytics from '../Analytics';
 import './App.css';
@@ -89,6 +90,7 @@ export class App extends Component {
             to="/"
           />
           <Route path="/settings" component={Settings} />
+          <Route path="/care" component={Care} />
           <Route path="/analytics" component={Analytics} />
           <Route path="/activate/:url" component={Activate} />
           <Route path="/reset/:userid/:url" component={ChangePassword} />

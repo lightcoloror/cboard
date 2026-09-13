@@ -1,4 +1,5 @@
 import API from '../../../api';
+import { API_URL } from '../../../constants';
 import { LOGIN_SUCCESS, LOGOUT } from './Login.constants';
 import {
   changeVoice,
@@ -72,7 +73,34 @@ export function logout() {
     console.error(err);
   }
 
-  return async dispatch => {
+  return async (dispatch, getState) => {
+    const token = getState?.().app?.userData?.authToken;
+    if (token) {
+      const abort = new AbortController();
+      const timeout = setTimeout(() => abort.abort(), 10000);
+      try {
+        const response = await fetch(
+          API_URL.replace(/\/$/, '') + '/user/logout',
+          {
+            method: 'POST',
+            signal: abort.signal,
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`
+            },
+            body: '{}'
+          }
+        );
+        if (!response.ok && response.status !== 401)
+          throw new Error('Session revocation failed');
+      } catch (_) {
+        window.alert(
+          '本机将退出，但暂时无法确认云端会话已撤销。联网后可在设备管理中撤销该设备。'
+        );
+      } finally {
+        clearTimeout(timeout);
+      }
+    }
     dispatch(updateNavigationSettings({ improvePhraseActive: false }));
     dispatch(setUnloggedUserLocation(null));
     dispatch(updateUnloggedUserLocation());

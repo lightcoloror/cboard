@@ -101,7 +101,7 @@ class API {
       response => response,
       error => {
         if (
-          error.response?.status === 403 &&
+          error.response?.status === 401 &&
           error.config?.baseURL === BASE_URL
         ) {
           if (isAndroid()) {

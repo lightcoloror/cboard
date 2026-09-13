@@ -268,6 +268,11 @@ export class Settings extends PureComponent {
         }
       >
         {/*<this.AddSense />*/}
+        {process.env.REACT_APP_CARE_COLLABORATION === 'true' && (
+          <Button component={Link} to="/care">
+            患者档案与家庭协作
+          </Button>
+        )}
         {(isDownloadingLang && (
           <div className="Settings__spinner-container">
             <CircularProgress
