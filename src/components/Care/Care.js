@@ -4,6 +4,8 @@ import { API_URL } from '../../constants';
 import { getStore } from '../../store';
 import { logout } from '../Account/Login/Login.actions';
 import { careBrowserStorage } from '../../common/communicationSupport/careBrowserStorage';
+import { createCareSync } from '../../common/communicationSupport/careSync';
+import { configureCareLocalAccount } from '../../common/communicationSupport/localData';
 
 const identity = () => {
   const u = getStore().getState().app.userData;
@@ -11,14 +13,121 @@ const identity = () => {
     ? { id: String(u.id || u._id), token: u.authToken }
     : null;
 };
-const runtime = {
+export const localCareIdentity = () =>
+  identity() ||
+  (localStorage.getItem('care-offline-selection-v1')
+    ? { id: 'offline', offline: true }
+    : null);
+configureCareLocalAccount(() => identity()?.id);
+export const runtime = {
   enabled: process.env.REACT_APP_CARE_COLLABORATION === 'true',
   identity,
+  randomBytes: length => crypto.getRandomValues(new Uint8Array(length)),
   newId: () =>
     Array.from(crypto.getRandomValues(new Uint8Array(16)), b =>
       b.toString(16).padStart(2, '0')
     ).join(''),
   storage: careBrowserStorage,
+  funding(profileId) {
+    const who = identity();
+    return who
+      ? localStorage.getItem(`care-funding-v1:${who.id}:${profileId}`)
+      : null;
+  },
+  setFunding(profileId, fundingId) {
+    const who = identity();
+    if (who)
+      localStorage.setItem(`care-funding-v1:${who.id}:${profileId}`, fundingId);
+  },
+  async selectProfile(profile) {
+    const who = identity();
+    if (!who) {
+      const selected = JSON.parse(
+        localStorage.getItem('care-offline-selection-v1') || 'null'
+      );
+      if (
+        !selected ||
+        selected.id !== profile.id ||
+        selected.familyId !== profile.familyId
+      )
+        throw new Error('请先登录');
+      return;
+    }
+    try {
+      await runtime.request('/care/context', 'PUT', { profileId: profile.id });
+    } catch (error) {
+      if (error.status) throw error;
+    }
+    localStorage.setItem(
+      `care-selection-v1:${who.id}`,
+      JSON.stringify(profile)
+    );
+    window.dispatchEvent(new Event('care-profile-selected'));
+  },
+  async restoreOffline(preview) {
+    const old = JSON.parse(
+      localStorage.getItem('care-offline-selection-v1') || 'null'
+    );
+    if (
+      old &&
+      (old.id !== preview.profileId || old.familyId !== preview.familyId)
+    )
+      throw new Error('本机已有另一患者资料，请使用独立设备空间。');
+    const engine = createCareSync({
+      accountId: 'offline',
+      profileId: preview.profileId,
+      familyId: preview.familyId,
+      storage: runtime.storage,
+      request: runtime.request,
+      newId: runtime.newId,
+      currentAccount: () => 'offline'
+    });
+    await engine.init();
+    await engine.importPreview(preview);
+    localStorage.setItem(
+      'care-offline-selection-v1',
+      JSON.stringify({
+        id: preview.profileId,
+        familyId: preview.familyId,
+        name: '离线恢复的患者',
+        relationship: preview.relationship || {
+          role: 'patient',
+          defaultMode: 'expression'
+        }
+      })
+    );
+    window.location.assign('/');
+  },
+  async saveArchive(bytes) {
+    const url = URL.createObjectURL(
+      new Blob([bytes], { type: 'application/zip' })
+    );
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'tuyujia-device.zip';
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  },
+  async offlineArchive() {
+    const selected = JSON.parse(
+      localStorage.getItem('care-offline-selection-v1') || 'null'
+    );
+    if (!selected) throw new Error('本机尚未恢复患者备份');
+    const engine = createCareSync({
+      accountId: 'offline',
+      profileId: selected.id,
+      familyId: selected.familyId,
+      storage: runtime.storage,
+      request: runtime.request,
+      newId: runtime.newId,
+      currentAccount: () => 'offline'
+    });
+    await engine.init();
+    return {
+      identity: { profileId: selected.id, familyId: selected.familyId },
+      snapshot: engine.archive()
+    };
+  },
   async request(path, method, body) {
     const who = identity();
     if (!who) {

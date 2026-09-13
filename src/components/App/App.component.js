@@ -15,6 +15,7 @@ import Notifications from '../Notifications';
 import NotFound from '../NotFound';
 import Settings from '../Settings';
 import Care from '../Care/Care';
+import CareHome from '../Care/CareHome';
 import WelcomeScreen from '../WelcomeScreen';
 import Analytics from '../Analytics';
 import './App.css';
@@ -100,7 +101,17 @@ export class App extends Component {
             path="/demo"
             render={routeProps => <BoardContainer {...routeProps} demoMode />}
           />
-          <Route path="/board/:id" component={BoardContainer} />
+          <Route
+            path="/board/:id"
+            render={props =>
+              isLogged &&
+              process.env.REACT_APP_CARE_COLLABORATION === 'true' ? (
+                <CareHome {...props} />
+              ) : (
+                <BoardContainer {...props} />
+              )
+            }
+          />
           {isDownloadingLang && (
             <Route exact path={'/'}>
               <Redirect to={'/settings/language'} />
@@ -113,6 +124,12 @@ export class App extends Component {
               if (demoMode) {
                 return <BoardContainer {...routeProps} demoMode />;
               }
+              if (
+                (isLogged ||
+                  localStorage.getItem('care-offline-selection-v1')) &&
+                process.env.REACT_APP_CARE_COLLABORATION === 'true'
+              )
+                return <CareHome {...routeProps} />;
               const RootComponent =
                 isFirstVisit && !isLogged ? WelcomeScreen : BoardContainer;
               return <RootComponent {...routeProps} />;

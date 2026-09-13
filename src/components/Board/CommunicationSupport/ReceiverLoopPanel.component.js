@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
+import { careErrorMessage } from '../../../common/communicationSupport/careErrors';
 import Button from '@material-ui/core/Button';
 import Dialog from '@material-ui/core/Dialog';
 import DialogActions from '@material-ui/core/DialogActions';
@@ -214,6 +215,8 @@ function getMatchTypeLabel(matchType, copy) {
 }
 
 function getAiFailureMessage(error, copy) {
+  if (error?.response?.data?.code || error?.data?.code)
+    return careErrorMessage(error);
   const limitScope = getCommunicationEnhancementLimitScope(error);
   if (limitScope === COMMUNICATION_ENHANCEMENT_LIMIT_SCOPES.month) {
     return copy.aiMonthlyQuota;
@@ -228,6 +231,8 @@ function getAiFailureMessage(error, copy) {
 }
 
 function getOcrFailureMessage(error, copy) {
+  if (error?.response?.data?.code || error?.data?.code)
+    return careErrorMessage(error);
   const limitScope = getCommunicationEnhancementLimitScope(error);
   if (limitScope === COMMUNICATION_ENHANCEMENT_LIMIT_SCOPES.month) {
     return copy.imageOcrMonthlyQuota;
@@ -242,6 +247,8 @@ function getOcrFailureMessage(error, copy) {
 }
 
 function getDialectAudioFailureMessage(error, copy) {
+  if (error?.response?.data?.code || error?.data?.code)
+    return careErrorMessage(error);
   const limitScope = getCommunicationEnhancementLimitScope(error);
   if (limitScope === COMMUNICATION_ENHANCEMENT_LIMIT_SCOPES.month) {
     return copy.dialectAudioMonthlyQuota;
@@ -912,7 +919,11 @@ export default function ReceiverLoopPanel({
         usedServer = Boolean(result);
       } catch (error) {
         const limitScope = getCommunicationEnhancementLimitScope(error);
-        if (limitScope === COMMUNICATION_ENHANCEMENT_LIMIT_SCOPES.month) {
+        if (error?.response?.data?.code || error?.data?.code) {
+          serverFailureNotice = careErrorMessage(error);
+        } else if (
+          limitScope === COMMUNICATION_ENHANCEMENT_LIMIT_SCOPES.month
+        ) {
           serverFailureNotice = copy.dialectMonthlyQuotaLocalApplied;
         } else if (
           limitScope === COMMUNICATION_ENHANCEMENT_LIMIT_SCOPES.minute

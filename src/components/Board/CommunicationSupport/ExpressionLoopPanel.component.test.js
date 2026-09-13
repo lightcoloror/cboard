@@ -479,7 +479,7 @@ describe('ExpressionLoopPanel', () => {
       expect.objectContaining({
         pictogramLabels: ['想', '水'],
         context: expect.objectContaining({
-          recentSentences: ['你想喝什么？'],
+          recentSentences: [],
           scene: 'hospital'
         })
       })

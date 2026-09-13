@@ -97,6 +97,38 @@ class API {
       baseURL: BASE_URL,
       ...config
     });
+    this.axiosInstance.interceptors.request.use(request => {
+      if (process.env.REACT_APP_CARE_COLLABORATION !== 'true') return request;
+      const user = getUserData();
+      const id = user && (user.id || user._id);
+      if (!id) return request;
+      const target = new URL(request.url, request.baseURL || BASE_URL);
+      if (target.origin !== new URL(BASE_URL).origin) return request;
+      let selected;
+      try {
+        selected = JSON.parse(
+          localStorage.getItem(`care-selection-v1:${id}`) || 'null'
+        );
+      } catch (_) {
+        return request;
+      }
+      const fundingId =
+        selected &&
+        localStorage.getItem(`care-funding-v1:${id}:${selected.id}`);
+      if (fundingId) {
+        request.headers = {
+          ...request.headers,
+          'X-Care-Profile-Id': selected.id,
+          'X-Care-Funding-Id': fundingId,
+          'Idempotency-Key':
+            request.headers?.['Idempotency-Key'] ||
+            Array.from(crypto.getRandomValues(new Uint8Array(16)), b =>
+              b.toString(16).padStart(2, '0')
+            ).join('')
+        };
+      }
+      return request;
+    });
     this.axiosInstance.interceptors.response.use(
       response => response,
       error => {
@@ -975,6 +1007,17 @@ class API {
   }
 
   async syncConfirmedReceiverRecords(records = []) {
+    if (!buildConfirmedReceiverSyncPayload(records).length) {
+      return {
+        acceptedCount: 0,
+        conflictCount: 0,
+        conflictedRecordIds: [],
+        records: [],
+        deletedRecordIds: [],
+        deletedRecords: [],
+        localOnly: true
+      };
+    }
     const authToken = getAuthToken();
     if (!(authToken && authToken.length)) {
       throw new Error('Need to be authenticated to perform this request');

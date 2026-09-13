@@ -6,6 +6,7 @@ import React, {
   useState
 } from 'react';
 import PropTypes from 'prop-types';
+import { careErrorMessage } from '../../../common/communicationSupport/careErrors';
 import Button from '@material-ui/core/Button';
 import { createCandidateAutoplayController } from '../../../common/communicationSupport/candidateAutoplay';
 import {
@@ -138,6 +139,8 @@ function SavedPhraseRow({ item, onApply, onPlay, playLabel, reuseLabel }) {
 }
 
 function getAiFailureMessage(error, copy) {
+  if (error?.response?.data?.code || error?.data?.code)
+    return careErrorMessage(error);
   const limitScope = getCommunicationEnhancementLimitScope(error);
   if (limitScope === COMMUNICATION_ENHANCEMENT_LIMIT_SCOPES.month) {
     return copy.aiMonthlyQuota;

@@ -248,7 +248,11 @@ export default function CommunicationSupportPanel({
   onChangeDisplaySettings,
   copyOverrides,
   initialMode,
-  initiallyExpanded
+  initiallyExpanded,
+  careMode = false,
+  onCareFavoritesChanged,
+  onCarePersonalImagesChanged,
+  careDataVersion
 }) {
   const copy = { ...DEFAULT_COPY, ...(copyOverrides || {}) };
   const cboardSpeechRate = speechSettings && speechSettings.rate;
@@ -419,7 +423,7 @@ export default function CommunicationSupportPanel({
       let cancelled = false;
 
       async function loadRemoteSettings() {
-        if (!isLogged) {
+        if (!isLogged || careMode) {
           return;
         }
 
@@ -470,13 +474,27 @@ export default function CommunicationSupportPanel({
         cancelled = true;
       };
     },
-    [isLogged]
+    [isLogged, careMode]
+  );
+
+  useEffect(
+    () => {
+      if (!careMode) return;
+      setSavedPhrases(loadCommunicationSavedPhrases());
+      setPersonalImagePreferences(loadPersonalImagePreferences());
+    },
+    [careMode, careDataVersion]
   );
 
   async function persistCommunicationSupportSettings(
     nextSavedPhrases,
     nextHistory
   ) {
+    if (careMode) {
+      if (onCareFavoritesChanged)
+        await onCareFavoritesChanged(nextSavedPhrases);
+      return;
+    }
     const payload = buildCommunicationCloudSettingsPayload(
       nextSavedPhrases,
       nextHistory
@@ -546,7 +564,7 @@ export default function CommunicationSupportPanel({
   }
 
   function syncReceiverCloudData() {
-    if (!isLogged) return;
+    if (!isLogged || careMode) return;
     loadMergedReceiverCloudData()
       .then(receiverData => {
         overwriteReceiverRecords(receiverData.receiverRecords);
@@ -757,6 +775,8 @@ export default function CommunicationSupportPanel({
       const saved = savePersonalImagePreference(entry);
       if (!saved) return false;
       refreshPersonalImages();
+      if (careMode && onCarePersonalImagesChanged)
+        onCarePersonalImagesChanged(loadPersonalImagePreferences());
       return true;
     } catch (error) {
       return false;
@@ -768,6 +788,8 @@ export default function CommunicationSupportPanel({
       const removed = removePersonalImagePreference(tileId, { boardId });
       if (!removed) return false;
       refreshPersonalImages();
+      if (careMode && onCarePersonalImagesChanged)
+        onCarePersonalImagesChanged(loadPersonalImagePreferences());
       return true;
     } catch (error) {
       return false;
@@ -848,7 +870,7 @@ export default function CommunicationSupportPanel({
     if (speechChanged) onChangeSpeechRate(savedPreferences.speechRate);
     if (displayChanged) onChangeDisplaySettings(nextDisplaySettings);
 
-    if (isLogged && (speechChanged || displayChanged)) {
+    if (isLogged && !careMode && (speechChanged || displayChanged)) {
       try {
         await API.updateSettings({
           display: nextDisplaySettings,
@@ -1242,7 +1264,11 @@ CommunicationSupportPanel.propTypes = {
   onCancelSpeech: PropTypes.func.isRequired,
   copyOverrides: PropTypes.object,
   initialMode: PropTypes.oneOf(['express', 'receive']),
-  initiallyExpanded: PropTypes.bool
+  initiallyExpanded: PropTypes.bool,
+  careMode: PropTypes.bool,
+  careDataVersion: PropTypes.string,
+  onCareFavoritesChanged: PropTypes.func,
+  onCarePersonalImagesChanged: PropTypes.func
 };
 
 CommunicationSupportPanel.defaultProps = {
