@@ -41,7 +41,7 @@ const baseRecord = {
 };
 
 describe('confirmed receiver sync contract', () => {
-  test('uploads confirmed records only and strips local maintenance fields', () => {
+  test('never uploads confirmed records, feedback, or drafts', () => {
     const payload = buildConfirmedReceiverSyncPayload([
       {
         ...baseRecord,
@@ -61,33 +61,10 @@ describe('confirmed receiver sync contract', () => {
       }
     ]);
 
-    expect(payload).toHaveLength(1);
-    expect(payload[0].pictogramSequence[0]).toEqual({
-      pictogramId: 'water',
-      label: '水',
-      source: 'opensymbols',
-      matchType: 'online',
-      confidence: 0.75,
-      originalToken: '水',
-      attribution: baseRecord.pictogramSequence[0].attribution
-    });
-    expect(payload[0]).not.toHaveProperty('receiverCorrections');
-    expect(payload[0]).not.toHaveProperty('missingTokens');
-    expect(payload[0]).toEqual(
-      expect.objectContaining({
-        baseVersion: 0,
-        patientFeedback: 'understood',
-        patientFeedbackAt: 30,
-        patientFeedbackEvents: [
-          { type: 'repeat_requested', createdAt: 25 },
-          { type: 'understood', createdAt: 30 }
-        ]
-      })
-    );
-    expect(payload[0].pictogramSequence[0]).not.toHaveProperty('boardId');
+    expect(payload).toEqual([]);
   });
 
-  test('uses the last accepted server version as the next base version', () => {
+  test('does not resume uploads from a legacy server version', () => {
     const payload = buildConfirmedReceiverSyncPayload([
       {
         ...baseRecord,
@@ -96,9 +73,7 @@ describe('confirmed receiver sync contract', () => {
       }
     ]);
 
-    expect(payload[0].baseVersion).toBe(4);
-    expect(payload[0]).not.toHaveProperty('serverVersion');
-    expect(payload[0]).not.toHaveProperty('conflicted');
+    expect(payload).toEqual([]);
   });
 
   test('never uploads device-private attribution or its local pictogram id', () => {
@@ -129,9 +104,7 @@ describe('confirmed receiver sync contract', () => {
       }
     ]);
 
-    expect(payload[0].pictogramSequence[0]).not.toHaveProperty('pictogramId');
-    expect(payload[0].pictogramSequence[0]).not.toHaveProperty('attribution');
-    expect(payload[0].pictogramSequence[0].source).toBe('user');
+    expect(payload).toEqual([]);
   });
 
   test('merges newer confirmed remote records without removing local drafts', () => {

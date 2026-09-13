@@ -114,7 +114,7 @@ describe('communication support local data', () => {
     expect(payload.history[0].labels).toEqual(['想', '水']);
   });
 
-  test('cloud settings leave complete confirmed receiver records to the event API', () => {
+  test('cloud settings exclude all expression and reception history', () => {
     const payload = buildCommunicationCloudSettingsPayload(
       [],
       [
@@ -148,10 +148,7 @@ describe('communication support local data', () => {
       ]
     );
 
-    expect(payload.history.map(entry => entry.id)).toEqual([
-      'receiver-legacy',
-      'expression-1'
-    ]);
+    expect(payload.history).toEqual([]);
   });
 
   test('cloud settings strip device-private assets without changing public pictograms', () => {
@@ -234,17 +231,7 @@ describe('communication support local data', () => {
         image: '/symbols/mulberry/water.svg'
       })
     ]);
-    expect(payload.history[0].output[0]).toEqual({
-      id: 'family',
-      label: '妈妈'
-    });
-    expect(payload.history[1].pictogramSequence[0]).toEqual({
-      label: '妈妈',
-      source: 'user',
-      matchType: 'manual',
-      confidence: 1,
-      originalToken: '妈妈'
-    });
+    expect(payload.history).toEqual([]);
 
     const serialized = JSON.stringify(payload);
     expect(serialized).not.toContain('device-private://');
@@ -288,7 +275,7 @@ describe('communication support local data', () => {
       '我要休息',
       '我要喝水'
     ]);
-    expect(merged.history).toHaveLength(1);
+    expect(merged.history).toHaveLength(0);
   });
 
   test('merge preview exposes additions and resolves conflicts by updatedAt', () => {
@@ -356,13 +343,13 @@ describe('communication support local data', () => {
     expect(buildCommunicationMergePreview(localValue, remoteValue)).toEqual(
       expect.objectContaining({
         localCount: 3,
-        remoteCount: 4,
-        resultCount: 5,
-        localOnly: 1,
-        remoteOnly: 2,
-        conflicts: 2,
+        remoteCount: 2,
+        resultCount: 4,
+        localOnly: 2,
+        remoteOnly: 1,
+        conflicts: 1,
         localWins: 1,
-        remoteWins: 1,
+        remoteWins: 0,
         unchanged: 0
       })
     );
@@ -374,7 +361,7 @@ describe('communication support local data', () => {
     ).toBe('local');
     expect(
       merged.history.find(item => item.id === 'shared-history').inputText
-    ).toBe('云端新记录');
+    ).toBe('本机旧记录');
   });
 
   test('overwriteCommunicationSettings persists both neutral and legacy local keys', () => {

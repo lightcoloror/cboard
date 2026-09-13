@@ -15,6 +15,11 @@ function open() {
   return database;
 }
 export const careBrowserStorage = {
+  exclusive(key, action) {
+    return typeof navigator !== 'undefined' && navigator.locks
+      ? navigator.locks.request(`tuyujia:${key}`, action)
+      : action();
+  },
   async get(key) {
     const db = await open();
     return new Promise((resolve, reject) => {

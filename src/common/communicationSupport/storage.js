@@ -530,7 +530,7 @@ export function normalizeCommunicationSavedPhrases(value) {
         .filter(Boolean),
       item => item.sentence
     )
-  ).slice(0, MAX_COMMUNICATION_ITEMS);
+  );
 }
 
 export function normalizeCommunicationHistory(value) {
@@ -538,10 +538,15 @@ export function normalizeCommunicationHistory(value) {
     dedupeBy(
       (Array.isArray(value) ? value : [])
         .map(normalizeHistoryEntry)
-        .filter(Boolean),
+        .filter(
+          item =>
+            item &&
+            item.recordStatus !== 'draft' &&
+            item.recordStatus !== 'candidate'
+        ),
       item => item.id
     )
-  ).slice(0, MAX_COMMUNICATION_ITEMS);
+  ).slice(0, 50);
 }
 
 export function normalizeCommunicationReceiverRecords(value) {
@@ -590,30 +595,12 @@ export function buildCommunicationSupportSettings(savedPhrases, history) {
   };
 }
 
-function isDedicatedReceiverSyncRecord(entry) {
-  return (
-    entry &&
-    entry.direction === 'receive' &&
-    entry.recordStatus === 'confirmed' &&
-    entry.id &&
-    entry.sessionId &&
-    entry.patientId &&
-    entry.workspaceId &&
-    entry.inputText
-  );
-}
-
 export function buildCommunicationSupportCloudSettings(savedPhrases, history) {
   const normalized = buildCommunicationSupportSettings(savedPhrases, history);
 
   return {
     savedPhrases: normalized.savedPhrases.map(sanitizeCommunicationCloudEntry),
-    history: normalized.history
-      .filter(
-        entry =>
-          entry.localOnly !== true && !isDedicatedReceiverSyncRecord(entry)
-      )
-      .map(sanitizeCommunicationCloudEntry)
+    history: []
   };
 }
 
@@ -712,7 +699,7 @@ export function buildCommunicationSupportMergePreview(localValue, remoteValue) {
   );
   const history = buildCommunicationCollectionMergePreview(
     local.history,
-    remote.history,
+    [],
     item => item.id
   );
 
@@ -741,10 +728,6 @@ export function mergeCommunicationSupportSettings(localValue, remoteValue) {
       remote.savedPhrases,
       item => item.sentence
     ),
-    mergeNewestCommunicationEntries(
-      local.history,
-      remote.history,
-      item => item.id
-    )
+    local.history
   );
 }

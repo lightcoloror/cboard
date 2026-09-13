@@ -36,7 +36,7 @@ describe('communication repository management schema', () => {
     expect(repository.loadCommunicationHistory()).toEqual([]);
   });
 
-  test('keeps 100 repeated communication events with stable unique ids', () => {
+  test('keeps 50 repeated communication events with stable unique ids', () => {
     const storage = createStorage();
     let timestamp = 1000;
     let sequence = 0;
@@ -55,8 +55,8 @@ describe('communication repository management schema', () => {
     }
 
     const history = repository.loadCommunicationHistory();
-    expect(history).toHaveLength(100);
-    expect(new Set(history.map(item => item.id)).size).toBe(100);
+    expect(history).toHaveLength(50);
+    expect(new Set(history.map(item => item.id)).size).toBe(50);
     expect(history.every(item => item.sentence === '我要喝水')).toBe(true);
   });
 

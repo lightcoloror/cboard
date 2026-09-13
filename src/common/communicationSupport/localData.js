@@ -11,6 +11,11 @@ import {
 } from './storage';
 import { buildPrivatePictogramClearPlan } from './localDeviceData';
 import { createMemoryKeyValueStorage, isDemoMode } from '../../demoMode';
+import { createScopedCommunicationStorage } from './scopedCommunicationStorage';
+let resolveCareAccount = () => null;
+export function configureCareLocalAccount(resolve) {
+  resolveCareAccount = resolve;
+}
 
 const demoCommunicationStorage = createMemoryKeyValueStorage();
 
@@ -19,7 +24,30 @@ export function resetDemoCommunicationStorage() {
 }
 
 function createDefaultStoragePort() {
-  return isDemoMode() ? demoCommunicationStorage : createBrowserStoragePort();
+  if (isDemoMode()) return demoCommunicationStorage;
+  const storage = createBrowserStoragePort();
+  if (process.env.REACT_APP_CARE_COLLABORATION !== 'true') return storage;
+  return createScopedCommunicationStorage(storage, () => {
+    const accountId =
+      resolveCareAccount() ||
+      (storage.getItem('care-offline-selection-v1') ? 'offline' : null);
+    if (!accountId) return null;
+    let selection = {};
+    try {
+      selection = JSON.parse(
+        storage.getItem(
+          accountId === 'offline'
+            ? 'care-offline-selection-v1'
+            : `care-selection-v1:${accountId}`
+        ) || '{}'
+      );
+    } catch (_) {}
+    return {
+      accountId: String(accountId),
+      familyId: selection.familyId,
+      profileId: selection.id
+    };
+  });
 }
 
 function createDefaultStore() {

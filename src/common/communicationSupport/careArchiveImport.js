@@ -7,12 +7,19 @@ import {
   restorePictureLibraryArchive
 } from './pictureLibraryArchive';
 import { applyPersonalImagePreferencesToBoards } from './personalImagePreferences';
+import { readCareDeviceArchive } from './careDeviceArchive';
+import {
+  isEncryptedPrivateArchive,
+  decryptPrivateArchive
+} from './privateArchiveEncryption';
 
 // Build an explicit, immutable import preview from the existing ZIP format.
 // No HTTP fetch, source mutation, password collection or automatic upload.
-export async function previewCareArchive(bytes, identity) {
+export async function previewCareArchive(bytes, identity, passphrase) {
   if (bytes.byteLength > 20 * 1024 * 1024)
     throw new Error('备份文件超过20 MiB，请拆分图库后导入');
+  if (isEncryptedPrivateArchive(bytes))
+    bytes = await decryptPrivateArchive({ data: bytes, passphrase });
   const zip = await JSZip.loadAsync(bytes);
   const read = (entry, limit) =>
     new Promise((resolve, reject) => {
@@ -42,6 +49,16 @@ export async function previewCareArchive(bytes, identity) {
       });
       stream.resume();
     });
+  if (zip.file('care-device.json')) {
+    const preview = await readCareDeviceArchive(zip, identity, read);
+    return {
+      ...preview,
+      media: preview.media.map(({ bytes, ...asset }) => ({
+        ...asset,
+        data: fromByteArray(bytes)
+      }))
+    };
+  }
   const manifestBytes = await read(zip.file('library.json'), 2 * 1024 * 1024);
   const manifest = normalizePictureLibraryArchiveManifest(
     JSON.parse(

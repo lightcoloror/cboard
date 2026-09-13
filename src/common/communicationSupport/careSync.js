@@ -1,6 +1,8 @@
 /* Shared Web/WeChat collaboration engine. Storage contains patient data: never log it. */
+import { careMediaIds } from './careMediaValues.js';
 const copy = value => JSON.parse(JSON.stringify(value));
 const resourceKey = r => `${r.kind}:${r.id || r.resourceId}`;
+const storageQueues = new WeakMap();
 
 export function createCareSync({
   accountId,
@@ -10,6 +12,7 @@ export function createCareSync({
   request,
   newId,
   currentAccount,
+  personalFavorites = false,
   changed = () => {}
 }) {
   const key = `care-v1:${accountId}:${familyId}:${profileId}`;
@@ -22,10 +25,19 @@ export function createCareSync({
     permissions: [],
     locked: false
   };
-  let tail = Promise.resolve();
+  if (!storageQueues.has(storage)) storageQueues.set(storage, new Map());
+  const queues = storageQueues.get(storage);
   const serial = fn => {
-    const job = tail.then(fn);
-    tail = job.catch(() => {});
+    const run = async () => {
+      checkAccount();
+      const raw = await storage.get(key);
+      if (raw) state = JSON.parse(raw);
+      return fn();
+    };
+    const job = (queues.get(key) || Promise.resolve()).then(() =>
+      storage.exclusive ? storage.exclusive(key, run) : run()
+    );
+    queues.set(key, job.catch(() => {}));
     return job;
   };
   const checkAccount = () => {
@@ -43,8 +55,12 @@ export function createCareSync({
   }
   function checkEdit(kind) {
     checkAccount();
-    const p = kind === 'preference' ? 'preferences.edit' : 'library.edit';
-    if (state.locked || !state.permissions.includes(p))
+    const p = ['favorite', 'personalFavorite'].includes(kind)
+      ? 'read'
+      : kind === 'preference'
+      ? 'preferences.edit'
+      : 'library.edit';
+    if (state.locked || (!state.localArchive && !state.permissions.includes(p)))
       throw new Error('当前档案未授予编辑权限');
   }
   function visible() {
@@ -71,9 +87,62 @@ export function createCareSync({
   }
   const api = `/care/profiles/${encodeURIComponent(profileId)}`;
   return {
+    newMediaId: newId,
     view: visible,
+    archive: () => {
+      checkAccount();
+      if (state.locked) throw new Error('该档案访问已撤销');
+      return copy(state);
+    },
     importPreview: preview =>
       serial(async () => {
+        if (preview.restore) {
+          checkAccount();
+          if (
+            preview.profileId !== profileId ||
+            preview.familyId !== familyId ||
+            state.locked
+          )
+            throw new Error('无法恢复到当前档案');
+          const next = copy(state);
+          for (const r of preview.resources) {
+            const k = resourceKey(r);
+            if (!next.resources[k]) next.resources[k] = r;
+          }
+          next.archiveResources = {
+            ...(next.archiveResources || {}),
+            ...Object.fromEntries(
+              preview.resources.map(r => [resourceKey(r), r])
+            )
+          };
+          for (const op of preview.queue) {
+            if (!next.queue.some(q => q.operationId === op.operationId))
+              next.queue.push(op);
+          }
+          next.originalUpdates = next.originalUpdates || [];
+          for (const job of preview.originalUpdates || [])
+            if (
+              !next.originalUpdates.some(
+                item => item.operationId === job.operationId
+              )
+            )
+              next.originalUpdates.push(job);
+          for (const c of preview.conflicts) {
+            if (
+              !next.conflicts.some(
+                v => v.operation.operationId === c.operation.operationId
+              )
+            )
+              next.conflicts.push(c);
+          }
+          for (const asset of preview.media)
+            if (!next.media[asset.mediaId]) next.media[asset.mediaId] = asset;
+          next.localArchive = true;
+          next.relationship = preview.relationship || next.relationship;
+          next.cursor = -1;
+          await persist(next);
+          return;
+        }
         checkEdit('tile');
         const next = copy(state);
         for (const asset of preview.media) {
@@ -108,7 +177,7 @@ export function createCareSync({
         changed();
         return visible();
       }),
-    edit: (kind, resourceId, value, action = 'put') =>
+    edit: (kind, resourceId, value, action = 'put', options = {}) =>
       serial(async () => {
         checkEdit(kind);
         const next = copy(state);
@@ -118,8 +187,24 @@ export function createCareSync({
         const current = visible().resources[k];
         if (current && current.deleted)
           throw new Error('已删除内容不能恢复，请新建图卡');
+        const operationId = await newId();
+        if (options.updateOriginal) {
+          if (!state.owner || kind !== 'favorite' || !current?.source)
+            throw new Error('仅家庭管理员可更新关联原收藏');
+          next.originalUpdates = [
+            ...(next.originalUpdates || []),
+            {
+              sharedOperationId: operationId,
+              operationId: await newId(),
+              action,
+              sharedId: resourceId,
+              baseVersion: current.source.version,
+              ...(action === 'put' ? { value } : {})
+            }
+          ];
+        }
         next.queue.push({
-          operationId: await newId(),
+          operationId,
           kind,
           resourceId,
           action,
@@ -128,9 +213,30 @@ export function createCareSync({
         });
         await persist(next);
       }),
+    resolveOriginal: (operationId, choice) =>
+      serial(async () => {
+        checkEdit('favorite');
+        const next = copy(state);
+        const job = (next.originalUpdates || []).find(
+          item => item.operationId === operationId
+        );
+        if (!job) return;
+        if (choice === 'server')
+          next.originalUpdates = next.originalUpdates.filter(
+            item => item !== job
+          );
+        else if (choice === 'local' && job.current && !job.current.deleted) {
+          job.baseVersion = job.current.version;
+          job.operationId = await newId();
+          delete job.error;
+          delete job.current;
+        } else
+          throw new Error('原收藏已删除或共享版本已变化，请核对后重新编辑');
+        await persist(next);
+      }),
     addMedia: media =>
       serial(async () => {
-        checkEdit('tile');
+        checkEdit('favorite');
         const next = copy(state);
         next.media[media.mediaId] = { ...media, pending: true };
         await persist(next);
@@ -187,16 +293,36 @@ export function createCareSync({
           if (snapshot.familyId !== familyId) throw new Error('档案空间不匹配');
           let next = copy(state);
           next.permissions = snapshot.permissions;
+          next.owner = snapshot.owner === true;
+          next.localArchive = false;
           next.locked = false;
+          next.status = 'ready';
+          next.entitlements = snapshot.entitlements || null;
+          next.relationship = snapshot.relationship || null;
           next.cursor = snapshot.cursor;
           if (full) next.resources = {};
+          if (full && next.archiveResources)
+            next.resources = { ...next.archiveResources };
           snapshot.resources.forEach(r => {
             next.resources[resourceKey(r)] = r;
           });
           await persist(next);
+          if (personalFavorites) {
+            const own = await request(`${api}/favorites`, 'GET');
+            checkAccount();
+            next = copy(state);
+            for (const r of own.items || [])
+              next.resources[`personalFavorite:${r.id}`] = {
+                ...r,
+                kind: 'personalFavorite'
+              };
+            await persist(next);
+          }
+          const canUpload = !next.entitlements || next.entitlements.syncWrite;
           for (const [mediaId, asset] of Object.entries(state.media)) {
+            if (!canUpload) break;
             if (!asset.pending) continue;
-            checkEdit('tile');
+            checkEdit('favorite');
             await request(`${api}/media`, 'POST', asset);
             checkAccount();
             next = copy(state);
@@ -207,11 +333,20 @@ export function createCareSync({
             state.conflicts.map(c => resourceKey(c.operation))
           );
           for (const op of [...state.queue]) {
+            if (!canUpload) break;
             if (blocked.has(resourceKey(op))) continue;
             checkEdit(op.kind);
             let result;
             try {
-              result = await request(`${api}/commands`, 'POST', op);
+              result = await request(
+                op.kind === 'personalFavorite'
+                  ? `${api}/favorites`
+                  : `${api}/commands`,
+                'POST',
+                op
+              );
+              if (result.resource && op.kind === 'personalFavorite')
+                result.resource.kind = 'personalFavorite';
             } catch (error) {
               if (error.status === 409 && error.data && error.data.conflict)
                 result = error.data;
@@ -236,6 +371,9 @@ export function createCareSync({
               });
               blocked.add(resourceKey(op));
             } else if (result.resource) {
+              for (const job of next.originalUpdates || [])
+                if (job.sharedOperationId === op.operationId)
+                  job.sharedVersion = result.resource.version;
               const key = resourceKey(result.resource);
               if (
                 !next.resources[key] ||
@@ -245,9 +383,47 @@ export function createCareSync({
             }
             await persist(next);
           }
+          for (const job of [...(state.originalUpdates || [])]) {
+            if (!canUpload) break;
+            if (!job.sharedVersion || job.error) continue;
+            checkEdit('favorite');
+            try {
+              const result = await request(
+                `${api}/favorite-original`,
+                'POST',
+                job
+              );
+              if (result.conflict)
+                throw Object.assign(new Error('FAVORITE_CONFLICT'), {
+                  status: 409,
+                  data: result
+                });
+              next = copy(state);
+              next.originalUpdates = next.originalUpdates.filter(
+                v => v.operationId !== job.operationId
+              );
+            } catch (error) {
+              if (
+                ![400, 403, 404, 409].includes(error.status) ||
+                error.data?.code === 'PROFILE_ACCESS_DENIED'
+              )
+                throw error;
+              next = copy(state);
+              const pending = next.originalUpdates.find(
+                v => v.operationId === job.operationId
+              );
+              pending.error = error.data?.code || 'ORIGINAL_UPDATE_CONFLICT';
+              pending.current = error.data?.current || null;
+            }
+            await persist(next);
+          }
           // Download authorized assets for offline use; never use permanent public URLs.
-          for (const r of Object.values(state.resources)) {
-            const mediaId = !r.deleted && r.value && r.value.mediaId;
+          const mediaIds = new Set(
+            Object.values(state.resources)
+              .filter(r => !r.deleted)
+              .flatMap(r => careMediaIds(r.value))
+          );
+          for (const mediaId of mediaIds) {
             if (!mediaId || state.media[mediaId]) continue;
             const asset = await request(
               `${api}/media/${encodeURIComponent(mediaId)}`,
@@ -260,11 +436,31 @@ export function createCareSync({
           }
           return visible();
         } catch (error) {
-          if (
-            (error.status === 401 || error.status === 403) &&
-            currentAccount() === accountId
-          ) {
-            await persist({ ...copy(state), locked: true });
+          if (currentAccount() === accountId) {
+            const code = error.data?.code || error.code;
+            if (error.status === 401) {
+              await persist({ ...copy(state), status: 'login_required' });
+            } else if (
+              ['SUBSCRIPTION_EXPIRED', 'DOWNLOAD_PERIOD_ENDED'].includes(code)
+            ) {
+              await persist({
+                ...copy(state),
+                status: code,
+                entitlements: {
+                  ...(state.entitlements || {}),
+                  syncWrite: false
+                }
+              });
+            } else if (
+              error.status === 403 &&
+              code === 'PROFILE_ACCESS_DENIED'
+            ) {
+              await persist({
+                ...copy(state),
+                locked: true,
+                status: 'access_revoked'
+              });
+            }
           }
           throw error;
         }

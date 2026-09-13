@@ -35,6 +35,6 @@ describe('communication history cloud privacy', () => {
         importSource: 'open-board-log'
       })
     );
-    expect(cloud.history.map(entry => entry.id)).toEqual(['history-local']);
+    expect(cloud.history).toEqual([]);
   });
 });

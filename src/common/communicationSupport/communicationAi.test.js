@@ -24,7 +24,7 @@ function createBoards() {
 }
 
 describe('communicationAi contract', () => {
-  test('builds a bounded request and excludes receiver drafts from context', () => {
+  test('builds a bounded current-request payload without previous conversations or feedback', () => {
     const output = Array.from({ length: 20 }, (_, index) => ({
       id: String(index),
       label: `词${index}`
@@ -55,11 +55,8 @@ describe('communicationAi contract', () => {
 
     expect(request.pictogramLabels).toHaveLength(MAX_COMMUNICATION_AI_LABELS);
     expect(request.candidateCount).toBe(5);
-    expect(request.context.recentSentences).toEqual(['上一句']);
-    expect(request.context.candidateFeedback).toEqual([
-      { sentence: '符合意图', feedback: 'up' },
-      { sentence: '不符合意图', feedback: 'down' }
-    ]);
+    expect(request.context.recentSentences).toEqual([]);
+    expect(request.context.candidateFeedback).toEqual([]);
     expect(request.context.scene).toBe('rehab_clinic');
     expect(
       buildCommunicationAiSentenceRequest({

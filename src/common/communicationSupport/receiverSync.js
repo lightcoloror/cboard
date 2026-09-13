@@ -140,19 +140,9 @@ function mergeReceiverPatientFeedback(local, remote) {
 }
 
 export function buildConfirmedReceiverSyncPayload(records) {
-  return normalizeCommunicationReceiverRecords(records)
-    .filter(
-      record =>
-        record.direction === 'receive' &&
-        record.recordStatus === 'confirmed' &&
-        record.id &&
-        record.sessionId &&
-        record.patientId &&
-        record.workspaceId &&
-        record.inputText
-    )
-    .slice(0, MAX_RECEIVER_SYNC_RECORDS)
-    .map(record => buildConfirmedRecord(record, { forUpload: true }));
+  // Ordinary history is device-local. Favorites use their separate contract.
+  void records;
+  return [];
 }
 
 export function mergeConfirmedReceiverRecords(

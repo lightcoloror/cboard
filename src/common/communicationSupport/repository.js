@@ -279,7 +279,7 @@ export function migrateCommunicationRepositoryStorage({
     COMMUNICATION_STORAGE_KEYS.savedPhrases,
     LEGACY_COMMUNICATION_STORAGE_KEYS.savedPhrases,
     normalizeCommunicationSavedPhrases,
-    itemLimit
+    Infinity
   );
   synchronizeList(
     COMMUNICATION_STORAGE_KEYS.history,
@@ -467,6 +467,23 @@ export function createCommunicationRepository({
 } = {}) {
   assertKeyValueStore(storage);
 
+  // Preserve the original collection before the new 50-item policy can cause a
+  // migration/write. This recovery copy is local and is never a sync payload.
+  for (const historyKey of [
+    COMMUNICATION_STORAGE_KEYS.history,
+    LEGACY_COMMUNICATION_STORAGE_KEYS.history,
+    COMMUNICATION_STORAGE_KEYS.receiverRecords
+  ]) {
+    const raw = historyKey && storage.getItem(historyKey);
+    if (raw && !storage.getItem(`${historyKey}:before-history-50`)) {
+      const entries = safeParse(raw, []);
+      if (Array.isArray(entries) && entries.length > 50) {
+        if (storage.setItem(`${historyKey}:before-history-50`, raw) === false)
+          throw new Error('无法备份旧历史，已停止更新');
+      }
+    }
+  }
+
   if (typeof now !== 'function') {
     throw new TypeError('Communication repository requires a clock function');
   }
@@ -527,7 +544,11 @@ export function createCommunicationRepository({
   }
 
   function writeList(primaryKey, legacyKey, list) {
-    const serialized = JSON.stringify(list.slice(0, itemLimit));
+    const serialized = JSON.stringify(
+      primaryKey === COMMUNICATION_STORAGE_KEYS.savedPhrases
+        ? list
+        : list.slice(0, itemLimit)
+    );
     writeStorageValue(primaryKey, serialized);
 
     if (legacyKey) {
@@ -596,9 +617,7 @@ export function createCommunicationRepository({
         COMMUNICATION_STORAGE_KEYS.savedPhrases,
         LEGACY_COMMUNICATION_STORAGE_KEYS.savedPhrases
       )
-    )
-      .filter(item => !deletedIds.has(item.id))
-      .slice(0, itemLimit);
+    ).filter(item => !deletedIds.has(item.id));
   }
 
   function overwriteCommunicationSavedPhraseTombstones(entries) {
@@ -612,9 +631,7 @@ export function createCommunicationRepository({
         COMMUNICATION_STORAGE_KEYS.savedPhrases,
         LEGACY_COMMUNICATION_STORAGE_KEYS.savedPhrases
       )
-    )
-      .filter(item => !deletedIds.has(item.id))
-      .slice(0, itemLimit);
+    ).filter(item => !deletedIds.has(item.id));
 
     writeList(
       COMMUNICATION_STORAGE_KEYS.savedPhraseTombstones,
@@ -633,9 +650,9 @@ export function createCommunicationRepository({
     const deletedIds = new Set(
       loadCommunicationSavedPhraseTombstones().map(item => item.id)
     );
-    const phrases = normalizeCommunicationSavedPhrases(entries)
-      .filter(item => !deletedIds.has(item.id))
-      .slice(0, itemLimit);
+    const phrases = normalizeCommunicationSavedPhrases(entries).filter(
+      item => !deletedIds.has(item.id)
+    );
 
     writeList(
       COMMUNICATION_STORAGE_KEYS.savedPhrases,
@@ -756,11 +773,29 @@ export function createCommunicationRepository({
   }
 
   function overwriteCommunicationHistory(entries) {
+    const normalized = normalizeCommunicationHistory(entries).slice(
+      0,
+      itemLimit
+    );
     writeList(
       COMMUNICATION_STORAGE_KEYS.history,
       LEGACY_COMMUNICATION_STORAGE_KEYS.history,
-      normalizeCommunicationHistory(entries).slice(0, itemLimit)
+      normalized
     );
+    const ids = new Set(normalized.map(item => item.id));
+    const receiver = safeParse(
+      storage.getItem(COMMUNICATION_STORAGE_KEYS.receiverRecords),
+      []
+    );
+    if (Array.isArray(receiver))
+      writeStorageValue(
+        COMMUNICATION_STORAGE_KEYS.receiverRecords,
+        JSON.stringify(
+          receiver.filter(
+            item => item.recordStatus !== 'confirmed' || ids.has(item.id)
+          )
+        )
+      );
   }
 
   function appendCommunicationHistory(entry) {

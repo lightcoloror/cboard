@@ -7,7 +7,6 @@ import {
   buildReceiverMatchQuality
 } from './receiverPipeline';
 import { buildCommunicationTileCatalog } from './symbolMatching';
-import { normalizeExpressionCandidates } from './candidateFeedback';
 import { normalizeConversationScene } from './conversationSession';
 
 export const COMMUNICATION_AI_CONTRACT_VERSION = 1;
@@ -44,20 +43,6 @@ function normalizeCandidateCount(value) {
       );
 }
 
-function getContextText(turn) {
-  if (!turn || turn.recordStatus === 'draft') return '';
-  return String(turn.text || turn.sentence || turn.inputText || '').trim();
-}
-
-function getCandidateFeedbackContext(context) {
-  return (context && context.turns ? context.turns : [])
-    .flatMap(turn =>
-      normalizeExpressionCandidates(turn && turn.candidateFeedback, [])
-    )
-    .filter(candidate => candidate.feedback)
-    .slice(-20);
-}
-
 export function buildCommunicationAiSentenceRequest({
   output,
   context,
@@ -74,12 +59,8 @@ export function buildCommunicationAiSentenceRequest({
     ),
     candidateCount: normalizeCandidateCount(candidateCount),
     context: {
-      recentSentences: normalizeStringList(
-        (context && context.turns ? context.turns : []).map(getContextText),
-        MAX_COMMUNICATION_AI_CONTEXT_TURNS,
-        120
-      ),
-      candidateFeedback: getCandidateFeedbackContext(context),
+      recentSentences: [],
+      candidateFeedback: [],
       ...(scene ? { scene } : {})
     }
   };
