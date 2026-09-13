@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import CareExpressionBoard from '../../Care/CareExpressionBoard';
 import PropTypes from 'prop-types';
 import Button from '@material-ui/core/Button';
 import shortid from 'shortid';
@@ -1012,6 +1013,16 @@ export default function CommunicationSupportPanel({
             </p>
           )}
 
+          {careMode && (
+            <CareExpressionBoard
+              preferences={preferences}
+              boards={expressionBoardDtos}
+              activeBoardId={activeBoardId}
+              output={output}
+              onApplyOutput={onApplyOutput}
+              onJumpBoard={onJumpBoard}
+            />
+          )}
           <ExpressionLoopPanel
             key={`express-${
               conversationSession ? conversationSession.id : 'loading'

@@ -71,6 +71,7 @@ function CareHome({ intl }) {
     setActive({ ...profile, accountId: identity.id });
     setSnapshot(null);
     setOutput([]);
+    setSelectedBoard(null);
     const instance = createCareSync({
       accountId: identity.id,
       profileId: profile.id,
@@ -157,8 +158,12 @@ function CareHome({ intl }) {
         if (localStorage.getItem(instance.localKey) === raw)
           localStorage.removeItem(instance.localKey);
       }
-      await instance.sync();
-      setNotice('');
+      if (localCareIdentity()?.offline) {
+        setNotice('正在使用本机恢复的患者资料；修改仅保存在本机。');
+      } else {
+        await instance.sync();
+        setNotice('');
+      }
     } catch (e) {
       setNotice(careErrorMessage(e));
     }

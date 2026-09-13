@@ -119,4 +119,40 @@ describe('patient collaboration home', () => {
     expect(wrapper.find(CommunicationSupportPanel)).toHaveLength(0);
     wrapper.unmount();
   });
+  test('restored offline profile never requests cloud synchronization on open or refresh', async () => {
+    who = { id: 'offline', offline: true };
+    localStorage.setItem(
+      'care-offline-selection-v1',
+      JSON.stringify({
+        id: 'patient',
+        familyId: 'family',
+        relationship: { role: 'patient', defaultMode: 'expression' }
+      })
+    );
+    disk['care-v1:offline:family:patient'] = JSON.stringify({
+      cursor: -1,
+      resources: {},
+      queue: [],
+      conflicts: [],
+      media: {},
+      permissions: [],
+      locked: false,
+      localArchive: true
+    });
+    let wrapper;
+    await act(async () => {
+      wrapper = mount(<CareHome intl={{}} />);
+      await flush();
+      tick();
+      await flush();
+    });
+    wrapper.update();
+    expect(runtime.request).not.toHaveBeenCalled();
+    expect(wrapper.text()).toContain('修改仅保存在本机');
+    expect(wrapper.text()).not.toContain('登录已失效');
+    expect(wrapper.find(CommunicationSupportPanel).prop('isLogged')).toBe(
+      false
+    );
+    wrapper.unmount();
+  });
 });

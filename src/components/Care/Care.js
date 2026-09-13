@@ -6,6 +6,7 @@ import { logout } from '../Account/Login/Login.actions';
 import { careBrowserStorage } from '../../common/communicationSupport/careBrowserStorage';
 import { createCareSync } from '../../common/communicationSupport/careSync';
 import { configureCareLocalAccount } from '../../common/communicationSupport/localData';
+import { chooseCareBrowserFile } from '../../common/communicationSupport/careBrowserFile';
 
 const identity = () => {
   const u = getStore().getState().app.userData;
@@ -182,14 +183,7 @@ export const runtime = {
     };
   },
   async chooseImage() {
-    const file = await new Promise(resolve => {
-      const input = document.createElement('input');
-      input.type = 'file';
-      input.accept = 'image/png,image/jpeg,image/webp';
-      input.onchange = () => resolve(input.files[0] || null);
-      input.oncancel = () => resolve(null);
-      input.click();
-    });
+    const file = await chooseCareBrowserFile('image/png,image/jpeg,image/webp');
     if (!file) return null;
     if (file.size > 4 * 1024 * 1024) throw new Error('请选择不超过4 MiB的图片');
     const bytes = new Uint8Array(await file.arrayBuffer());
@@ -206,14 +200,7 @@ export const runtime = {
     return { data, type: file.type, sha256 };
   },
   async chooseArchive() {
-    const file = await new Promise(resolve => {
-      const input = document.createElement('input');
-      input.type = 'file';
-      input.accept = '.zip';
-      input.onchange = () => resolve(input.files[0] || null);
-      input.oncancel = () => resolve(null);
-      input.click();
-    });
+    const file = await chooseCareBrowserFile('.zip');
     if (!file) return null;
     if (file.size > 20 * 1024 * 1024)
       throw new Error('请选择不超过20 MiB的图库备份');
