@@ -22,6 +22,7 @@ export default function CarePanel({ runtime, ui }) {
   const [message, setMessage] = useState('');
   const [busy, setBusy] = useState(false);
   const [sessions, setSessions] = useState([]);
+  const [logoutAllAccount, setLogoutAllAccount] = useState(null);
   const [members, setMembers] = useState({});
   const [audit, setAudit] = useState([]);
   const [boardId, setBoardId] = useState('default');
@@ -91,6 +92,7 @@ export default function CarePanel({ runtime, ui }) {
           setMembers({});
           setAudit([]);
           setSessions([]);
+          setLogoutAllAccount(null);
           setIdentity(who);
         }
         if (!enabled || !who?.id) return;
@@ -1080,27 +1082,44 @@ export default function CarePanel({ runtime, ui }) {
           </Button>
         </Box>
       ))}
-      <Button
-        disabled={busy}
-        onClick={() =>
-          run(async () => {
-            if (
-              !(await runtime.confirm(
-                '退出全部设备？患者的其他设备也需要重新登录。'
-              ))
-            )
-              return;
-            await request('/user/sessions', 'POST', { all: true });
-            runtime.logout();
-            setIdentity(null);
-            setData(null);
-            engine.current = null;
-            setSessions([]);
-          })
-        }
-      >
+      <Button disabled={busy} onClick={() => setLogoutAllAccount(identity.id)}>
         退出全部设备
       </Button>
+      {logoutAllAccount === identity.id && (
+        <Box role="alertdialog" aria-label="确认退出全部设备">
+          <Text>退出全部设备？患者的其他设备也需要重新登录。</Text>
+          <Button disabled={busy} onClick={() => setLogoutAllAccount(null)}>
+            取消退出
+          </Button>
+          <Button
+            disabled={busy}
+            onClick={() =>
+              run(async () => {
+                const initiatingIdentity = runtime.identity();
+                if (initiatingIdentity?.id !== logoutAllAccount) {
+                  setLogoutAllAccount(null);
+                  return;
+                }
+                await request('/user/sessions', 'POST', { all: true });
+                const currentIdentity = runtime.identity();
+                if (
+                  currentIdentity?.id !== initiatingIdentity.id ||
+                  currentIdentity?.token !== initiatingIdentity.token
+                )
+                  return;
+                runtime.logout();
+                setLogoutAllAccount(null);
+                setIdentity(null);
+                setData(null);
+                engine.current = null;
+                setSessions([]);
+              })
+            }
+          >
+            确认退出全部设备
+          </Button>
+        </Box>
+      )}
     </Box>
   );
 }

@@ -76,6 +76,67 @@ describe('shared patient collaboration UI', () => {
     });
     host.remove();
   });
+  it('requires page confirmation for logout-all and permits cancellation', async () => {
+    await act(async () => {
+      ReactDOM.render(<CarePanel runtime={runtime} ui={ui} />, host);
+      await flush();
+    });
+    runtime.request.mockClear();
+    act(() => Simulate.click(button('退出全部设备')));
+    expect(host.querySelector('[role="alertdialog"]')).not.toBeNull();
+    expect(runtime.request).not.toHaveBeenCalled();
+    act(() => Simulate.click(button('取消退出')));
+    expect(host.querySelector('[role="alertdialog"]')).toBeNull();
+    expect(runtime.request).not.toHaveBeenCalled();
+    act(() => Simulate.click(button('退出全部设备')));
+    await act(async () => {
+      Simulate.click(button('确认退出全部设备'));
+      await flush();
+    });
+    expect(runtime.request).toHaveBeenCalledWith('/user/sessions', 'POST', {
+      all: true
+    });
+    expect(who).toBeNull();
+  });
+  it('does not use a logout confirmation for a different account', async () => {
+    await act(async () => {
+      ReactDOM.render(<CarePanel runtime={runtime} ui={ui} />, host);
+      await flush();
+    });
+    act(() => Simulate.click(button('退出全部设备')));
+    who = { id: 'other', token: 'other-synthetic' };
+    runtime.request.mockClear();
+    await act(async () => {
+      Simulate.click(button('确认退出全部设备'));
+      await flush();
+    });
+    expect(runtime.request).not.toHaveBeenCalled();
+    expect(who.id).toBe('other');
+  });
+  it.each(['other', 'owner'])(
+    'does not clear a new session while old logout is in flight (%s)',
+    async nextId => {
+      await act(async () => {
+        ReactDOM.render(<CarePanel runtime={runtime} ui={ui} />, host);
+        await flush();
+      });
+      let finish;
+      runtime.request.mockImplementation(
+        () =>
+          new Promise(resolve => {
+            finish = resolve;
+          })
+      );
+      act(() => Simulate.click(button('退出全部设备')));
+      act(() => Simulate.click(button('确认退出全部设备')));
+      who = { id: nextId, token: 'new-session' };
+      await act(async () => {
+        finish({});
+        await flush();
+      });
+      expect(who).toEqual({ id: nextId, token: 'new-session' });
+    }
+  );
   it.each([
     [{ status: 401 }, '登录已失效'],
     [
