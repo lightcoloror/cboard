@@ -2,6 +2,7 @@ import {
   buildCommunicationMergePreview,
   buildCommunicationCloudSettingsPayload,
   buildCommunicationSettingsPayload,
+  configureCareLocalAccount,
   getAnonymousAccountMergeState,
   loadCommunicationHistory,
   loadPersonalImagePreferences,
@@ -44,6 +45,69 @@ describe('communication support local data', () => {
         shouldPrompt: false
       })
     );
+  });
+
+  test('keeps restored offline, guest and account data separate through logout and relogin', () => {
+    const previousFlag = process.env.REACT_APP_CARE_COLLABORATION;
+    let account = null;
+    process.env.REACT_APP_CARE_COLLABORATION = 'true';
+    configureCareLocalAccount(() => account);
+    const selection = JSON.stringify({
+      id: 'same-patient',
+      familyId: 'same-family'
+    });
+    const save = label =>
+      overwriteCommunicationSettings({
+        savedPhrases: [
+          { sentence: label, output: [{ id: label, label }], createdAt: 1 }
+        ],
+        history: [
+          {
+            direction: 'express',
+            sentence: label,
+            labels: [label],
+            createdAt: 1
+          }
+        ]
+      });
+    const expectOnly = label => {
+      expect(loadCommunicationSavedPhrases().map(row => row.sentence)).toEqual([
+        label
+      ]);
+      expect(loadCommunicationHistory().map(row => row.labels)).toEqual([
+        [label]
+      ]);
+    };
+    try {
+      setDemoModeOverride(false);
+      save('guest-only');
+      localStorage.setItem('care-offline-selection-v1', selection);
+      expect(loadCommunicationSavedPhrases()).toEqual([]);
+      expect(loadCommunicationHistory()).toEqual([]);
+      save('restored-only');
+      for (const id of ['account-a', 'account-b']) {
+        account = id;
+        localStorage.setItem(`care-selection-v1:${id}`, selection);
+        expect(loadCommunicationSavedPhrases()).toEqual([]);
+        expect(loadCommunicationHistory()).toEqual([]);
+        save(id);
+      }
+      account = null;
+      expectOnly('restored-only');
+      account = 'account-a';
+      expectOnly('account-a');
+      account = 'account-b';
+      expectOnly('account-b');
+      account = null;
+      localStorage.removeItem('care-offline-selection-v1');
+      expectOnly('guest-only');
+    } finally {
+      configureCareLocalAccount(() => null);
+      setDemoModeOverride(null);
+      if (previousFlag === undefined)
+        delete process.env.REACT_APP_CARE_COLLABORATION;
+      else process.env.REACT_APP_CARE_COLLABORATION = previousFlag;
+    }
   });
 
   test('isolates demo records from production browser storage', () => {

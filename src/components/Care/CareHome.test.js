@@ -183,6 +183,8 @@ describe('patient collaboration home', () => {
     await act(async () => {
       wrapper = mount(<CareHome intl={{}} />);
       await flush();
+    });
+    await act(async () => {
       tick();
       await flush();
     });
