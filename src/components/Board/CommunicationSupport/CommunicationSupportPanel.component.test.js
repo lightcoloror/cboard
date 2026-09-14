@@ -249,6 +249,35 @@ describe('CommunicationSupportPanel receiver flow', () => {
     initiallyExpanded: true
   };
 
+  it('keeps shared daily phrases outside personal persistence when reused', () => {
+    const shared = {
+      id: 'family-shared:one',
+      sentence: '家庭共享测试',
+      output: [],
+      careSharedReadOnly: true
+    };
+    const changed = jest.fn();
+    const wrapper = mount(
+      <CommunicationSupportPanel
+        {...props}
+        careMode
+        initialMode="express"
+        careSharedPhrases={[shared]}
+        onCareFavoritesChanged={changed}
+      />
+    );
+    const expression = wrapper.find('ExpressionLoopPanel');
+    expect(expression.prop('savedPhrases')).toContainEqual(shared);
+    localData.overwriteCommunicationSavedPhrases.mockClear();
+    act(() => expression.prop('onUseSavedPhrase')(shared));
+    expect(localData.overwriteCommunicationSavedPhrases).not.toHaveBeenCalled();
+    expect(changed).not.toHaveBeenCalled();
+    expect(
+      wrapper.find('CommunicationManagementDialog').prop('savedPhrases')
+    ).not.toContainEqual(shared);
+    wrapper.unmount();
+  });
+
   beforeEach(() => {
     jest.useFakeTimers();
     onApplyOutput.mockClear();

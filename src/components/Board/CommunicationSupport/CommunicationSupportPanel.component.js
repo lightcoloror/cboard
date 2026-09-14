@@ -85,6 +85,7 @@ import {
   resolveCommunicationTileLabel
 } from '../../../common/communicationSupport/resolvers';
 import { markCommunicationSavedPhraseUsed } from '../../../common/communicationSupport/savedPhraseManagement';
+import { isCareSharedPhrase } from '../../../common/communicationSupport/careSharedPhrases';
 import { PATIENT_ACTION_IDS } from '../../../common/communicationSupport/patientActionLanguage';
 import ExpressionLoopPanel from './ExpressionLoopPanel.component';
 import CommunicationAccessibilityDialog from './CommunicationAccessibilityDialog.component';
@@ -251,6 +252,7 @@ export default function CommunicationSupportPanel({
   initialMode,
   initiallyExpanded,
   careMode = false,
+  careSharedPhrases = [],
   onCareFavoritesChanged,
   onCarePersonalImagesChanged,
   careDataVersion
@@ -727,6 +729,7 @@ export default function CommunicationSupportPanel({
   }
 
   function handleSavedPhraseUsed(item) {
+    if (isCareSharedPhrase(item)) return;
     if (!item || !item.id) return;
     const result = markCommunicationSavedPhraseUsed(savedPhrases, item.id);
     if (result.changed) {
@@ -1042,7 +1045,7 @@ export default function CommunicationSupportPanel({
             boards={expressionBoardDtos}
             activeBoardId={activeBoardId}
             pictogramOrdering={pictogramOrdering}
-            savedPhrases={savedPhrases}
+            savedPhrases={[...savedPhrases, ...careSharedPhrases]}
             conversationContext={getConversationContext()}
             aiAvailable={isLogged}
             onGenerateAiSentences={request =>
@@ -1288,6 +1291,7 @@ CommunicationSupportPanel.propTypes = {
   initialMode: PropTypes.oneOf(['express', 'receive']),
   initiallyExpanded: PropTypes.bool,
   careMode: PropTypes.bool,
+  careSharedPhrases: PropTypes.arrayOf(PropTypes.object),
   careDataVersion: PropTypes.string,
   onCareFavoritesChanged: PropTypes.func,
   onCarePersonalImagesChanged: PropTypes.func

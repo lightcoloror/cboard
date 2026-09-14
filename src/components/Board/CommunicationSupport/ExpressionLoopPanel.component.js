@@ -1065,12 +1065,15 @@ export default function ExpressionLoopPanel({
           {savedPhrases.length ? (
             savedPhrases.map(item => (
               <SavedPhraseRow
-                key={item.sentence}
+                key={`${item.careSharedReadOnly ? 'shared' : 'own'}:${item.id ||
+                  item.sentence}`}
                 item={item}
                 onApply={handleApplySavedPhrase}
                 onPlay={handlePlaySavedPhrase}
                 playLabel={copy.quickPlay}
-                reuseLabel={copy.reuse}
+                reuseLabel={
+                  item.careSharedReadOnly ? '重用家庭共享' : copy.reuse
+                }
               />
             ))
           ) : (

@@ -11,6 +11,7 @@ import {
   overwritePersonalImagePreferences
 } from '../../common/communicationSupport/localData';
 import CommunicationSupportPanel from '../Board/CommunicationSupport/CommunicationSupportPanel.component';
+import { projectCareSharedPhrases } from '../../common/communicationSupport/careSharedPhrases';
 import Care, { runtime, localCareIdentity } from './Care';
 import {
   encodeCareMedia,
@@ -406,6 +407,11 @@ function CareHome({ intl }) {
             key={`${who.id}:${active.id}`}
             intl={intl}
             careMode
+            careSharedPhrases={projectCareSharedPhrases(
+              snapshot,
+              active.relationship?.role,
+              mediaImage
+            )}
             isLogged={!who.offline}
             initiallyExpanded
             initialMode={
