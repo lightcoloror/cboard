@@ -25,6 +25,7 @@ import {
   normalizeExpressionCandidates
 } from '../../../common/communicationSupport/candidateFeedback';
 import {
+  addCommunicationSavedPhrase,
   buildCommunicationSavedPhraseExport,
   deleteCommunicationSavedPhrase,
   importCommunicationSavedPhrases,
@@ -248,7 +249,31 @@ export default function CommunicationManagementDialog({
       action === 'favorite'
         ? toggleCommunicationHistoryFavorite(historyItems, id)
         : deleteCommunicationHistoryEntry(historyItems, id);
-    if (result.changed) onHistoryChange(result.items);
+    if (!result.changed) return;
+    try {
+      if (action === 'favorite') {
+        const entry = result.items.find(item => item.id === id);
+        if (entry && entry.isFavorite) {
+          const effective = getEffectiveReceiverHistoryEntry(
+            entry,
+            receiverCorrections
+          );
+          const favorite = addCommunicationSavedPhrase(savedPhrases, {
+            sentence: getCommunicationHistoryReplayText(effective),
+            output: JSON.parse(JSON.stringify(effective.output || [])),
+            sourceHistoryId: id
+          });
+          if (!favorite.item) throw new Error('这条记录没有可收藏的内容');
+          if (favorite.changed) onSavedPhrasesChange(favorite.items);
+          setNotice('已独立保存到常用语，删除或淘汰这条历史不会删除收藏。');
+        } else {
+          setNotice('已取消历史标记；独立收藏仍保留，可在常用语管理中删除。');
+        }
+      }
+      onHistoryChange(result.items);
+    } catch (error) {
+      setNotice(error.message || '收藏保存失败，请重试。');
+    }
   }
 
   function updateCandidateFeedback(id, candidateIndex, feedback) {
@@ -260,11 +285,7 @@ export default function CommunicationManagementDialog({
     );
     if (!result.changed) return;
     onHistoryChange(result.items);
-    setNotice(
-      candidateFeedbackSyncAvailable
-        ? '候选句反馈已保存，并会纳入下次云同步。'
-        : '候选句反馈已保存在本机，登录后可同步。'
-    );
+    setNotice('候选句反馈已保存在本机，不随普通沟通历史上传。');
   }
 
   function startReceiverHistoryReview(item) {
@@ -967,7 +988,7 @@ export default function CommunicationManagementDialog({
                           size="small"
                           onClick={() => updateHistory(item.id, 'favorite')}
                         >
-                          {item.isFavorite ? '取消收藏' : '收藏'}
+                          {item.isFavorite ? '取消标记' : '收藏'}
                         </Button>
                         <Button
                           size="small"

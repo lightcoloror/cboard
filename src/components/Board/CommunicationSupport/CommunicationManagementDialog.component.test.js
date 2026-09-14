@@ -31,6 +31,7 @@ const history = {
   direction: 'express',
   sentence: '我要喝水',
   labels: ['水'],
+  output: [{ id: 'water', label: '水', image: '/synthetic-water.png' }],
   sessionId: 'session-1',
   createdAt: 1,
   updatedAt: 1,
@@ -100,6 +101,8 @@ describe('CommunicationManagementDialog', () => {
 
   test('favorites and replays a history item', () => {
     const onHistoryChange = jest.fn();
+    const onSavedPhrasesChange = jest.fn();
+    const onApplyOutput = jest.fn();
     const onSpeak = jest.fn();
     const wrapper = mount(
       <CommunicationManagementDialog
@@ -107,9 +110,9 @@ describe('CommunicationManagementDialog', () => {
         onClose={jest.fn()}
         savedPhrases={[]}
         historyItems={[history]}
-        onSavedPhrasesChange={jest.fn()}
+        onSavedPhrasesChange={onSavedPhrasesChange}
         onHistoryChange={onHistoryChange}
-        onApplyOutput={jest.fn()}
+        onApplyOutput={onApplyOutput}
         onSpeak={onSpeak}
       />
     );
@@ -137,6 +140,63 @@ describe('CommunicationManagementDialog', () => {
       ])
     );
     expect(onSpeak).toHaveBeenCalledWith('我要喝水');
+    expect(onSavedPhrasesChange).toHaveBeenCalledWith([
+      expect.objectContaining({
+        sentence: '我要喝水',
+        sourceHistoryId: 'history-1'
+      })
+    ]);
+    expect(onSavedPhrasesChange.mock.invocationCallOrder[0]).toBeLessThan(
+      onHistoryChange.mock.invocationCallOrder[0]
+    );
+    wrapper.setProps({
+      savedPhrases: onSavedPhrasesChange.mock.calls[0][0],
+      historyItems: []
+    });
+    wrapper
+      .find('ForwardRef(Button)')
+      .filterWhere(node => node.text().startsWith('常用语（'))
+      .first()
+      .simulate('click');
+    wrapper.update();
+    wrapper
+      .find('ForwardRef(Button)')
+      .filterWhere(node => node.text() === '重用')
+      .first()
+      .simulate('click');
+    expect(onApplyOutput).toHaveBeenLastCalledWith(history.output);
+  });
+
+  test('does not mark history when independent favorite saving fails', () => {
+    const onHistoryChange = jest.fn();
+    const wrapper = mount(
+      <CommunicationManagementDialog
+        open
+        onClose={jest.fn()}
+        savedPhrases={[]}
+        historyItems={[history]}
+        onSavedPhrasesChange={() => {
+          throw new Error('storage full');
+        }}
+        onHistoryChange={onHistoryChange}
+        onApplyOutput={jest.fn()}
+        onSpeak={jest.fn()}
+      />
+    );
+    wrapper
+      .find('ForwardRef(Button)')
+      .filterWhere(node => node.text().startsWith('沟通历史'))
+      .first()
+      .simulate('click');
+    wrapper.update();
+    wrapper
+      .find('ForwardRef(Button)')
+      .filterWhere(node => node.text() === '收藏')
+      .first()
+      .simulate('click');
+    wrapper.update();
+    expect(onHistoryChange).not.toHaveBeenCalled();
+    expect(wrapper.text()).toContain('storage full');
   });
 
   test('exports readable text and a private Open Board Logging file separately', () => {
@@ -461,7 +521,7 @@ describe('CommunicationManagementDialog', () => {
         })
       ])
     );
-    expect(wrapper.text()).toContain('纳入下次云同步');
+    expect(wrapper.text()).toContain('不随普通沟通历史上传');
   });
 
   test('shows and forgets an active workspace correction memory rule', () => {
