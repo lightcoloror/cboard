@@ -80,6 +80,29 @@ describe('shared patient collaboration UI', () => {
     });
     host.remove();
   });
+  it('offers account navigation for anonymous users without touching care data or hiding offline import', async () => {
+    who = null;
+    const openAccount = jest.fn();
+    const storageGet = jest.spyOn(runtime.storage, 'get');
+    runtime.openAccount = openAccount;
+    runtime.chooseArchive = jest.fn();
+    runtime.restoreOffline = jest.fn();
+    await act(async () => {
+      ReactDOM.render(<CarePanel runtime={runtime} ui={ui} />, host);
+      await flush();
+    });
+
+    expect(host.textContent).toContain('登录或注册账号');
+    expect(host.textContent).toContain('换设备离线恢复');
+    await act(async () => {
+      Simulate.click(button('登录或注册账号'));
+      await flush();
+    });
+    expect(openAccount).toHaveBeenCalledTimes(1);
+    expect(runtime.request).not.toHaveBeenCalled();
+    expect(storageGet).not.toHaveBeenCalled();
+    expect(previewCareArchive).not.toHaveBeenCalled();
+  });
   async function openImportTarget() {
     previewCareArchive.mockResolvedValue({
       fingerprint: 'synthetic-guest-archive',

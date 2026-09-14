@@ -24,6 +24,7 @@ configureCareLocalAccount(() => identity()?.id);
 export const runtime = {
   enabled: process.env.REACT_APP_CARE_COLLABORATION === 'true',
   identity,
+  openAccount: () => history.replace('/login-signup'),
   randomBytes: length => crypto.getRandomValues(new Uint8Array(length)),
   newId: () =>
     Array.from(crypto.getRandomValues(new Uint8Array(16)), b =>

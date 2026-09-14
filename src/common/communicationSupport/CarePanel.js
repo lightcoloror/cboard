@@ -277,6 +277,12 @@ export default function CarePanel({ runtime, ui }) {
     return (
       <Box>
         <Text>请先在现有账号页面登录，再进入患者协作。</Text>
+        <Text>登录或注册账号后，可以创建家庭、患者档案或加入受邀家庭。</Text>
+        {runtime.openAccount && (
+          <Button disabled={busy} onClick={() => runtime.openAccount()}>
+            登录或注册账号
+          </Button>
+        )}
         {runtime.restoreOffline && (
           <CareOfflineImport runtime={runtime} ui={ui} />
         )}

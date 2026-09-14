@@ -49,6 +49,14 @@ test('waits for asynchronous logout before opening the login route', async () =>
     global.fetch = previous;
   }
 });
+test('anonymous Care navigation opens account entry without logging out or clearing local data', () => {
+  const logout = jest.spyOn(runtime, 'logout');
+  const before = localStorage.getItem('care-offline-selection-v1');
+  runtime.openAccount();
+  expect(history.replace).toHaveBeenCalledWith('/login-signup');
+  expect(logout).not.toHaveBeenCalled();
+  expect(localStorage.getItem('care-offline-selection-v1')).toBe(before);
+});
 test.each([401, 403, 503])(
   'preserves HTTP %s when an error body is not JSON',
   async status => {
