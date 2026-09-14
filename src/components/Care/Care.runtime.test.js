@@ -18,6 +18,27 @@ beforeEach(() => {
   });
 });
 afterEach(() => jest.restoreAllMocks());
+test.each([401, 403, 503])(
+  'preserves HTTP %s when an error body is not JSON',
+  async status => {
+    const previous = global.fetch;
+    global.fetch = jest.fn(async () => ({
+      ok: false,
+      status,
+      json: async () => {
+        throw new SyntaxError('Unexpected token <');
+      }
+    }));
+    try {
+      await expect(runtime.request('/care/profiles')).rejects.toMatchObject({
+        status,
+        code: 'INVALID_RESPONSE'
+      });
+    } finally {
+      global.fetch = previous;
+    }
+  }
+);
 test.each([false, true])(
   'settings do not publish an old selection after account changes (offline=%s)',
   async offline => {

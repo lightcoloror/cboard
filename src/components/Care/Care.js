@@ -152,7 +152,15 @@ export const runtime = {
         },
         ...(body ? { body: JSON.stringify(body) } : {})
       });
-      const data = await response.json();
+      let data;
+      try {
+        data = await response.json();
+      } catch (_) {
+        const e = new Error('服务响应格式异常，请稍后重试');
+        e.status = response.status;
+        e.code = 'INVALID_RESPONSE';
+        throw e;
+      }
       if (!response.ok) {
         const e = new Error(data.code || '连接失败');
         e.status = response.status;
