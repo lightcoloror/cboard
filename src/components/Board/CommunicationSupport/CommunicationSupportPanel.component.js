@@ -117,7 +117,7 @@ const DEFAULT_COPY = {
   shareExpression: '分享此句',
   shareReceiverImage: '分享图片序列',
   savedPhrasesTitle: '常用短句',
-  savedPhrasesHint: '本地保存最近 20 条',
+  savedPhrasesHint: '收藏独立保存，不随最近历史清除',
   reuse: '重用',
   noSavedPhrases: '还没有收藏的短句。',
   receiveSectionTitle: '文字转图片',

@@ -66,7 +66,7 @@ const DEFAULT_COPY = {
   shareExpression: '分享此句',
   sharingExpression: '正在准备分享…',
   savedPhrasesTitle: '常用短句',
-  savedPhrasesHint: '本地保存最近 20 条',
+  savedPhrasesHint: '收藏独立保存，不随最近历史清除',
   quickPlay: '一键播报',
   reuse: '重用',
   playbackSpeaking: '正在播报',
