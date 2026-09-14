@@ -2,6 +2,7 @@ import JSZip from 'jszip';
 import { sha256 } from '@noble/hashes/sha256';
 import { bytesToHex } from '@noble/hashes/utils';
 import { toByteArray } from 'base64-js';
+import { careMediaIds } from './careMediaValues';
 
 const validId = value =>
   typeof value === 'string' &&
@@ -15,6 +16,17 @@ const allowedKinds = [
   'favorite',
   'personalFavorite'
 ];
+function requireCompleteMedia(document, mediaIds) {
+  const available = new Set(mediaIds);
+  const references = careMediaIds({
+    resources: document.resources,
+    queue: document.queue,
+    conflicts: document.conflicts,
+    originalUpdates: document.originalUpdates
+  });
+  if (references.some(id => !available.has(id)))
+    throw new Error('备份缺少引用的图片；请先将完整图片下载到本机后重新导出');
+}
 function resource(value) {
   if (
     !value ||
@@ -131,6 +143,7 @@ export async function exportCareDeviceArchive(identity, snapshot) {
     assets
   };
   const json = JSON.stringify(document);
+  requireCompleteMedia(document, assets.map(asset => asset.mediaId));
   zip.file('care-device.json', json);
   zip.file(
     'care-device.sha256',
@@ -163,6 +176,7 @@ export async function readCareDeviceArchive(zip, identity, read) {
     throw new Error('此备份属于另一患者，不能覆盖当前档案');
   const resources = (doc.resources || []).map(resource),
     queue = (doc.queue || []).map(operation);
+  requireCompleteMedia(doc, (doc.assets || []).map(asset => asset.mediaId));
   const media = [];
   let total = bytes.length;
   for (const asset of doc.assets || []) {
