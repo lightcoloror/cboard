@@ -35,6 +35,7 @@ export default function CarePanel({ runtime, ui }) {
   const [includeOriginal, setIncludeOriginal] = useState(false);
   const [delegationLimit, setDelegationLimit] = useState('');
   const [archivePassword, setArchivePassword] = useState('');
+  const [pendingRestore, setPendingRestore] = useState(null);
   const engine = useRef(null);
   const mounted = useRef(true);
   const account = useRef(identity && identity.id);
@@ -44,8 +45,9 @@ export default function CarePanel({ runtime, ui }) {
     if (busy) return;
     setBusy(true);
     try {
-      await fn();
-      if (mounted.current) setMessage('已保存；本地待同步修改会保留。');
+      const result = await fn();
+      if (mounted.current && result !== false)
+        setMessage('已保存；本地待同步修改会保留。');
     } catch (e) {
       if (mounted.current) setMessage(careErrorMessage(e));
     } finally {
@@ -93,6 +95,7 @@ export default function CarePanel({ runtime, ui }) {
           setAudit([]);
           setSessions([]);
           setLogoutAllAccount(null);
+          setPendingRestore(null);
           setIdentity(who);
         }
         if (!enabled || !who?.id) return;
@@ -117,6 +120,7 @@ export default function CarePanel({ runtime, ui }) {
     [runtime, enabled, reload]
   );
   async function open(profile) {
+    setPendingRestore(null);
     setData(null);
     setActive(profile);
     setMembers({});
@@ -640,6 +644,7 @@ export default function CarePanel({ runtime, ui }) {
                   disabled={busy}
                   onClick={() =>
                     run(async () => {
+                      setPendingRestore(null);
                       const target = engine.current;
                       const initiatingIdentity = runtime.identity();
                       const ensureTarget = () => {
@@ -658,7 +663,7 @@ export default function CarePanel({ runtime, ui }) {
                       };
                       ensureTarget();
                       const bytes = await runtime.chooseArchive();
-                      if (!bytes) return;
+                      if (!bytes) return false;
                       ensureTarget();
                       const preview = await previewCareArchive(
                         bytes,
@@ -670,27 +675,58 @@ export default function CarePanel({ runtime, ui }) {
                       );
                       ensureTarget();
                       setArchivePassword('');
-                      if (
-                        !(await runtime.confirm(
-                          `恢复「${active.name}」的换设备备份：${
-                            preview.boardCount
-                          }个图板、${preview.tileCount}张图卡。${
-                            preview.restore
-                              ? '保留资源标识与待同步修改。'
-                              : '这是旧格式，请确认来源确实为同一患者；不创建新的账号或授权。'
-                          }原资料保留。`
-                        ))
-                      )
-                        return;
-                      ensureTarget();
-                      await target.importPreview(preview);
-                      ensureTarget();
-                      await target.sync();
+                      setPendingRestore({
+                        preview,
+                        target,
+                        ensureTarget,
+                        name: active.name
+                      });
+                      setMessage('已读取备份预览，尚未导入或上传。');
+                      return false;
                     })
                   }
                 >
                   从同一患者的备份恢复
                 </Button>
+              )}
+              {pendingRestore && (
+                <Box role="alertdialog" aria-label="确认备份来源与恢复目标">
+                  <Text>
+                    恢复到「{pendingRestore.name}」：
+                    {pendingRestore.preview.boardCount} 个图板、
+                    {pendingRestore.preview.tileCount} 张图卡。
+                  </Text>
+                  <Text>
+                    {pendingRestore.preview.restore
+                      ? '保留同一患者的资源标识与待同步修改。'
+                      : '这是旧格式，请确认来源确实为同一患者；不创建新的账号或授权。'}
+                    原资料保留。确认后将按当前权限导入，联网时尝试同步。
+                  </Text>
+                  <Button
+                    disabled={busy}
+                    onClick={() => {
+                      setPendingRestore(null);
+                      setMessage('已取消恢复，未导入或上传。');
+                    }}
+                  >
+                    取消恢复
+                  </Button>
+                  <Button
+                    disabled={busy}
+                    onClick={() =>
+                      run(async () => {
+                        const approved = pendingRestore;
+                        setPendingRestore(null);
+                        approved.ensureTarget();
+                        await approved.target.importPreview(approved.preview);
+                        approved.ensureTarget();
+                        await approved.target.sync();
+                      })
+                    }
+                  >
+                    确认来源并恢复
+                  </Button>
+                </Box>
               )}
               {tiles.map((tile, index) => (
                 <Box key={tile.id}>

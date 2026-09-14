@@ -116,20 +116,19 @@ describe('shared patient collaboration UI', () => {
       });
       if (stage === 'file') runtime.chooseArchive.mockReturnValue(wait);
       if (stage === 'preview') previewCareArchive.mockReturnValue(wait);
-      if (stage === 'confirmation') runtime.confirm.mockReturnValue(wait);
       await act(async () => {
         Simulate.click(button('从同一患者的备份恢复'));
         await flush();
       });
       who = { id: 'owner', token: 'new-session' };
       await act(async () => {
-        finish(
-          stage === 'file'
-            ? new Uint8Array([1])
-            : stage === 'preview'
-            ? { boardCount: 0, tileCount: 1 }
-            : true
-        );
+        if (stage === 'confirmation') Simulate.click(button('确认来源并恢复'));
+        else
+          finish(
+            stage === 'file'
+              ? new Uint8Array([1])
+              : { boardCount: 0, tileCount: 1 }
+          );
         await flush();
       });
       expect(host.textContent).toContain('本次恢复已取消');
@@ -146,7 +145,6 @@ describe('shared patient collaboration UI', () => {
     'imports a guest archive only after explicit source confirmation=%s',
     async accepted => {
       await openImportTarget();
-      runtime.confirm.mockResolvedValue(accepted);
       expect(runtime.chooseArchive).not.toHaveBeenCalled();
       expect(runtime.request).not.toHaveBeenCalled();
       await act(async () => {
@@ -158,9 +156,21 @@ describe('shared patient collaboration UI', () => {
         { profileId: 'patient', familyId: 'family' },
         ''
       );
-      expect(runtime.confirm).toHaveBeenCalledWith(
-        expect.stringContaining('请确认来源确实为同一患者')
+      expect(runtime.confirm).not.toHaveBeenCalled();
+      expect(host.textContent).toContain('请确认来源确实为同一患者');
+      expect(host.textContent).toContain('恢复到「合成患者」');
+      expect(host.textContent).toContain('尚未导入或上传');
+      expect(runtime.request).not.toHaveBeenCalled();
+      expect(JSON.parse(disk['care-v1:owner:family:patient']).queue).toEqual(
+        []
       );
+      await act(async () => {
+        Simulate.click(button(accepted ? '确认来源并恢复' : '取消恢复'));
+        await flush();
+      });
+      expect(
+        host.querySelector('[aria-label="确认备份来源与恢复目标"]')
+      ).toBeNull();
       const writes = runtime.request.mock.calls.filter(
         ([, method]) => method === 'POST'
       );
@@ -173,6 +183,22 @@ describe('shared patient collaboration UI', () => {
         ).toEqual({});
     }
   );
+  it('clears an archive preview when the selected account changes', async () => {
+    await openImportTarget();
+    await act(async () => {
+      Simulate.click(button('从同一患者的备份恢复'));
+      await flush();
+    });
+    expect(button('确认来源并恢复')).toBeTruthy();
+    await act(async () => {
+      who = null;
+      tick();
+      await flush();
+    });
+    expect(button('确认来源并恢复')).toBeUndefined();
+    expect(JSON.parse(disk['care-v1:owner:family:patient']).queue).toEqual([]);
+    expect(runtime.request).not.toHaveBeenCalled();
+  });
   it('requires page confirmation for logout-all and permits cancellation', async () => {
     await act(async () => {
       ReactDOM.render(<CarePanel runtime={runtime} ui={ui} />, host);
