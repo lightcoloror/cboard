@@ -526,7 +526,10 @@ export default function CommunicationSupportPanel({
   function refreshHistory() {
     const nextHistory = loadCommunicationHistory();
     setHistoryItems(nextHistory);
-    persistCommunicationSupportSettings(latestSavedRef.current, nextHistory);
+    // Completed communication is device-local. In care mode this must not
+    // submit the projected favorites as if the user had edited them.
+    if (!careMode)
+      persistCommunicationSupportSettings(latestSavedRef.current, nextHistory);
   }
 
   function handleSavePhrase(entry) {
@@ -758,10 +761,11 @@ export default function CommunicationSupportPanel({
         // Local deletion remains applied; the account tombstone can retry.
       });
     }
-    persistCommunicationSupportSettings(
-      latestSavedRef.current,
-      normalizedHistory
-    );
+    if (!careMode)
+      persistCommunicationSupportSettings(
+        latestSavedRef.current,
+        normalizedHistory
+      );
   }
 
   function refreshPersonalImages() {

@@ -6,6 +6,7 @@ import {
   queueCareBoards
 } from '../../common/communicationSupport/careProjection';
 import {
+  loadCommunicationSavedPhrases,
   overwriteCommunicationSavedPhrases,
   overwritePersonalImagePreferences
 } from '../../common/communicationSupport/localData';
@@ -126,6 +127,11 @@ function CareHome({ intl }) {
           const kind =
             instance.localRole === 'patient' ? 'favorite' : 'personalFavorite';
           for (const item of pending.favorites) {
+            const baseline = pending.favoritesBase?.find(
+              old => old.id === item.id
+            );
+            if (baseline && JSON.stringify(baseline) === JSON.stringify(item))
+              continue;
             const value = await encodeCareMedia(item, instance, readImage);
             const old = instance.view().resources[`${kind}:${item.id}`];
             if (!old || JSON.stringify(old.value) !== JSON.stringify(value))
@@ -133,7 +139,13 @@ function CareHome({ intl }) {
           }
           const ids = new Set(pending.favorites.map(item => item.id));
           for (const r of Object.values(instance.view().resources))
-            if (r.kind === kind && !r.deleted && !ids.has(r.id))
+            if (
+              r.kind === kind &&
+              !r.deleted &&
+              !ids.has(r.id) &&
+              (!pending.favoritesBase ||
+                pending.favoritesBase.some(item => item.id === r.id))
+            )
               await instance.edit(kind, r.id, null, 'delete');
         }
         if (pending.personalImages) {
@@ -181,7 +193,7 @@ function CareHome({ intl }) {
     const kind =
       data.relationship?.role === 'patient' ? 'favorite' : 'personalFavorite';
     const pending = JSON.parse(localStorage.getItem(instance.localKey) || '{}');
-    if (!pending.favorites)
+    if (!pending.favorites) {
       overwriteCommunicationSavedPhrases(
         Object.values(data.resources)
           .filter(r => !r.deleted && r.kind === kind)
@@ -191,6 +203,8 @@ function CareHome({ intl }) {
             createdAt: r.value.createdAt || r.updatedAt || 1
           }))
       );
+      instance.projectedFavorites = loadCommunicationSavedPhrases();
+    }
     const pref = data.resources['preference:personalImagePreferences'];
     if (pref && !pref.deleted && !pending.personalImages)
       overwritePersonalImagePreferences(
@@ -294,7 +308,15 @@ function CareHome({ intl }) {
     }
   }
   async function favoritesChanged(items) {
-    await savePending({ favorites: items });
+    const instance = engine.current;
+    if (!instance) return;
+    const pending = JSON.parse(localStorage.getItem(instance.localKey) || '{}');
+    // Diff against the normalized view the user actually saw, not the raw cloud
+    // value. Keep that baseline with the pending edit across process restarts.
+    await savePending({
+      favorites: items,
+      favoritesBase: pending.favoritesBase || instance.projectedFavorites || []
+    });
   }
   async function savePending(change) {
     const instance = engine.current;

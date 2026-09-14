@@ -985,6 +985,64 @@ describe('CommunicationSupportPanel receiver flow', () => {
     );
   });
 
+  test('care history completion and deletion never submit projected favorites', () => {
+    const onCareFavoritesChanged = jest.fn();
+    localData.loadCommunicationSavedPhrases.mockReturnValue([
+      { id: 'shared', sentence: '家庭共享收藏', output: [], createdAt: 1 }
+    ]);
+    const wrapper = mount(
+      <CommunicationSupportPanel
+        {...props}
+        careMode
+        onCareFavoritesChanged={onCareFavoritesChanged}
+      />
+    );
+    act(() => {
+      wrapper
+        .find('ExpressionLoopPanel')
+        .first()
+        .prop('onAppendHistory')({
+        id: 'completed',
+        direction: 'express',
+        sentence: '喝水'
+      });
+    });
+    expect(localData.appendCommunicationHistory).toHaveBeenCalled();
+    act(() => {
+      wrapper
+        .find('CommunicationManagementDialog')
+        .first()
+        .prop('onHistoryChange')([]);
+    });
+    expect(localData.overwriteCommunicationHistory).toHaveBeenCalledWith([]);
+    expect(onCareFavoritesChanged).not.toHaveBeenCalled();
+    expect(API.updateSettings).not.toHaveBeenCalled();
+    wrapper.unmount();
+  });
+
+  test('care explicit favorite edits still submit the reviewed favorites', async () => {
+    const onCareFavoritesChanged = jest.fn();
+    const changed = [
+      { id: 'own', sentence: '请给我水', output: [], createdAt: 1 }
+    ];
+    const wrapper = mount(
+      <CommunicationSupportPanel
+        {...props}
+        careMode
+        onCareFavoritesChanged={onCareFavoritesChanged}
+      />
+    );
+    localData.loadCommunicationSavedPhrases.mockReturnValue(changed);
+    await act(async () => {
+      wrapper
+        .find('CommunicationManagementDialog')
+        .first()
+        .prop('onSavedPhrasesChange')(changed);
+    });
+    expect(onCareFavoritesChanged).toHaveBeenCalledWith(changed);
+    wrapper.unmount();
+  });
+
   test('persists quick phrase usage without replacing the output', () => {
     const phrase = {
       id: 'phrase-quick',

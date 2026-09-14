@@ -195,4 +195,27 @@ describe('patient collaboration home', () => {
     );
     wrapper.unmount();
   });
+
+  test('saving a new favorite does not rewrite unchanged projected shared favorites', async () => {
+    const wrapper = await render('patient');
+    const projected = require('../../common/communicationSupport/localData').loadCommunicationSavedPhrases();
+    runtime.request.mockClear();
+    await act(async () => {
+      await wrapper
+        .find(CommunicationSupportPanel)
+        .prop('onCareFavoritesChanged')([
+        ...projected,
+        { id: 'new-favorite', sentence: '新收藏', output: [], createdAt: 2 }
+      ]);
+      await flush();
+    });
+    const writes = runtime.request.mock.calls.filter(
+      call => call[1] === 'POST'
+    );
+    expect(writes).toHaveLength(1);
+    expect(writes[0][2]).toEqual(
+      expect.objectContaining({ resourceId: 'new-favorite', kind: 'favorite' })
+    );
+    wrapper.unmount();
+  });
 });
