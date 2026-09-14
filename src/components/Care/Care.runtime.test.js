@@ -23,6 +23,32 @@ beforeEach(() => {
   });
 });
 afterEach(() => jest.restoreAllMocks());
+test('waits for asynchronous logout before opening the login route', async () => {
+  const previous = global.fetch;
+  let finishLogout;
+  const completed = new Promise(resolve => {
+    finishLogout = resolve;
+  });
+  const logout = jest.spyOn(runtime, 'logout').mockReturnValue(completed);
+  global.fetch = jest.fn(async () => ({
+    ok: false,
+    status: 401,
+    json: async () => ({ code: 'AUTH_REQUIRED' })
+  }));
+  try {
+    const pending = runtime.request('/care/profiles');
+    const rejected = expect(pending).rejects.toMatchObject({ status: 401 });
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(logout).toHaveBeenCalledTimes(1);
+    expect(history.replace).not.toHaveBeenCalled();
+    finishLogout();
+    await rejected;
+    expect(history.replace).toHaveBeenCalledWith('/login-signup');
+  } finally {
+    global.fetch = previous;
+  }
+});
 test.each([401, 403, 503])(
   'preserves HTTP %s when an error body is not JSON',
   async status => {

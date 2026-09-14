@@ -176,7 +176,7 @@ export const runtime = {
         current?.id === who.id &&
         current?.token === who.token
       ) {
-        runtime.logout();
+        await runtime.logout();
         history.replace('/login-signup');
       }
       throw error;
