@@ -128,7 +128,7 @@ describe('communication API calls', () => {
     );
   });
 
-  test('syncs only confirmed receiver records through the bearer route', async () => {
+  test('keeps confirmed and draft receiver history local', async () => {
     const confirmed = {
       id: 'receiver-1',
       sessionId: 'session-1',
@@ -183,50 +183,18 @@ describe('communication API calls', () => {
         { ...confirmed, id: 'draft-1', recordStatus: 'draft' }
       ])
     ).resolves.toEqual({
-      acceptedCount: 1,
-      conflictCount: 1,
-      conflictedRecordIds: ['receiver-1'],
-      records: [
-        {
-          ...confirmed,
-          serverVersion: 2,
-          conflicted: true
-        }
-      ],
-      deletedRecordIds: ['receiver-deleted'],
-      deletedRecords: [
-        {
-          id: 'receiver-deleted',
-          deletedAt: 30,
-          deletedBy: 'user-1',
-          serverVersion: 2
-        }
-      ]
+      acceptedCount: 0,
+      conflictCount: 0,
+      conflictedRecordIds: [],
+      records: [],
+      deletedRecordIds: [],
+      deletedRecords: [],
+      localOnly: true
     });
-
-    expect(post).toHaveBeenCalledWith(
-      '/communication/receiver-records/sync',
-      {
-        records: [
-          expect.objectContaining({
-            id: 'receiver-1',
-            recordStatus: 'confirmed'
-          })
-        ]
-      },
-      {
-        headers: {
-          Authorization: expect.stringMatching(/^Bearer /)
-        }
-      }
-    );
-    expect(post.mock.calls[0][1].records).toHaveLength(1);
-    expect(
-      post.mock.calls[0][1].records[0].pictogramSequence[0]
-    ).not.toHaveProperty('boardId');
+    expect(post).not.toHaveBeenCalled();
   });
 
-  test('marks selected receiver records as deleted through the bearer route', async () => {
+  test('deletes receiver history locally without calling the legacy cloud route', async () => {
     const remove = jest.spyOn(API.axiosInstance, 'delete').mockResolvedValue({
       data: {
         deletedCount: 1,
@@ -241,12 +209,8 @@ describe('communication API calls', () => {
       deletedRecordIds: ['receiver-1'],
       deletedRecords: []
     });
-    expect(remove).toHaveBeenCalledWith('/communication/receiver-records', {
-      data: { recordIds: ['receiver-1'] },
-      headers: {
-        Authorization: expect.stringMatching(/^Bearer /)
-      }
-    });
+    await API.deleteConfirmedReceiverRecords([], { deleteAll: true });
+    expect(remove).not.toHaveBeenCalled();
   });
 
   test('syncs versioned saved phrases without device-private image data', async () => {

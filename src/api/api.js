@@ -1064,50 +1064,19 @@ class API {
     };
   }
 
-  async deleteConfirmedReceiverRecords(recordIds = [], options = {}) {
-    const authToken = getAuthToken();
-    if (!(authToken && authToken.length)) {
-      throw new Error('Need to be authenticated to perform this request');
-    }
-
-    const normalizedIds = Array.from(
+  async deleteConfirmedReceiverRecords(recordIds = []) {
+    // Ordinary history belongs to this device. Never mutate legacy cloud history.
+    const ids = Array.from(
       new Set(
         (Array.isArray(recordIds) ? recordIds : [])
           .map(value => String(value || '').trim())
           .filter(Boolean)
       )
-    ).slice(0, 100);
-    const data = options.deleteAll
-      ? { deleteAll: true }
-      : { recordIds: normalizedIds };
-    if (!options.deleteAll && !normalizedIds.length) {
-      return { deletedCount: 0, deletedRecordIds: [] };
-    }
-
-    const response = await this.axiosInstance.delete(
-      '/communication/receiver-records',
-      {
-        data,
-        headers: { Authorization: `Bearer ${authToken}` }
-      }
     );
-    const deletedRecords =
-      response.data && Array.isArray(response.data.deletedRecords)
-        ? response.data.deletedRecords
-        : [];
     return {
-      deletedCount: Number(response.data && response.data.deletedCount) || 0,
-      deletedRecordIds: Array.from(
-        new Set([
-          ...(response.data && Array.isArray(response.data.deletedRecordIds)
-            ? response.data.deletedRecordIds
-            : normalizedIds),
-          ...deletedRecords.map(record => record && record.id)
-        ])
-      )
-        .map(value => String(value || '').trim())
-        .filter(Boolean),
-      deletedRecords
+      deletedCount: ids.length,
+      deletedRecordIds: ids,
+      deletedRecords: []
     };
   }
 
