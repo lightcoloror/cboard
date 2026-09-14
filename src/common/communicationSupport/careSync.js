@@ -74,7 +74,9 @@ export function createCareSync({
         conflicts: []
       };
     const result = copy(state);
-    for (const op of result.queue)
+    for (const op of result.queue) {
+      // Keep unsent edits for recovery, but never display them over a tombstone.
+      if (result.resources[resourceKey(op)]?.deleted) continue;
       result.resources[resourceKey(op)] = {
         id: op.resourceId,
         kind: op.kind,
@@ -83,6 +85,7 @@ export function createCareSync({
         version: op.baseVersion + 1,
         pending: true
       };
+    }
     return result;
   }
   const api = `/care/profiles/${encodeURIComponent(profileId)}`;
@@ -368,6 +371,18 @@ export function createCareSync({
               q => q.operationId !== op.operationId
             );
             if (result.conflict) {
+              if (result.current) {
+                const current = {
+                  ...result.current,
+                  kind: op.kind
+                };
+                const key = resourceKey(current);
+                if (
+                  !next.resources[key] ||
+                  next.resources[key].version <= current.version
+                )
+                  next.resources[key] = current;
+              }
               next.conflicts.push({
                 operation: op,
                 current: result.current,

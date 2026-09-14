@@ -52,6 +52,48 @@ const snapshot = {
   permissions: ['read', 'library.edit']
 };
 
+it('keeps a cloud tombstone visible over unsent edits when subscription uploads are paused', async () => {
+  const disk = {};
+  let deleted = false;
+  const request = jest.fn(async () => ({
+    ...snapshot,
+    cursor: deleted ? 2 : 1,
+    entitlements: { syncWrite: !deleted },
+    resources: deleted
+      ? [{ ...tile, version: 2, deleted: true, value: null }]
+      : [tile]
+  }));
+  const engine = client(request, disk);
+  await engine.init();
+  await engine.sync();
+  await engine.edit('tile', 'water', { label: '尚未上传的编辑' });
+  deleted = true;
+  await engine.sync();
+  expect(engine.view().resources['tile:water'].deleted).toBe(true);
+  expect(engine.archive().queue[0].value.label).toBe('尚未上传的编辑');
+  expect(request.mock.calls.every(([, method]) => method === 'GET')).toBe(true);
+  const restarted = client(request, disk);
+  await restarted.init();
+  expect(restarted.view().resources['tile:water'].deleted).toBe(true);
+  expect(restarted.archive().queue).toHaveLength(1);
+});
+
+it('applies a deletion learned from the upload conflict and retains the local edit', async () => {
+  const removed = { ...tile, version: 2, deleted: true, value: null };
+  const engine = client(async (path, method) =>
+    method === 'GET' ? snapshot : { conflict: true, current: removed }
+  );
+  await engine.init();
+  await engine.sync();
+  await engine.edit('tile', 'water', { label: '删除前的离线编辑' });
+  await engine.sync();
+  expect(engine.view().resources['tile:water']).toEqual(removed);
+  expect(engine.view().queue).toHaveLength(0);
+  expect(engine.view().conflicts[0].operation.value.label).toBe(
+    '删除前的离线编辑'
+  );
+});
+
 it('retains denied favorite edits across restart without blocking or retrying unrelated edits', async () => {
   const disk = {};
   const shared = {
