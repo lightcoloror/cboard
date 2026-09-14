@@ -23,7 +23,11 @@ export function projectCareBoards(
           .map(tile => ({
             id: tile.id,
             label: tile.value.label,
-            vocalization: tile.value.label,
+            vocalization: tile.value.vocalization || tile.value.label,
+            loadBoardId: tile.value.loadBoardId || '',
+            keyPath: tile.value.keyPath || '',
+            backgroundColor: tile.value.backgroundColor || '',
+            communication: tile.value.communication || {},
             image: snapshot.media[tile.value.mediaId]
               ? image(snapshot.media[tile.value.mediaId])
               : '',
@@ -48,6 +52,16 @@ export async function queueCareBoards(engine, boards, readImage) {
         ...(current?.value || {}),
         label: tile.label || tile.vocalization || '图卡'
       };
+      for (const field of [
+        'vocalization',
+        'loadBoardId',
+        'keyPath',
+        'backgroundColor',
+        'communication'
+      ]) {
+        if (Object.prototype.hasOwnProperty.call(tile, field))
+          value[field] = tile[field];
+      }
       if (tile.pictogramAttribution)
         value.pictogramAttribution = tile.pictogramAttribution;
       if (tile.image && readImage) {
