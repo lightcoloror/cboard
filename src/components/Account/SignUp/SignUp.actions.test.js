@@ -3,7 +3,8 @@ import {
   confirmPhoneVerification,
   getPhoneVerificationConfiguration,
   requestPhoneVerification,
-  signUp
+  signUp,
+  resendVerification
 } from './SignUp.actions';
 
 jest.mock('axios');
@@ -12,6 +13,15 @@ describe('SignUp actions', () => {
   beforeEach(() => {
     axios.get.mockReset();
     axios.post.mockReset();
+  });
+
+  test('requests verification resend without sending passwords or tokens', async () => {
+    axios.post.mockResolvedValueOnce({ data: { success: 1 } });
+    await resendVerification('family@example.invalid');
+    expect(axios.post).toHaveBeenCalledWith(
+      expect.stringMatching(/user\/resend-verification$/),
+      { email: 'family@example.invalid' }
+    );
   });
 
   test('uses the public phone verification endpoints', async () => {

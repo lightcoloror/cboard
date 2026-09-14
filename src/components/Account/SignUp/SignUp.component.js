@@ -14,6 +14,7 @@ import Checkbox from '@material-ui/core/Checkbox';
 import { TextField } from '../../UI/FormItems';
 import LoadingIcon from '../../UI/LoadingIcon';
 import validationSchema from './validationSchema';
+import ResendVerification from './ResendVerification';
 import {
   confirmPhoneVerification,
   getPhoneVerificationConfiguration,
@@ -285,6 +286,7 @@ function SignUp(props) {
                     error={errors.email}
                     onChange={handleChange}
                   />
+                  <ResendVerification email={formValues.email} />
                   <TextField
                     name="phone"
                     type="tel"

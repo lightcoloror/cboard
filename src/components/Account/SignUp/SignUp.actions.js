@@ -13,3 +13,9 @@ export function signUp(formValues) {
   const endpoint = `${API_URL}user`;
   return axios.post(endpoint, formValues).then(get('data'));
 }
+
+export function resendVerification(email) {
+  return axios
+    .post(`${API_URL}user/resend-verification`, { email })
+    .then(get('data'));
+}
