@@ -46,11 +46,23 @@ const SettingsWrapper = ({ match }) => (
       <Route path={`${match.url}/symbols`} component={Symbols} />
       <Route
         path={`${match.url}/${COMMUNICATION_SUPPORT_ROUTE_SEGMENTS.default}`}
-        component={CommunicationSupport}
+        render={props =>
+          legacyServicesEnabled ? (
+            <CommunicationSupport {...props} />
+          ) : (
+            <Redirect to="/care" />
+          )
+        }
       />
       <Route
         path={`${match.url}/${COMMUNICATION_SUPPORT_ROUTE_SEGMENTS.tuyujia}`}
-        component={Tuyujia}
+        render={props =>
+          legacyServicesEnabled ? (
+            <Tuyujia {...props} />
+          ) : (
+            <Redirect to="/care" />
+          )
+        }
       />
     </Switch>
   </Fragment>

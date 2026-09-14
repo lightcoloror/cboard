@@ -1,5 +1,8 @@
 import React from 'react';
-import { shallow } from 'enzyme';
+import { shallow, mount } from 'enzyme';
+import { MemoryRouter, Route, Switch } from 'react-router-dom';
+import { act } from 'react-dom/test-utils';
+import * as servicePolicy from '../../legacyServices';
 import SettingsWrapper from './Settings.wrapper';
 import { COMMUNICATION_SUPPORT_ROUTE_SEGMENTS } from '../../common/communicationSupport/legacy';
 
@@ -18,8 +21,50 @@ jest.mock('./Help', () => 'Help');
 jest.mock('./Symbols', () => 'Symbols');
 jest.mock('./CommunicationSupport', () => 'CommunicationSupport');
 jest.mock('./Tuyujia', () => 'Tuyujia');
+jest.mock('../../legacyServices', () => ({
+  __esModule: true,
+  legacyServicesEnabled: true
+}));
 
 describe('Settings wrapper', () => {
+  afterEach(() => {
+    servicePolicy.legacyServicesEnabled = true;
+  });
+  test.each(['communication-support', 'tuyujia', 'subscribe'])(
+    'care mode redirects the legacy %s route before mounting its controls',
+    async path => {
+      servicePolicy.legacyServicesEnabled = false;
+      let wrapper;
+      await act(async () => {
+        wrapper = mount(
+          <MemoryRouter initialEntries={[`/settings/${path}`]}>
+            <Switch>
+              <Route path="/settings" component={SettingsWrapper} />
+              <Route path="/care" render={() => <div>患者授权设置</div>} />
+            </Switch>
+          </MemoryRouter>
+        );
+      });
+      wrapper.update();
+      expect(wrapper.text()).toBe('患者授权设置');
+      expect(wrapper.find('CommunicationSupport')).toHaveLength(0);
+      expect(wrapper.find('Tuyujia')).toHaveLength(0);
+      expect(wrapper.find('Subscribe')).toHaveLength(0);
+      wrapper.unmount();
+    }
+  );
+  test.each(['communication-support', 'tuyujia'])(
+    'upstream mode retains the legacy %s component',
+    path => {
+      const wrapper = shallow(<SettingsWrapper match={{ url: '/settings' }} />);
+      const route = wrapper
+        .find('Route')
+        .findWhere(item => item.prop('path') === `/settings/${path}`);
+      expect(route.prop('render')({}).type).toBe(
+        path === 'tuyujia' ? 'Tuyujia' : 'CommunicationSupport'
+      );
+    }
+  );
   test('registers communication support routes', () => {
     const wrapper = shallow(<SettingsWrapper match={{ url: '/settings' }} />);
     const routes = wrapper.find('Route');
