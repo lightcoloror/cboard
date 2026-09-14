@@ -196,6 +196,84 @@ describe('patient collaboration home', () => {
     wrapper.unmount();
   });
 
+  test('restores the current account profile list and switches cached content while offline', async () => {
+    const profiles = ['a', 'b'].map(id => ({
+      id,
+      familyId: 'family-' + id,
+      name: id,
+      relationship: { role: 'patient', defaultMode: 'expression' }
+    }));
+    disk['care-list-v1:account'] = JSON.stringify({ profiles, families: [] });
+    disk['care-list-v1:other'] = JSON.stringify({
+      profiles: [{ id: 'private-other-account', familyId: 'other' }]
+    });
+    localStorage.setItem(
+      'care-selection-v1:account',
+      JSON.stringify(profiles[0])
+    );
+    for (const profile of profiles)
+      disk[
+        `care-v1:account:${profile.familyId}:${profile.id}`
+      ] = JSON.stringify({
+        cursor: 1,
+        permissions: ['read'],
+        relationship: profile.relationship,
+        locked: false,
+        queue: [],
+        conflicts: [],
+        media: {},
+        resources: {
+          'favorite:one': {
+            kind: 'favorite',
+            id: 'one',
+            version: 1,
+            value: { sentence: 'only-' + profile.id, output: [], createdAt: 1 }
+          }
+        }
+      });
+    runtime.request.mockRejectedValue(new Error('offline'));
+    let wrapper;
+    await act(async () => {
+      wrapper = mount(<CareHome />);
+      await flush();
+    });
+    wrapper.update();
+    expect(wrapper.text()).toContain('only-a');
+    await act(async () => {
+      wrapper
+        .find('button')
+        .filterWhere(b => b.text() === '切换患者档案')
+        .simulate('click');
+      await flush();
+    });
+    wrapper.update();
+    expect(
+      wrapper.find('button').filterWhere(b => b.text() === '进入')
+    ).toHaveLength(2);
+    expect(wrapper.text()).not.toContain('private-other-account');
+    await act(async () => {
+      wrapper
+        .find('button')
+        .filterWhere(b => b.text() === '进入')
+        .at(1)
+        .simulate('click');
+      await flush();
+    });
+    wrapper.update();
+    expect(wrapper.text()).toContain('only-b');
+    expect(wrapper.text()).not.toContain('only-a');
+    expect(runtime.selectProfile).toHaveBeenLastCalledWith(profiles[1]);
+    wrapper.unmount();
+  });
+
+  test('successful profile loading populates the shared account-scoped list cache', async () => {
+    const wrapper = await render('patient');
+    expect(JSON.parse(disk['care-list-v1:account']).profiles[0].id).toBe(
+      'patient'
+    );
+    wrapper.unmount();
+  });
+
   test('saving a new favorite does not rewrite unchanged projected shared favorites', async () => {
     const wrapper = await render('patient');
     const projected = require('../../common/communicationSupport/localData').loadCommunicationSavedPhrases();

@@ -232,6 +232,21 @@ function CareHome({ intl }) {
         runtime.request('/care/context', 'GET')
       ]);
       if (!mounted.current || runtime.identity()?.id !== loadingAccount) return;
+      const cacheKey = `care-list-v1:${loadingAccount}`;
+      let cachedList = {};
+      try {
+        cachedList = JSON.parse((await runtime.storage.get(cacheKey)) || '{}');
+      } catch (_) {}
+      await runtime.storage.set(
+        cacheKey,
+        JSON.stringify({
+          profiles: list,
+          families: Array.isArray(cachedList?.families)
+            ? cachedList.families
+            : []
+        })
+      );
+      if (!mounted.current || runtime.identity()?.id !== loadingAccount) return;
       setProfiles(list);
       const selected = list.find(p => p.id === context.selectedProfileId);
       if (selected?.relationship) await open(selected);
@@ -247,11 +262,31 @@ function CareHome({ intl }) {
         mounted.current &&
         runtime.identity()?.id === loadingAccount
       ) {
-        const cached = JSON.parse(
-          localStorage.getItem(`care-selection-v1:${loadingAccount}`) || 'null'
+        let cached = null;
+        let list = [];
+        try {
+          cached = JSON.parse(
+            localStorage.getItem(`care-selection-v1:${loadingAccount}`) ||
+              'null'
+          );
+        } catch (_) {}
+        try {
+          const saved = JSON.parse(
+            (await runtime.storage.get(`care-list-v1:${loadingAccount}`)) ||
+              '{}'
+          );
+          if (Array.isArray(saved.profiles))
+            list = saved.profiles.filter(p => p?.id && p?.familyId);
+        } catch (_) {}
+        if (!mounted.current || runtime.identity()?.id !== loadingAccount)
+          return;
+        if (!list.length && cached?.id && cached?.familyId) list = [cached];
+        setProfiles(list);
+        const selected = list.find(
+          p => p.id === cached?.id && p.familyId === cached?.familyId
         );
-        if (cached?.relationship) {
-          await open(cached);
+        if (selected?.relationship) {
+          await open(selected);
           return;
         }
       }
