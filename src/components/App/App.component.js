@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import { legacyServicesEnabled } from '../../legacyServices';
 import PropTypes from 'prop-types';
 import Helmet from 'react-helmet';
 import { Route, Switch, Redirect } from 'react-router-dom';
@@ -137,7 +138,7 @@ export class App extends Component {
           />
           <Route component={NotFound} />
         </Switch>
-        {!demoMode && <PremiumRequiredModal />}
+        {!demoMode && legacyServicesEnabled && <PremiumRequiredModal />}
         {!demoMode && <LoginRequiredModal />}
         <OfflineNotificationModal />
       </div>

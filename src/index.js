@@ -21,6 +21,7 @@ import SubscriptionProvider from './providers/SubscriptionProvider';
 import { PAYPAL_CLIENT_ID } from './constants';
 import { initializeAppInsights } from './appInsights';
 import { isDemoMode, setDemoModeOverride } from './demoMode';
+import { legacyServicesEnabled } from './legacyServices';
 
 const demoMode = isDemoMode();
 setDemoModeOverride(demoMode ? true : null);
@@ -53,7 +54,10 @@ const renderApp = () => {
   ReactDOM.render(
     <Provider store={store}>
       <PersistGate persistor={persistor}>
-        <PayPalScriptProvider options={paypalOptions}>
+        <PayPalScriptProvider
+          options={paypalOptions}
+          deferLoading={!legacyServicesEnabled}
+        >
           <SpeechProvider>
             <LanguageProvider>
               <ThemeProvider>

@@ -1,9 +1,10 @@
 import { ApplicationInsights } from '@microsoft/applicationinsights-web';
 import { NODE_ENV, AZURE_INST_KEY } from './constants';
+import { legacyServicesEnabled } from './legacyServices';
 
 export const appInsights = new ApplicationInsights({
   config: {
-    disableTelemetry: NODE_ENV === 'development',
+    disableTelemetry: !legacyServicesEnabled || NODE_ENV === 'development',
     instrumentationKey: AZURE_INST_KEY,
     enableAutoRouteTracking: true,
     loggingLevelTelemetry: 2,
@@ -27,6 +28,7 @@ export const appInsights = new ApplicationInsights({
 });
 
 const initializeAppInsights = () => {
+  if (!legacyServicesEnabled) return;
   appInsights.loadAppInsights();
   appInsights.trackPageView();
 };

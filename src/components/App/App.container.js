@@ -25,6 +25,7 @@ import {
 } from '../../cordova-util';
 import { appInsights } from '../../appInsights';
 import { isDemoMode } from '../../demoMode';
+import { legacyServicesEnabled } from '../../legacyServices';
 
 // Module-scoped so the sync throttle survives AppContainer remounts but still
 // resets on a real app launch.
@@ -88,7 +89,7 @@ export class AppContainer extends Component {
     };
 
     const initGoogleAnalytics = () => {
-      if (demoMode) return;
+      if (demoMode || !legacyServicesEnabled) return;
       const { isLogged, userId } = this.props;
       if (isCordova() && !isElectron()) {
         try {
@@ -108,7 +109,7 @@ export class AppContainer extends Component {
     };
 
     const initAppInsightsUserContext = () => {
-      if (demoMode) return;
+      if (demoMode || !legacyServicesEnabled) return;
       const { isLogged, userId } = this.props;
       // The App Insights authenticated user context is per-session, so it must
       // be re-applied on each launch for returning users. Use the Mongo user

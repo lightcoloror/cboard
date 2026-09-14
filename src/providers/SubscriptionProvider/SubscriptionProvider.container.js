@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 
 import API from '../../api';
+import { legacyServicesEnabled } from '../../legacyServices';
 import { isAndroid, isIOS } from '../../cordova-util';
 
 import {
@@ -29,6 +30,7 @@ export class SubscriptionProvider extends Component {
   };
 
   async componentDidMount() {
+    if (!legacyServicesEnabled) return;
     const {
       updateIsSubscribed,
       updateIsOnTrialPeriod,
@@ -46,6 +48,7 @@ export class SubscriptionProvider extends Component {
   }
 
   componentDidUpdate = async prevProps => {
+    if (!legacyServicesEnabled) return;
     const {
       isLogged,
       updateIsSubscribed,

@@ -1,4 +1,5 @@
 import React, { PureComponent } from 'react';
+import { legacyServicesEnabled } from '../../legacyServices';
 import PropTypes from 'prop-types';
 import { FormattedMessage, intlShape } from 'react-intl';
 import { Link } from 'react-router-dom';
@@ -198,7 +199,7 @@ export class Settings extends PureComponent {
             text: messages.feedback,
             onClick: this.handleFeedbackClick
           }
-        ]
+        ].filter(item => legacyServicesEnabled || item.text !== messages.donate)
       }
     ];
   }

@@ -1,5 +1,6 @@
 import React, { Fragment } from 'react';
-import { Route, Switch } from 'react-router-dom';
+import { Route, Switch, Redirect } from 'react-router-dom';
+import { legacyServicesEnabled } from '../../legacyServices';
 
 import Settings from './Settings.container';
 import People from './People';
@@ -23,7 +24,16 @@ const SettingsWrapper = ({ match }) => (
     <Route exact component={Settings} />
     <Switch>
       <Route path={`${match.url}/people`} component={People} />
-      <Route path={`${match.url}/subscribe`} component={Subscribe} />
+      <Route
+        path={`${match.url}/subscribe`}
+        render={props =>
+          legacyServicesEnabled ? (
+            <Subscribe {...props} />
+          ) : (
+            <Redirect to="/care" />
+          )
+        }
+      />
       <Route path={`${match.url}/language`} component={Language} />
       <Route path={`${match.url}/speech`} component={Speech} />
       <Route path={`${match.url}/export`} component={Export} />
