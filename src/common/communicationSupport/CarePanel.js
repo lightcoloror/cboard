@@ -640,8 +640,26 @@ export default function CarePanel({ runtime, ui }) {
                   disabled={busy}
                   onClick={() =>
                     run(async () => {
+                      const target = engine.current;
+                      const initiatingIdentity = runtime.identity();
+                      const ensureTarget = () => {
+                        const current = runtime.identity();
+                        if (
+                          !mounted.current ||
+                          !target ||
+                          engine.current !== target ||
+                          !initiatingIdentity ||
+                          current?.id !== initiatingIdentity.id ||
+                          current?.token !== initiatingIdentity.token
+                        )
+                          throw new Error(
+                            '账号或患者档案已变化，本次恢复已取消；请重新选择备份。'
+                          );
+                      };
+                      ensureTarget();
                       const bytes = await runtime.chooseArchive();
                       if (!bytes) return;
+                      ensureTarget();
                       const preview = await previewCareArchive(
                         bytes,
                         {
@@ -650,6 +668,7 @@ export default function CarePanel({ runtime, ui }) {
                         },
                         archivePassword
                       );
+                      ensureTarget();
                       setArchivePassword('');
                       if (
                         !(await runtime.confirm(
@@ -663,8 +682,10 @@ export default function CarePanel({ runtime, ui }) {
                         ))
                       )
                         return;
-                      await engine.current.importPreview(preview);
-                      await engine.current.sync();
+                      ensureTarget();
+                      await target.importPreview(preview);
+                      ensureTarget();
+                      await target.sync();
                     })
                   }
                 >

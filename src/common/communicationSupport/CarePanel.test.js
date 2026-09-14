@@ -2,6 +2,9 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import { act, Simulate } from 'react-dom/test-utils';
 import CarePanel from './CarePanel';
+import { previewCareArchive } from './careArchiveImport';
+
+jest.mock('./careArchiveImport', () => ({ previewCareArchive: jest.fn() }));
 
 describe('shared patient collaboration UI', () => {
   let host, who, tick, disk, runtime, counter;
@@ -20,6 +23,7 @@ describe('shared patient collaboration UI', () => {
   const button = text =>
     [...host.querySelectorAll('button')].find(b => b.textContent === text);
   beforeEach(() => {
+    previewCareArchive.mockReset();
     host = document.createElement('div');
     document.body.appendChild(host);
     who = { id: 'owner', token: 'synthetic' };
@@ -76,6 +80,99 @@ describe('shared patient collaboration UI', () => {
     });
     host.remove();
   });
+  async function openImportTarget() {
+    previewCareArchive.mockResolvedValue({
+      fingerprint: 'synthetic-guest-archive',
+      boardCount: 0,
+      tileCount: 1,
+      media: [],
+      resources: [
+        {
+          kind: 'tile',
+          resourceId: 'guest-water',
+          value: { label: '访客喝水' }
+        }
+      ]
+    });
+    runtime.chooseArchive = jest.fn(async () => new Uint8Array([1]));
+    runtime.confirm = jest.fn(async () => true);
+    await act(async () => {
+      ReactDOM.render(<CarePanel runtime={runtime} ui={ui} />, host);
+      await flush();
+    });
+    await act(async () => {
+      Simulate.click(button('合成患者'));
+      await flush();
+    });
+    runtime.request.mockClear();
+  }
+  it.each(['file', 'preview', 'confirmation'])(
+    'cancels restoration when the session changes during %s',
+    async stage => {
+      await openImportTarget();
+      let finish;
+      const wait = new Promise(resolve => {
+        finish = resolve;
+      });
+      if (stage === 'file') runtime.chooseArchive.mockReturnValue(wait);
+      if (stage === 'preview') previewCareArchive.mockReturnValue(wait);
+      if (stage === 'confirmation') runtime.confirm.mockReturnValue(wait);
+      await act(async () => {
+        Simulate.click(button('从同一患者的备份恢复'));
+        await flush();
+      });
+      who = { id: 'owner', token: 'new-session' };
+      await act(async () => {
+        finish(
+          stage === 'file'
+            ? new Uint8Array([1])
+            : stage === 'preview'
+            ? { boardCount: 0, tileCount: 1 }
+            : true
+        );
+        await flush();
+      });
+      expect(host.textContent).toContain('本次恢复已取消');
+      expect(runtime.request).not.toHaveBeenCalled();
+      expect(JSON.parse(disk['care-v1:owner:family:patient']).queue).toEqual(
+        []
+      );
+      expect(
+        JSON.parse(disk['care-v1:owner:family:patient']).resources
+      ).toEqual({});
+    }
+  );
+  it.each([false, true])(
+    'imports a guest archive only after explicit source confirmation=%s',
+    async accepted => {
+      await openImportTarget();
+      runtime.confirm.mockResolvedValue(accepted);
+      expect(runtime.chooseArchive).not.toHaveBeenCalled();
+      expect(runtime.request).not.toHaveBeenCalled();
+      await act(async () => {
+        Simulate.click(button('从同一患者的备份恢复'));
+        await flush();
+      });
+      expect(previewCareArchive).toHaveBeenCalledWith(
+        expect.any(Uint8Array),
+        { profileId: 'patient', familyId: 'family' },
+        ''
+      );
+      expect(runtime.confirm).toHaveBeenCalledWith(
+        expect.stringContaining('请确认来源确实为同一患者')
+      );
+      const writes = runtime.request.mock.calls.filter(
+        ([, method]) => method === 'POST'
+      );
+      expect(writes).toHaveLength(accepted ? 1 : 0);
+      if (accepted)
+        expect(writes[0][0]).toBe('/care/profiles/patient/commands');
+      else
+        expect(
+          JSON.parse(disk['care-v1:owner:family:patient']).resources
+        ).toEqual({});
+    }
+  );
   it('requires page confirmation for logout-all and permits cancellation', async () => {
     await act(async () => {
       ReactDOM.render(<CarePanel runtime={runtime} ui={ui} />, host);
