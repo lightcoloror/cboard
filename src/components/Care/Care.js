@@ -2,6 +2,7 @@ import React from 'react';
 import CarePanel from '../../common/communicationSupport/CarePanel';
 import { API_URL } from '../../constants';
 import { getStore } from '../../store';
+import history from '../../history';
 import { logout } from '../Account/Login/Login.actions';
 import { careBrowserStorage } from '../../common/communicationSupport/careBrowserStorage';
 import { createCareSync } from '../../common/communicationSupport/careSync';
@@ -168,6 +169,17 @@ export const runtime = {
         throw e;
       }
       return data;
+    } catch (error) {
+      const current = identity();
+      if (
+        error.status === 401 &&
+        current?.id === who.id &&
+        current?.token === who.token
+      ) {
+        runtime.logout();
+        history.replace('/login-signup');
+      }
+      throw error;
     } finally {
       clearTimeout(timeout);
     }
