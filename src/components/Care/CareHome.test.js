@@ -274,6 +274,35 @@ describe('patient collaboration home', () => {
     wrapper.unmount();
   });
 
+  test.each([401, 403])(
+    'does not reopen cached data after explicit HTTP %s',
+    async status => {
+      const profile = {
+        id: 'cached-patient',
+        familyId: 'family',
+        relationship: { role: 'patient' }
+      };
+      disk['care-list-v1:account'] = JSON.stringify({ profiles: [profile] });
+      localStorage.setItem(
+        'care-selection-v1:account',
+        JSON.stringify(profile)
+      );
+      runtime.request.mockRejectedValue(
+        Object.assign(new Error('access denied'), { status })
+      );
+      let wrapper;
+      await act(async () => {
+        wrapper = mount(<CareHome />);
+        await flush();
+      });
+      wrapper.update();
+      expect(runtime.selectProfile).not.toHaveBeenCalled();
+      expect(wrapper.find(CommunicationSupportPanel)).toHaveLength(0);
+      expect(wrapper.text()).not.toContain('cached-patient');
+      wrapper.unmount();
+    }
+  );
+
   test('saving a new favorite does not rewrite unchanged projected shared favorites', async () => {
     const wrapper = await render('patient');
     const projected = require('../../common/communicationSupport/localData').loadCommunicationSavedPhrases();
