@@ -175,6 +175,20 @@ export default function CarePanel({ runtime, ui }) {
     setLabel('');
     await engine.current.sync();
   }
+  async function claimTrial(family) {
+    await run(async () => {
+      const result = await request('/care/trial-claims', 'POST', {
+        familyId: family.id
+      });
+      if (result?.status !== 'complete') {
+        const error = new Error('CARE_TRIAL_UNAVAILABLE');
+        error.code = 'CARE_TRIAL_UNAVAILABLE';
+        throw error;
+      }
+      await reload();
+      if (active?.familyId === family.id) await open(active);
+    });
+  }
   async function updateFavorite(item, action) {
     if (!canModifyFavorite(item)) {
       const error = new Error('FAVORITE_ADMIN_REQUIRED');
@@ -343,6 +357,11 @@ export default function CarePanel({ runtime, ui }) {
       {families.map(f => (
         <Box key={f.id}>
           <Text>{f.name}</Text>
+          {runtime.trialEnabled && (
+            <Button disabled={busy} onClick={() => void claimTrial(f)}>
+              开通体验
+            </Button>
+          )}
           <Button
             disabled={busy}
             onClick={() =>

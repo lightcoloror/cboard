@@ -103,6 +103,60 @@ describe('shared patient collaboration UI', () => {
     expect(storageGet).not.toHaveBeenCalled();
     expect(previewCareArchive).not.toHaveBeenCalled();
   });
+  it('keeps trial claims hidden by default and submits only the family id when enabled', async () => {
+    const family = { id: 'family-a', name: '合成家庭' };
+    runtime.request.mockImplementation(async (path, method, body) => {
+      if (path === '/care/profiles') return [];
+      if (path === '/care/families') return [family];
+      if (path === '/care/trial-claims') {
+        expect(method).toBe('POST');
+        expect(body).toEqual({ familyId: 'family-a' });
+        return { status: 'complete', claimId: 'trial-a' };
+      }
+      return {};
+    });
+    await act(async () => {
+      ReactDOM.render(<CarePanel runtime={runtime} ui={ui} />, host);
+      await flush();
+    });
+    expect(button('开通体验')).toBeUndefined();
+
+    runtime.trialEnabled = true;
+    await act(async () => {
+      ReactDOM.render(<CarePanel runtime={runtime} ui={ui} />, host);
+      await flush();
+    });
+    expect(button('开通体验')).toBeTruthy();
+    await act(async () => {
+      Simulate.click(button('开通体验'));
+      await flush();
+    });
+    expect(
+      runtime.request.mock.calls.filter(
+        ([path]) => path === '/care/trial-claims'
+      )
+    ).toHaveLength(1);
+  });
+  it('does not report a non-complete trial result as successful', async () => {
+    const family = { id: 'family-pending', name: '待核对家庭' };
+    runtime.trialEnabled = true;
+    runtime.request.mockImplementation(async path => {
+      if (path === '/care/profiles') return [];
+      if (path === '/care/families') return [family];
+      if (path === '/care/trial-claims') return { status: 'pending' };
+      return {};
+    });
+    await act(async () => {
+      ReactDOM.render(<CarePanel runtime={runtime} ui={ui} />, host);
+      await flush();
+    });
+    await act(async () => {
+      Simulate.click(button('开通体验'));
+      await flush();
+    });
+    expect(host.textContent).toContain('体验开通未完成');
+    expect(host.textContent).not.toContain('已保存；本地待同步修改会保留。');
+  });
   async function openImportTarget() {
     previewCareArchive.mockResolvedValue({
       fingerprint: 'synthetic-guest-archive',

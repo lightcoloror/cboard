@@ -20,7 +20,22 @@ export function careErrorMessage(error) {
     AI_REQUEST_PENDING_RECONCILIATION:
       '这次 AI 请求的结果尚待核对，系统不会重复执行或扣减。',
     AI_REQUEST_ALREADY_COMPLETED: '这次 AI 请求已处理，不会重复执行或扣减。',
-    FUNDING_ACCESS_DENIED: '没有使用此额度来源的授权，请在设置中核对。'
+    FUNDING_ACCESS_DENIED: '没有使用此额度来源的授权，请在设置中核对。',
+    CARE_TRIAL_DISABLED: '家庭体验暂未开放。',
+    TRIAL_NOT_CONFIGURED: '家庭体验尚未配置，暂不可开通。',
+    TRIAL_ACCOUNT_ALREADY_CLAIMED: '此账号已经领取过家庭体验。',
+    TRIAL_FAMILY_ALREADY_CLAIMED: '此家庭已经领取过家庭体验。',
+    FAMILY_OWNER_REQUIRED: '只有家庭管理员可以开通家庭体验。',
+    CARE_TRIAL_RATE_LIMITED: '体验开通请求过于频繁，请稍后再试。',
+    CARE_TRIAL_RATE_LIMIT_UNAVAILABLE: '体验服务暂时不可用，请稍后再试。',
+    CARE_TRIAL_UNAVAILABLE: '体验开通未完成，请稍后重试。',
+    FAMILY_NOT_FOUND: '找不到这个家庭，请刷新家庭列表后重试。',
+    ACCOUNT_VERIFICATION_REQUIRED: '请先完成账号验证，再开通家庭体验。',
+    TRIAL_SUBSCRIPTION_EXISTS: '此家庭已有有效服务，不能重复开通体验。',
+    TRIAL_FUNDING_CONFLICT: '家庭体验状态正在变更，请刷新后重试。',
+    TRIAL_CLAIM_CORRUPT: '家庭体验记录异常，请联系支持人员处理。',
+    RETRY_CONCURRENT_CHANGE: '家庭状态刚刚发生变化，请刷新后重试。',
+    INVALID_TRIAL_CLAIM: '家庭体验请求无效，请刷新后重试。'
   };
   if (messages[code]) return messages[code];
   if (error?.status === 401 || error?.response?.status === 401)

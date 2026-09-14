@@ -14,3 +14,21 @@ test('network outage retains a distinct message from authentication and revocati
     'Unexpected programming error'
   );
 });
+
+test('maps public trial claim outcomes without implying payment or email delivery', () => {
+  expect(
+    careErrorMessage({ data: { code: 'TRIAL_NOT_CONFIGURED' } })
+  ).toContain('尚未配置');
+  expect(
+    careErrorMessage({ data: { code: 'TRIAL_FAMILY_ALREADY_CLAIMED' } })
+  ).toContain('已经领取过');
+  expect(
+    careErrorMessage({ data: { code: 'CARE_TRIAL_RATE_LIMITED' } })
+  ).toContain('过于频繁');
+  expect(
+    careErrorMessage({ data: { code: 'CARE_TRIAL_UNAVAILABLE' } })
+  ).toContain('未完成');
+  expect(careErrorMessage({ data: { code: 'TRIAL_CLAIM_CORRUPT' } })).toContain(
+    '联系支持人员处理'
+  );
+});
