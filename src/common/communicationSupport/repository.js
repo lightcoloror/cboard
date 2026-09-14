@@ -83,9 +83,10 @@ function getReceiverDraftScopeKey(record) {
 
 function normalizeReceiverRecordsForRepository(value) {
   const activeDraftScopes = new Set();
+  let confirmedCount = 0;
 
   return normalizeCommunicationReceiverRecords(value).filter(record => {
-    if (record.recordStatus !== 'draft') return true;
+    if (record.recordStatus !== 'draft') return ++confirmedCount <= 50;
 
     const scopeKey = getReceiverDraftScopeKey(record);
     if (activeDraftScopes.has(scopeKey)) return false;
@@ -477,7 +478,12 @@ export function createCommunicationRepository({
     const raw = historyKey && storage.getItem(historyKey);
     if (raw && !storage.getItem(`${historyKey}:before-history-50`)) {
       const entries = safeParse(raw, []);
-      if (Array.isArray(entries) && entries.length > 50) {
+      const retainedHistory =
+        historyKey === COMMUNICATION_STORAGE_KEYS.receiverRecords &&
+        Array.isArray(entries)
+          ? entries.filter(entry => entry.recordStatus !== 'draft')
+          : entries;
+      if (Array.isArray(retainedHistory) && retainedHistory.length > 50) {
         if (storage.setItem(`${historyKey}:before-history-50`, raw) === false)
           throw new Error('无法备份旧历史，已停止更新');
       }

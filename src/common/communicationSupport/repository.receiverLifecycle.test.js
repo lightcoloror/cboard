@@ -35,6 +35,55 @@ const receiverEntry = {
 };
 
 describe('communication repository receiver lifecycle', () => {
+  test('supports the 51st draft without treating it as legacy history needing a backup', () => {
+    const storage = createMemoryStorage();
+    const originalSet = storage.setItem;
+    storage.setItem = jest.fn((key, value) =>
+      key.endsWith(':before-history-50') ? false : originalSet(key, value)
+    );
+    let timestamp = 0;
+    let id = 0;
+    const open = () =>
+      createCommunicationRepository({
+        storage,
+        now: () => ++timestamp,
+        createId: prefix => `${prefix}-${++id}`
+      });
+    let repository = open();
+    for (let i = 0; i < 51; i++) {
+      const draft = repository.createReceiverDraft({
+        ...receiverEntry,
+        inputText: `合成记录${i}`
+      });
+      repository = open();
+      expect(repository.loadCommunicationHistory()).toHaveLength(
+        Math.min(i, 50)
+      );
+      repository.confirmReceiverDraft(draft, {
+        ...receiverEntry,
+        inputText: `合成记录${i}`
+      });
+      repository = open();
+      expect(repository.loadCommunicationHistory()).toHaveLength(
+        Math.min(i + 1, 50)
+      );
+    }
+    expect(
+      repository
+        .loadReceiverRecords()
+        .filter(r => r.recordStatus === 'confirmed')
+    ).toHaveLength(50);
+    expect(
+      repository
+        .loadCommunicationHistory()
+        .some(r => r.inputText === '合成记录0')
+    ).toBe(false);
+    expect(
+      storage.setItem.mock.calls.some(([key]) =>
+        key.endsWith(':before-history-50')
+      )
+    ).toBe(false);
+  });
   test('keeps drafts private until fullscreen confirmation', () => {
     const storage = createMemoryStorage();
     let timestamp = 0;
