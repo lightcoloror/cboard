@@ -12,7 +12,7 @@ import { buildConfirmedReceiverSyncPayload } from './receiverSync';
 import { encryptPrivateArchive } from './privateArchiveEncryption';
 import { normalizeCommunicationSavedPhrases } from './storage';
 
-function client(request, disk = {}) {
+function client(request, disk = {}, options = {}) {
   let serial = 0;
   return createCareSync({
     accountId: 'account',
@@ -21,6 +21,7 @@ function client(request, disk = {}) {
     currentAccount: () => 'account',
     newId: () => `op-${++serial}`,
     request,
+    ...options,
     storage: {
       get: async k => disk[k],
       set: async (k, v) => {
@@ -93,6 +94,59 @@ it('applies a deletion learned from the upload conflict and retains the local ed
     '删除前的离线编辑'
   );
 });
+
+it.each(['favorite', 'personalFavorite'])(
+  'retains deletion and local conflict across restart for %s',
+  async kind => {
+    const disk = {};
+    const original = { id: 'phrase', version: 1, value: { sentence: '喝水' } };
+    const removed = { ...original, version: 2, deleted: true, value: null };
+    const writes = [];
+    const request = async (path, method, body) => {
+      if (method === 'GET') {
+        if (path.endsWith('/favorites')) return { items: [original] };
+        return {
+          ...snapshot,
+          resources: kind === 'favorite' ? [{ ...original, kind }] : []
+        };
+      }
+      writes.push({ path, body });
+      throw Object.assign(new Error('conflict'), {
+        status: 409,
+        data: {
+          conflict: true,
+          current: kind === 'favorite' ? { ...removed, kind } : removed
+        }
+      });
+    };
+    const options = { personalFavorites: kind === 'personalFavorite' };
+    const engine = client(request, disk, options);
+    await engine.init();
+    await engine.sync();
+    await engine.edit(kind, 'phrase', { sentence: '保留离线收藏编辑' });
+    await engine.sync();
+    expect(writes).toHaveLength(1);
+    expect(writes[0].path).toBe(
+      `/care/profiles/patient/${
+        kind === 'personalFavorite' ? 'favorites' : 'commands'
+      }`
+    );
+    expect(engine.view().resources[`${kind}:phrase`].deleted).toBe(true);
+    const restarted = client(request, disk, options);
+    await restarted.init();
+    const conflict = restarted.view().conflicts[0];
+    expect(conflict.operation.value.sentence).toBe('保留离线收藏编辑');
+    await expect(
+      restarted.resolve(conflict.operation.operationId, 'local')
+    ).rejects.toThrow('云端已删除');
+    expect(restarted.view().conflicts).toHaveLength(1);
+    await restarted.resolve(conflict.operation.operationId, 'server');
+    expect(restarted.view().conflicts).toHaveLength(0);
+    expect(restarted.view().resources[`${kind}:phrase`].deleted).toBe(true);
+    expect(restarted.view().queue).toHaveLength(0);
+    expect(writes).toHaveLength(1);
+  }
+);
 
 it('retains denied favorite edits across restart without blocking or retrying unrelated edits', async () => {
   const disk = {};
