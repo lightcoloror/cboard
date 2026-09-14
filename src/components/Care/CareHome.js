@@ -20,12 +20,9 @@ import { toByteArray, fromByteArray } from 'base64-js';
 import { sha256 } from '@noble/hashes/sha256';
 import { bytesToHex } from '@noble/hashes/utils';
 import { careErrorMessage } from '../../common/communicationSupport/careErrors';
+import { sameCareFavoriteContent } from '../../common/communicationSupport/careFavoriteChanges';
 
 const mediaImage = asset => `data:${asset.type};base64,${asset.data}`;
-const favoriteContent = item => {
-  const { usageCount, lastUsedAt, updatedAt, ...content } = item;
-  return JSON.stringify(content);
-};
 async function readImage(source) {
   const match = /^data:(image\/(?:png|jpeg|webp));base64,(.+)$/.exec(source);
   if (match)
@@ -134,8 +131,7 @@ function CareHome({ intl }) {
             const baseline = pending.favoritesBase?.find(
               old => old.id === item.id
             );
-            if (baseline && favoriteContent(baseline) === favoriteContent(item))
-              continue;
+            if (baseline && sameCareFavoriteContent(baseline, item)) continue;
             const value = await encodeCareMedia(item, instance, readImage);
             const old = instance.view().resources[`${kind}:${item.id}`];
             if (!old || JSON.stringify(old.value) !== JSON.stringify(value))
