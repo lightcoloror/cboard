@@ -389,6 +389,83 @@ describe('shared patient collaboration UI', () => {
       }
     }
   );
+  it('reports shared success and original conflict separately, then permits keeping the original', async () => {
+    const shared = {
+      id: 'shared',
+      kind: 'favorite',
+      version: 1,
+      seq: 1,
+      source: { owner: 'member', id: 'original', version: 1 },
+      value: { sentence: '共享旧内容', output: [] }
+    };
+    runtime.request = jest.fn(async (path, method, body) => {
+      if (path === '/care/profiles')
+        return [{ id: 'patient', familyId: 'family', name: '合成患者' }];
+      if (path === '/care/families') return [];
+      if (path.endsWith('/favorites')) return { items: [] };
+      if (path.endsWith('/favorite-original'))
+        throw {
+          status: 409,
+          data: {
+            code: 'FAVORITE_CONFLICT',
+            current: { version: 2, value: { sentence: '成员自行更新' } }
+          }
+        };
+      if (path.endsWith('/commands')) {
+        shared.version += 1;
+        shared.value = body.value;
+        return { resource: { ...shared } };
+      }
+      if (method === 'GET')
+        return {
+          familyId: 'family',
+          cursor: 1,
+          owner: true,
+          permissions: ['read'],
+          resources: [shared]
+        };
+      throw new Error('Unexpected request');
+    });
+    await act(async () => {
+      ReactDOM.render(<CarePanel runtime={runtime} ui={ui} />, host);
+      await flush();
+    });
+    await act(async () => {
+      Simulate.click(button('合成患者'));
+      await flush();
+    });
+    const input = [...host.querySelectorAll('input')].find(
+      e => e.placeholder === '收藏内容或修改后的文字'
+    );
+    act(() => {
+      Simulate.change(input, { target: { value: '管理员修改' } });
+      Simulate.click(button('修改范围：仅家庭共享内容'));
+    });
+    await act(async () => {
+      Simulate.click(button('保存修改'));
+      await flush();
+    });
+    expect(host.textContent).toContain('共享内容已保存；成员原收藏尚未更新');
+    expect(host.textContent).toContain('原收藏当前内容：成员自行更新');
+    expect(shared.value.sentence).toBe('管理员修改');
+    expect(
+      JSON.parse(disk['care-v1:owner:family:patient']).originalUpdates
+    ).toHaveLength(1);
+    const writesBefore = runtime.request.mock.calls.filter(
+      ([, method]) => method === 'POST'
+    ).length;
+    await act(async () => {
+      Simulate.click(button('保留原收藏当前版本'));
+      await flush();
+    });
+    expect(
+      JSON.parse(disk['care-v1:owner:family:patient']).originalUpdates
+    ).toHaveLength(0);
+    expect(
+      runtime.request.mock.calls.filter(([, method]) => method === 'POST')
+    ).toHaveLength(writesBefore);
+    expect(button('保留原收藏当前版本')).toBeUndefined();
+  });
   it('opens the patient, persists a new tile using the shared engine, and renders it for communication', async () => {
     await act(async () => {
       ReactDOM.render(<CarePanel runtime={runtime} ui={ui} />, host);

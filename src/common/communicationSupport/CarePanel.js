@@ -185,10 +185,22 @@ export default function CarePanel({ runtime, ui }) {
       ...item.value,
       sentence: favoriteText.trim() || item.value?.sentence
     };
-    await engine.current.edit(item.kind, item.id, value, action, {
+    const target = engine.current;
+    await target.edit(item.kind, item.id, value, action, {
       updateOriginal: includeOriginal && Boolean(item.source)
     });
-    await engine.current.sync();
+    await target.sync();
+    const unfinished = (target.view().originalUpdates || []).filter(
+      job => job.sharedId === item.id
+    );
+    if (unfinished.length && mounted.current && engine.current === target) {
+      setMessage(
+        unfinished.some(job => job.sharedVersion)
+          ? '共享内容已保存；成员原收藏尚未更新，请查看下方处理结果。'
+          : '共享内容及成员原收藏尚待同步，请查看下方处理结果。'
+      );
+      return false;
+    }
   }
   async function photo() {
     if (!label.trim()) throw new Error('先输入图片对应的表达文字');
