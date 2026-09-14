@@ -1,8 +1,38 @@
 import API from './api';
+import { buildCommunicationAiSentenceRequest } from '../common/communicationSupport/communicationAi';
 
 jest.mock('../store');
 
 describe('communication API calls', () => {
+  test('sends current expression without stored history at the API boundary', async () => {
+    const post = jest.spyOn(API.axiosInstance, 'post').mockResolvedValue({
+      data: { candidates: ['我要喝水。'] }
+    });
+    const request = buildCommunicationAiSentenceRequest({
+      output: [{ id: 'water', label: '水' }],
+      context: {
+        scene: 'rehab_clinic',
+        turns: [
+          {
+            direction: 'express',
+            text: 'PRIVATE_HISTORY_SENTINEL',
+            candidateFeedback: [
+              { sentence: 'PRIVATE_FEEDBACK_SENTINEL', feedback: 'up' }
+            ]
+          }
+        ],
+        recentSentences: ['PRIVATE_HISTORY_SENTINEL']
+      }
+    });
+    await API.generateCommunicationSentences(request);
+    const sent = post.mock.calls[0][1];
+    expect(sent.pictogramLabels).toEqual(['水']);
+    expect(sent.context.scene).toBe('rehab_clinic');
+    expect(sent.context.recentSentences).toEqual([]);
+    expect(sent.context.candidateFeedback).toEqual([]);
+    expect(JSON.stringify(sent)).not.toContain('PRIVATE_');
+  });
+
   afterEach(() => {
     jest.restoreAllMocks();
   });
