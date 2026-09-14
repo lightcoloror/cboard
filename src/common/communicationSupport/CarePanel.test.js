@@ -76,6 +76,89 @@ describe('shared patient collaboration UI', () => {
     });
     host.remove();
   });
+  it.each([false, true])(
+    'matches family favorite ownership controls when administrator=%s',
+    async administrator => {
+      runtime.funding = () => null;
+      const records = [
+        { id: 'other', kind: 'favorite', createdBy: 'someone-else' },
+        { id: 'own-share', kind: 'favorite', createdBy: 'owner' },
+        {
+          id: 'source-share',
+          kind: 'favorite',
+          source: { owner: 'owner', id: 'original' }
+        }
+      ].map(item => ({
+        ...item,
+        version: 1,
+        seq: 1,
+        value: { sentence: item.id, output: [] }
+      }));
+      runtime.request = jest.fn(async (path, method) => {
+        if (path === '/care/profiles')
+          return [{ id: 'patient', familyId: 'family', name: '合成患者' }];
+        if (path === '/care/families') return [];
+        if (path.endsWith('/favorites'))
+          return {
+            items: [
+              {
+                id: 'personal',
+                version: 1,
+                value: { sentence: 'personal', output: [] }
+              }
+            ]
+          };
+        if (method === 'GET')
+          return {
+            familyId: 'family',
+            cursor: 1,
+            permissions: ['read'],
+            owner: administrator,
+            resources: records
+          };
+        throw new Error('Unexpected mutation');
+      });
+      await act(async () => {
+        ReactDOM.render(<CarePanel runtime={runtime} ui={ui} />, host);
+        await flush();
+      });
+      await act(async () => {
+        Simulate.click(button('合成患者'));
+        await flush();
+      });
+      const row = sentence =>
+        [...host.querySelectorAll('p')].find(p =>
+          p.textContent.endsWith('：' + sentence)
+        ).parentElement;
+      const editButtons = sentence =>
+        [...row(sentence).querySelectorAll('button')].filter(b =>
+          ['编辑此内容', '保存修改', '删除'].includes(b.textContent)
+        );
+      expect(editButtons('other').map(b => b.disabled)).toEqual([
+        !administrator,
+        !administrator,
+        !administrator
+      ]);
+      for (const sentence of ['own-share', 'source-share', 'personal'])
+        expect(editButtons(sentence).map(b => b.disabled)).toEqual([
+          false,
+          false,
+          false
+        ]);
+      if (!administrator) {
+        await act(async () => {
+          Simulate.click(editButtons('other')[1]);
+          await flush();
+        });
+        expect(
+          runtime.request.mock.calls.filter(([, method]) => method === 'POST')
+        ).toHaveLength(0);
+        expect(
+          JSON.parse(disk['care-v1:owner:family:patient']).queue
+        ).toHaveLength(0);
+      }
+    }
+  );
   it('opens the patient, persists a new tile using the shared engine, and renders it for communication', async () => {
     await act(async () => {
       ReactDOM.render(<CarePanel runtime={runtime} ui={ui} />, host);

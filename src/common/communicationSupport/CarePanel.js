@@ -171,6 +171,11 @@ export default function CarePanel({ runtime, ui }) {
     await engine.current.sync();
   }
   async function updateFavorite(item, action) {
+    if (!canModifyFavorite(item)) {
+      const error = new Error('FAVORITE_ADMIN_REQUIRED');
+      error.code = 'FAVORITE_ADMIN_REQUIRED';
+      throw error;
+    }
     const value = {
       ...item.value,
       sentence: favoriteText.trim() || item.value?.sentence
@@ -202,6 +207,18 @@ export default function CarePanel({ runtime, ui }) {
   }
   const permissions = data?.permissions || [];
   const canEdit = permissions.includes('library.edit') && !data?.locked;
+  const canModifyFavorite = item =>
+    Boolean(
+      identity?.id &&
+        runtime.identity()?.id === identity.id &&
+        !data?.locked &&
+        permissions.includes('read') &&
+        (item.kind === 'personalFavorite' ||
+          (item.kind === 'favorite' &&
+            (data.owner ||
+              item.createdBy === identity.id ||
+              item.source?.owner === identity.id)))
+    );
   const resources = Object.values(data?.resources || {}).filter(
     r => !r.deleted
   );
@@ -482,18 +499,19 @@ export default function CarePanel({ runtime, ui }) {
                         ：{item.value.sentence}
                       </Text>
                       <Button
+                        disabled={busy || !canModifyFavorite(item)}
                         onClick={() => setFavoriteText(item.value.sentence)}
                       >
                         编辑此内容
                       </Button>
                       <Button
-                        disabled={busy}
+                        disabled={busy || !canModifyFavorite(item)}
                         onClick={() => run(() => updateFavorite(item, 'put'))}
                       >
                         保存修改
                       </Button>
                       <Button
-                        disabled={busy}
+                        disabled={busy || !canModifyFavorite(item)}
                         onClick={() =>
                           run(async () => {
                             if (await runtime.confirm('删除此收藏？'))
