@@ -2,7 +2,8 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import 'fontsource-roboto';
 import { Provider } from 'react-redux';
-import { BrowserRouter, HashRouter, Route } from 'react-router-dom';
+import { Route } from 'react-router-dom';
+import PlatformRouter from './PlatformRouter';
 import { TouchBackend } from 'react-dnd-touch-backend';
 import { DndProvider } from 'react-dnd';
 import { PersistGate } from 'redux-persist/es/integration/react';
@@ -35,9 +36,6 @@ const dndOptions = {
   enableMouseEvents: true,
   enableKeyboardEvents: true
 };
-
-// When running in Cordova, must use the HashRouter
-const PlatformRouter = isCordova() ? HashRouter : BrowserRouter;
 
 // PayPal configuration
 const paypalOptions = {
