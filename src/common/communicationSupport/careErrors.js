@@ -1,6 +1,10 @@
 export function careErrorMessage(error) {
   const code = error?.data?.code || error?.response?.data?.code || error?.code;
   const messages = {
+    CARE_STORAGE_UNAVAILABLE:
+      '云端存储暂时不可用；本地内容和待同步修改仍保留，请稍后重试。',
+    SESSION_STORAGE_UNAVAILABLE:
+      '登录服务暂时不可用，请稍后重试；本地内容仍保留。',
     FAVORITE_ADMIN_REQUIRED:
       '您无权修改这项共享收藏；本机修改已保留，请联系家庭管理员处理。',
     PROFILE_ACCESS_DENIED: '此患者档案的访问已撤销或尚未授权。',
@@ -21,6 +25,8 @@ export function careErrorMessage(error) {
   if (messages[code]) return messages[code];
   if (error?.status === 401 || error?.response?.status === 401)
     return '登录已失效，请重新登录；本地内容仍保留。';
+  if (error?.errMsg?.includes('url not in domain list'))
+    return '当前客户端未获准连接配置的云端地址，请联系管理员检查服务配置；本地内容仍保留。';
   if (
     !error?.status &&
     !error?.response?.status &&

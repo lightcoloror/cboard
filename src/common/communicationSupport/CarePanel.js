@@ -99,11 +99,10 @@ export default function CarePanel({ runtime, ui }) {
             .sync()
             .catch(e => mounted.current && setMessage(careErrorMessage(e)));
         else
-          reload().catch(
-            () =>
-              mounted.current &&
-              setMessage('暂时无法联网；可打开已缓存的档案。')
-          );
+          reload().catch(e => {
+            if (mounted.current && runtime.identity()?.id === who.id)
+              setMessage(careErrorMessage(e));
+          });
       };
       const stop = runtime.watch(tick);
       tick();

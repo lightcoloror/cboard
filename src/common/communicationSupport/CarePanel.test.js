@@ -76,6 +76,52 @@ describe('shared patient collaboration UI', () => {
     });
     host.remove();
   });
+  it.each([
+    [{ status: 401 }, '登录已失效'],
+    [
+      { status: 403, data: { code: 'PROFILE_ACCESS_DENIED' } },
+      '撤销或尚未授权'
+    ],
+    [{ status: 403, data: { code: 'SUBSCRIPTION_EXPIRED' } }, '订阅已到期'],
+    [
+      { status: 503, data: { code: 'CARE_STORAGE_UNAVAILABLE' } },
+      '云端存储暂时不可用'
+    ],
+    [{ errMsg: 'request:fail url not in domain list' }, '未获准连接'],
+    [new TypeError('Failed to fetch'), '暂时无法连接云端']
+  ])(
+    'preserves the initial profile load error category %j',
+    async (error, expected) => {
+      runtime.request.mockRejectedValue(error);
+      await act(async () => {
+        ReactDOM.render(<CarePanel runtime={runtime} ui={ui} />, host);
+        await flush();
+      });
+      expect(host.textContent).toContain(expected);
+      expect(host.textContent).not.toContain(
+        '暂时无法联网；可打开已缓存的档案。'
+      );
+    }
+  );
+  it('does not display an old account load failure after an account switch', async () => {
+    let rejectLoad;
+    runtime.request.mockImplementation(
+      () =>
+        new Promise((resolve, reject) => {
+          rejectLoad = reject;
+        })
+    );
+    await act(async () => {
+      ReactDOM.render(<CarePanel runtime={runtime} ui={ui} />, host);
+      await flush();
+    });
+    await act(async () => {
+      who = { id: 'other', token: 'synthetic-other' };
+      rejectLoad({ status: 401 });
+      await flush();
+    });
+    expect(host.textContent).not.toContain('登录已失效');
+  });
   it.each([false, true])(
     'matches family favorite ownership controls when administrator=%s',
     async administrator => {
