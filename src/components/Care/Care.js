@@ -59,6 +59,10 @@ export const runtime = {
     } catch (error) {
       if (error.status) throw error;
     }
+    if (identity()?.id !== who.id)
+      throw Object.assign(new Error('账号已切换，请重新选择档案'), {
+        status: 401
+      });
     localStorage.setItem(
       `care-selection-v1:${who.id}`,
       JSON.stringify(profile)
