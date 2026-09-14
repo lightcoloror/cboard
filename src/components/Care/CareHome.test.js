@@ -9,12 +9,28 @@ jest.mock('react-intl', () => ({ injectIntl: component => component }));
 jest.mock(
   '../Board/CommunicationSupport/CommunicationSupportPanel.component',
   () =>
-    function CommunicationPanel() {
-      return <div>沟通界面</div>;
+    function CommunicationPanel({ careDataVersion }) {
+      const React = require('react');
+      const {
+        loadCommunicationSavedPhrases
+      } = require('../../common/communicationSupport/localData');
+      const [items, setItems] = React.useState([]);
+      React.useEffect(
+        () => {
+          setItems(loadCommunicationSavedPhrases());
+        },
+        [careDataVersion]
+      );
+      return <div>沟通界面 {items.map(item => item.sentence).join(' ')}</div>;
     }
 );
 jest.mock('../../common/communicationSupport/localData', () => ({
-  overwriteCommunicationSavedPhrases: jest.fn(),
+  loadCommunicationSavedPhrases: jest.fn(() => []),
+  overwriteCommunicationSavedPhrases: jest.fn(items => {
+    require('../../common/communicationSupport/localData').loadCommunicationSavedPhrases.mockReturnValue(
+      items
+    );
+  }),
   overwritePersonalImagePreferences: jest.fn()
 }));
 jest.mock('./Care', () => {
@@ -41,6 +57,16 @@ describe('patient collaboration home', () => {
   let who, tick, disk;
   beforeEach(() => {
     jest.clearAllMocks();
+    require('../../common/communicationSupport/localData').loadCommunicationSavedPhrases.mockReturnValue(
+      []
+    );
+    require('../../common/communicationSupport/localData').overwriteCommunicationSavedPhrases.mockImplementation(
+      items => {
+        require('../../common/communicationSupport/localData').loadCommunicationSavedPhrases.mockReturnValue(
+          items
+        );
+      }
+    );
     localStorage.clear();
     disk = {};
     who = { id: 'account' };
@@ -72,6 +98,13 @@ describe('patient collaboration home', () => {
         cursor: 1,
         permissions: ['read'],
         resources: [
+          {
+            id: 'favorite',
+            kind: 'favorite',
+            version: 1,
+            seq: 1,
+            value: { sentence: '首次同步收藏' }
+          },
           {
             id: 'board',
             kind: 'board',
@@ -117,6 +150,13 @@ describe('patient collaboration home', () => {
     });
     wrapper.update();
     expect(wrapper.find(CommunicationSupportPanel)).toHaveLength(0);
+    wrapper.unmount();
+  });
+  test('shows favorites after the initial sync without remounting the communication panel', async () => {
+    const wrapper = await render('patient');
+    expect(wrapper.find(CommunicationSupportPanel).text()).toContain(
+      '首次同步收藏'
+    );
     wrapper.unmount();
   });
   test('restored offline profile never requests cloud synchronization on open or refresh', async () => {

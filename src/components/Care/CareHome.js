@@ -51,6 +51,7 @@ function CareHome({ intl }) {
   const [profiles, setProfiles] = useState([]);
   const [active, setActive] = useState(null);
   const [snapshot, setSnapshot] = useState(null);
+  const [projectionVersion, setProjectionVersion] = useState(0);
   const [settings, setSettings] = useState(false);
   const [notice, setNotice] = useState('正在读取患者档案');
   const [output, setOutput] = useState([]);
@@ -195,6 +196,9 @@ function CareHome({ intl }) {
       overwritePersonalImagePreferences(
         decodeCareMedia(pref.value.value, data.media, mediaImage)
       );
+    // The engine can publish resource versions before the local projection is
+    // written. Notify the panel after that write, even if versions are unchanged.
+    setProjectionVersion(version => version + 1);
     setSnapshot({ ...data });
   }
   async function load() {
@@ -391,13 +395,14 @@ function CareHome({ intl }) {
             output={output}
             activeBoardId={selectedBoard || boards[0]?.id}
             onApplyOutput={setOutput}
-            careDataVersion={JSON.stringify(
+            careDataVersion={JSON.stringify([
+              projectionVersion,
               Object.values(snapshot.resources).map(r => [
                 r.kind,
                 r.id,
                 r.version
               ])
-            )}
+            ])}
             pictogramOrdering={{
               manualOrderByBoard: Object.fromEntries(
                 boards.map(board => [board.id, board.layout.tileIds])
