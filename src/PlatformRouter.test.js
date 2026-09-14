@@ -11,7 +11,7 @@ it('shows login immediately when an external session failure redirects, even wit
   localStorage.setItem('care-offline-selection-v1', 'synthetic-offline');
   history.replace('/');
   try {
-    act(() =>
+    act(() => {
       ReactDOM.render(
         <PlatformRouter>
           <Switch>
@@ -20,8 +20,8 @@ it('shows login immediately when an external session failure redirects, even wit
           </Switch>
         </PlatformRouter>,
         host
-      )
-    );
+      );
+    });
     expect(host.textContent).toBe('本机离线沟通');
     act(() => history.push('/login-signup/'));
     expect(host.textContent).toBe('登录表单');
@@ -31,7 +31,9 @@ it('shows login immediately when an external session failure redirects, even wit
     act(() => history.push('/'));
     expect(host.textContent).toBe('本机离线沟通');
   } finally {
-    act(() => ReactDOM.unmountComponentAtNode(host));
+    act(() => {
+      ReactDOM.unmountComponentAtNode(host);
+    });
     host.remove();
     localStorage.removeItem('care-offline-selection-v1');
     history.replace('/');
