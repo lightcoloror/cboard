@@ -1,6 +1,8 @@
 export function careErrorMessage(error) {
   const code = error?.data?.code || error?.response?.data?.code || error?.code;
   const messages = {
+    FAVORITE_ADMIN_REQUIRED:
+      '您无权修改这项共享收藏；本机修改已保留，请联系家庭管理员处理。',
     PROFILE_ACCESS_DENIED: '此患者档案的访问已撤销或尚未授权。',
     SUBSCRIPTION_EXPIRED:
       '订阅已到期，新增同步暂停；本地内容和待同步修改仍然保留。',

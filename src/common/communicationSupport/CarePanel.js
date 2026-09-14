@@ -809,7 +809,8 @@ export default function CarePanel({ runtime, ui }) {
                   </Text>
                   {c.reason && (
                     <Text>
-                      此项被服务端拒绝：{c.reason}，不会自动反复提交。
+                      {careErrorMessage({ code: c.reason, message: c.reason })}
+                      此项不会自动反复提交。
                     </Text>
                   )}
                   <Text>

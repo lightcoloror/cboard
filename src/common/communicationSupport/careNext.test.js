@@ -52,6 +52,71 @@ const snapshot = {
   permissions: ['read', 'library.edit']
 };
 
+it('retains denied favorite edits across restart without blocking or retrying unrelated edits', async () => {
+  const disk = {};
+  const shared = {
+    kind: 'favorite',
+    id: 'shared',
+    version: 1,
+    seq: 1,
+    value: { sentence: '共享原文' }
+  };
+  const writes = [];
+  const request = async (path, method, body) => {
+    if (method === 'GET') return { ...snapshot, resources: [shared, tile] };
+    writes.push(body);
+    if (body.kind === 'favorite')
+      throw Object.assign(new Error('forbidden'), {
+        status: 403,
+        data: { code: 'FAVORITE_ADMIN_REQUIRED' }
+      });
+    return { resource: { ...tile, version: 2, value: body.value } };
+  };
+  const first = client(request, disk);
+  await first.init();
+  await first.sync();
+  await first.edit('favorite', 'shared', { sentence: '保留待处理修改' });
+  await first.edit('tile', 'water', { label: '合法图库编辑' });
+  await first.sync();
+  expect(writes).toHaveLength(2);
+  expect(first.view().queue).toHaveLength(0);
+  expect(first.view().conflicts).toEqual([
+    expect.objectContaining({
+      reason: 'FAVORITE_ADMIN_REQUIRED',
+      current: shared,
+      operation: expect.objectContaining({
+        value: { sentence: '保留待处理修改' }
+      })
+    })
+  ]);
+  const restarted = client(request, disk);
+  await restarted.init();
+  await restarted.sync();
+  expect(writes).toHaveLength(2);
+  expect(restarted.view().conflicts).toHaveLength(1);
+  expect(restarted.view().locked).toBe(false);
+});
+
+it('still stops all writes and locks the profile when access is revoked during upload', async () => {
+  const writes = [];
+  const request = async (path, method, body) => {
+    if (method === 'GET') return snapshot;
+    writes.push(body);
+    throw Object.assign(new Error('revoked'), {
+      status: 403,
+      data: { code: 'PROFILE_ACCESS_DENIED' }
+    });
+  };
+  const engine = client(request);
+  await engine.init();
+  await engine.sync();
+  await engine.edit('favorite', 'new', { sentence: '待同步' });
+  await engine.edit('tile', 'water', { label: '不应提交' });
+  await expect(engine.sync()).rejects.toMatchObject({ status: 403 });
+  expect(writes).toHaveLength(1);
+  expect(engine.view().locked).toBe(true);
+});
+
 it('retains the optional original-update intent across a crash and reports its partial failure separately', async () => {
   const disk = {};
   let failOriginal = true;

@@ -729,7 +729,14 @@ export default function CommunicationSupportPanel({
   function handleSavedPhraseUsed(item) {
     if (!item || !item.id) return;
     const result = markCommunicationSavedPhraseUsed(savedPhrases, item.id);
-    if (result.changed) handleManagedSavedPhrasesChange(result.items);
+    if (result.changed) {
+      if (careMode) {
+        // Reading a shared favorite must not require permission to edit it.
+        // Usage counters remain local; only reviewed content changes sync.
+        overwriteCommunicationSavedPhrases(result.items);
+        setSavedPhrases(loadCommunicationSavedPhrases());
+      } else handleManagedSavedPhrasesChange(result.items);
+    }
   }
 
   function handleManagedHistoryChange(nextHistory) {

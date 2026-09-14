@@ -204,7 +204,12 @@ describe('patient collaboration home', () => {
       await wrapper
         .find(CommunicationSupportPanel)
         .prop('onCareFavoritesChanged')([
-        ...projected,
+        ...projected.map(item => ({
+          ...item,
+          usageCount: 1,
+          lastUsedAt: 3,
+          updatedAt: 3
+        })),
         { id: 'new-favorite', sentence: '新收藏', output: [], createdAt: 2 }
       ]);
       await flush();

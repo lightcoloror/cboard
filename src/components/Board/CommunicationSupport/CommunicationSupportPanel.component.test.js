@@ -1043,52 +1043,71 @@ describe('CommunicationSupportPanel receiver flow', () => {
     wrapper.unmount();
   });
 
-  test('persists quick phrase usage without replacing the output', () => {
-    const phrase = {
-      id: 'phrase-quick',
-      sentence: '请给我水',
-      output: [{ id: 'water', label: '水' }],
-      createdAt: 1,
-      lastUsedAt: 1,
-      updatedAt: 1,
-      usageCount: 0
-    };
-    let storedPhrases = [phrase];
-    localData.loadCommunicationSavedPhrases.mockImplementation(
-      () => storedPhrases
-    );
-    localData.overwriteCommunicationSavedPhrases.mockImplementation(items => {
-      storedPhrases = items;
-    });
-    const wrapper = mount(<CommunicationSupportPanel {...props} />);
-
-    act(() => {
-      wrapper
-        .find('ExpressionLoopPanel')
-        .first()
-        .prop('onUseSavedPhrase')(phrase);
-    });
-    wrapper.update();
-
-    expect(localData.overwriteCommunicationSavedPhrases).toHaveBeenCalledWith([
-      expect.objectContaining({
+  test.each([false, true])(
+    'persists quick phrase usage locally in care mode %s without replacing the output',
+    careMode => {
+      const phrase = {
         id: 'phrase-quick',
-        usageCount: 1
-      })
-    ]);
-    expect(
-      localData.buildCommunicationCloudSettingsPayload
-    ).toHaveBeenCalledWith(
-      [
-        expect.objectContaining({
-          id: 'phrase-quick',
-          usageCount: 1
-        })
-      ],
-      []
-    );
-    expect(onApplyOutput).not.toHaveBeenCalled();
-  });
+        sentence: '请给我水',
+        output: [{ id: 'water', label: '水' }],
+        createdAt: 1,
+        lastUsedAt: 1,
+        updatedAt: 1,
+        usageCount: 0
+      };
+      let storedPhrases = [phrase];
+      localData.loadCommunicationSavedPhrases.mockImplementation(
+        () => storedPhrases
+      );
+      localData.overwriteCommunicationSavedPhrases.mockImplementation(items => {
+        storedPhrases = items;
+      });
+      const onCareFavoritesChanged = jest.fn();
+      const wrapper = mount(
+        <CommunicationSupportPanel
+          {...props}
+          careMode={careMode}
+          onCareFavoritesChanged={onCareFavoritesChanged}
+        />
+      );
+
+      act(() => {
+        wrapper
+          .find('ExpressionLoopPanel')
+          .first()
+          .prop('onUseSavedPhrase')(phrase);
+      });
+      wrapper.update();
+
+      expect(localData.overwriteCommunicationSavedPhrases).toHaveBeenCalledWith(
+        [
+          expect.objectContaining({
+            id: 'phrase-quick',
+            usageCount: 1
+          })
+        ]
+      );
+      if (careMode) {
+        expect(onCareFavoritesChanged).not.toHaveBeenCalled();
+        expect(
+          localData.buildCommunicationCloudSettingsPayload
+        ).not.toHaveBeenCalled();
+      } else
+        expect(
+          localData.buildCommunicationCloudSettingsPayload
+        ).toHaveBeenCalledWith(
+          [
+            expect.objectContaining({
+              id: 'phrase-quick',
+              usageCount: 1
+            })
+          ],
+          []
+        );
+      expect(onApplyOutput).not.toHaveBeenCalled();
+      wrapper.unmount();
+    }
+  );
 
   test('opens saved phrase management and persists reviewed changes', () => {
     const managedPhrase = {

@@ -350,7 +350,11 @@ export function createCareSync({
             } catch (error) {
               if (error.status === 409 && error.data && error.data.conflict)
                 result = error.data;
-              else if ([400, 413].includes(error.status)) {
+              else if (
+                [400, 413].includes(error.status) ||
+                (error.status === 403 &&
+                  error.data?.code === 'FAVORITE_ADMIN_REQUIRED')
+              ) {
                 result = {
                   conflict: true,
                   current: state.resources[resourceKey(op)] || null,
