@@ -9,6 +9,7 @@ import {
 import {
   PICTURE_LIBRARY_ARCHIVE_NOT_FOUND,
   buildPrivateDeviceDataArchive,
+  buildLocalDeviceDataArchive,
   buildPictureLibraryArchive,
   persistPictureLibraryRestore,
   readPictureLibraryArchive
@@ -27,6 +28,7 @@ import {
   loadReceiverCorrections,
   loadReceiverRecords
 } from '../../../common/communicationSupport/localData';
+import { createAccountClosureRecovery } from '../../../common/communicationSupport/accountClosureRecovery';
 
 const IMAGE_SOURCE = 'fixture://water.png';
 const IMAGE_BYTES = new Uint8Array([1, 2, 3, 4]);
@@ -115,6 +117,48 @@ function asFile(content) {
 }
 
 describe('web picture library ZIP adapter', () => {
+  test('retains a complete legacy device archive and restores media after the session is gone', async () => {
+    const entries = new Map();
+    let account = 'synthetic-owner';
+    const recovery = createAccountClosureRecovery({
+      scope: 'isolated-api',
+      currentAccount: () => account,
+      storage: {
+        get: async key => entries.get(key),
+        set: async (key, value) => entries.set(key, value)
+      },
+      buildArchive: async () =>
+        (await buildLocalDeviceDataArchive({
+          boards: createBoards(),
+          zipType: 'uint8array',
+          readImage: async () => ({
+            data: IMAGE_BYTES,
+            size: IMAGE_BYTES.length,
+            mediaType: 'image/png'
+          })
+        })).content
+    });
+    await recovery.preserve({ owner: account });
+    account = null;
+    const bytes = await recovery.load('synthetic-owner');
+    const zip = await JSZip.loadAsync(bytes);
+    const manifest = JSON.parse(
+      await zip.file(PICTURE_LIBRARY_ARCHIVE_MANIFEST).async('text')
+    );
+    expect(manifest.scope).toBe(PICTURE_LIBRARY_ARCHIVE_SCOPES.full);
+    expect(manifest.boards).toHaveLength(1);
+    expect(zip.file(LOCAL_DEVICE_DATA_MANIFEST)).not.toBeNull();
+    const imagePath = Object.keys(zip.files).find(
+      path => !zip.files[path].dir && path.startsWith('images/')
+    );
+    expect(await zip.file(imagePath).async('uint8array')).toEqual(IMAGE_BYTES);
+    const restored = await readPictureLibraryArchive({
+      file: asFile(bytes),
+      existingBoards: []
+    });
+    expect(restored.boards).toHaveLength(1);
+  });
+
   test('builds a compact account snapshot with device sidecars but no complete board set', async () => {
     const built = await buildPrivateDeviceDataArchive({
       createdAt: 1700000000000,

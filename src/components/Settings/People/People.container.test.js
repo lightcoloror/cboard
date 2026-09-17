@@ -1,5 +1,6 @@
 import API from '../../../api';
 import { PeopleContainer } from './People.container';
+jest.mock('./AccountClosurePanel', () => () => null);
 
 jest.mock('../../../api', () => ({
   __esModule: true,
@@ -91,5 +92,14 @@ describe('PeopleContainer profile updates', () => {
       code: 'FAMILY_CLOSE_CONFIRMATION_REQUIRED',
       familyIds: []
     });
+  });
+
+  test('does not render previous account fields while receiving a logged-out or different account', () => {
+    const instance = createContainer();
+    instance.props = { ...instance.props, user: {}, isLogged: false };
+    const rendered = instance.render();
+    expect(rendered.props.name).toBe('');
+    expect(rendered.props.email).toBe('');
+    expect(rendered.props.accountId).toBeNull();
   });
 });

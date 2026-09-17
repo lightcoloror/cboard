@@ -30,6 +30,7 @@ function setup() {
     api,
     storage,
     currentAccount: () => account,
+    preserveLocal: jest.fn(async () => ({ saved: true })),
     scope: 'https://api.example.test'
   };
   return {
@@ -50,7 +51,8 @@ test('durably saves receipt and recovery pointer before sending explicit confirm
     expect([...f.values.values()]).toContainEqual({
       owner,
       receiptId: owner,
-      secret: prepared.secret
+      secret: prepared.secret,
+      submitted: true
     });
     expect([...f.values.values()]).toContain(owner);
     expect(body).toEqual({
@@ -175,9 +177,10 @@ test('a confirmed receipt is reused even when original local prepare expiry pass
   expect(f.api.confirm).toHaveBeenCalledTimes(1);
 });
 
-test('an explicitly unavailable old receipt can be prepared again after fresh preview', async () => {
+test('an explicitly unavailable unsubmitted receipt can be prepared again after fresh preview', async () => {
   const f = setup();
-  await f.client.confirm(preview);
+  f.options.preserveLocal.mockRejectedValueOnce(new Error('quota'));
+  await expect(f.client.confirm(preview)).rejects.toThrow();
   f.api.status.mockRejectedValue(
     Object.assign(new Error(), {
       code: 'CLOSURE_RECEIPT_UNAVAILABLE',
@@ -186,6 +189,29 @@ test('an explicitly unavailable old receipt can be prepared again after fresh pr
   );
   await createAccountClosure(f.options).confirm(await f.client.preview());
   expect(f.api.prepare).toHaveBeenCalledTimes(2);
+});
+
+test('an attempted confirmation with prepared status cannot be submitted again after restart', async () => {
+  const f = setup();
+  f.api.confirm.mockRejectedValue(new Error('lost response'));
+  await expect(f.client.confirm(preview)).rejects.toThrow();
+  const restarted = createAccountClosure(f.options);
+  expect(await restarted.status()).toMatchObject({ confirmationUnknown: true });
+  await expect(restarted.confirm(preview)).rejects.toMatchObject({
+    code: 'CLOSURE_CONFIRMATION_UNKNOWN'
+  });
+  expect(f.api.confirm).toHaveBeenCalledTimes(1);
+  expect(f.api.prepare).toHaveBeenCalledTimes(1);
+});
+
+test('a definite permission refusal can be retried after a fresh preview', async () => {
+  const f = setup();
+  f.api.confirm.mockRejectedValueOnce(
+    Object.assign(new Error('membership changed'), { status: 409 })
+  );
+  await expect(f.client.confirm(preview)).rejects.toThrow();
+  await f.client.confirm(await f.client.preview());
+  expect(f.api.confirm).toHaveBeenCalledTimes(2);
 });
 
 test('two views sharing storage do not rotate the receipt while confirmation is in flight', async () => {
@@ -212,4 +238,33 @@ test('a late status response cannot appear under a different account', async () 
   await expect(f.client.status()).rejects.toMatchObject({
     code: 'ACCOUNT_CHANGED'
   });
+});
+
+test('missing local recovery adapter blocks confirmation', async () => {
+  const f = setup();
+  await expect(
+    createAccountClosure({ ...f.options, preserveLocal: undefined }).confirm(
+      preview
+    )
+  ).rejects.toMatchObject({ code: 'CLOSURE_LOCAL_RECOVERY_UNAVAILABLE' });
+  expect(f.api.confirm).not.toHaveBeenCalled();
+});
+
+test('local recovery must finish before deletion can be submitted', async () => {
+  const f = setup();
+  f.options.preserveLocal.mockRejectedValue(new Error('disk full'));
+  await expect(f.client.confirm(preview)).rejects.toMatchObject({
+    code: 'CLOSURE_LOCAL_RECOVERY_UNAVAILABLE'
+  });
+  expect(f.api.confirm).not.toHaveBeenCalled();
+  f.options.preserveLocal.mockResolvedValue({ saved: true });
+  f.api.confirm.mockImplementation(async () => {
+    expect(f.options.preserveLocal).toHaveBeenLastCalledWith({
+      owner,
+      familyIds: preview.familyIds
+    });
+    return accepted;
+  });
+  await f.client.confirm(preview);
+  expect(f.api.confirm).toHaveBeenCalledTimes(1);
 });

@@ -388,9 +388,14 @@ export async function pictureLibraryExportAdapter({
   return manifest.stats;
 }
 
-export async function localDeviceDataExportAdapter({ boards, onProgress }) {
-  const createdAt = Date.now();
-  const { content, deviceDataManifest } = await buildPictureLibraryArchive({
+export async function buildLocalDeviceDataArchive({
+  boards,
+  onProgress,
+  createdAt = Date.now(),
+  zipType = 'blob',
+  readImage = readBrowserPictureLibraryImage
+}) {
+  return buildPictureLibraryArchive({
     boards,
     scope: PICTURE_LIBRARY_ARCHIVE_SCOPES.full,
     personalImagePreferences: loadAllPersonalImagePreferences(),
@@ -399,6 +404,15 @@ export async function localDeviceDataExportAdapter({ boards, onProgress }) {
     sourcePlatform: 'cboard-web',
     createdAt,
     deviceData: currentLocalDeviceData(createdAt),
+    onProgress,
+    zipType,
+    readImage
+  });
+}
+
+export async function localDeviceDataExportAdapter({ boards, onProgress }) {
+  const { content, deviceDataManifest } = await buildLocalDeviceDataArchive({
+    boards,
     onProgress
   });
   const fileName =

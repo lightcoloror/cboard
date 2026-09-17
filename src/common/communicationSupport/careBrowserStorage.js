@@ -15,6 +15,25 @@ function open() {
   return database;
 }
 export const careBrowserStorage = {
+  async list(prefix) {
+    const db = await open();
+    return new Promise((resolve, reject) => {
+      const rows = [];
+      const request = db
+        .transaction('profiles')
+        .objectStore('profiles')
+        .openCursor(IDBKeyRange.bound(prefix, prefix + '\uffff'));
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => {
+        const cursor = request.result;
+        if (!cursor) return resolve(rows);
+        if (rows.length >= 512)
+          return reject(new Error('本机档案过多，请先整理或导出资料。'));
+        rows.push({ key: cursor.key, value: cursor.value });
+        cursor.continue();
+      };
+    });
+  },
   exclusive(key, action) {
     return typeof navigator !== 'undefined' && navigator.locks
       ? navigator.locks.request(`tuyujia:${key}`, action)

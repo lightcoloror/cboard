@@ -1,7 +1,13 @@
 // Shared by browser and mini program. Platform adapters provide transport/storage.
 // A status receipt is not a login token and must never enter exports or sync data.
 const storageQueues = new WeakMap();
-export function createAccountClosure({ api, storage, currentAccount, scope }) {
+export function createAccountClosure({
+  api,
+  storage,
+  currentAccount,
+  scope,
+  preserveLocal
+}) {
   const prefix = `account-closure-v1:${encodeURIComponent(scope)}:`;
   const latestKey = `${prefix}latest`;
   let busy = false;
@@ -27,7 +33,8 @@ export function createAccountClosure({ api, storage, currentAccount, scope }) {
     if (
       !saved ||
       saved.secret !== receipt.secret ||
-      saved.receiptId !== receipt.receiptId
+      saved.receiptId !== receipt.receiptId ||
+      saved.submitted !== receipt.submitted
     )
       throw Object.assign(new Error('无法保存注销进度凭据，尚未提交删除。'), {
         code: 'CLOSURE_STORAGE_UNAVAILABLE'
@@ -61,6 +68,8 @@ export function createAccountClosure({ api, storage, currentAccount, scope }) {
       const receipt = await read();
       const result = receipt ? await inspect(receipt) : null;
       if (currentAccount() !== account) throw changed();
+      if (result && result.status === 'prepared' && receipt.submitted)
+        return { ...result, confirmationUnknown: true };
       return result;
     },
     async preview() {
@@ -101,8 +110,16 @@ export function createAccountClosure({ api, storage, currentAccount, scope }) {
             const status = await inspect(receipt);
             check(owner);
             if (status.status === 'confirmed') return status;
+            if (receipt.submitted)
+              throw Object.assign(
+                new Error('确认请求结果尚不明确，请查询进度。'),
+                {
+                  code: 'CLOSURE_CONFIRMATION_UNKNOWN'
+                }
+              );
           } catch (error) {
             if (
+              receipt.submitted ||
               error.code !== 'CLOSURE_RECEIPT_UNAVAILABLE' ||
               error.status !== 404
             )
@@ -137,6 +154,41 @@ export function createAccountClosure({ api, storage, currentAccount, scope }) {
           );
         }
         check(owner);
+        if (typeof preserveLocal !== 'function')
+          throw Object.assign(
+            new Error('本机资料保留尚未准备好，未提交注销。'),
+            {
+              code: 'CLOSURE_LOCAL_RECOVERY_UNAVAILABLE'
+            }
+          );
+        let recovery;
+        try {
+          recovery = await preserveLocal({
+            owner,
+            familyIds: preview.familyIds
+          });
+        } catch (error) {
+          if (error.code === 'ACCOUNT_CHANGED') throw error;
+          throw Object.assign(new Error('本机恢复副本保存失败，未提交注销。'), {
+            code: 'CLOSURE_LOCAL_RECOVERY_UNAVAILABLE'
+          });
+        }
+        check(owner);
+        if (!recovery || recovery.saved !== true)
+          throw Object.assign(new Error('本机资料保留未完成，未提交注销。'), {
+            code: 'CLOSURE_LOCAL_RECOVERY_UNAVAILABLE'
+          });
+        // Persist the attempt before sending. A process crash or a temporarily
+        // prepared status must never authorize a second ambiguous submission.
+        receipt = { ...receipt, submitted: true };
+        try {
+          await persist(receipt);
+        } catch (_) {
+          throw Object.assign(new Error('无法保存提交记录，尚未提交注销。'), {
+            code: 'CLOSURE_STORAGE_UNAVAILABLE'
+          });
+        }
+        check(owner);
         try {
           const accepted = await api.confirm({
             familyIds: preview.familyIds,
@@ -163,6 +215,15 @@ export function createAccountClosure({ api, storage, currentAccount, scope }) {
           } catch (_) {
             /* Keep the original bounded error and durable receipt. */
           }
+          if (error.status >= 400 && error.status < 500) {
+            // An explicit client-error response is a definite refusal. Keep
+            // uncertain network/5xx attempts blocked until status is confirmed.
+            try {
+              await persist({ ...receipt, submitted: false });
+            } catch (_) {
+              /* The durable attempted flag remains conservative. */
+            }
+          }
           throw error;
         }
       };
@@ -183,6 +244,10 @@ export function createAccountClosure({ api, storage, currentAccount, scope }) {
 
 export function accountClosureMessage(error) {
   const messages = {
+    CLOSURE_CONFIRMATION_UNKNOWN:
+      '注销确认请求的结果尚不明确。请查询进度；暂不重复提交，必要时联系支持核对。',
+    CLOSURE_LOCAL_RECOVERY_UNAVAILABLE:
+      '本机恢复副本未能完整保存，尚未提交注销。请先检查存储空间或导出资料。',
     ACCOUNT_CHANGED: '账号已切换，请重新打开注销页面。',
     LOGIN_REQUIRED: '请重新登录后确认；已提交的注销仍可查询进度。',
     FAMILY_TRANSFER_REQUIRED: '家庭还有其他成员，请先交接管理员权限。',

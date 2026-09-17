@@ -1,4 +1,5 @@
 const NodePolyfillPlugin = require('node-polyfill-webpack-plugin');
+const path = require('path');
 
 module.exports = {
   webpack: {
@@ -8,6 +9,22 @@ module.exports = {
       extensions: ['.web.js', '.mjs', '.js', '.json', '.web.jsx', '.jsx']
     },
     configure: (webpackConfig, { env, paths }) => {
+      if (process.env.TEST_TMP_ROOT) {
+        for (const plugin of webpackConfig.plugins || []) {
+          if (plugin?.constructor?.name === 'ESLintWebpackPlugin') {
+            plugin.options.cacheLocation = path.join(
+              process.env.TEST_TMP_ROOT,
+              'eslintcache'
+            );
+          }
+        }
+        if (webpackConfig.cache && webpackConfig.cache.type === 'filesystem') {
+          webpackConfig.cache.cacheDirectory = path.join(
+            process.env.TEST_TMP_ROOT,
+            'webpack'
+          );
+        }
+      }
       const isCordovaDebug = process.argv.includes('--cordova-debug');
       const isWindows = process.platform === 'win32';
       if (isCordovaDebug) {

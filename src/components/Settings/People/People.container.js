@@ -16,11 +16,24 @@ export class PeopleContainer extends PureComponent {
   };
 
   state = {
+    accountId: this.props.user.id,
     name: this.props.user.name,
     email: this.props.user.email,
     birthdate: this.props.user.birthdate,
     updateError: false
   };
+
+  componentDidUpdate(previous) {
+    if (previous.user.id !== this.props.user.id) {
+      this.setState({
+        accountId: this.props.user.id,
+        name: this.props.user.name,
+        email: this.props.user.email,
+        birthdate: this.props.user.birthdate,
+        updateError: false
+      });
+    }
+  }
 
   handleChange = name => event => {
     this.setState({
@@ -62,7 +75,7 @@ export class PeopleContainer extends PureComponent {
         }
       );
     }
-    this.props.logout();
+    return this.props.logout();
   };
 
   handleDeleteAccount = async closeFamilyIds => {
@@ -100,15 +113,20 @@ export class PeopleContainer extends PureComponent {
 
   render() {
     const { history, location } = this.props;
+    const editable =
+      this.state.accountId === this.props.user.id
+        ? this.state
+        : this.props.user;
 
     return (
       <People
         onClose={history.goBack}
         isLogged={this.props.isLogged}
+        accountId={this.props.isLogged ? this.props.user.id : null}
         logout={this.handleLogout}
-        name={this.state.name}
-        email={this.state.email}
-        birthdate={this.state.birthdate}
+        name={editable.name || ''}
+        email={editable.email || ''}
+        birthdate={editable.birthdate || ''}
         updateError={this.state.updateError}
         location={location}
         onChangePeople={this.handleChange}

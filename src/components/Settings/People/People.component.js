@@ -15,7 +15,9 @@ import messages from './People.messages';
 import UserIcon from '../../UI/UserIcon';
 import DeleteIcon from '@material-ui/icons/Delete';
 import '../Settings.css';
+import './People.css';
 import DeleteConfirmationDialog from './DeleteConfirmationDialog';
+import AccountClosurePanel from './AccountClosurePanel';
 
 const propTypes = {
   /**
@@ -63,7 +65,8 @@ const People = ({
   location: { country, countryCode },
   onChangePeople,
   onSubmitPeople,
-  onDeleteAccount
+  onDeleteAccount,
+  accountId
 }) => {
   const [openDeleteConfirmation, setOpenDeleteConfirmation] = useState(false);
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
@@ -111,7 +114,7 @@ const People = ({
         onSubmit={onSubmitPeople}
         disableSubmit={!isLogged}
       >
-        <Paper>
+        <Paper className="People__profile">
           <List>
             {updateError && (
               <ListItem role="alert">
@@ -216,7 +219,7 @@ const People = ({
                 </ListItemSecondaryAction>
               </ListItem>
             )}
-            {isLogged && (
+            {isLogged && process.env.REACT_APP_CARE_ACCOUNT_CLOSURE !== 'true' && (
               <ListItem>
                 <ListItemText
                   primary={
@@ -244,6 +247,13 @@ const People = ({
             )}
           </List>
         </Paper>
+        {process.env.REACT_APP_CARE_ACCOUNT_CLOSURE === 'true' && (
+          <AccountClosurePanel
+            key={accountId || 'guest'}
+            accountId={accountId}
+            onAccepted={logout}
+          />
+        )}
         <DeleteConfirmationDialog
           open={openDeleteConfirmation}
           handleClose={handleCloseDeleteDialog}
