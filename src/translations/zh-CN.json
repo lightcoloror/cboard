@@ -470,6 +470,8 @@
   "cboard.components.Settings.People.nameSecondary": "更新您的用户名",
   "cboard.components.Settings.People.email": "电子邮件地址",
   "cboard.components.Settings.People.emailSecondary": "更新您的用户电子邮件",
+  "cboard.components.Settings.People.emailVerificationRequired": "邮箱暂不支持直接修改；修改前需完成验证。",
+  "cboard.components.Settings.People.updateError": "无法更新个人资料，请稍后重试。",
   "cboard.components.Settings.People.language": "语言",
   "cboard.components.Settings.People.languageSecondary": "让我们知道你的语言",
   "cboard.components.Settings.People.birthdate": "出生日期",

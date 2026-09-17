@@ -105,8 +105,8 @@ exports[`People tests default renderer 1`] = `
             }
             secondary={
               <FormattedMessage
-                defaultMessage="Update your user email"
-                id="cboard.components.Settings.People.emailSecondary"
+                defaultMessage="Changing your email requires email verification"
+                id="cboard.components.Settings.People.emailVerificationRequired"
                 values={Object {}}
               />
             }
@@ -117,6 +117,13 @@ exports[`People tests default renderer 1`] = `
             <WithStyles(ForwardRef(TextField))
               className="Settings--secondaryAction--textField"
               disabled={true}
+              helperText={
+                <FormattedMessage
+                  defaultMessage="Changing your email requires email verification"
+                  id="cboard.components.Settings.People.emailVerificationRequired"
+                  values={Object {}}
+                />
+              }
               id="user-email"
               label={
                 <FormattedMessage

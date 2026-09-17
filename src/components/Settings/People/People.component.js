@@ -59,6 +59,7 @@ const People = ({
   name,
   email,
   birthdate,
+  updateError,
   location: { country, countryCode },
   onChangePeople,
   onSubmitPeople,
@@ -96,6 +97,13 @@ const People = ({
       >
         <Paper>
           <List>
+            {updateError && (
+              <ListItem role="alert">
+                <ListItemText
+                  primary={<FormattedMessage {...messages.updateError} />}
+                />
+              </ListItem>
+            )}
             <ListItem>
               <div className="Settings__UserIcon__Container">
                 <UserIcon />
@@ -133,16 +141,21 @@ const People = ({
             <ListItem>
               <ListItemText
                 primary={<FormattedMessage {...messages.email} />}
-                secondary={<FormattedMessage {...messages.emailSecondary} />}
+                secondary={
+                  <FormattedMessage {...messages.emailVerificationRequired} />
+                }
               />
               <ListItemSecondaryAction className="Settings--secondaryAction">
                 <TextField
                   className="Settings--secondaryAction--textField"
-                  disabled={true} // Replace with `{!isLogged}` untill fix issue #140 on cboard-api
+                  disabled
                   id="user-email"
                   label={<FormattedMessage {...messages.email} />}
                   value={email}
                   margin="normal"
+                  helperText={
+                    <FormattedMessage {...messages.emailVerificationRequired} />
+                  }
                   onChange={onChangePeople('email')}
                 />
               </ListItemSecondaryAction>

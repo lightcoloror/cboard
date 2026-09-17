@@ -9,6 +9,11 @@ const mockStore = configureMockStore(middlewares);
 
 jest.mock('../../../api/api');
 
+beforeAll(() => {
+  global.fetch = jest.fn().mockResolvedValue({ ok: true, status: 200 });
+  window.alert = jest.fn();
+});
+
 jest.mock('../../../appInsights', () => ({
   appInsights: {
     setAuthenticatedUserContext: jest.fn(),
@@ -113,6 +118,25 @@ describe('actions', () => {
     store.dispatch(actions.loginSuccess(userData));
     const loginActions = store.getActions();
     expect(loginActions).toContainEqual(expectedAction);
+  });
+
+  it('updates only first-login state and never resubmits the login email', async () => {
+    API.updateUser = jest.fn().mockResolvedValue({});
+    const store = mockStore(initialState);
+
+    store.dispatch(
+      actions.loginSuccess({
+        ...userData,
+        isFirstLogin: true,
+        email: 'first-login@example.test'
+      })
+    );
+    await Promise.resolve();
+
+    expect(API.updateUser).toHaveBeenCalledWith({
+      id: userData.id,
+      isFirstLogin: false
+    });
   });
   it('should create an action to logout', async () => {
     const store = mockStore(initialState);

@@ -24,6 +24,10 @@ jest.mock('../People/People.messages', () => {
       id: 'cboard.components.Settings.People.emailSecondary',
       defaultMessage: 'Update your user email'
     },
+    emailVerificationRequired: {
+      id: 'cboard.components.Settings.People.emailVerificationRequired',
+      defaultMessage: 'Changing your email requires email verification'
+    },
     language: {
       id: 'cboard.components.Settings.People.language',
       defaultMessage: 'Language'

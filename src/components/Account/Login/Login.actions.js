@@ -48,7 +48,7 @@ export function loginSuccess(payload) {
 
 async function firstLoginActions(dispatch, payload) {
   try {
-    await API.updateUser({ ...payload, isFirstLogin: false });
+    await API.updateUser({ id: payload.id, isFirstLogin: false });
   } catch (err) {
     console.error(err);
   }

@@ -18,7 +18,8 @@ export class PeopleContainer extends PureComponent {
   state = {
     name: this.props.user.name,
     email: this.props.user.email,
-    birthdate: this.props.user.birthdate
+    birthdate: this.props.user.birthdate,
+    updateError: false
   };
 
   handleChange = name => event => {
@@ -30,10 +31,10 @@ export class PeopleContainer extends PureComponent {
 
   handleSubmit = async () => {
     try {
+      this.setState({ updateError: false });
       await API.updateUser({
         id: this.props.user.id,
         name: this.state.name,
-        email: this.state.email,
         birthdate: this.state.birthdate
       });
       this.props.updateUserData({
@@ -43,6 +44,8 @@ export class PeopleContainer extends PureComponent {
         birthdate: this.state.birthdate
       });
     } catch (e) {
+      console.error('Unable to update user profile.');
+      this.setState({ updateError: true });
     } finally {
     }
   };
@@ -84,6 +87,7 @@ export class PeopleContainer extends PureComponent {
         name={this.state.name}
         email={this.state.email}
         birthdate={this.state.birthdate}
+        updateError={this.state.updateError}
         location={location}
         onChangePeople={this.handleChange}
         onSubmitPeople={this.handleSubmit}

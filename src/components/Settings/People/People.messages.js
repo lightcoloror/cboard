@@ -21,6 +21,14 @@ export default defineMessages({
     id: 'cboard.components.Settings.People.emailSecondary',
     defaultMessage: 'Update your user email'
   },
+  emailVerificationRequired: {
+    id: 'cboard.components.Settings.People.emailVerificationRequired',
+    defaultMessage: 'Changing your email requires email verification'
+  },
+  updateError: {
+    id: 'cboard.components.Settings.People.updateError',
+    defaultMessage: 'Unable to update your profile. Please try again.'
+  },
   language: {
     id: 'cboard.components.Settings.People.language',
     defaultMessage: 'Language'
