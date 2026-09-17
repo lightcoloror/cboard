@@ -60,8 +60,12 @@ it('continues unrelated edits and downloads when media quota is full, retaining 
     data: { code: 'FAMILY_MEDIA_QUOTA_EXCEEDED' }
   };
   let remoteAvailable = false;
+  let quotaFull = true;
   const request = jest.fn(async (path, method, body) => {
-    if (method === 'POST' && path.endsWith('/media')) throw quotaError;
+    if (method === 'POST' && path.endsWith('/media')) {
+      if (quotaFull) throw quotaError;
+      return { id: body.mediaId };
+    }
     if (method === 'POST')
       return {
         resource: {
@@ -99,9 +103,18 @@ it('continues unrelated edits and downloads when media quota is full, retaining 
   expect(restarted.archive().queue.map(op => op.resourceId)).toEqual(['new']);
   expect(restarted.archive().media.pending.data).toBe('local-image');
   request.mockClear();
+  await expect(restarted.sync({ automatic: true })).rejects.toMatchObject(
+    quotaError
+  );
+  expect(request.mock.calls.every(([, method]) => method === 'GET')).toBe(true);
   await restarted.sync({ skipMediaUploads: true });
   expect(request.mock.calls.every(([, method]) => method === 'GET')).toBe(true);
   expect(restarted.archive().media.pending.pending).toBe(true);
+  quotaFull = false;
+  await restarted.sync();
+  expect(restarted.archive().media.pending.pending).toBe(false);
+  expect(restarted.archive().mediaQuotaPaused).toBe(false);
+  expect(restarted.archive().queue).toHaveLength(0);
 });
 
 it('keeps a cloud tombstone visible over unsent edits when subscription uploads are paused', async () => {

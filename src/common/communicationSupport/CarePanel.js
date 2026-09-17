@@ -164,7 +164,7 @@ export default function CarePanel({ runtime, ui }) {
           runtime.identity()?.token === who.token;
         if (engine.current)
           engine.current
-            .sync()
+            .sync({ automatic: true })
             .catch(e => current() && setMessage(careErrorMessage(e)));
         else
           reload().catch(e => {

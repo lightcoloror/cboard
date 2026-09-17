@@ -274,7 +274,7 @@ export function createCareSync({
         }
         await persist(next);
       }),
-    sync: ({ skipMediaUploads = false } = {}) =>
+    sync: ({ skipMediaUploads = false, automatic = false } = {}) =>
       serial(async () => {
         checkAccount();
         try {
@@ -323,8 +323,9 @@ export function createCareSync({
           }
           const canUpload = !next.entitlements || next.entitlements.syncWrite;
           let mediaUploadError;
+          const quotaPaused = automatic && state.mediaQuotaPaused;
           for (const [mediaId, asset] of Object.entries(state.media)) {
-            if (skipMediaUploads) break;
+            if (skipMediaUploads || quotaPaused) break;
             if (!canUpload) break;
             if (!asset.pending) continue;
             checkEdit('favorite');
@@ -334,6 +335,7 @@ export function createCareSync({
               if (error.data?.code !== 'FAMILY_MEDIA_QUOTA_EXCEEDED')
                 throw error;
               mediaUploadError = error;
+              await persist({ ...copy(state), mediaQuotaPaused: true });
               break;
             }
             checkAccount();
@@ -468,6 +470,13 @@ export function createCareSync({
             await persist(next);
           }
           if (mediaUploadError) throw mediaUploadError;
+          if (quotaPaused)
+            throw Object.assign(new Error('FAMILY_MEDIA_QUOTA_EXCEEDED'), {
+              status: 413,
+              data: { code: 'FAMILY_MEDIA_QUOTA_EXCEEDED' }
+            });
+          if (!automatic && !skipMediaUploads && state.mediaQuotaPaused)
+            await persist({ ...copy(state), mediaQuotaPaused: false });
           return visible();
         } catch (error) {
           if (currentAccount() === accountId) {

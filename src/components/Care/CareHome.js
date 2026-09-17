@@ -111,12 +111,12 @@ function CareHome({ intl }) {
     }
     await sync();
   }
-  function sync() {
-    const task = syncing.current.then(synchronize);
+  function sync(options = {}) {
+    const task = syncing.current.then(() => synchronize(options));
     syncing.current = task.catch(() => {});
     return task;
   }
-  async function synchronize() {
+  async function synchronize(options) {
     const instance = engine.current;
     if (!instance) return;
     try {
@@ -175,7 +175,7 @@ function CareHome({ intl }) {
       if (localCareIdentity()?.offline) {
         setNotice('正在使用本机恢复的患者资料；修改仅保存在本机。');
       } else {
-        await instance.sync();
+        await instance.sync(options);
         setNotice('');
       }
     } catch (e) {
@@ -312,7 +312,7 @@ function CareHome({ intl }) {
       }
       if (!next) return;
       if (settingsOpen.current) return;
-      if (engine.current) void actions.current.sync();
+      if (engine.current) void actions.current.sync({ automatic: true });
       else void actions.current.load();
     };
     const stop = runtime.watch(update);
