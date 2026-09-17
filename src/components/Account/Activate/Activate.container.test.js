@@ -3,6 +3,10 @@ import { mount } from 'enzyme';
 import { act } from 'react-dom/test-utils';
 import Activate from './Activate.container';
 import { activate } from './Activate.actions';
+import { resendVerification } from '../SignUp/SignUp.actions';
+jest.mock('../SignUp/SignUp.actions', () => ({
+  resendVerification: jest.fn()
+}));
 
 let mockUrl = 'first';
 const mockHistory = { replace: jest.fn() };
@@ -39,6 +43,24 @@ test('keeps failed activation visible without a timed redirect', async () => {
   await render();
   expect(wrapper.text()).toContain('FAILED');
   act(() => jest.advanceTimersByTime(3000));
+  expect(mockHistory.replace).not.toHaveBeenCalled();
+});
+test('lets a failed activation request a new email without leaving the page', async () => {
+  activate.mockResolvedValue({ success: false });
+  resendVerification.mockResolvedValue({ success: 1 });
+  await render();
+  expect(resendVerification).not.toHaveBeenCalled();
+  act(() =>
+    wrapper
+      .find('input[type="email"]')
+      .simulate('change', { target: { value: ' Family@Example.test ' } })
+  );
+  await act(async () => {
+    wrapper.find('button').simulate('click');
+  });
+  wrapper.update();
+  expect(resendVerification).toHaveBeenCalledWith('family@example.test');
+  expect(wrapper.text()).toContain('请求已受理');
   expect(mockHistory.replace).not.toHaveBeenCalled();
 });
 test('redirects only after success and cancels scheduled navigation on unmount', async () => {
