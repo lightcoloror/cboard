@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { FormattedMessage, injectIntl, intlShape } from 'react-intl';
@@ -38,6 +38,7 @@ export function ResetPassword({
   resetPasswordWithPhone
 }) {
   const [isSending, setIsSending] = useState(false);
+  const emailRequestEpoch = useRef(0);
   const [forgotState, setForgotState] = useState({});
   const [completed, setCompleted] = useState(false);
   const [resetMode, setResetMode] = useState('email');
@@ -57,6 +58,7 @@ export function ResetPassword({
 
   useEffect(
     () => {
+      emailRequestEpoch.current += 1;
       if (!isDialogOpen) return undefined;
 
       let active = true;
@@ -89,6 +91,7 @@ export function ResetPassword({
 
       return () => {
         active = false;
+        emailRequestEpoch.current += 1;
       };
     },
     [isDialogOpen]
@@ -100,20 +103,22 @@ export function ResetPassword({
     intl.formatMessage(messages.resetPasswordError);
 
   const handleSubmit = async values => {
+    const epoch = ++emailRequestEpoch.current;
     setIsSending(true);
     setForgotState({});
     try {
       const res = await forgot(values);
+      if (epoch !== emailRequestEpoch.current) return;
       setForgotState(res);
       setCompleted(true);
     } catch (err) {
-      console.error('Error in ResetPassword:', err?.message);
+      if (epoch !== emailRequestEpoch.current) return;
       setForgotState({
         success: false,
         message: getErrorMessage(err)
       });
     } finally {
-      setIsSending(false);
+      if (epoch === emailRequestEpoch.current) setIsSending(false);
     }
   };
 
@@ -126,6 +131,8 @@ export function ResetPassword({
   };
 
   const changeResetMode = mode => {
+    emailRequestEpoch.current += 1;
+    setIsSending(false);
     setResetMode(mode);
     setForgotState({});
     setCompleted(false);
