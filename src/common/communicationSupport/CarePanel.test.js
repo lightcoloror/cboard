@@ -157,6 +157,81 @@ describe('shared patient collaboration UI', () => {
     expect(host.textContent).toContain('体验开通未完成');
     expect(host.textContent).not.toContain('已保存；本地待同步修改会保留。');
   });
+  it.each([
+    ['patient', '我是患者，进入表达'],
+    ['relative', '我是家属或照护者，进入接收'],
+    ['professional', '我是专业协作者，进入接收']
+  ])(
+    'creates a profile with the selected %s entry role',
+    async (role, label) => {
+      runtime.request.mockImplementation(async (path, method, body) => {
+        if (path === '/care/profiles') return [];
+        if (path === '/care/families')
+          return [{ id: 'family-a', name: '合成家庭' }];
+        if (path === '/care/profiles' && method === 'POST')
+          return { id: 'patient-a' };
+        return {};
+      });
+      await act(async () => {
+        ReactDOM.render(<CarePanel runtime={runtime} ui={ui} />, host);
+        await flush();
+      });
+      const name = host.querySelector(
+        'input[placeholder="家庭或患者档案名称"]'
+      );
+      await act(async () => {
+        Simulate.change(name, { target: { value: '合成患者' } });
+        Simulate.click(button(label));
+        await flush();
+      });
+      await act(async () => {
+        Simulate.click(button('在此家庭新建患者档案'));
+        await flush();
+      });
+      expect(runtime.request).toHaveBeenCalledWith('/care/profiles', 'POST', {
+        familyId: 'family-a',
+        name: '合成患者',
+        role
+      });
+    }
+  );
+  it('clears visible creation drafts and restores the relative entry default after an account switch', async () => {
+    runtime.request.mockImplementation(async (path, method) => {
+      if (path === '/care/profiles') return [];
+      if (path === '/care/families')
+        return [{ id: `family-${who.id}`, name: '合成家庭' }];
+      return {};
+    });
+    await act(async () => {
+      ReactDOM.render(<CarePanel runtime={runtime} ui={ui} />, host);
+      await flush();
+    });
+    const [name, invitation] = host.querySelectorAll('input');
+    await act(async () => {
+      Simulate.change(name, { target: { value: '前账号患者' } });
+      Simulate.change(invitation, { target: { value: '前账号邀请凭据' } });
+      Simulate.click(button('我是患者，进入表达'));
+      who = { id: 'other', token: 'synthetic-other' };
+      tick();
+      await flush();
+    });
+    const [nextName, nextInvitation] = host.querySelectorAll('input');
+    expect(nextName.value).toBe('');
+    expect(nextInvitation.value).toBe('');
+    await act(async () => {
+      Simulate.change(nextName, { target: { value: '新账号患者' } });
+      await flush();
+    });
+    await act(async () => {
+      Simulate.click(button('在此家庭新建患者档案'));
+      await flush();
+    });
+    expect(runtime.request).toHaveBeenCalledWith('/care/profiles', 'POST', {
+      familyId: 'family-other',
+      name: '新账号患者',
+      role: 'relative'
+    });
+  });
   async function openImportTarget() {
     previewCareArchive.mockResolvedValue({
       fingerprint: 'synthetic-guest-archive',

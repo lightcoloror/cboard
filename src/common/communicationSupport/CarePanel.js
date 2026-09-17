@@ -17,6 +17,7 @@ export default function CarePanel({ runtime, ui }) {
   const [active, setActive] = useState(null);
   const [data, setData] = useState(null);
   const [name, setName] = useState('');
+  const [role, setRole] = useState('relative');
   const [label, setLabel] = useState('');
   const [invitation, setInvitation] = useState('');
   const [message, setMessage] = useState('');
@@ -94,6 +95,16 @@ export default function CarePanel({ runtime, ui }) {
           setMembers({});
           setAudit([]);
           setSessions([]);
+          setName('');
+          setRole('relative');
+          setInvitation('');
+          setMessage('');
+          setMigration(null);
+          setLabel('');
+          setBoardName('');
+          setFavoriteText('');
+          setArchivePassword('');
+          setDelegationLimit('');
           setLogoutAllAccount(null);
           setPendingRestore(null);
           setIdentity(who);
@@ -357,6 +368,24 @@ export default function CarePanel({ runtime, ui }) {
       {families.map(f => (
         <Box key={f.id}>
           <Text>{f.name}</Text>
+          <Text>本人使用身份（只决定进入表达或接收，不改变权限）</Text>
+          <Text>
+            已选择：
+            {role === 'patient'
+              ? '患者 · 表达'
+              : role === 'professional'
+              ? '专业协作者 · 接收'
+              : '家属或照护者 · 接收'}
+          </Text>
+          <Button disabled={busy} onClick={() => setRole('patient')}>
+            我是患者，进入表达
+          </Button>
+          <Button disabled={busy} onClick={() => setRole('relative')}>
+            我是家属或照护者，进入接收
+          </Button>
+          <Button disabled={busy} onClick={() => setRole('professional')}>
+            我是专业协作者，进入接收
+          </Button>
           {runtime.trialEnabled && (
             <Button disabled={busy} onClick={() => void claimTrial(f)}>
               开通体验
@@ -368,7 +397,8 @@ export default function CarePanel({ runtime, ui }) {
               run(async () => {
                 await request('/care/profiles', 'POST', {
                   familyId: f.id,
-                  name
+                  name,
+                  role
                 });
                 setName('');
                 await reload();
