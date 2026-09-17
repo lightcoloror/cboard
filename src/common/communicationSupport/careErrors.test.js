@@ -31,4 +31,22 @@ test('maps public trial claim outcomes without implying payment or email deliver
   expect(careErrorMessage({ data: { code: 'TRIAL_CLAIM_CORRUPT' } })).toContain(
     '联系支持人员处理'
   );
+  expect(
+    careErrorMessage({ data: { code: 'FAMILY_MEDIA_QUOTA_EXCEEDED' } })
+  ).toContain('存储空间或文件数已达上限');
+  expect(
+    careErrorMessage({ data: { code: 'MEDIA_QUOTA_NOT_CONFIGURED' } })
+  ).toContain('尚未配置');
+  expect(
+    careErrorMessage({ data: { code: 'MEDIA_UPLOAD_PENDING_RECONCILIATION' } })
+  ).toContain('本地修改仍待同步');
+  expect(
+    careErrorMessage({ data: { code: 'MEDIA_UPLOAD_RECONCILIATION_REQUIRED' } })
+  ).toContain('需要核对');
+  expect(
+    careErrorMessage({ data: { code: 'MEDIA_QUOTA_RECONCILIATION_REQUIRED' } })
+  ).toContain('额度状态需要核对');
+  expect(careErrorMessage({ data: { code: 'MEDIA_FILE_DELETED' } })).toContain(
+    '不能继续上传此版本'
+  );
 });

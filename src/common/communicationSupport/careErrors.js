@@ -35,7 +35,17 @@ export function careErrorMessage(error) {
     TRIAL_FUNDING_CONFLICT: '家庭体验状态正在变更，请刷新后重试。',
     TRIAL_CLAIM_CORRUPT: '家庭体验记录异常，请联系支持人员处理。',
     RETRY_CONCURRENT_CHANGE: '家庭状态刚刚发生变化，请刷新后重试。',
-    INVALID_TRIAL_CLAIM: '家庭体验请求无效，请刷新后重试。'
+    INVALID_TRIAL_CLAIM: '家庭体验请求无效，请刷新后重试。',
+    FAMILY_MEDIA_QUOTA_EXCEEDED:
+      '家庭云存储空间或文件数已达上限；本地内容仍保留。',
+    MEDIA_QUOTA_NOT_CONFIGURED: '家庭云存储服务尚未配置，暂不可上传。',
+    MEDIA_UPLOAD_PENDING_RECONCILIATION:
+      '上传尚未完成，本地修改仍待同步。请稍后重试；若持续失败，请联系支持人员。',
+    MEDIA_UPLOAD_RECONCILIATION_REQUIRED:
+      '上传状态需要核对，系统已保留本地内容，请联系支持人员处理。',
+    MEDIA_QUOTA_RECONCILIATION_REQUIRED:
+      '家庭云存储额度状态需要核对，系统已保留本地内容，请联系支持人员处理。',
+    MEDIA_FILE_DELETED: '该云端媒体已删除，不能继续上传此版本。'
   };
   if (messages[code]) return messages[code];
   if (error?.status === 401 || error?.response?.status === 401)
