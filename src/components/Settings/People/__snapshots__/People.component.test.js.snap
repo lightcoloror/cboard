@@ -182,8 +182,11 @@ exports[`People tests default renderer 1`] = `
     </WithStyles(ForwardRef(Paper))>
     <DeleteConfirmationDialog
       errorDeletingAccount={false}
+      familyCloseIds={Array []}
+      familyTransferRequired={false}
       handleClose={[Function]}
       handleDeleteConfirmed={[Function]}
+      handleFamilyCloseConfirmed={[Function]}
       isDeletingAccount={false}
       open={false}
     />

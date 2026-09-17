@@ -68,21 +68,37 @@ const People = ({
   const [openDeleteConfirmation, setOpenDeleteConfirmation] = useState(false);
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
   const [errorDeletingAccount, setErrorDeletingAccount] = useState(false);
+  const [familyCloseIds, setFamilyCloseIds] = useState([]);
+  const [familyTransferRequired, setFamilyTransferRequired] = useState(false);
 
   const handleCloseDeleteDialog = () => {
     setOpenDeleteConfirmation(false);
+    setFamilyCloseIds([]);
+    setFamilyTransferRequired(false);
   };
 
-  const handleDeleteConfirmed = async () => {
+  const handleDeleteConfirmed = async closeIds => {
     setIsDeletingAccount(true);
     setErrorDeletingAccount(false);
+    setFamilyTransferRequired(false);
     try {
-      await onDeleteAccount();
+      await onDeleteAccount(closeIds);
       setIsDeletingAccount(false);
     } catch (error) {
-      console.error(error);
       setIsDeletingAccount(false);
-      setErrorDeletingAccount(true);
+      if (
+        error &&
+        error.code === 'FAMILY_CLOSE_CONFIRMATION_REQUIRED' &&
+        Array.isArray(error.familyIds) &&
+        error.familyIds.length
+      ) {
+        setFamilyCloseIds(error.familyIds);
+      } else if (error && error.code === 'FAMILY_TRANSFER_REQUIRED') {
+        setFamilyCloseIds([]);
+        setFamilyTransferRequired(true);
+      } else {
+        setErrorDeletingAccount(true);
+      }
     }
   };
 
@@ -232,8 +248,11 @@ const People = ({
           open={openDeleteConfirmation}
           handleClose={handleCloseDeleteDialog}
           handleDeleteConfirmed={handleDeleteConfirmed}
+          handleFamilyCloseConfirmed={handleDeleteConfirmed}
           isDeletingAccount={isDeletingAccount}
           errorDeletingAccount={errorDeletingAccount}
+          familyCloseIds={familyCloseIds}
+          familyTransferRequired={familyTransferRequired}
         />
       </FullScreenDialog>
     </div>

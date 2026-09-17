@@ -65,14 +65,36 @@ export class PeopleContainer extends PureComponent {
     this.props.logout();
   };
 
-  handleDeleteAccount = async () => {
+  handleDeleteAccount = async closeFamilyIds => {
     try {
-      const data = await API.deleteAccount();
+      const data = await API.deleteAccount(closeFamilyIds);
       this.handleLogout();
       this.props.history.push('/login-signup/');
       return data;
     } catch (error) {
-      throw Error(error);
+      const response = error && error.response;
+      const payload = response && response.data;
+      const nested = payload && payload.error;
+      const code = (nested && nested.code) || (payload && payload.code) || '';
+      const familyIds =
+        response &&
+        response.status === 409 &&
+        code === 'FAMILY_CLOSE_CONFIRMATION_REQUIRED' &&
+        nested &&
+        Array.isArray(nested.familyIds)
+          ? nested.familyIds.every(
+              familyId =>
+                typeof familyId === 'string' && familyId.trim().length > 0
+            )
+            ? nested.familyIds
+            : []
+          : [];
+      const normalized = new Error(
+        (payload && payload.message) || 'Unable to delete the cloud account.'
+      );
+      normalized.code = code;
+      normalized.familyIds = familyIds;
+      throw normalized;
     }
   };
 

@@ -79,5 +79,19 @@ export default defineMessages({
   cancelDeleteAccount: {
     id: 'cboard.components.Settings.People.cancelDeleteAccount',
     defaultMessage: 'Cancel'
+  },
+  closeFamilyConfirmation: {
+    id: 'cboard.components.Settings.People.closeFamilyConfirmation',
+    defaultMessage:
+      'I confirm closing these {count} families and deleting their cloud data and my account. Local data will remain on this device.'
+  },
+  closeFamilyAndDelete: {
+    id: 'cboard.components.Settings.People.closeFamilyAndDelete',
+    defaultMessage: 'Close family and delete account'
+  },
+  familyTransferRequired: {
+    id: 'cboard.components.Settings.People.familyTransferRequired',
+    defaultMessage:
+      'Another family member must take over administration before this account can be deleted. No deletion was continued.'
   }
 });

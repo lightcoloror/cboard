@@ -1646,7 +1646,7 @@ class API {
     return data;
   }
 
-  async deleteAccount() {
+  async deleteAccount(closeFamilyIds = []) {
     const userId = getUserData().id;
     if (userId) {
       const authToken = getAuthToken();
@@ -1657,9 +1657,14 @@ class API {
       const headers = {
         Authorization: `Bearer ${authToken}`
       };
-      const { data } = await this.axiosInstance.delete(`/account/${userId}`, {
-        headers
-      });
+      const request = { headers };
+      if (Array.isArray(closeFamilyIds) && closeFamilyIds.length) {
+        request.data = { closeFamilyIds };
+      }
+      const { data } = await this.axiosInstance.delete(
+        `/account/${userId}`,
+        request
+      );
       return data;
     }
   }

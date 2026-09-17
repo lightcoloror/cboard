@@ -3,7 +3,7 @@ import { PeopleContainer } from './People.container';
 
 jest.mock('../../../api', () => ({
   __esModule: true,
-  default: { updateUser: jest.fn() }
+  default: { updateUser: jest.fn(), deleteAccount: jest.fn() }
 }));
 jest.mock('../../Account/Login/Login.actions', () => ({
   logout: jest.fn()
@@ -70,5 +70,26 @@ describe('PeopleContainer profile updates', () => {
 
     expect(updateUserData).not.toHaveBeenCalled();
     expect(instance.state.updateError).toBe(true);
+  });
+
+  test('preserves only a valid family-close contract for the confirmation UI', async () => {
+    API.deleteAccount.mockRejectedValue({
+      response: {
+        status: 409,
+        data: {
+          message: 'Confirm closing the family first.',
+          error: {
+            code: 'FAMILY_CLOSE_CONFIRMATION_REQUIRED',
+            familyIds: ['family-1', { id: 'unexpected' }]
+          }
+        }
+      }
+    });
+    const instance = createContainer();
+
+    await expect(instance.handleDeleteAccount()).rejects.toMatchObject({
+      code: 'FAMILY_CLOSE_CONFIRMATION_REQUIRED',
+      familyIds: []
+    });
   });
 });
