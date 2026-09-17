@@ -14,6 +14,7 @@ import {
 } from 'react-social-login-buttons';
 
 import messages from './WelcomeScreen.messages';
+import { getProductLinks } from '../../productLinks';
 import { finishFirstVisit } from '../App/App.actions';
 import Login from '../Account/Login';
 import SignUp from '../Account/SignUp';
@@ -215,6 +216,7 @@ export class WelcomeScreen extends Component {
   }
 
   render() {
+    const productLinks = getProductLinks();
     const { finishFirstVisit, onClose, classes } = this.props;
     const { activeView, dialogWithKeyboardStyle } = this.state;
 
@@ -294,7 +296,8 @@ export class WelcomeScreen extends Component {
           </footer>
           <div className="WelcomeScreen__links">
             <Link
-              href="https://www.cboard.io/privacy/"
+              href={productLinks.privacy || undefined}
+              aria-disabled={!productLinks.privacy}
               target="_blank"
               rel="noopener noreferrer"
               color="inherit"
@@ -302,7 +305,8 @@ export class WelcomeScreen extends Component {
               <FormattedMessage {...messages.privacy} />
             </Link>
             <Link
-              href="https://www.cboard.io/terms-of-use/"
+              href={productLinks.terms || undefined}
+              aria-disabled={!productLinks.terms}
               target="_blank"
               rel="noopener noreferrer"
               color="inherit"
