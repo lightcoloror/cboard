@@ -322,11 +322,19 @@ export function createCareSync({
             await persist(next);
           }
           const canUpload = !next.entitlements || next.entitlements.syncWrite;
+          let mediaUploadError;
           for (const [mediaId, asset] of Object.entries(state.media)) {
             if (!canUpload) break;
             if (!asset.pending) continue;
             checkEdit('favorite');
-            await request(`${api}/media`, 'POST', asset);
+            try {
+              await request(`${api}/media`, 'POST', asset);
+            } catch (error) {
+              if (error.data?.code !== 'FAMILY_MEDIA_QUOTA_EXCEEDED')
+                throw error;
+              mediaUploadError = error;
+              break;
+            }
             checkAccount();
             next = copy(state);
             next.media[mediaId].pending = false;
@@ -338,6 +346,11 @@ export function createCareSync({
           for (const op of [...state.queue]) {
             if (!canUpload) break;
             if (blocked.has(resourceKey(op))) continue;
+            if (
+              op.action !== 'delete' &&
+              careMediaIds(op.value).some(id => state.media[id]?.pending)
+            )
+              continue;
             checkEdit(op.kind);
             let result;
             try {
@@ -453,6 +466,7 @@ export function createCareSync({
             next.media[mediaId] = { ...asset, mediaId, pending: false };
             await persist(next);
           }
+          if (mediaUploadError) throw mediaUploadError;
           return visible();
         } catch (error) {
           if (currentAccount() === accountId) {

@@ -53,6 +53,53 @@ const snapshot = {
   permissions: ['read', 'library.edit']
 };
 
+it('continues unrelated edits and downloads when media quota is full, retaining dependent edits across restart', async () => {
+  const disk = {};
+  const quotaError = {
+    status: 413,
+    data: { code: 'FAMILY_MEDIA_QUOTA_EXCEEDED' }
+  };
+  let remoteAvailable = false;
+  const request = jest.fn(async (path, method, body) => {
+    if (method === 'POST' && path.endsWith('/media')) throw quotaError;
+    if (method === 'POST')
+      return {
+        resource: {
+          kind: body.kind,
+          id: body.resourceId,
+          value: body.value,
+          version: 1
+        }
+      };
+    if (path.endsWith('/media/remote')) return { data: 'remote-image' };
+    return {
+      ...snapshot,
+      permissions: [...snapshot.permissions, 'preferences.edit'],
+      resources: remoteAvailable
+        ? [{ ...tile, value: { mediaId: 'remote' } }]
+        : []
+    };
+  });
+  const engine = client(request, disk);
+  await engine.init();
+  await engine.sync();
+  await engine.addMedia({ mediaId: 'pending', data: 'local-image' });
+  await engine.edit('tile', 'new', { mediaId: 'pending' });
+  await engine.edit('preference', 'font', { size: 24 });
+  remoteAvailable = true;
+  await expect(engine.sync()).rejects.toBe(quotaError);
+  const commands = request.mock.calls.filter(
+    ([path, method]) => method === 'POST' && path.endsWith('/commands')
+  );
+  expect(commands.map(([, , body]) => body.kind)).toEqual(['preference']);
+  expect(engine.archive().media.pending.pending).toBe(true);
+  expect(engine.archive().media.remote.pending).toBe(false);
+  const restarted = client(request, disk);
+  await restarted.init();
+  expect(restarted.archive().queue.map(op => op.resourceId)).toEqual(['new']);
+  expect(restarted.archive().media.pending.data).toBe('local-image');
+});
+
 it('keeps a cloud tombstone visible over unsent edits when subscription uploads are paused', async () => {
   const disk = {};
   let deleted = false;
