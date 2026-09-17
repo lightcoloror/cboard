@@ -48,6 +48,88 @@ describe('Cboard API calls', () => {
     API.axiosInstance = axiosInstance;
   });
 
+  it('queries closure progress without Bearer or normal 401 redirect handling', async () => {
+    const body = { receiptId: 'a'.repeat(24), secret: 'b'.repeat(64) };
+    axiosInstance.post.mockResolvedValueOnce({
+      data: { status: 'confirmed', accountDeleted: false }
+    });
+    expect(await API.getAccountClosureStatus(body)).toMatchObject({
+      accountDeleted: false
+    });
+    expect(axiosInstance.post).toHaveBeenCalledWith(
+      '/care/account/closure-status',
+      body,
+      {
+        accountClosure: true,
+        timeout: 20000,
+        headers: {}
+      }
+    );
+  });
+
+  it('authenticates preview, preparation and explicit confirmation without treating acceptance as deletion', async () => {
+    axiosInstance.get.mockResolvedValueOnce({
+      data: { canConfirm: true, familyIds: [] }
+    });
+    axiosInstance.post.mockResolvedValueOnce({
+      data: { receiptId: 'a'.repeat(24) }
+    });
+    axiosInstance.post.mockResolvedValueOnce({
+      data: { operationId: 'job-a', accountDeleted: false }
+    });
+    await API.previewAccountClosure();
+    await API.prepareAccountClosure();
+    const body = {
+      familyIds: [],
+      secret: 'b'.repeat(64),
+      confirmCloudDeletion: true
+    };
+    expect(await API.confirmAccountClosure(body)).toMatchObject({
+      accountDeleted: false
+    });
+    const config = {
+      ...expectAuthConfig(),
+      accountClosure: true,
+      timeout: 20000
+    };
+    expect(axiosInstance.get).toHaveBeenCalledWith(
+      '/care/account/closure-preview',
+      config
+    );
+    expect(axiosInstance.post).toHaveBeenCalledWith(
+      '/care/account/closure-receipt',
+      {},
+      config
+    );
+    expect(axiosInstance.post).toHaveBeenCalledWith(
+      '/care/account/closure-confirm',
+      body,
+      config
+    );
+  });
+
+  it('strips transport config and secret-bearing request data from closure errors', async () => {
+    axiosInstance.post.mockRejectedValueOnce({
+      config: { data: 'secret-must-not-escape' },
+      response: { status: 404, data: { code: 'CLOSURE_RECEIPT_UNAVAILABLE' } }
+    });
+    let failure;
+    try {
+      await API.getAccountClosureStatus({
+        receiptId: 'synthetic',
+        secret: 'synthetic'
+      });
+    } catch (error) {
+      failure = error;
+    }
+    expect(failure).toMatchObject({
+      status: 404,
+      code: 'CLOSURE_RECEIPT_UNAVAILABLE'
+    });
+    expect(failure.config).toBeUndefined();
+    expect(JSON.stringify(failure)).not.toContain('secret-must-not-escape');
+  });
+
   it('uploads authenticated AAC files for transient server conversion', async () => {
     axiosInstance.post.mockResolvedValueOnce({
       data: {

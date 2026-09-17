@@ -98,6 +98,7 @@ class API {
       ...config
     });
     this.axiosInstance.interceptors.request.use(request => {
+      if (request.accountClosure) return request;
       if (process.env.REACT_APP_CARE_COLLABORATION !== 'true') return request;
       const user = getUserData();
       const id = user && (user.id || user._id);
@@ -134,6 +135,7 @@ class API {
       error => {
         if (
           error.response?.status === 401 &&
+          !error.config?.accountClosure &&
           error.config?.baseURL === BASE_URL
         ) {
           if (isAndroid()) {
@@ -1644,6 +1646,52 @@ class API {
   async listSubscriptions() {
     const { data } = await this.axiosInstance.get(`/subscription/list`);
     return data;
+  }
+
+  async accountClosureRequest(path, body, anonymous = false) {
+    const token = anonymous ? null : getAuthToken();
+    if (!anonymous && !token)
+      throw Object.assign(new Error('Login required'), {
+        code: 'LOGIN_REQUIRED'
+      });
+    const config = {
+      accountClosure: true,
+      timeout: 20000,
+      headers: token ? { Authorization: `Bearer ${token}` } : {}
+    };
+    try {
+      const response =
+        body === undefined
+          ? await this.axiosInstance.get(`/care/account/${path}`, config)
+          : await this.axiosInstance.post(
+              `/care/account/${path}`,
+              body,
+              config
+            );
+      return response.data;
+    } catch (error) {
+      const data = error.response && error.response.data;
+      // Do not propagate an Axios error containing the receipt secret in config.
+      throw Object.assign(new Error('Account closure request failed'), {
+        status: error.response && error.response.status,
+        code:
+          (data && (data.code || (data.error && data.error.code))) ||
+          'CLOSURE_UNAVAILABLE'
+      });
+    }
+  }
+
+  previewAccountClosure() {
+    return this.accountClosureRequest('closure-preview');
+  }
+  prepareAccountClosure() {
+    return this.accountClosureRequest('closure-receipt', {});
+  }
+  confirmAccountClosure(body) {
+    return this.accountClosureRequest('closure-confirm', body);
+  }
+  getAccountClosureStatus(body) {
+    return this.accountClosureRequest('closure-status', body, true);
   }
 
   async deleteAccount(closeFamilyIds = []) {
