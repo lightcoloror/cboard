@@ -98,6 +98,10 @@ it('continues unrelated edits and downloads when media quota is full, retaining 
   await restarted.init();
   expect(restarted.archive().queue.map(op => op.resourceId)).toEqual(['new']);
   expect(restarted.archive().media.pending.data).toBe('local-image');
+  request.mockClear();
+  await restarted.sync({ skipMediaUploads: true });
+  expect(request.mock.calls.every(([, method]) => method === 'GET')).toBe(true);
+  expect(restarted.archive().media.pending.pending).toBe(true);
 });
 
 it('keeps a cloud tombstone visible over unsent edits when subscription uploads are paused', async () => {

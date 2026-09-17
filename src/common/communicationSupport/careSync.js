@@ -274,7 +274,7 @@ export function createCareSync({
         }
         await persist(next);
       }),
-    sync: () =>
+    sync: ({ skipMediaUploads = false } = {}) =>
       serial(async () => {
         checkAccount();
         try {
@@ -324,6 +324,7 @@ export function createCareSync({
           const canUpload = !next.entitlements || next.entitlements.syncWrite;
           let mediaUploadError;
           for (const [mediaId, asset] of Object.entries(state.media)) {
+            if (skipMediaUploads) break;
             if (!canUpload) break;
             if (!asset.pending) continue;
             checkEdit('favorite');
