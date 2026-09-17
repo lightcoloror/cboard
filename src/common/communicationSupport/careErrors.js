@@ -30,6 +30,14 @@ export function careErrorMessage(error) {
     CARE_TRIAL_RATE_LIMIT_UNAVAILABLE: '体验服务暂时不可用，请稍后再试。',
     CARE_TRIAL_UNAVAILABLE: '体验开通未完成，请稍后重试。',
     FAMILY_NOT_FOUND: '找不到这个家庭，请刷新家庭列表后重试。',
+    CARE_FAMILY_CREATE_RATE_LIMITED:
+      '创建家庭过于频繁，请稍后再试；已有家庭和本机沟通仍可使用。',
+    CARE_PROFILE_CREATE_RATE_LIMITED:
+      '创建患者档案过于频繁，请稍后再试；已有档案和本机沟通仍可使用。',
+    CARE_FAMILY_CREATE_RATE_LIMIT_UNAVAILABLE:
+      '家庭创建服务暂不可用，尚未创建，请稍后再试。',
+    CARE_PROFILE_CREATE_RATE_LIMIT_UNAVAILABLE:
+      '档案创建服务暂不可用，尚未创建，请稍后再试。',
     ACCOUNT_VERIFICATION_REQUIRED: '请先完成账号验证，再开通家庭体验。',
     TRIAL_SUBSCRIPTION_EXISTS: '此家庭已有有效服务，不能重复开通体验。',
     TRIAL_FUNDING_CONFLICT: '家庭体验状态正在变更，请刷新后重试。',

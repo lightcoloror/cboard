@@ -1,5 +1,18 @@
 import { careErrorMessage } from './careErrors';
 
+test('creation throttles preserve local use and distinguish unavailable limit storage', () => {
+  for (const kind of ['FAMILY', 'PROFILE']) {
+    expect(
+      careErrorMessage({ data: { code: `CARE_${kind}_CREATE_RATE_LIMITED` } })
+    ).toContain('本机沟通仍可使用');
+    expect(
+      careErrorMessage({
+        data: { code: `CARE_${kind}_CREATE_RATE_LIMIT_UNAVAILABLE` }
+      })
+    ).toContain('尚未创建');
+  }
+});
+
 test('network outage retains a distinct message from authentication and revocation', () => {
   expect(careErrorMessage(new TypeError('Failed to fetch'))).toContain(
     '待同步修改会在恢复连接后上传'
