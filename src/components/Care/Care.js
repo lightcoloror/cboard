@@ -187,9 +187,13 @@ export const runtime = {
     }
   },
   watch(callback) {
-    let prior = identity()?.id;
+    const session = () => {
+      const who = identity();
+      return JSON.stringify([who?.id, who?.token]);
+    };
+    let prior = session();
     const unsubscribe = getStore().subscribe(() => {
-      const next = identity()?.id;
+      const next = session();
       if (next !== prior) {
         prior = next;
         callback();

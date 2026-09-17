@@ -232,6 +232,90 @@ describe('shared patient collaboration UI', () => {
       role: 'relative'
     });
   });
+  it('discards an old account response after switching away and back', async () => {
+    let finish;
+    const original = runtime.request.getMockImplementation();
+    runtime.request.mockImplementation((path, ...args) =>
+      path === '/care/migration-preview'
+        ? new Promise(resolve => {
+            finish = resolve;
+          })
+        : original(path, ...args)
+    );
+    await act(async () => {
+      ReactDOM.render(<CarePanel runtime={runtime} ui={ui} />, host);
+      await flush();
+    });
+    await act(async () => {
+      Simulate.click(button('查看旧资料归属预览'));
+      await flush();
+    });
+    for (const id of ['other', 'owner']) {
+      await act(async () => {
+        who = { id, token: 'synthetic' };
+        tick();
+        await flush();
+      });
+    }
+    await act(async () => {
+      finish({
+        boardIds: [],
+        communicators: [{ sourceId: 'OLD-PRIVATE-SOURCE', boardIds: [] }]
+      });
+      await flush();
+    });
+    expect(host.textContent).not.toContain('OLD-PRIVATE-SOURCE');
+    expect(host.textContent).not.toContain('已保存；');
+    expect(button('查看旧资料归属预览').disabled).toBe(false);
+  });
+  it('continues loading with a refreshed token for the same account', async () => {
+    await act(async () => {
+      ReactDOM.render(<CarePanel runtime={runtime} ui={ui} />, host);
+      await flush();
+    });
+    runtime.request.mockClear();
+    await act(async () => {
+      who = { id: 'owner', token: 'refreshed' };
+      tick();
+      await flush();
+    });
+    expect(runtime.request).toHaveBeenCalledWith('/care/profiles', 'GET');
+    expect(host.textContent).toContain('合成患者');
+    expect(host.textContent).not.toContain('账号已切换');
+  });
+  it('does not persist an old token 401 as the new session login state', async () => {
+    let rejectOld;
+    const original = runtime.request.getMockImplementation();
+    runtime.request.mockImplementation((path, ...args) =>
+      path.startsWith('/care/profiles/patient')
+        ? new Promise((_, reject) => {
+            rejectOld = reject;
+          })
+        : original(path, ...args)
+    );
+    await act(async () => {
+      ReactDOM.render(<CarePanel runtime={runtime} ui={ui} />, host);
+      await flush();
+    });
+    await act(async () => {
+      Simulate.click(button('合成患者'));
+      await flush();
+    });
+    expect(rejectOld).toEqual(expect.any(Function));
+    await act(async () => {
+      who = { id: 'owner', token: 'new-token' };
+      tick();
+      await flush();
+    });
+    await act(async () => {
+      rejectOld(Object.assign(new Error('OLD-AUTH-FAILURE'), { status: 401 }));
+      await flush();
+    });
+    expect(
+      JSON.parse(disk['care-v1:owner:family:patient'] || '{}').status
+    ).not.toBe('login_required');
+    expect(host.textContent).not.toContain('OLD-AUTH-FAILURE');
+  });
   async function openImportTarget() {
     previewCareArchive.mockResolvedValue({
       fingerprint: 'synthetic-guest-archive',
@@ -283,7 +367,8 @@ describe('shared patient collaboration UI', () => {
           );
         await flush();
       });
-      expect(host.textContent).toContain('本次恢复已取消');
+      // A former session cannot publish even its cancellation message.
+      expect(host.textContent).not.toContain('本次恢复已取消');
       expect(runtime.request).not.toHaveBeenCalled();
       expect(JSON.parse(disk['care-v1:owner:family:patient']).queue).toEqual(
         []

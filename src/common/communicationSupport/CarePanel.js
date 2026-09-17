@@ -40,28 +40,66 @@ export default function CarePanel({ runtime, ui }) {
   const engine = useRef(null);
   const mounted = useRef(true);
   const account = useRef(identity && identity.id);
+  const accountToken = useRef(identity?.token);
+  const accountEpoch = useRef(0);
   const enabled = runtime.enabled !== false;
-  const request = runtime.request;
+  const request = useCallback(
+    async (...args) => {
+      const epoch = accountEpoch.current;
+      const matches = () =>
+        mounted.current &&
+        epoch === accountEpoch.current &&
+        runtime.identity()?.id === identity?.id &&
+        runtime.identity()?.token === identity?.token;
+      const changed = () =>
+        Object.assign(new Error('账号已切换，请重新操作。'), {
+          code: 'ACCOUNT_CHANGED'
+        });
+      if (!matches()) throw changed();
+      try {
+        const result = await runtime.request(...args);
+        if (!matches()) throw changed();
+        return result;
+      } catch (error) {
+        if (!matches()) throw changed();
+        throw error;
+      }
+    },
+    [runtime, identity?.id, identity?.token]
+  );
   async function run(fn) {
     if (busy) return;
+    const epoch = accountEpoch.current;
+    const current = () =>
+      mounted.current &&
+      epoch === accountEpoch.current &&
+      runtime.identity()?.id === identity?.id &&
+      runtime.identity()?.token === identity?.token;
     setBusy(true);
     try {
       const result = await fn();
-      if (mounted.current && result !== false)
+      if (current() && result !== false)
         setMessage('已保存；本地待同步修改会保留。');
     } catch (e) {
-      if (mounted.current) setMessage(careErrorMessage(e));
+      if (current()) setMessage(careErrorMessage(e));
     } finally {
-      if (mounted.current) setBusy(false);
+      if (current()) setBusy(false);
     }
   }
   const reload = useCallback(
     async () => {
       const who = runtime.identity();
       if (!who || !who.id) return;
+      const epoch = accountEpoch.current;
+      const current = () =>
+        mounted.current &&
+        epoch === accountEpoch.current &&
+        runtime.identity()?.id === who.id &&
+        runtime.identity()?.token === who.token;
       const cacheKey = `care-list-v1:${who.id}`;
       const cached = await runtime.storage.get(cacheKey);
-      if (cached && mounted.current && account.current === who.id) {
+      if (!current()) return;
+      if (cached) {
         const v = JSON.parse(cached);
         setProfiles(v.profiles);
         setFamilies(v.families);
@@ -70,11 +108,12 @@ export default function CarePanel({ runtime, ui }) {
         request('/care/profiles', 'GET'),
         request('/care/families', 'GET')
       ]);
-      if (!mounted.current || runtime.identity()?.id !== who.id) return;
+      if (!current()) return;
       await runtime.storage.set(
         cacheKey,
         JSON.stringify({ profiles: p, families: f })
       );
+      if (!current()) return;
       setProfiles(p);
       setFamilies(f);
     },
@@ -85,8 +124,14 @@ export default function CarePanel({ runtime, ui }) {
       mounted.current = true;
       const tick = () => {
         const who = runtime.identity();
-        if (who?.id !== account.current) {
+        if (
+          who?.id !== account.current ||
+          who?.token !== accountToken.current
+        ) {
+          accountEpoch.current += 1;
+          setBusy(false);
           account.current = who?.id;
+          accountToken.current = who?.token;
           engine.current = null;
           setData(null);
           setActive(null);
@@ -108,16 +153,22 @@ export default function CarePanel({ runtime, ui }) {
           setLogoutAllAccount(null);
           setPendingRestore(null);
           setIdentity(who);
+          return; // The next render binds requests to the new session.
         }
         if (!enabled || !who?.id) return;
+        const epoch = accountEpoch.current;
+        const current = () =>
+          mounted.current &&
+          epoch === accountEpoch.current &&
+          runtime.identity()?.id === who.id &&
+          runtime.identity()?.token === who.token;
         if (engine.current)
           engine.current
             .sync()
-            .catch(e => mounted.current && setMessage(careErrorMessage(e)));
+            .catch(e => current() && setMessage(careErrorMessage(e)));
         else
           reload().catch(e => {
-            if (mounted.current && runtime.identity()?.id === who.id)
-              setMessage(careErrorMessage(e));
+            if (current()) setMessage(careErrorMessage(e));
           });
       };
       const stop = runtime.watch(tick);
@@ -131,6 +182,12 @@ export default function CarePanel({ runtime, ui }) {
     [runtime, enabled, reload]
   );
   async function open(profile) {
+    const epoch = accountEpoch.current;
+    const current = () =>
+      mounted.current &&
+      epoch === accountEpoch.current &&
+      runtime.identity()?.id === identity?.id &&
+      runtime.identity()?.token === identity?.token;
     setPendingRestore(null);
     setData(null);
     setActive(profile);
@@ -145,6 +202,7 @@ export default function CarePanel({ runtime, ui }) {
     const who = runtime.identity();
     if (!who) throw new Error('请先登录');
     if (runtime.selectProfile) await runtime.selectProfile(profile);
+    if (!current()) return;
     let instance;
     instance = createCareSync({
       accountId: who.id,
@@ -156,8 +214,7 @@ export default function CarePanel({ runtime, ui }) {
       personalFavorites: Boolean(runtime.funding),
       currentAccount: () => runtime.identity()?.id,
       changed: () => {
-        if (mounted.current && engine.current === instance)
-          setData(instance.view());
+        if (current() && engine.current === instance) setData(instance.view());
       }
     });
     engine.current = instance;
@@ -171,7 +228,7 @@ export default function CarePanel({ runtime, ui }) {
         ),
         request(`/care/profiles/${profile.id}/entitlements`, 'GET')
       ]);
-      if (engine.current === instance) {
+      if (current() && engine.current === instance) {
         setFunding(available.items || []);
         setRights(entitlement);
       }
