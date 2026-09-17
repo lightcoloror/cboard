@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { getProductLinks } from '../../../productLinks';
 import PropTypes from 'prop-types';
 import { FormattedMessage, injectIntl, intlShape } from 'react-intl';
 import { Formik, ErrorMessage } from 'formik';
@@ -34,7 +35,8 @@ import {
   hasMatchingPhoneVerification
 } from './phoneVerification';
 
-function SignUp(props) {
+export function SignUp(props) {
+  const productLinks = getProductLinks();
   const { intl, isDialogOpen, onClose, dialogWithKeyboardStyle = {} } = props;
 
   const [isSigningUp, setIsSigningUp] = useState(false);
@@ -170,6 +172,7 @@ function SignUp(props) {
   }
 
   async function handleSubmit(values) {
+    if (!productLinks.registrationReady) return;
     const normalizedPhone = normalizeMainlandChinaPhone(values.phone);
     const formValues = buildRegistrationPayload(values, {
       verifiedPhone,
@@ -389,6 +392,7 @@ function SignUp(props) {
                     onChange={handleChange}
                   />
                   <FormControlLabel
+                    disabled={!productLinks.registrationReady}
                     control={
                       <Checkbox
                         type="checkbox"
@@ -403,7 +407,7 @@ function SignUp(props) {
                         values={{
                           terms: (
                             <a
-                              href="https://www.cboard.io/terms-of-use/"
+                              href={productLinks.terms || undefined}
                               target="_blank"
                               rel="noopener noreferrer"
                             >
@@ -412,7 +416,7 @@ function SignUp(props) {
                           ),
                           privacy: (
                             <a
-                              href="https://www.cboard.io/privacy/"
+                              href={productLinks.privacy || undefined}
                               target="_blank"
                               rel="noopener noreferrer"
                             >
@@ -428,6 +432,11 @@ function SignUp(props) {
                     component="p"
                     className="SignUp__status--error SignUp__termsError"
                   />
+                  {!productLinks.registrationReady && (
+                    <Typography role="status" color="error">
+                      注册协议与隐私说明尚未就绪，暂不能注册；本机沟通仍可使用。
+                    </Typography>
+                  )}
 
                   <DialogActions>
                     <Button
@@ -440,7 +449,9 @@ function SignUp(props) {
                     <Button
                       type="submit"
                       disabled={
-                        isButtonDisabled || phoneVerificationBlocksSubmit
+                        isButtonDisabled ||
+                        phoneVerificationBlocksSubmit ||
+                        !productLinks.registrationReady
                       }
                       variant="contained"
                       color="primary"

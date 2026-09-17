@@ -1,5 +1,6 @@
 import React, { PureComponent } from 'react';
 import { legacyServicesEnabled } from '../../legacyServices';
+import { getProductLinks } from '../../productLinks';
 import PropTypes from 'prop-types';
 import { FormattedMessage, intlShape } from 'react-intl';
 import { Link } from 'react-router-dom';
@@ -197,6 +198,7 @@ export class Settings extends PureComponent {
           {
             icon: <FeedbackIcon />,
             text: messages.feedback,
+            secondary: getProductLinks().support ? null : '反馈入口尚未开放',
             onClick: this.handleFeedbackClick
           }
         ].filter(item => legacyServicesEnabled || item.text !== messages.donate)
@@ -205,7 +207,8 @@ export class Settings extends PureComponent {
   }
 
   handleFeedbackClick = () => {
-    window.location.href = 'mailto:support@cboard.io?subject=Cboard feedback';
+    const { support } = getProductLinks();
+    if (support) window.location.href = support;
   };
   handleDonateClick = () => {
     window.open('https://opencollective.com/cboard#backer', '_blank');
