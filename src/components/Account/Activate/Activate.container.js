@@ -1,4 +1,4 @@
-import React, { Fragment, useCallback, useEffect, useState } from 'react';
+import React, { Fragment, useEffect, useState } from 'react';
 import { Link, useParams, useHistory } from 'react-router-dom';
 import { activate } from './Activate.actions';
 import './Activate.css';
@@ -13,41 +13,35 @@ function ActivateContainer() {
   const { url } = useParams();
   const history = useHistory();
 
-  const redirectToLogin = useCallback(
-    () => {
-      setTimeout(() => {
-        history.replace('/login-signup');
-      }, 2000);
-    },
-    [history]
-  );
-
-  const handleError = useCallback(
-    () => {
-      setIsErrorActivating(true);
-      redirectToLogin();
-    },
-    [redirectToLogin]
-  );
-
   useEffect(
     () => {
+      let current = true;
+      let redirectTimer;
       const activateAccount = async () => {
         setIsActivating(true);
+        setIsErrorActivating(false);
         try {
           const status = await activate(url);
-          if (!status.success) {
+          if (!current) return;
+          if (!status?.success) {
             throw new Error('Activation failed');
           }
-          redirectToLogin();
+          redirectTimer = setTimeout(() => {
+            if (current) history.replace('/login-signup');
+          }, 2000);
         } catch (error) {
-          handleError();
+          if (!current) return;
+          setIsErrorActivating(true);
         }
-        setIsActivating(false);
+        if (current) setIsActivating(false);
       };
       activateAccount();
+      return () => {
+        current = false;
+        clearTimeout(redirectTimer);
+      };
     },
-    [url, redirectToLogin, handleError]
+    [url, history]
   );
 
   return (
