@@ -316,6 +316,81 @@ describe('shared patient collaboration UI', () => {
     ).not.toBe('login_required');
     expect(host.textContent).not.toContain('OLD-AUTH-FAILURE');
   });
+  it.each([
+    ['patient', '改为患者，进入表达', 'expression'],
+    ['relative', '改为家属或照护者，进入接收', 'receiver'],
+    ['professional', '改为专业协作者，进入接收', 'receiver']
+  ])(
+    'changes only the current member to %s without changing permissions',
+    async (role, label, defaultMode) => {
+      let currentRole = 'relative';
+      runtime.selectProfile = jest.fn(async () => {});
+      runtime.request.mockImplementation(async (path, method, body) => {
+        if (path === '/care/profiles')
+          return [
+            {
+              id: 'patient',
+              familyId: 'family',
+              name: '合成患者',
+              relationship: {
+                role: currentRole,
+                defaultMode:
+                  currentRole === 'patient' ? 'expression' : 'receiver'
+              }
+            }
+          ];
+        if (path === '/care/families') return [];
+        if (path === '/care/profiles/patient/commands') {
+          expect(method).toBe('POST');
+          expect(body).toEqual({
+            action: 'relationship',
+            operationId: expect.any(String),
+            value: { role }
+          });
+          currentRole = role;
+          return { relationship: { role, defaultMode } };
+        }
+        if (method === 'GET')
+          return {
+            id: 'patient',
+            familyId: 'family',
+            cursor: 0,
+            permissions: ['read', 'library.edit', 'preferences.edit'],
+            relationship: {
+              role: currentRole,
+              defaultMode: currentRole === 'patient' ? 'expression' : 'receiver'
+            },
+            resources: []
+          };
+        return {};
+      });
+      await act(async () => {
+        ReactDOM.render(<CarePanel runtime={runtime} ui={ui} />, host);
+        await flush();
+      });
+      await act(async () => {
+        Simulate.click(button('合成患者'));
+        await flush();
+      });
+      await act(async () => {
+        Simulate.click(button(label));
+        await flush();
+      });
+      expect(runtime.selectProfile).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          id: 'patient',
+          relationship: { role, defaultMode }
+        })
+      );
+      expect(host.textContent).toContain(
+        role === 'patient'
+          ? '当前本人身份：患者 · 表达'
+          : role === 'professional'
+          ? '当前本人身份：专业协作者 · 接收'
+          : '当前本人身份：家属或照护者 · 接收'
+      );
+    }
+  );
   async function openImportTarget() {
     previewCareArchive.mockResolvedValue({
       fingerprint: 'synthetic-guest-archive',

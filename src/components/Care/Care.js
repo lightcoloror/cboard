@@ -62,7 +62,7 @@ export const runtime = {
     } catch (error) {
       if (error.status) throw error;
     }
-    if (identity()?.id !== who.id)
+    if (identity()?.id !== who.id || identity()?.token !== who.token)
       throw Object.assign(new Error('账号已切换，请重新选择档案'), {
         status: 401
       });

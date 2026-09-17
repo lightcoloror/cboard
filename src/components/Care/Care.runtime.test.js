@@ -132,3 +132,19 @@ test('unchanged accounts retain offline selection support', async () => {
     profile
   );
 });
+test('a replaced session cannot publish its old profile relationship', async () => {
+  const event = jest.spyOn(window, 'dispatchEvent');
+  jest.spyOn(runtime, 'request').mockImplementation(async () => {
+    sessionToken = 'replacement';
+    return {};
+  });
+  await expect(
+    runtime.selectProfile({
+      id: 'patient',
+      familyId: 'family',
+      relationship: { role: 'patient' }
+    })
+  ).rejects.toMatchObject({ status: 401 });
+  expect(localStorage.getItem('care-selection-v1:first')).toBeNull();
+  expect(event).not.toHaveBeenCalled();
+});

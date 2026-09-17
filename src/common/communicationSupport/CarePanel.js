@@ -284,6 +284,34 @@ export default function CarePanel({ runtime, ui }) {
       return false;
     }
   }
+  async function updateOwnRelationship(nextRole) {
+    const target = engine.current;
+    const profile = active;
+    const who = runtime.identity();
+    if (!target || !profile || !who) throw new Error('请先选择患者档案');
+    const current = () =>
+      mounted.current &&
+      engine.current === target &&
+      runtime.identity()?.id === who.id &&
+      runtime.identity()?.token === who.token;
+    const result = await request(
+      `/care/profiles/${profile.id}/commands`,
+      'POST',
+      {
+        action: 'relationship',
+        operationId: await runtime.newId(),
+        value: { role: nextRole }
+      }
+    );
+    if (!current()) return false;
+    const nextProfile = { ...profile, relationship: result.relationship };
+    if (runtime.selectProfile) await runtime.selectProfile(nextProfile);
+    if (!current()) return false;
+    await target.sync();
+    if (!current()) return false;
+    setActive(nextProfile);
+    await reload();
+  }
   async function photo() {
     if (!label.trim()) throw new Error('先输入图片对应的表达文字');
     const asset = await runtime.chooseImage();
@@ -496,6 +524,34 @@ export default function CarePanel({ runtime, ui }) {
             {active.name} · 待同步 {data.queue.length} · 冲突{' '}
             {data.conflicts.length}
           </Text>
+          <Text>
+            当前本人身份：
+            {(data.relationship || active.relationship)?.role === 'patient'
+              ? '患者 · 表达'
+              : (data.relationship || active.relationship)?.role ===
+                'professional'
+              ? '专业协作者 · 接收'
+              : '家属或照护者 · 接收'}
+            。此设置只决定本人入口，不改变权限。
+          </Text>
+          <Button
+            disabled={busy}
+            onClick={() => run(() => updateOwnRelationship('patient'))}
+          >
+            改为患者，进入表达
+          </Button>
+          <Button
+            disabled={busy}
+            onClick={() => run(() => updateOwnRelationship('relative'))}
+          >
+            改为家属或照护者，进入接收
+          </Button>
+          <Button
+            disabled={busy}
+            onClick={() => run(() => updateOwnRelationship('professional'))}
+          >
+            改为专业协作者，进入接收
+          </Button>
           {rights && (
             <Text>
               云服务：
