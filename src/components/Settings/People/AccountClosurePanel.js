@@ -97,7 +97,7 @@ export default function AccountClosurePanel({
     <section aria-label="账号注销与本机恢复" style={{ padding: 16 }}>
       <h3>账号注销与本机恢复</h3>
       <p>
-        注销会删除账号及确认关闭家庭的云端资料。提交前会保存本机恢复副本；保存在这台设备的资料不会自动转给其他账号。
+        注销会删除账号及确认关闭家庭的云端资料。恢复副本仅包含本机可读取且允许导出的资料；受邀协作的其他家庭与已锁定档案不会转为离线副本。
       </p>
       {accountId && !confirmed && (
         <Button

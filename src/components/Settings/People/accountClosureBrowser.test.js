@@ -9,6 +9,7 @@ jest.mock('file-saver', () => ({ saveAs: jest.fn() }));
 function setup() {
   const owner = 'a'.repeat(24);
   let user = { id: owner, authToken: 'synthetic' };
+  let selected = null;
   const entries = new Map();
   const storage = {
     get: jest.fn(async key => entries.get(key)),
@@ -47,6 +48,7 @@ function setup() {
     api,
     storage,
     scope: 'isolated-api',
+    selection: () => selected,
     state: () => ({
       app: { userData: user },
       board: { boards: [{ id: 'local-board' }] }
@@ -59,6 +61,9 @@ function setup() {
     options,
     api,
     storage,
+    setSelection: value => {
+      selected = value;
+    },
     client: createBrowserAccountClosure(options),
     setUser: value => {
       user = value;
@@ -91,4 +96,53 @@ test('a media read failure leaves server confirmation untouched', async () => {
   f.options.buildLegacy.mockRejectedValue(new Error('missing media'));
   await expect(f.client.confirm(await f.client.preview())).rejects.toThrow();
   expect(f.api.confirmAccountClosure).not.toHaveBeenCalled();
+});
+
+test('does not export current communication sidecars from an invited family', async () => {
+  const f = setup();
+  f.setSelection({ id: 'patient-b', familyId: 'family-b' });
+  await f.client.confirm(await f.client.preview());
+  expect(f.options.buildLegacy).not.toHaveBeenCalled();
+  expect(f.options.buildCare).toHaveBeenCalledTimes(1);
+  expect(await f.client.recoveries()).toEqual([
+    expect.objectContaining({ id: 'care:family-a:patient-a', kind: 'care' })
+  ]);
+});
+
+test('does not export locked current communication data', async () => {
+  const f = setup();
+  f.setSelection({ id: 'patient-a', familyId: 'family-a' });
+  await f.storage.set(
+    `care-v1:${f.owner}:family-a:patient-a`,
+    JSON.stringify({ locked: true })
+  );
+  f.storage.list.mockResolvedValue([]);
+  await f.client.confirm(await f.client.preview());
+  expect(f.options.buildLegacy).not.toHaveBeenCalled();
+  expect(await f.client.recoveries()).toEqual([]);
+});
+
+test('profile switch during archive creation prevents confirmation', async () => {
+  const f = setup();
+  f.options.buildLegacy.mockImplementation(async () => {
+    f.setSelection({ id: 'patient-b', familyId: 'family-b' });
+    return { content: new Uint8Array([1]) };
+  });
+  await expect(
+    f.client.confirm(await f.client.preview())
+  ).rejects.toMatchObject({ code: 'ACCOUNT_CHANGED' });
+  expect(f.api.confirmAccountClosure).not.toHaveBeenCalled();
+});
+
+test('account switch while reading recovery index does not expose the previous list', async () => {
+  const f = setup();
+  await f.client.confirm(await f.client.preview());
+  const original = f.storage.get.getMockImplementation();
+  f.storage.get.mockImplementation(async key => {
+    const result = await original(key);
+    if (key.startsWith('closure-recovery-index-v1:'))
+      f.setUser({ id: 'other', authToken: 'token' });
+    return result;
+  });
+  await expect(f.client.recoveries()).rejects.toThrow('账号已切换');
 });

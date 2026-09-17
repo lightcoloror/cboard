@@ -14,6 +14,10 @@ export function createBrowserAccountClosure({
   storage = careBrowserStorage,
   state = () => getStore().getState(),
   scope = API_URL,
+  selection = owner =>
+    process.env.REACT_APP_CARE_COLLABORATION === 'true'
+      ? JSON.parse(localStorage.getItem(`care-selection-v1:${owner}`) || 'null')
+      : null,
   buildLegacy = buildLocalDeviceDataArchive,
   buildCare = exportCareDeviceArchive,
   download = saveAs
@@ -42,15 +46,44 @@ export function createBrowserAccountClosure({
       status: body => api.getAccountClosureStatus(body)
     },
     async preserveLocal({ owner, familyIds }) {
-      const boards = state().board.boards;
-      await recovery(
-        'legacy',
-        async () =>
-          (await buildLegacy({ boards, zipType: 'uint8array' })).content
-      ).preserve({ owner });
-      const entries = [
-        { id: 'legacy', label: '本机图板与沟通资料', kind: 'legacy' }
-      ];
+      const selected = selection(owner);
+      const selectedKey = JSON.stringify(selected);
+      const check = () => {
+        if (
+          account() !== owner ||
+          JSON.stringify(selection(owner)) !== selectedKey
+        )
+          throw Object.assign(new Error('账号或患者档案已切换'), {
+            code: 'ACCOUNT_CHANGED'
+          });
+      };
+      check();
+      const entries = [];
+      if (selected && (!selected.id || !selected.familyId))
+        throw new Error('患者档案选择无效');
+      const raw = selected
+        ? await storage.get(
+            `care-v1:${owner}:${selected.familyId}:${selected.id}`
+          )
+        : null;
+      const locked = raw ? JSON.parse(raw).locked : false;
+      check();
+      // The legacy archive includes scoped communication sidecars. Never turn an
+      // invited family's current data into the closing account's offline copy.
+      if ((!selected || familyIds.includes(selected.familyId)) && !locked) {
+        const boards = state().board.boards;
+        await recovery(
+          'legacy',
+          async () =>
+            (await buildLegacy({ boards, zipType: 'uint8array' })).content
+        ).preserve({ owner });
+        entries.push({
+          id: 'legacy',
+          label: '本机图板与沟通资料',
+          kind: 'legacy'
+        });
+      }
+      check();
       // Only export caches of families explicitly owned and closed by this user.
       // Collaborator caches stay in their original partition, never become guest data.
       const profiles = await storage.list(`care-v1:${owner}:`);
@@ -63,16 +96,14 @@ export function createBrowserAccountClosure({
         await recovery(id, () =>
           buildCare({ familyId: parts[2], profileId: parts[3] }, snapshot)
         ).preserve({ owner });
+        check();
         entries.push({
           id,
           label: `患者档案恢复副本 ${entries.length}`,
           kind: 'care'
         });
       }
-      if (account() !== owner)
-        throw Object.assign(new Error('Account changed'), {
-          code: 'ACCOUNT_CHANGED'
-        });
+      check();
       await storage.set(indexKey(owner), entries);
       if (
         JSON.stringify(await storage.get(indexKey(owner))) !==
@@ -81,17 +112,21 @@ export function createBrowserAccountClosure({
         throw Object.assign(new Error('Recovery index unavailable'), {
           code: 'CLOSURE_LOCAL_RECOVERY_UNAVAILABLE'
         });
+      check();
       return { saved: true };
     }
   });
   async function recoveryContext() {
     const receipt = await client.receipt();
-    return receipt
+    const context = receipt
       ? {
           owner: receipt.owner,
           entries: (await storage.get(indexKey(receipt.owner))) || []
         }
       : null;
+    const current = await client.receipt();
+    if (current?.owner !== receipt?.owner) throw new Error('账号已切换。');
+    return context;
   }
   return {
     ...client,
