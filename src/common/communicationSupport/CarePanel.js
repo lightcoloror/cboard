@@ -1163,7 +1163,7 @@ export default function CarePanel({ runtime, ui }) {
                                   '将整个家庭的管理员权限交给此成员？付款账号不会因此改变。'
                                 ))
                               )
-                                return;
+                                return false;
                               await request(
                                 `/care/profiles/${active.id}/administrator`,
                                 'POST',
@@ -1171,6 +1171,7 @@ export default function CarePanel({ runtime, ui }) {
                               );
                               await engine.current.sync();
                               setMembers({});
+                              await reload();
                             })
                           }
                         >

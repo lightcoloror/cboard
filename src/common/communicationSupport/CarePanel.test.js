@@ -80,6 +80,62 @@ describe('shared patient collaboration UI', () => {
     });
     host.remove();
   });
+  it.each([false, true])(
+    'refreshes administrator rights only after confirmed transfer (%s)',
+    async confirmed => {
+      let transferred = false;
+      let listReads = 0;
+      runtime.confirm = jest.fn(async () => confirmed);
+      runtime.request.mockImplementation(async (path, method, body) => {
+        if (path === '/care/profiles') {
+          listReads += 1;
+          return [{ id: 'patient', familyId: 'family', name: '合成患者' }];
+        }
+        if (path === '/care/families') return [];
+        if (path.endsWith('/administrator')) {
+          expect(body.member).toBe('relative');
+          transferred = true;
+          return { ok: true };
+        }
+        return {
+          id: 'patient',
+          familyId: 'family',
+          cursor: 0,
+          resources: [],
+          owner: !transferred,
+          permissions: transferred ? ['read'] : ['read', 'members.manage'],
+          members: transferred
+            ? undefined
+            : { owner: ['read', 'members.manage'], relative: ['read'] }
+        };
+      });
+      await act(async () => {
+        ReactDOM.render(<CarePanel runtime={runtime} ui={ui} />, host);
+        await flush();
+      });
+      await act(async () => {
+        Simulate.click(button('合成患者'));
+        await flush();
+      });
+      await act(async () => {
+        Simulate.click(button('查看成员'));
+        await flush();
+      });
+      const readsBefore = listReads;
+      await act(async () => {
+        Simulate.click(button('交接家庭管理员'));
+        await flush();
+      });
+      expect(transferred).toBe(confirmed);
+      if (confirmed) {
+        expect(button('交接家庭管理员')).toBeUndefined();
+        expect(listReads).toBeGreaterThan(readsBefore);
+      } else {
+        expect(button('交接家庭管理员')).toBeTruthy();
+        expect(listReads).toBe(readsBefore);
+      }
+    }
+  );
   it('offers account navigation for anonymous users without touching care data or hiding offline import', async () => {
     who = null;
     const openAccount = jest.fn();
