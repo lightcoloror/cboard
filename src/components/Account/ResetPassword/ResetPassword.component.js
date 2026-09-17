@@ -38,7 +38,7 @@ export function ResetPassword({
   resetPasswordWithPhone
 }) {
   const [isSending, setIsSending] = useState(false);
-  const emailRequestEpoch = useRef(0);
+  const requestEpoch = useRef(0);
   const [forgotState, setForgotState] = useState({});
   const [completed, setCompleted] = useState(false);
   const [resetMode, setResetMode] = useState('email');
@@ -58,7 +58,7 @@ export function ResetPassword({
 
   useEffect(
     () => {
-      emailRequestEpoch.current += 1;
+      requestEpoch.current += 1;
       if (!isDialogOpen) return undefined;
 
       let active = true;
@@ -91,7 +91,7 @@ export function ResetPassword({
 
       return () => {
         active = false;
-        emailRequestEpoch.current += 1;
+        requestEpoch.current += 1;
       };
     },
     [isDialogOpen]
@@ -103,22 +103,22 @@ export function ResetPassword({
     intl.formatMessage(messages.resetPasswordError);
 
   const handleSubmit = async values => {
-    const epoch = ++emailRequestEpoch.current;
+    const epoch = ++requestEpoch.current;
     setIsSending(true);
     setForgotState({});
     try {
       const res = await forgot(values);
-      if (epoch !== emailRequestEpoch.current) return;
+      if (epoch !== requestEpoch.current) return;
       setForgotState(res);
       setCompleted(true);
     } catch (err) {
-      if (epoch !== emailRequestEpoch.current) return;
+      if (epoch !== requestEpoch.current) return;
       setForgotState({
         success: false,
         message: getErrorMessage(err)
       });
     } finally {
-      if (epoch === emailRequestEpoch.current) setIsSending(false);
+      if (epoch === requestEpoch.current) setIsSending(false);
     }
   };
 
@@ -131,7 +131,7 @@ export function ResetPassword({
   };
 
   const changeResetMode = mode => {
-    emailRequestEpoch.current += 1;
+    requestEpoch.current += 1;
     setIsSending(false);
     setResetMode(mode);
     setForgotState({});
@@ -145,6 +145,8 @@ export function ResetPassword({
       11
     );
     if (nextPhone !== phoneChallenge?.phone) resetPhoneFlow();
+    requestEpoch.current += 1;
+    setIsSending(false);
     setPhone(nextPhone);
     setForgotState({});
   };
@@ -166,6 +168,7 @@ export function ResetPassword({
       return;
     }
 
+    const epoch = ++requestEpoch.current;
     setIsSending(true);
     setForgotState({});
     try {
@@ -173,6 +176,7 @@ export function ResetPassword({
         normalizedPhone,
         'password-reset'
       );
+      if (epoch !== requestEpoch.current) return;
       setPhoneChallenge({ ...challenge, phone: normalizedPhone });
       setPhoneVerificationToken('');
       setPhoneCode('');
@@ -183,13 +187,14 @@ export function ResetPassword({
         })
       });
     } catch (error) {
+      if (epoch !== requestEpoch.current) return;
       setPhoneChallenge(null);
       setForgotState({
         success: false,
         message: getErrorMessage(error)
       });
     } finally {
-      setIsSending(false);
+      if (epoch === requestEpoch.current) setIsSending(false);
     }
   };
 
@@ -207,6 +212,7 @@ export function ResetPassword({
       return;
     }
 
+    const epoch = ++requestEpoch.current;
     setIsSending(true);
     setForgotState({});
     try {
@@ -216,18 +222,20 @@ export function ResetPassword({
         code: phoneCode,
         purpose: 'password-reset'
       });
+      if (epoch !== requestEpoch.current) return;
       setPhoneVerificationToken(result.verificationToken);
       setForgotState({
         success: true,
         message: intl.formatMessage(messages.phoneVerified)
       });
     } catch (error) {
+      if (epoch !== requestEpoch.current) return;
       setForgotState({
         success: false,
         message: getErrorMessage(error)
       });
     } finally {
-      setIsSending(false);
+      if (epoch === requestEpoch.current) setIsSending(false);
     }
   };
 
@@ -252,6 +260,7 @@ export function ResetPassword({
       return;
     }
 
+    const epoch = ++requestEpoch.current;
     setIsSending(true);
     setForgotState({});
     try {
@@ -260,16 +269,18 @@ export function ResetPassword({
         phoneVerificationToken,
         password: newPassword
       });
+      if (epoch !== requestEpoch.current) return;
       setForgotState(res);
       setCompleted(true);
       resetPhoneFlow();
     } catch (error) {
+      if (epoch !== requestEpoch.current) return;
       setForgotState({
         success: false,
         message: getErrorMessage(error)
       });
     } finally {
-      setIsSending(false);
+      if (epoch === requestEpoch.current) setIsSending(false);
     }
   };
 

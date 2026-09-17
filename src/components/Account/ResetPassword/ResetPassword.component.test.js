@@ -1,9 +1,20 @@
 import React from 'react';
-import { shallow } from 'enzyme';
+import { shallow, mount } from 'enzyme';
+jest.mock('react-intl', () => ({
+  ...jest.requireActual('react-intl'),
+  FormattedMessage: ({ defaultMessage }) => <span>{defaultMessage}</span>
+}));
+import {
+  requestPhoneVerification,
+  getPhoneVerificationConfiguration
+} from '../PhoneVerification/PhoneVerification.actions';
 import { Formik } from 'formik';
 import { act } from 'react-dom/test-utils';
 
 import { ResetPassword } from './ResetPassword.component';
+jest.mock('@material-ui/core/Dialog', () => ({ children }) => (
+  <div>{children}</div>
+));
 
 jest.mock('./ResetPassword.actions', () => ({
   forgot: jest.fn(),
@@ -63,6 +74,58 @@ const props = {
 };
 
 describe('ResetPassword', () => {
+  test('discards a code request response after the phone number changes', async () => {
+    getPhoneVerificationConfiguration.mockResolvedValue({
+      phonePasswordResetAvailable: true
+    });
+    let resolveCode;
+    requestPhoneVerification.mockImplementationOnce(
+      () =>
+        new Promise(resolve => {
+          resolveCode = resolve;
+        })
+    );
+    let wrapper;
+    await act(async () => {
+      wrapper = mount(<ResetPassword {...props} isDialogOpen />);
+    });
+    wrapper.update();
+    act(() =>
+      wrapper
+        .find('[data-testid="phone-reset-mode"]')
+        .first()
+        .prop('onClick')()
+    );
+    wrapper.update();
+    act(() =>
+      wrapper
+        .find('input[name="phone"]')
+        .simulate('change', { target: { value: '13800138000' } })
+    );
+    wrapper.update();
+    let pending;
+    act(() => {
+      pending = wrapper
+        .find('[data-testid="send-phone-reset-code"]')
+        .first()
+        .prop('onClick')();
+    });
+    act(() =>
+      wrapper
+        .find('input[name="phone"]')
+        .simulate('change', { target: { value: '13900139000' } })
+    );
+    await act(async () => {
+      resolveCode({ challengeId: 'obsolete', phoneMasked: 'old-number' });
+      await pending;
+    });
+    wrapper.update();
+    expect(wrapper.text()).not.toContain('Code sent');
+    expect(
+      wrapper.find('[data-testid="confirm-phone-reset-code"]')
+    ).toHaveLength(0);
+    wrapper.unmount();
+  });
   test.each([false, true])(
     'ignores a late email response after switching reset mode (failure=%s)',
     async failure => {
