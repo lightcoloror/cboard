@@ -1,5 +1,16 @@
 import { careErrorMessage } from './careErrors';
 
+test('invitation throttles do not imply loss of existing access or successful joining', () => {
+  expect(
+    careErrorMessage({ data: { code: 'CARE_INVITATION_ACCEPT_RATE_LIMITED' } })
+  ).toContain('已有档案和本机沟通仍可使用');
+  expect(
+    careErrorMessage({
+      data: { code: 'CARE_INVITATION_ACCEPT_RATE_LIMIT_UNAVAILABLE' }
+    })
+  ).toContain('尚未加入');
+});
+
 test('creation throttles preserve local use and distinguish unavailable limit storage', () => {
   for (const kind of ['FAMILY', 'PROFILE']) {
     expect(

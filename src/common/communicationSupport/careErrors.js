@@ -38,6 +38,10 @@ export function careErrorMessage(error) {
       '家庭创建服务暂不可用，尚未创建，请稍后再试。',
     CARE_PROFILE_CREATE_RATE_LIMIT_UNAVAILABLE:
       '档案创建服务暂不可用，尚未创建，请稍后再试。',
+    CARE_INVITATION_ACCEPT_RATE_LIMITED:
+      '接受邀请过于频繁，请稍后再试；已有档案和本机沟通仍可使用。',
+    CARE_INVITATION_ACCEPT_RATE_LIMIT_UNAVAILABLE:
+      '邀请验证服务暂不可用，尚未加入，请稍后再试。',
     ACCOUNT_VERIFICATION_REQUIRED: '请先完成账号验证，再开通家庭体验。',
     TRIAL_SUBSCRIPTION_EXISTS: '此家庭已有有效服务，不能重复开通体验。',
     TRIAL_FUNDING_CONFLICT: '家庭体验状态正在变更，请刷新后重试。',
