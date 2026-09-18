@@ -115,6 +115,21 @@ it('continues unrelated edits and downloads when media quota is full, retaining 
   expect(restarted.archive().media.pending.pending).toBe(false);
   expect(restarted.archive().mediaQuotaPaused).toBe(false);
   expect(restarted.archive().queue).toHaveLength(0);
+  // The manual retry may have happened in another view. An already-open
+  // workspace must reload that persisted recovery state before its next
+  // automatic sync.
+  await engine.addMedia({ mediaId: 'after-recovery', data: 'new-local-image' });
+  request.mockClear();
+  await engine.sync({ automatic: true });
+  expect(
+    request.mock.calls.some(
+      ([path, method, body]) =>
+        method === 'POST' &&
+        path.endsWith('/media') &&
+        body.mediaId === 'after-recovery'
+    )
+  ).toBe(true);
+  expect(engine.archive().media['after-recovery'].pending).toBe(false);
 });
 
 it('keeps a cloud tombstone visible over unsent edits when subscription uploads are paused', async () => {
