@@ -118,7 +118,7 @@ describe('shared patient collaboration UI', () => {
         await flush();
       });
       await act(async () => {
-        Simulate.click(button('查看成员'));
+        Simulate.click(button('查看成员与邀请'));
         await flush();
       });
       const readsBefore = listReads;
@@ -136,6 +136,74 @@ describe('shared patient collaboration UI', () => {
       }
     }
   );
+  it('refreshes pending invitations after generation without exposing tokens and revokes the selected invitation', async () => {
+    let revoked = false;
+    let created = false;
+    runtime.request.mockImplementation(async (path, method, body) => {
+      if (path === '/care/profiles')
+        return [{ id: 'patient', familyId: 'family', name: '合成患者' }];
+      if (path === '/care/families') return [];
+      if (path.endsWith('/commands')) {
+        if (body.action === 'invite') {
+          expect(body).toEqual({
+            action: 'invite',
+            operationId: 'op1',
+            permissions: ['read']
+          });
+          created = true;
+          return { token: 'generated-invitation-token' };
+        }
+        expect(body).toEqual({
+          action: 'revokeInvite',
+          invitationId: 'pending-invite',
+          operationId: 'op2'
+        });
+        revoked = true;
+        return { ok: true };
+      }
+      return {
+        id: 'patient',
+        familyId: 'family',
+        cursor: 0,
+        owner: true,
+        permissions: ['read', 'members.manage'],
+        resources: [],
+        members: { owner: ['read', 'members.manage'] },
+        invitations:
+          revoked || !created
+            ? []
+            : [
+                {
+                  invitationId: 'pending-invite',
+                  permissions: ['read'],
+                  expiresAt: Date.now() + 60 * 60 * 1000,
+                  revoked: false,
+                  acceptedBy: null
+                }
+              ]
+      };
+    });
+    await act(async () => {
+      ReactDOM.render(<CarePanel runtime={runtime} ui={ui} />, host);
+      await flush();
+    });
+    await act(async () => {
+      Simulate.click(button('合成患者'));
+      await flush();
+    });
+    await act(async () => {
+      Simulate.click(button('生成只读邀请（72小时）'));
+      await flush();
+    });
+    expect(host.textContent).toContain('待接受邀请：read');
+    expect(host.textContent).not.toContain('pending-invite');
+    await act(async () => {
+      Simulate.click(button('撤销邀请'));
+      await flush();
+    });
+    expect(revoked).toBe(true);
+    expect(button('撤销邀请')).toBeUndefined();
+  });
   it('offers account navigation for anonymous users without touching care data or hiding offline import', async () => {
     who = null;
     const openAccount = jest.fn();

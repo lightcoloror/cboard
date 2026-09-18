@@ -25,6 +25,7 @@ export default function CarePanel({ runtime, ui }) {
   const [sessions, setSessions] = useState([]);
   const [logoutAllAccount, setLogoutAllAccount] = useState(null);
   const [members, setMembers] = useState({});
+  const [invitations, setInvitations] = useState([]);
   const [audit, setAudit] = useState([]);
   const [boardId, setBoardId] = useState('default');
   const [boardName, setBoardName] = useState('');
@@ -138,6 +139,7 @@ export default function CarePanel({ runtime, ui }) {
           setProfiles([]);
           setFamilies([]);
           setMembers({});
+          setInvitations([]);
           setAudit([]);
           setSessions([]);
           setName('');
@@ -192,6 +194,7 @@ export default function CarePanel({ runtime, ui }) {
     setData(null);
     setActive(profile);
     setMembers({});
+    setInvitations([]);
     setAudit([]);
     setFunding([]);
     setRights(null);
@@ -1126,10 +1129,11 @@ export default function CarePanel({ runtime, ui }) {
                           'GET'
                         );
                         setMembers(v.members || {});
+                        setInvitations(v.invitations || []);
                       })
                     }
                   >
-                    查看成员
+                    查看成员与邀请
                   </Button>
                   {['read', 'edit'].map(mode => (
                     <Button
@@ -1150,6 +1154,12 @@ export default function CarePanel({ runtime, ui }) {
                             }
                           );
                           setInvitation(v.token);
+                          const latest = await request(
+                            `/care/profiles/${active.id}`,
+                            'GET'
+                          );
+                          setMembers(latest.members || {});
+                          setInvitations(latest.invitations || []);
                           await runtime.copy(v.token);
                         })
                       }
@@ -1265,6 +1275,45 @@ export default function CarePanel({ runtime, ui }) {
                       )}
                     </Box>
                   ))}
+                  {invitations
+                    .filter(
+                      invite =>
+                        !invite.revoked &&
+                        !invite.acceptedBy &&
+                        invite.expiresAt > Date.now()
+                    )
+                    .map(invite => (
+                      <Box key={invite.invitationId}>
+                        <Text>
+                          待接受邀请：{invite.permissions.join('、')}；到期{' '}
+                          {new Date(invite.expiresAt).toLocaleString()}
+                        </Text>
+                        <Button
+                          disabled={busy}
+                          onClick={() =>
+                            run(async () => {
+                              await request(
+                                `/care/profiles/${active.id}/commands`,
+                                'POST',
+                                {
+                                  action: 'revokeInvite',
+                                  invitationId: invite.invitationId,
+                                  operationId: await runtime.newId()
+                                }
+                              );
+                              const v = await request(
+                                `/care/profiles/${active.id}`,
+                                'GET'
+                              );
+                              setMembers(v.members || {});
+                              setInvitations(v.invitations || []);
+                            })
+                          }
+                        >
+                          撤销邀请
+                        </Button>
+                      </Box>
+                    ))}
                 </Box>
               )}
               <Button
