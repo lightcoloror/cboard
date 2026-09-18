@@ -8,6 +8,10 @@ import { careBrowserStorage } from '../../common/communicationSupport/careBrowse
 import { createCareSync } from '../../common/communicationSupport/careSync';
 import { configureCareLocalAccount } from '../../common/communicationSupport/localData';
 import { chooseCareBrowserFile } from '../../common/communicationSupport/careBrowserFile';
+import { createCareBuiltinImages } from '../../common/communicationSupport/careBuiltinImages';
+import boardsFixture from '../../api/boards.json';
+
+const builtinImages = createCareBuiltinImages(boardsFixture.advanced || []);
 
 const identity = () => {
   const u = getStore().getState().app.userData;
@@ -25,6 +29,7 @@ export const runtime = {
   enabled: process.env.REACT_APP_CARE_COLLABORATION === 'true',
   trialEnabled: process.env.REACT_APP_CARE_PUBLIC_TRIAL === 'true',
   identity,
+  resolveBuiltinImage: reference => builtinImages.resolve(reference),
   openAccount: () => history.replace('/login-signup'),
   randomBytes: length => crypto.getRandomValues(new Uint8Array(length)),
   newId: () =>

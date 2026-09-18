@@ -9,6 +9,10 @@ export async function encodeCareMedia(value, engine, readImage, depth = 0) {
   for (const [key, item] of Object.entries(value)) {
     if (key === 'image' && typeof item === 'string' && item) {
       const asset = await readImage(item);
+      if (asset.builtinImage) {
+        result.builtinImage = asset.builtinImage;
+        continue;
+      }
       const existing = Object.values(engine.view().media).find(
         m => m.sha256 === asset.sha256
       );
@@ -20,6 +24,14 @@ export async function encodeCareMedia(value, engine, readImage, depth = 0) {
       if (!engine.view().media[mediaId])
         await engine.addMedia({ ...asset, mediaId, visibility: 'private' });
       result.mediaId = mediaId;
+    } else if (
+      ['builtinImage', 'mediaId'].includes(key) &&
+      typeof value.image === 'string' &&
+      value.image
+    ) {
+      // Re-encoding a decoded favorite must not retain its old public reference
+      // when the user has replaced that image with a private one.
+      continue;
     } else if (!['__proto__', 'constructor', 'prototype'].includes(key))
       result[key] = await encodeCareMedia(item, engine, readImage, depth + 1);
   }
@@ -37,6 +49,8 @@ export function decodeCareMedia(value, media, image, depth = 0) {
   }
   if (value.mediaId && media[value.mediaId])
     result.image = image(media[value.mediaId]);
+  else if (value.builtinImage)
+    result.image = image({ builtinImage: value.builtinImage });
   return result;
 }
 export function careMediaIds(value) {

@@ -141,6 +141,167 @@ describe('patient collaboration home', () => {
       wrapper.unmount();
     }
   );
+
+  test('shows bundled CBoard boards for an empty patient library without queuing them', async () => {
+    const profile = {
+      id: 'empty-patient',
+      familyId: 'family',
+      relationship: { role: 'patient', defaultMode: 'expression' }
+    };
+    runtime.request.mockImplementation(async path => {
+      if (path === '/care/profiles') return [profile];
+      if (path === '/care/context') return { selectedProfileId: profile.id };
+      return {
+        ...profile,
+        cursor: 1,
+        permissions: ['read'],
+        resources: []
+      };
+    });
+    let wrapper;
+    await act(async () => {
+      wrapper = mount(<CareHome intl={{}} />);
+      await flush();
+    });
+    wrapper.update();
+    const panel = wrapper.find(CommunicationSupportPanel);
+    expect(panel).toHaveLength(1);
+    expect(panel.prop('boards')).toHaveLength(46);
+    expect(panel.prop('boards')[0]).toEqual(
+      expect.objectContaining({ id: 'root' })
+    );
+    expect(panel.prop('boards')[0].tiles).toEqual(
+      expect.arrayContaining([expect.objectContaining({ label: '帮帮我' })])
+    );
+    expect(
+      runtime.request.mock.calls.filter(call => call[1] === 'POST')
+    ).toHaveLength(0);
+    expect(
+      localStorage.getItem('care-projection-v1:account:family:empty-patient')
+    ).toBeNull();
+    wrapper.unmount();
+  });
+
+  test('saves a personal board without copying bundled boards into the patient queue', async () => {
+    const profile = {
+      id: 'empty-patient',
+      familyId: 'family',
+      relationship: { role: 'patient', defaultMode: 'expression' }
+    };
+    runtime.request.mockImplementation(async path => {
+      if (path === '/care/profiles') return [profile];
+      if (path === '/care/context') return { selectedProfileId: profile.id };
+      return {
+        ...profile,
+        cursor: 1,
+        permissions: ['read', 'library.edit'],
+        resources: []
+      };
+    });
+    let wrapper;
+    await act(async () => {
+      wrapper = mount(<CareHome intl={{}} />);
+      await flush();
+    });
+    wrapper.update();
+    runtime.request.mockClear();
+    await act(async () => {
+      await wrapper
+        .find(CommunicationSupportPanel)
+        .prop('onCreateCommunicationBoard')({
+        id: 'device_private_board_test',
+        name: '我的图板',
+        tiles: []
+      });
+      await flush();
+    });
+    const writes = runtime.request.mock.calls.filter(
+      call => call[1] === 'POST'
+    );
+    expect(writes).toHaveLength(1);
+    expect(writes[0][2]).toEqual(
+      expect.objectContaining({
+        resourceId: 'device_private_board_test',
+        kind: 'board'
+      })
+    );
+    expect(writes[0][2].resourceId).not.toBe('root');
+    wrapper.unmount();
+  });
+
+  test('syncs a favorite with a bundled image reference without uploading media', async () => {
+    const profile = {
+      id: 'empty-patient',
+      familyId: 'family',
+      relationship: { role: 'patient', defaultMode: 'expression' }
+    };
+    runtime.request.mockImplementation(async path => {
+      if (path === '/care/profiles') return [profile];
+      if (path === '/care/context') return { selectedProfileId: profile.id };
+      return {
+        ...profile,
+        cursor: 1,
+        permissions: ['read'],
+        resources: []
+      };
+    });
+    const defaultImage = require('../../api/boards.json')
+      .advanced.find(board => board.id === 'root')
+      .tiles.find(tile => tile.id === 'pi-home-help').image;
+    let wrapper;
+    await act(async () => {
+      wrapper = mount(<CareHome intl={{}} />);
+      await flush();
+    });
+    wrapper.update();
+    runtime.request.mockClear();
+    await act(async () => {
+      await wrapper
+        .find(CommunicationSupportPanel)
+        .prop('onCareFavoritesChanged')([
+        {
+          id: 'favorite-with-builtin',
+          sentence: '帮帮我',
+          output: [
+            {
+              id: 'pi-home-help',
+              label: '帮帮我',
+              image: defaultImage
+            }
+          ],
+          createdAt: 1
+        }
+      ]);
+      await flush();
+    });
+    const writes = runtime.request.mock.calls.filter(
+      call => call[1] === 'POST'
+    );
+    expect(writes).toHaveLength(1);
+    expect(writes[0][0]).toContain('/commands');
+    expect(writes[0][2]).toEqual(
+      expect.objectContaining({
+        kind: 'favorite',
+        resourceId: 'favorite-with-builtin',
+        value: expect.objectContaining({
+          output: [
+            expect.objectContaining({
+              builtinImage: {
+                catalog: 'cboard-default-v1',
+                boardId: 'root',
+                tileId: 'pi-home-help'
+              }
+            })
+          ]
+        })
+      })
+    );
+    expect(
+      runtime.request.mock.calls.some(call => call[0].endsWith('/media'))
+    ).toBe(false);
+    expect(wrapper.text()).not.toContain('图片需先保存到本机');
+    wrapper.unmount();
+  });
   test('removes the previous patient immediately when switching accounts', async () => {
     const wrapper = await render('patient');
     await act(async () => {

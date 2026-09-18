@@ -910,6 +910,15 @@ export default function CarePanel({ runtime, ui }) {
               )}
               {tiles.map((tile, index) => (
                 <Box key={tile.id}>
+                  {!data.media[tile.value.mediaId] &&
+                    tile.value.builtinImage &&
+                    runtime.resolveBuiltinImage?.(tile.value.builtinImage) && (
+                      <Image
+                        src={runtime.resolveBuiltinImage(
+                          tile.value.builtinImage
+                        )}
+                      />
+                    )}
                   {data.media[tile.value.mediaId] && (
                     <Image
                       src={`data:${

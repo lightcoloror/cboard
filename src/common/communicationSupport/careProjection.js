@@ -2,7 +2,8 @@ import { createBoardDTO } from './dto';
 
 export function projectCareBoards(
   snapshot,
-  image = asset => `data:${asset.type};base64,${asset.data}`
+  image = asset =>
+    asset.builtinImage ? '' : `data:${asset.type};base64,${asset.data}`
 ) {
   if (snapshot.locked) return [];
   const resources = Object.values(snapshot.resources || {}).filter(
@@ -30,6 +31,8 @@ export function projectCareBoards(
             communication: tile.value.communication || {},
             image: snapshot.media[tile.value.mediaId]
               ? image(snapshot.media[tile.value.mediaId])
+              : tile.value.builtinImage
+              ? image({ builtinImage: tile.value.builtinImage })
               : '',
             pictogramAttribution: tile.value.pictogramAttribution || null
           })),
@@ -67,13 +70,21 @@ export async function queueCareBoards(engine, boards, readImage) {
       if (tile.image && readImage) {
         const asset = await readImage(tile.image);
         if (asset) {
-          const existing = Object.values(engine.view().media).find(
-            m => m.sha256 === asset.sha256
-          );
-          const mediaId = existing ? existing.mediaId : `image-${asset.sha256}`;
-          if (!engine.view().media[mediaId])
-            await engine.addMedia({ ...asset, mediaId });
-          value.mediaId = mediaId;
+          if (asset.builtinImage) {
+            value.builtinImage = asset.builtinImage;
+            delete value.mediaId;
+          } else {
+            delete value.builtinImage;
+            const existing = Object.values(engine.view().media).find(
+              m => m.sha256 === asset.sha256
+            );
+            const mediaId = existing
+              ? existing.mediaId
+              : `image-${asset.sha256}`;
+            if (!engine.view().media[mediaId])
+              await engine.addMedia({ ...asset, mediaId });
+            value.mediaId = mediaId;
+          }
         }
       }
       if (!current || JSON.stringify(current.value) !== JSON.stringify(value))

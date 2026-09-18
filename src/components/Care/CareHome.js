@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { injectIntl } from 'react-intl';
 import { createCareSync } from '../../common/communicationSupport/careSync';
 import {
@@ -22,9 +22,12 @@ import { sha256 } from '@noble/hashes/sha256';
 import { bytesToHex } from '@noble/hashes/utils';
 import { careErrorMessage } from '../../common/communicationSupport/careErrors';
 import { sameCareFavoriteContent } from '../../common/communicationSupport/careFavoriteChanges';
+import { createCareBuiltinImages } from '../../common/communicationSupport/careBuiltinImages';
+import { createCareBuiltinBoards } from './careBuiltinBoards';
 
-const mediaImage = asset => `data:${asset.type};base64,${asset.data}`;
-async function readImage(source) {
+async function readImage(source, builtinImages) {
+  const builtinImage = builtinImages.reference(source);
+  if (builtinImage) return { builtinImage };
   const match = /^data:(image\/(?:png|jpeg|webp));base64,(.+)$/.exec(source);
   if (match)
     return {
@@ -50,6 +53,15 @@ async function readImage(source) {
 }
 
 function CareHome({ intl }) {
+  const builtinBoards = useMemo(() => createCareBuiltinBoards(intl), [intl]);
+  const builtinImages = useMemo(() => createCareBuiltinImages(builtinBoards), [
+    builtinBoards
+  ]);
+  const mediaImage = asset =>
+    asset?.builtinImage
+      ? builtinImages.resolve(asset.builtinImage)
+      : `data:${asset.type};base64,${asset.data}`;
+  const readCareImage = source => readImage(source, builtinImages);
   const [accountId, setAccountId] = useState(localCareIdentity()?.id);
   const [profiles, setProfiles] = useState([]);
   const [active, setActive] = useState(null);
@@ -124,7 +136,7 @@ function CareHome({ intl }) {
       if (raw) {
         const pending = JSON.parse(raw);
         if (pending.boards)
-          await queueCareBoards(instance, pending.boards, readImage);
+          await queueCareBoards(instance, pending.boards, readCareImage);
         if (pending.favorites) {
           const kind =
             instance.localRole === 'patient' ? 'favorite' : 'personalFavorite';
@@ -133,7 +145,7 @@ function CareHome({ intl }) {
               old => old.id === item.id
             );
             if (baseline && sameCareFavoriteContent(baseline, item)) continue;
-            const value = await encodeCareMedia(item, instance, readImage);
+            const value = await encodeCareMedia(item, instance, readCareImage);
             const old = instance.view().resources[`${kind}:${item.id}`];
             if (!old || JSON.stringify(old.value) !== JSON.stringify(value))
               await instance.edit(kind, item.id, value);
@@ -154,7 +166,7 @@ function CareHome({ intl }) {
             value: await encodeCareMedia(
               pending.personalImages,
               instance,
-              readImage
+              readCareImage
             )
           };
           if (
@@ -366,10 +378,11 @@ function CareHome({ intl }) {
     );
     await sync();
   }
-  const boards =
-    snapshot && !snapshot.locked ? projectCareBoards(snapshot) : [];
+  const patientBoards =
+    snapshot && !snapshot.locked ? projectCareBoards(snapshot, mediaImage) : [];
+  const boards = patientBoards.length ? patientBoards : builtinBoards;
   async function updateBoard(board) {
-    const next = boards.filter(b => b.id !== board.id).concat(board);
+    const next = patientBoards.filter(b => b.id !== board.id).concat(board);
     await savePending({ boards: next });
     return board.id;
   }
