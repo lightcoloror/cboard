@@ -380,7 +380,11 @@ function CareHome({ intl }) {
   }
   const patientBoards =
     snapshot && !snapshot.locked ? projectCareBoards(snapshot, mediaImage) : [];
-  const boards = patientBoards.length ? patientBoards : builtinBoards;
+  // Display-only catalog: never pass bundled boards to the patient upload queue.
+  const patientBoardIds = new Set(patientBoards.map(board => board.id));
+  const boards = builtinBoards
+    .filter(board => !patientBoardIds.has(board.id))
+    .concat(patientBoards);
   async function updateBoard(board) {
     const next = patientBoards.filter(b => b.id !== board.id).concat(board);
     await savePending({ boards: next });

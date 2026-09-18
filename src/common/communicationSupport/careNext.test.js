@@ -53,6 +53,63 @@ const snapshot = {
   permissions: ['read', 'library.edit']
 };
 
+it.each(['INVALID_MEDIA', 'INVALID_IMAGE', 'MEDIA_CHECKSUM_MISMATCH'])(
+  'retains media after %s without repeating automatic upload after restart',
+  async code => {
+    const disk = {};
+    let rejected = true;
+    const request = jest.fn(async (path, method, body) => {
+      if (method === 'POST' && path.endsWith('/media')) {
+        if (rejected && body.mediaId === 'invalid')
+          throw { status: 400, data: { code } };
+        return { id: body.mediaId };
+      }
+      if (method === 'POST')
+        return {
+          resource: {
+            kind: body.kind,
+            id: body.resourceId,
+            value: body.value,
+            version: 1
+          }
+        };
+      return { ...snapshot, resources: [] };
+    });
+    const engine = client(request, disk);
+    await engine.init();
+    await engine.sync();
+    await engine.addMedia({ mediaId: 'invalid', data: 'local-original' });
+    await engine.edit('tile', 'dependent', { mediaId: 'invalid' });
+    await engine.addMedia({ mediaId: 'valid', data: 'other-image' });
+    await engine.edit('tile', 'independent', { mediaId: 'valid' });
+    await expect(engine.sync()).rejects.toMatchObject({
+      status: 400,
+      data: { code }
+    });
+    expect(engine.archive().media.valid.pending).toBe(false);
+    const restarted = client(request, disk);
+    await restarted.init();
+    request.mockClear();
+    await expect(restarted.sync({ automatic: true })).rejects.toMatchObject({
+      data: { code }
+    });
+    expect(request.mock.calls.every(([, method]) => method === 'GET')).toBe(
+      true
+    );
+    expect(restarted.archive().media.invalid.data).toBe('local-original');
+    expect(restarted.archive().queue).toHaveLength(1);
+    rejected = false;
+    await restarted.sync();
+    expect(restarted.archive().media.invalid.pending).toBe(false);
+    expect(restarted.archive().media.invalid.uploadFailure).toBeUndefined();
+    expect(restarted.archive().queue).toHaveLength(0);
+    const sent = request.mock.calls.find(
+      ([path, method]) => method === 'POST' && path.endsWith('/media')
+    )[2];
+    expect(sent.uploadFailure).toBeUndefined();
+  }
+);
+
 it('continues unrelated edits and downloads when media quota is full, retaining dependent edits across restart', async () => {
   const disk = {};
   const quotaError = {

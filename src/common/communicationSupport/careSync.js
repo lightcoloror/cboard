@@ -328,10 +328,38 @@ export function createCareSync({
             if (skipMediaUploads || quotaPaused) break;
             if (!canUpload) break;
             if (!asset.pending) continue;
+            if (automatic && asset.uploadFailure) {
+              mediaUploadError = Object.assign(
+                new Error(asset.uploadFailure.code),
+                {
+                  status: asset.uploadFailure.status,
+                  data: { code: asset.uploadFailure.code }
+                }
+              );
+              continue;
+            }
             checkEdit('favorite');
             try {
-              await request(`${api}/media`, 'POST', asset);
+              const { uploadFailure, ...upload } = asset;
+              await request(`${api}/media`, 'POST', upload);
             } catch (error) {
+              if (
+                error.status === 400 &&
+                [
+                  'INVALID_MEDIA',
+                  'INVALID_IMAGE',
+                  'MEDIA_CHECKSUM_MISMATCH'
+                ].includes(error.data?.code)
+              ) {
+                next = copy(state);
+                next.media[mediaId].uploadFailure = {
+                  status: 400,
+                  code: error.data.code
+                };
+                await persist(next);
+                mediaUploadError = error;
+                continue;
+              }
               if (error.data?.code !== 'FAMILY_MEDIA_QUOTA_EXCEEDED')
                 throw error;
               mediaUploadError = error;
@@ -341,6 +369,7 @@ export function createCareSync({
             checkAccount();
             next = copy(state);
             next.media[mediaId].pending = false;
+            delete next.media[mediaId].uploadFailure;
             await persist(next);
           }
           const blocked = new Set(

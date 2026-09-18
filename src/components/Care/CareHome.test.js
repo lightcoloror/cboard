@@ -136,7 +136,17 @@ describe('patient collaboration home', () => {
       const wrapper = await render(role);
       const panel = wrapper.find(CommunicationSupportPanel);
       expect(panel.prop('initialMode')).toBe(mode);
-      expect(panel.prop('boards')[0].tiles[0].label).toBe('喝水');
+      expect(
+        panel.prop('boards').find(board => board.id === 'board').tiles[0].label
+      ).toBe('喝水');
+      expect(
+        panel.prop('boards').find(board => board.id === 'root').tiles
+      ).toEqual(
+        expect.arrayContaining([expect.objectContaining({ label: '帮帮我' })])
+      );
+      expect(
+        runtime.request.mock.calls.filter(call => call[1] === 'POST')
+      ).toHaveLength(0);
       expect(panel.prop('careMode')).toBe(true);
       wrapper.unmount();
     }
@@ -311,6 +321,53 @@ describe('patient collaboration home', () => {
     });
     wrapper.update();
     expect(wrapper.find(CommunicationSupportPanel)).toHaveLength(0);
+    wrapper.unmount();
+  });
+  test('projects downloaded boards while showing a permanent upload failure', async () => {
+    const wrapper = await render('patient');
+    const key = 'care-v1:account:family:patient';
+    const saved = JSON.parse(disk[key]);
+    saved.media.invalid = {
+      mediaId: 'invalid',
+      data: 'local-original',
+      pending: true
+    };
+    disk[key] = JSON.stringify(saved);
+    const previousRequest = runtime.request.getMockImplementation();
+    runtime.request.mockImplementation(async (path, method, body) => {
+      if (method === 'POST' && path.endsWith('/media'))
+        throw { status: 400, data: { code: 'INVALID_MEDIA' } };
+      const result = await previousRequest(path, method, body);
+      if (!result.resources) return result;
+      return {
+        ...result,
+        cursor: 2,
+        resources: result.resources.map(resource =>
+          resource.id === 'water'
+            ? {
+                ...resource,
+                version: 2,
+                seq: 2,
+                value: { label: '另一设备更新的喝水图卡' }
+              }
+            : resource
+        )
+      };
+    });
+    await act(async () => {
+      tick();
+      await flush();
+    });
+    wrapper.update();
+    expect(wrapper.text()).toContain('已暂停此图片的自动上传');
+    expect(
+      wrapper
+        .find(CommunicationSupportPanel)
+        .prop('boards')
+        .find(board => board.id === 'board').tiles[0].label
+    ).toBe('另一设备更新的喝水图卡');
+    expect(JSON.parse(disk[key]).media.invalid.data).toBe('local-original');
+    expect(JSON.parse(disk[key]).media.invalid.pending).toBe(true);
     wrapper.unmount();
   });
   test('shows favorites after the initial sync without remounting the communication panel', async () => {

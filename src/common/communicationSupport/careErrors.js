@@ -51,6 +51,12 @@ export function careErrorMessage(error) {
     FAMILY_MEDIA_QUOTA_EXCEEDED:
       '家庭云存储空间或文件数已达上限；本地内容仍保留。',
     MEDIA_QUOTA_NOT_CONFIGURED: '家庭云存储服务尚未配置，暂不可上传。',
+    INVALID_MEDIA:
+      '图片上传格式无效，已暂停此图片的自动上传；本地图片仍保留，请重新选择图片后重试。',
+    INVALID_IMAGE:
+      '图片格式无法识别，已暂停此图片的自动上传；本地图片仍保留，请重新选择图片后重试。',
+    MEDIA_CHECKSUM_MISMATCH:
+      '图片校验失败，已暂停此图片的自动上传；本地图片仍保留，请重新选择图片后重试。',
     MEDIA_UPLOAD_PENDING_RECONCILIATION:
       '上传尚未完成，本地修改仍待同步。请稍后重试；若持续失败，请联系支持人员。',
     MEDIA_UPLOAD_RECONCILIATION_REQUIRED:
