@@ -74,3 +74,22 @@ test('maps public trial claim outcomes without implying payment or email deliver
     '不能继续上传此版本'
   );
 });
+
+test('server JSON auth and service failures retain distinct recovery instructions', () => {
+  expect(careErrorMessage({ data: { code: 'LOGIN_REQUIRED' } })).toContain(
+    '重新登录'
+  );
+  const forbidden = careErrorMessage({
+    status: 403,
+    data: { code: 'USER_ACCESS_FORBIDDEN' }
+  });
+  expect(forbidden).toContain('家庭授权');
+  expect(forbidden).not.toContain('联网后可继续同步');
+  for (const code of ['SERVICE_UNAVAILABLE', 'INTERNAL_SERVER_ERROR']) {
+    const message = careErrorMessage({
+      response: { status: 503, data: { code } }
+    });
+    expect(message).toContain('本地内容和待同步修改仍保留');
+    expect(message).not.toContain('重新登录');
+  }
+});

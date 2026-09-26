@@ -51,6 +51,27 @@
   }
 }
 
+.WelcomeScreen__cloud-trial {
+  max-width: 680px;
+  margin: 0 auto 0.5rem;
+  padding: 0 1rem;
+  color: #fff;
+  text-align: center;
+  text-shadow: 0 0 6px black;
+}
+
+.WelcomeScreen__cloud-trial strong {
+  display: block;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.WelcomeScreen__cloud-trial p {
+  margin: 0.35rem auto 0;
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
 .WelcomeScreen__footer {
   display: flex;
   flex-wrap: wrap;

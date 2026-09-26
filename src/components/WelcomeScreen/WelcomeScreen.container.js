@@ -219,11 +219,13 @@ export class WelcomeScreen extends Component {
     const productLinks = getProductLinks();
     const { finishFirstVisit, onClose, classes } = this.props;
     const { activeView, dialogWithKeyboardStyle } = this.state;
+    const cloudTrialEnabled =
+      process.env.REACT_APP_TUYUJIA_CLOUD_TRIAL === 'true';
 
     return (
       <div className={classes.WelcomeScreen}>
         <div className="WelcomeScreen__container">
-          {onClose && (
+          {onClose && !cloudTrialEnabled && (
             <IconButton label="close" onClick={onClose}>
               <CloseIcon />
             </IconButton>
@@ -231,6 +233,20 @@ export class WelcomeScreen extends Component {
           <div className="WelcomeScreen__logo">
             <CboardLogo />
           </div>
+          {cloudTrialEnabled && (
+            <div
+              className="WelcomeScreen__cloud-trial"
+              role="note"
+              aria-label="图语家云端受限试用说明"
+            >
+              <strong>图语家 · 云端受限试用</strong>
+              <p>
+                本试用仅使用专用测试账号和合成资料。仅开放已有账号登录；不提供注册或
+                Google、Facebook、Apple
+                登录。也可选择“本地使用（下次再说）”继续使用本地功能。
+              </p>
+            </div>
+          )}
           <footer className="WelcomeScreen__footer">
             <Button
               className="WelcomeScreen__button WelcomeScreen__button--login"
@@ -239,81 +255,101 @@ export class WelcomeScreen extends Component {
             >
               <FormattedMessage {...messages.login} />
             </Button>
-            <Button
-              className="WelcomeScreen__button WelcomeScreen__button--signup"
-              variant="contained"
-              color="primary"
-              onClick={() => this.handleActiveView('signup')}
-            >
-              <FormattedMessage {...messages.signUp} />
-            </Button>
+            {!cloudTrialEnabled && (
+              <Button
+                className="WelcomeScreen__button WelcomeScreen__button--signup"
+                variant="contained"
+                color="primary"
+                onClick={() => this.handleActiveView('signup')}
+              >
+                <FormattedMessage {...messages.signUp} />
+              </Button>
+            )}
 
-            <div className="WelcomeScreen__button WelcomeScreen__button">
-              {!isElectron() && (
-                <GoogleLoginButton
-                  style={SocialBtnStyle}
-                  className="WelcomeScreen__button WelcomeScreen__button--google"
-                  onClick={this.handleGoogleLoginClick}
-                >
-                  <FormattedMessage {...messages.google} />
-                </GoogleLoginButton>
-              )}
+            {!cloudTrialEnabled && (
+              <div className="WelcomeScreen__button WelcomeScreen__button">
+                {!isElectron() && (
+                  <GoogleLoginButton
+                    style={SocialBtnStyle}
+                    className="WelcomeScreen__button WelcomeScreen__button--google"
+                    onClick={this.handleGoogleLoginClick}
+                  >
+                    <FormattedMessage {...messages.google} />
+                  </GoogleLoginButton>
+                )}
 
-              {!isElectron() && (
-                <FacebookLoginButton
-                  style={SocialBtnStyle}
-                  className="WelcomeScreen__button WelcomeScreen__button--facebook"
-                  onClick={this.handleFacebookLoginClick}
-                >
-                  <FormattedMessage {...messages.facebook} />
-                </FacebookLoginButton>
-              )}
+                {!isElectron() && (
+                  <FacebookLoginButton
+                    style={SocialBtnStyle}
+                    className="WelcomeScreen__button WelcomeScreen__button--facebook"
+                    onClick={this.handleFacebookLoginClick}
+                  >
+                    <FormattedMessage {...messages.facebook} />
+                  </FacebookLoginButton>
+                )}
 
-              {!isAndroid() && !isElectron() && (
-                <AppleLoginButton
-                  style={SocialBtnStyle}
-                  className="WelcomeScreen__button WelcomeScreen__button--google"
-                  onClick={this.handleAppleLoginClick}
-                >
-                  <FormattedMessage {...messages.apple} />
-                </AppleLoginButton>
-              )}
-            </div>
+                {!isAndroid() && !isElectron() && (
+                  <AppleLoginButton
+                    style={SocialBtnStyle}
+                    className="WelcomeScreen__button WelcomeScreen__button--google"
+                    onClick={this.handleAppleLoginClick}
+                  >
+                    <FormattedMessage {...messages.apple} />
+                  </AppleLoginButton>
+                )}
+              </div>
+            )}
 
-            {!onClose && (
+            {cloudTrialEnabled ? (
               <Button
                 className="WelcomeScreen__button WelcomeScreen__button--skip"
-                onClick={finishFirstVisit}
+                onClick={onClose || finishFirstVisit}
                 style={{
                   color: '#fff',
                   margin: '1em auto 0 auto',
                   textShadow: '0px 0px 6px black'
                 }}
               >
-                <FormattedMessage {...messages.skipForNow} />
+                本地使用（下次再说）
               </Button>
+            ) : (
+              !onClose && (
+                <Button
+                  className="WelcomeScreen__button WelcomeScreen__button--skip"
+                  onClick={finishFirstVisit}
+                  style={{
+                    color: '#fff',
+                    margin: '1em auto 0 auto',
+                    textShadow: '0px 0px 6px black'
+                  }}
+                >
+                  <FormattedMessage {...messages.skipForNow} />
+                </Button>
+              )
             )}
           </footer>
-          <div className="WelcomeScreen__links">
-            <Link
-              href={productLinks.privacy || undefined}
-              aria-disabled={!productLinks.privacy}
-              target="_blank"
-              rel="noopener noreferrer"
-              color="inherit"
-            >
-              <FormattedMessage {...messages.privacy} />
-            </Link>
-            <Link
-              href={productLinks.terms || undefined}
-              aria-disabled={!productLinks.terms}
-              target="_blank"
-              rel="noopener noreferrer"
-              color="inherit"
-            >
-              <FormattedMessage {...messages.terms} />
-            </Link>
-          </div>
+          {!cloudTrialEnabled && (
+            <div className="WelcomeScreen__links">
+              <Link
+                href={productLinks.privacy || undefined}
+                aria-disabled={!productLinks.privacy}
+                target="_blank"
+                rel="noopener noreferrer"
+                color="inherit"
+              >
+                <FormattedMessage {...messages.privacy} />
+              </Link>
+              <Link
+                href={productLinks.terms || undefined}
+                aria-disabled={!productLinks.terms}
+                target="_blank"
+                rel="noopener noreferrer"
+                color="inherit"
+              >
+                <FormattedMessage {...messages.terms} />
+              </Link>
+            </div>
+          )}
         </div>
         <Login
           isDialogOpen={activeView === 'login'}

@@ -444,6 +444,24 @@ describe('TileEditor tests', () => {
     );
   });
 
+  test('keeps the image locally when public trial rejects legacy upload', async () => {
+    const gif = new Blob(['GIF89a'], { type: 'image/gif' });
+    API.uploadFile.mockRejectedValue({
+      response: {
+        status: 403,
+        data: { code: 'LEGACY_MEDIA_UPLOAD_DISABLED' }
+      }
+    });
+    const wrapper = shallow(<TileEditorComponent {...props} />);
+    await wrapper.instance().handleInputImageChange(gif, 'drink.gif', gif);
+    await wrapper.instance().handleSubmit();
+
+    expect(props.onAddSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({ image: 'data:image/gif;base64,R0lGODlh' })
+    );
+    expect(API.uploadFile).toHaveBeenCalledTimes(1);
+  });
+
   test('uploads a prepared short video instead of persisting a blob URL', async () => {
     const video = new Blob(['video'], { type: 'video/mp4' });
     API.uploadFile.mockResolvedValue('https://cdn.example.test/action.mp4');

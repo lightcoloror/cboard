@@ -91,45 +91,55 @@ const getQueryParameters = (obj = {}) => {
     .join('&');
 };
 
+export const applyCareRequestHeaders = (
+  request,
+  configuredBaseUrl = BASE_URL
+) => {
+  if (request.accountClosure) return request;
+  if (process.env.REACT_APP_CARE_COLLABORATION !== 'true') return request;
+  const user = getUserData();
+  const id = user && (user.id || user._id);
+  if (!id) return request;
+  const apiBase = new URL(
+    request.baseURL || configuredBaseUrl,
+    window.location.href
+  );
+  const trustedApiOrigin = new URL(configuredBaseUrl, window.location.href)
+    .origin;
+  const target = new URL(request.url, apiBase);
+  if (target.origin !== trustedApiOrigin) return request;
+  let selected;
+  try {
+    selected = JSON.parse(
+      localStorage.getItem(`care-selection-v1:${id}`) || 'null'
+    );
+  } catch (_) {
+    return request;
+  }
+  const fundingId =
+    selected && localStorage.getItem(`care-funding-v1:${id}:${selected.id}`);
+  if (fundingId) {
+    request.headers = {
+      ...request.headers,
+      'X-Care-Profile-Id': selected.id,
+      'X-Care-Funding-Id': fundingId,
+      'Idempotency-Key':
+        request.headers?.['Idempotency-Key'] ||
+        Array.from(crypto.getRandomValues(new Uint8Array(16)), b =>
+          b.toString(16).padStart(2, '0')
+        ).join('')
+    };
+  }
+  return request;
+};
+
 class API {
   constructor(config = {}) {
     this.axiosInstance = axios.create({
       baseURL: BASE_URL,
       ...config
     });
-    this.axiosInstance.interceptors.request.use(request => {
-      if (request.accountClosure) return request;
-      if (process.env.REACT_APP_CARE_COLLABORATION !== 'true') return request;
-      const user = getUserData();
-      const id = user && (user.id || user._id);
-      if (!id) return request;
-      const target = new URL(request.url, request.baseURL || BASE_URL);
-      if (target.origin !== new URL(BASE_URL).origin) return request;
-      let selected;
-      try {
-        selected = JSON.parse(
-          localStorage.getItem(`care-selection-v1:${id}`) || 'null'
-        );
-      } catch (_) {
-        return request;
-      }
-      const fundingId =
-        selected &&
-        localStorage.getItem(`care-funding-v1:${id}:${selected.id}`);
-      if (fundingId) {
-        request.headers = {
-          ...request.headers,
-          'X-Care-Profile-Id': selected.id,
-          'X-Care-Funding-Id': fundingId,
-          'Idempotency-Key':
-            request.headers?.['Idempotency-Key'] ||
-            Array.from(crypto.getRandomValues(new Uint8Array(16)), b =>
-              b.toString(16).padStart(2, '0')
-            ).join('')
-        };
-      }
-      return request;
-    });
+    this.axiosInstance.interceptors.request.use(applyCareRequestHeaders);
     this.axiosInstance.interceptors.response.use(
       response => response,
       error => {
@@ -170,6 +180,7 @@ class API {
   }
 
   async getAzureVoices() {
+    if (!AZURE_SPEECH_SUBSCR_KEY) return [];
     const azureVoicesListPath = `${AZURE_VOICES_BASE_PATH_API}list`;
     const headers = {
       'Ocp-Apim-Subscription-Key': AZURE_SPEECH_SUBSCR_KEY

@@ -825,6 +825,95 @@ describe('shared patient collaboration UI', () => {
       }
     }
   );
+  it('skips disabled AI funding while retaining entitlements and personal favorites', async () => {
+    runtime.funding = jest.fn(() => null);
+    runtime.fundingEnabled = false;
+    runtime.request.mockImplementation(async (path, method) => {
+      if (path === '/care/profiles')
+        return [{ id: 'patient', familyId: 'family', name: '合成患者' }];
+      if (path === '/care/families') return [];
+      if (path.endsWith('/favorites'))
+        return {
+          items: [
+            {
+              id: 'personal',
+              version: 1,
+              value: { sentence: '个人收藏仍可同步', output: [] }
+            }
+          ]
+        };
+      if (path.endsWith('/entitlements'))
+        return { state: 'active', syncWrite: true };
+      if (method === 'GET')
+        return {
+          familyId: 'family',
+          cursor: 1,
+          permissions: ['read'],
+          resources: []
+        };
+      throw new Error(`Unexpected request: ${path}`);
+    });
+    await act(async () => {
+      ReactDOM.render(<CarePanel runtime={runtime} ui={ui} />, host);
+      await flush();
+    });
+    await act(async () => {
+      Simulate.click(button('合成患者'));
+      await flush();
+    });
+
+    expect(runtime.request).toHaveBeenCalledWith(
+      '/care/profiles/patient/entitlements',
+      'GET'
+    );
+    expect(runtime.request).toHaveBeenCalledWith(
+      '/care/profiles/patient/favorites',
+      'GET'
+    );
+    expect(
+      runtime.request.mock.calls.some(([path]) =>
+        path.startsWith('/care/funding')
+      )
+    ).toBe(false);
+    expect(runtime.funding).not.toHaveBeenCalled();
+    expect(host.textContent).toContain('个人收藏仍可同步');
+  });
+  it('keeps AI funding queries enabled by default for existing runtimes', async () => {
+    runtime.funding = jest.fn(() => null);
+    runtime.request.mockImplementation(async (path, method) => {
+      if (path === '/care/profiles')
+        return [{ id: 'patient', familyId: 'family', name: '合成患者' }];
+      if (path === '/care/families') return [];
+      if (path.startsWith('/care/funding?')) return { items: [] };
+      if (path.endsWith('/entitlements'))
+        return { state: 'active', syncWrite: true };
+      if (method === 'GET')
+        return {
+          familyId: 'family',
+          cursor: 1,
+          permissions: ['read'],
+          resources: []
+        };
+      throw new Error(`Unexpected request: ${path}`);
+    });
+    await act(async () => {
+      ReactDOM.render(<CarePanel runtime={runtime} ui={ui} />, host);
+      await flush();
+    });
+    await act(async () => {
+      Simulate.click(button('合成患者'));
+      await flush();
+    });
+
+    expect(runtime.request).toHaveBeenCalledWith(
+      '/care/funding?profileId=patient',
+      'GET'
+    );
+    expect(runtime.request).toHaveBeenCalledWith(
+      '/care/profiles/patient/entitlements',
+      'GET'
+    );
+  });
   it('reports shared success and original conflict separately, then permits keeping the original', async () => {
     const shared = {
       id: 'shared',

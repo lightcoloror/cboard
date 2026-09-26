@@ -1,6 +1,12 @@
 export function careErrorMessage(error) {
   const code = error?.data?.code || error?.response?.data?.code || error?.code;
   const messages = {
+    LOGIN_REQUIRED: '登录已失效，请重新登录；本地内容仍保留。',
+    USER_ACCESS_FORBIDDEN: '您没有执行此操作的权限；请核对当前账号和家庭授权。',
+    SERVICE_UNAVAILABLE:
+      '云端服务暂时不可用，请稍后重试；本地内容和待同步修改仍保留。',
+    INTERNAL_SERVER_ERROR:
+      '云端暂时无法完成此操作，请稍后重试；本地内容和待同步修改仍保留。',
     CARE_STORAGE_UNAVAILABLE:
       '云端存储暂时不可用；本地内容和待同步修改仍保留，请稍后重试。',
     SESSION_STORAGE_UNAVAILABLE:
@@ -22,6 +28,8 @@ export function careErrorMessage(error) {
     AI_REQUEST_ALREADY_COMPLETED: '这次 AI 请求已处理，不会重复执行或扣减。',
     FUNDING_ACCESS_DENIED: '没有使用此额度来源的授权，请在设置中核对。',
     CARE_TRIAL_DISABLED: '家庭体验暂未开放。',
+    CARE_TRIAL_CONFIGURATION_INVALID:
+      '在线 AI 暂时不可用，请联系支持人员；本地沟通仍可使用。',
     TRIAL_NOT_CONFIGURED: '家庭体验尚未配置，暂不可开通。',
     TRIAL_ACCOUNT_ALREADY_CLAIMED: '此账号已经领取过家庭体验。',
     TRIAL_FAMILY_ALREADY_CLAIMED: '此家庭已经领取过家庭体验。',

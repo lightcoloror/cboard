@@ -200,7 +200,8 @@ export default function CarePanel({ runtime, ui }) {
     setRights(null);
     setIncludeOriginal(false);
     setFavoriteText('');
-    setChosenFunding(runtime.funding ? runtime.funding(profile.id) : null);
+    const fundingEnabled = runtime.funding && runtime.fundingEnabled !== false;
+    setChosenFunding(fundingEnabled ? runtime.funding(profile.id) : null);
     setBoardId('default');
     const who = runtime.identity();
     if (!who) throw new Error('请先登录');
@@ -225,10 +226,12 @@ export default function CarePanel({ runtime, ui }) {
     await instance.sync();
     if (runtime.funding) {
       const [available, entitlement] = await Promise.all([
-        request(
-          `/care/funding?profileId=${encodeURIComponent(profile.id)}`,
-          'GET'
-        ),
+        fundingEnabled
+          ? request(
+              `/care/funding?profileId=${encodeURIComponent(profile.id)}`,
+              'GET'
+            )
+          : Promise.resolve({ items: [] }),
         request(`/care/profiles/${profile.id}/entitlements`, 'GET')
       ]);
       if (current() && engine.current === instance) {

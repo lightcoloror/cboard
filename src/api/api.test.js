@@ -1,4 +1,5 @@
 import API, {
+  applyCareRequestHeaders,
   isPrivatePictureLibraryReencryptionRequiredError,
   isPrivatePictureLibraryUnavailableError
 } from './api';
@@ -46,6 +47,136 @@ describe('Cboard API calls', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     API.axiosInstance = axiosInstance;
+  });
+
+  it('does not request Azure voices when no subscription key is configured', async () => {
+    jest.resetModules();
+    jest.doMock('../constants', () => ({
+      ...jest.requireActual('../constants'),
+      AZURE_SPEECH_SUBSCR_KEY: ''
+    }));
+
+    try {
+      const isolatedAPI = require('./api').default;
+      const isolatedAxios = { get: jest.fn() };
+      isolatedAPI.axiosInstance = isolatedAxios;
+
+      await expect(isolatedAPI.getAzureVoices()).resolves.toEqual([]);
+      expect(isolatedAxios.get).not.toHaveBeenCalled();
+    } finally {
+      jest.dontMock('../constants');
+      jest.resetModules();
+    }
+  });
+
+  it('adds care headers when a relative API base resolves to the current origin', () => {
+    const previousFlag = process.env.REACT_APP_CARE_COLLABORATION;
+    process.env.REACT_APP_CARE_COLLABORATION = 'true';
+    const user = { id: 'user-1' };
+    const store = getStore();
+    const previousUser = store.getState().app.userData;
+    store.getState().app.userData = user;
+    localStorage.setItem(
+      'care-selection-v1:user-1',
+      JSON.stringify({ id: 'profile-1' })
+    );
+    localStorage.setItem('care-funding-v1:user-1:profile-1', 'funding-1');
+
+    try {
+      const request = applyCareRequestHeaders(
+        {
+          url: '/resource',
+          baseURL: '/api/',
+          headers: { 'Idempotency-Key': 'request-key' }
+        },
+        '/api/'
+      );
+
+      expect(request.headers).toMatchObject({
+        'X-Care-Profile-Id': 'profile-1',
+        'X-Care-Funding-Id': 'funding-1'
+      });
+      expect(request.headers['Idempotency-Key']).toBe('request-key');
+    } finally {
+      localStorage.removeItem('care-selection-v1:user-1');
+      localStorage.removeItem('care-funding-v1:user-1:profile-1');
+      store.getState().app.userData = previousUser;
+      if (previousFlag === undefined)
+        delete process.env.REACT_APP_CARE_COLLABORATION;
+      else process.env.REACT_APP_CARE_COLLABORATION = previousFlag;
+    }
+  });
+
+  it('does not add care headers to cross-origin requests with a relative API base', () => {
+    const previousFlag = process.env.REACT_APP_CARE_COLLABORATION;
+    process.env.REACT_APP_CARE_COLLABORATION = 'true';
+    const user = { id: 'user-2' };
+    const store = getStore();
+    const previousUser = store.getState().app.userData;
+    store.getState().app.userData = user;
+    localStorage.setItem(
+      'care-selection-v1:user-2',
+      JSON.stringify({ id: 'profile-2' })
+    );
+    localStorage.setItem('care-funding-v1:user-2:profile-2', 'funding-2');
+
+    try {
+      const request = applyCareRequestHeaders(
+        {
+          url: 'https://external.example/resource',
+          baseURL: '/api/',
+          headers: {}
+        },
+        '/api/'
+      );
+
+      expect(request.headers).not.toHaveProperty('X-Care-Profile-Id');
+      expect(request.headers).not.toHaveProperty('X-Care-Funding-Id');
+      expect(request.headers).not.toHaveProperty('Idempotency-Key');
+    } finally {
+      localStorage.removeItem('care-selection-v1:user-2');
+      localStorage.removeItem('care-funding-v1:user-2:profile-2');
+      store.getState().app.userData = previousUser;
+      if (previousFlag === undefined)
+        delete process.env.REACT_APP_CARE_COLLABORATION;
+      else process.env.REACT_APP_CARE_COLLABORATION = previousFlag;
+    }
+  });
+
+  it('does not add care headers when a request overrides the API base cross-origin', () => {
+    const previousFlag = process.env.REACT_APP_CARE_COLLABORATION;
+    process.env.REACT_APP_CARE_COLLABORATION = 'true';
+    const user = { id: 'user-3' };
+    const store = getStore();
+    const previousUser = store.getState().app.userData;
+    store.getState().app.userData = user;
+    localStorage.setItem(
+      'care-selection-v1:user-3',
+      JSON.stringify({ id: 'profile-3' })
+    );
+    localStorage.setItem('care-funding-v1:user-3:profile-3', 'funding-3');
+
+    try {
+      const request = applyCareRequestHeaders(
+        {
+          url: '/resource',
+          baseURL: 'https://external.example/api/',
+          headers: {}
+        },
+        '/api/'
+      );
+
+      expect(request.headers).not.toHaveProperty('X-Care-Profile-Id');
+      expect(request.headers).not.toHaveProperty('X-Care-Funding-Id');
+      expect(request.headers).not.toHaveProperty('Idempotency-Key');
+    } finally {
+      localStorage.removeItem('care-selection-v1:user-3');
+      localStorage.removeItem('care-funding-v1:user-3:profile-3');
+      store.getState().app.userData = previousUser;
+      if (previousFlag === undefined)
+        delete process.env.REACT_APP_CARE_COLLABORATION;
+      else process.env.REACT_APP_CARE_COLLABORATION = previousFlag;
+    }
   });
 
   it('queries closure progress without Bearer or normal 401 redirect handling', async () => {

@@ -46,6 +46,10 @@ const getConnectionStatus = () => {
 };
 
 const initAzureSynthesizer = () => {
+  if (!AZURE_SPEECH_SUBSCR_KEY) {
+    azureSynthesizer = undefined;
+    return;
+  }
   var azureSpeechConfig = azureSdk.SpeechConfig.fromSubscription(
     AZURE_SPEECH_SUBSCR_KEY,
     AZURE_SPEECH_SERVICE_REGION
@@ -452,6 +456,10 @@ const tts = {
         onend({ error: true });
       }
     } else if (voice && voice.voiceSource === 'cloud') {
+      if (!azureSynthesizer) {
+        onend({ error: true });
+        return;
+      }
       initAppleUserAgent();
       const speakAlertTimeoutId = setCloudSpeakAlertTimeout();
       // set voice to speak

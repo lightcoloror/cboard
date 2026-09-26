@@ -3,6 +3,12 @@ import { shallow } from 'enzyme';
 
 import { WelcomeScreen } from './WelcomeScreen.container';
 import Link from '@material-ui/core/Link';
+import Button from '@material-ui/core/Button';
+import {
+  AppleLoginButton,
+  FacebookLoginButton,
+  GoogleLoginButton
+} from 'react-social-login-buttons';
 jest.mock('./WelcomeScreen.messages', () => {
   return {
     login: {
@@ -44,6 +50,69 @@ it('renders without crashing', () => {
   };
   shallow(<WelcomeScreen {...props} />);
 });
+
+it('limits the enabled cloud trial to test-account login or local use', () => {
+  const original = process.env.REACT_APP_TUYUJIA_CLOUD_TRIAL;
+  const finishFirstVisit = jest.fn();
+  const props = {
+    intl: intlMock,
+    classes: { WelcomeScreen: 'WelcomeScreen' },
+    finishFirstVisit
+  };
+
+  try {
+    process.env.REACT_APP_TUYUJIA_CLOUD_TRIAL = 'true';
+    const trial = shallow(<WelcomeScreen {...props} />);
+    expect(trial.find('.WelcomeScreen__cloud-trial').text()).toContain(
+      '图语家 · 云端受限试用'
+    );
+    expect(trial.find('.WelcomeScreen__cloud-trial').text()).toContain(
+      '专用测试账号和合成资料'
+    );
+    expect(trial.find(Button)).toHaveLength(2);
+    expect(
+      trial
+        .find(Button)
+        .at(1)
+        .text()
+    ).toContain('本地使用（下次再说）');
+    expect(
+      trial
+        .find(Button)
+        .someWhere(button =>
+          String(button.prop('className')).includes('--signup')
+        )
+    ).toBe(false);
+    expect(trial.find(GoogleLoginButton)).toHaveLength(0);
+    expect(trial.find(FacebookLoginButton)).toHaveLength(0);
+    expect(trial.find(AppleLoginButton)).toHaveLength(0);
+    expect(trial.find(Link)).toHaveLength(0);
+    trial
+      .find(Button)
+      .at(1)
+      .simulate('click');
+    expect(finishFirstVisit).toHaveBeenCalledTimes(1);
+    trial.unmount();
+
+    delete process.env.REACT_APP_TUYUJIA_CLOUD_TRIAL;
+    const standard = shallow(<WelcomeScreen {...props} />);
+    expect(standard.find('.WelcomeScreen__cloud-trial')).toHaveLength(0);
+    expect(
+      standard
+        .find(Button)
+        .someWhere(button =>
+          String(button.prop('className')).includes('--signup')
+        )
+    ).toBe(true);
+    expect(standard.find(Link)).toHaveLength(2);
+    standard.unmount();
+  } finally {
+    if (original === undefined)
+      delete process.env.REACT_APP_TUYUJIA_CLOUD_TRIAL;
+    else process.env.REACT_APP_TUYUJIA_CLOUD_TRIAL = original;
+  }
+});
+
 it('uses configured care policies and never falls back to upstream policies', () => {
   const keys = [
     'REACT_APP_CARE_COLLABORATION',

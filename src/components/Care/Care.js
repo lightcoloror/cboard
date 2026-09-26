@@ -28,6 +28,7 @@ configureCareLocalAccount(() => identity()?.id);
 export const runtime = {
   enabled: process.env.REACT_APP_CARE_COLLABORATION === 'true',
   trialEnabled: process.env.REACT_APP_CARE_PUBLIC_TRIAL === 'true',
+  fundingEnabled: process.env.REACT_APP_TUYUJIA_CLOUD_TRIAL !== 'true',
   identity,
   resolveBuiltinImage: reference => builtinImages.resolve(reference),
   openAccount: () => history.replace('/login-signup'),
