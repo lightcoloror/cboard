@@ -1,5 +1,8 @@
 import { getCboardCommunicationConceptProfile } from './cboardConceptProfiles';
-import { findChineseCommunicationEntry } from './chineseLexicon';
+import {
+  findChineseCommunicationEntry,
+  isAutomaticCommunicationCandidateAllowed
+} from './chineseLexicon';
 import {
   resolveCommunicationBoardName,
   resolveCommunicationTileLabel
@@ -8,10 +11,38 @@ import { segmentChineseCommunicationText } from './segmentation';
 import { getCommunicationTileMetadata } from './tileMetadata';
 import { applyWorkspaceCorrectionMemory } from './correctionMemory';
 import { getPictogramAttribution } from './pictogramAttribution';
+import { getReviewedLookupToken } from './reviewedArasaac';
 
 const NEGATION_PREFIXES = ['不', '没', '别', '勿', '莫', '未'];
 const MATCH_STAGE_GAP = 100;
 const DOMAIN_MATCH_BONUS = 40;
+const TEXT_SEPARATOR_CHARS = new Set(
+  Array.from('，。？！、；：,.!?;:"\'“”‘’（）()【】[]{}《》<>…—-')
+);
+
+function isSeparatorToken(token) {
+  return (
+    Boolean(token) &&
+    Array.from(token).every(
+      char => /\s/.test(char) || TEXT_SEPARATOR_CHARS.has(char)
+    )
+  );
+}
+
+export function createTextCommunicationCatalogItem(token, id) {
+  return {
+    id,
+    displayLabel: token,
+    textOnly: true,
+    boardId: '',
+    boardName: '',
+    labels: [token],
+    synonyms: [],
+    excludeTokens: [],
+    semanticDomain: null,
+    tile: { id, label: token, vocalization: token, image: '' }
+  };
+}
 
 const MATCH_STAGE_SCORE = {
   exact: MATCH_STAGE_GAP * 4,
@@ -153,6 +184,17 @@ function buildExclusionTerms(token, candidate, lexiconEntry) {
 }
 
 function scoreCandidate(token, candidate, lexiconEntry) {
+  // Old/default/user-saved board synonym fields may still contain the unsafe
+  // aliases. Apply the same guard at every automatic candidate stage.
+  if (
+    !isAutomaticCommunicationCandidateAllowed(
+      token,
+      candidate.tile.displayLabel,
+      candidate.tile.tile.vocalization || candidate.tile.displayLabel
+    )
+  ) {
+    return Number.NEGATIVE_INFINITY;
+  }
   const base = MATCH_STAGE_SCORE[candidate.matchType];
   const excludedTokens = new Set(candidate.tile.excludeTokens || []);
   const exclusionTerms = buildExclusionTerms(token, candidate, lexiconEntry);
@@ -251,7 +293,8 @@ function mergeUnmatchedWithNextToken(matches, catalog) {
     const current = matches[index];
     const next = matches[index + 1];
 
-    if (!current.tile && next) {
+    const currentEntry = findChineseCommunicationEntry(current.token);
+    if (!current.tile && next && !(currentEntry && currentEntry.exactOnly)) {
       const combinedToken = current.token + next.token;
       const lexiconEntry = findChineseCommunicationEntry(combinedToken);
       const exactCandidates = catalog.filter(item =>
@@ -294,43 +337,16 @@ export function matchTextToCommunicationTiles(text, boards, options = {}) {
     : segmentChineseCommunicationText(text);
   const segmentation = {
     ...rawSegmentation,
-    segments: normalizeSegments(rawSegmentation.segments)
+    segments: options.preserveSegments
+      ? rawSegmentation.segments.slice()
+      : normalizeSegments(rawSegmentation.segments)
   };
   const catalog = buildCommunicationTileCatalog(boards, options.intl);
   let matches = segmentation.segments.map((token, index) => {
-    const previousToken = index > 0 ? segmentation.segments[index - 1] : '';
-    const negatedToken = NEGATION_PREFIXES.includes(previousToken)
-      ? previousToken + token
-      : '';
     const lexiconEntry = findChineseCommunicationEntry(token);
-    const negatedLexiconEntry = negatedToken
-      ? findChineseCommunicationEntry(negatedToken)
-      : null;
     let matched = null;
-
-    if (negatedLexiconEntry) {
-      const negatedCandidate = pickBestCandidate(
-        negatedToken,
-        mapCandidates(
-          catalog.filter(item => item.labels.includes(negatedLexiconEntry.zh)),
-          'lexicon-synonym',
-          negatedLexiconEntry.zh
-        ),
-        negatedLexiconEntry
-      );
-
-      if (negatedCandidate) {
-        matched = negatedCandidate;
-      }
-    }
-
-    if (!matched && negatedToken) {
-      return {
-        token,
-        tile: null,
-        matchType: 'none'
-      };
-    }
+    // Match this occurrence only. Looking across a preserved boundary used to
+    // turn [不, 开心] into [不, 伤心], duplicating the negation in the output.
 
     const exactCandidate = pickBestCandidate(
       token,
@@ -363,10 +379,13 @@ export function matchTextToCommunicationTiles(text, boards, options = {}) {
     }
 
     if (!matched && lexiconEntry) {
+      const allowedLabels = lexiconEntry.automaticLabels || [lexiconEntry.zh];
       const lexiconCandidate = pickBestCandidate(
         token,
         mapCandidates(
-          catalog.filter(item => item.labels.includes(lexiconEntry.zh)),
+          catalog.filter(item =>
+            item.labels.some(label => allowedLabels.includes(label))
+          ),
           'lexicon-synonym',
           lexiconEntry.zh
         ),
@@ -378,8 +397,23 @@ export function matchTextToCommunicationTiles(text, boards, options = {}) {
       }
     }
 
+    // A curated lookup alias may select an image without replacing the source.
+    const lookupToken = getReviewedLookupToken(token);
+    if (!matched && lookupToken !== token) {
+      matched = pickBestCandidate(
+        token,
+        mapCandidates(
+          catalog.filter(item => item.labels.includes(lookupToken)),
+          'lexicon-synonym',
+          lookupToken
+        ),
+        findChineseCommunicationEntry(lookupToken)
+      );
+    }
+
     if (
       !matched &&
+      options.allowPartial !== false &&
       token.length >= 3 &&
       !NEGATION_PREFIXES.some(prefix => token.startsWith(prefix))
     ) {
@@ -416,10 +450,24 @@ export function matchTextToCommunicationTiles(text, boards, options = {}) {
       }
     }
 
+    if (!matched && isSeparatorToken(token)) {
+      return {
+        token,
+        tile: createTextCommunicationCatalogItem(
+          token,
+          `text-separator-${index}`
+        ),
+        matchType: 'manual',
+        source: 'text'
+      };
+    }
     return {
       token,
       tile: matched ? matched.tile : null,
-      matchType: matched ? matched.matchType : 'none'
+      matchType: matched ? matched.matchType : 'none',
+      ...(matched && matched.matchedKey !== token
+        ? { lookupToken: matched.matchedKey }
+        : {})
     };
   });
 
@@ -433,6 +481,17 @@ export function matchTextToCommunicationTiles(text, boards, options = {}) {
     catalog,
     options.correctionMemory
   );
+  if (matches.map(item => item.token).join('') === text) {
+    let cursor = 0;
+    matches = matches.map(item => {
+      const start = cursor;
+      cursor += Array.from(item.token).length;
+      return {
+        ...item,
+        sourceSpan: { start, end: cursor, offsetUnit: 'unicode-code-point' }
+      };
+    });
+  }
   const matchedCount = matches.filter(item => item.tile).length;
 
   return {
@@ -445,8 +504,20 @@ export function matchTextToCommunicationTiles(text, boards, options = {}) {
 
 export function createCommunicationOutputFromMatches(matches) {
   return (matches || [])
-    .filter(item => item.tile)
+    .filter(
+      item =>
+        item.tile && !(item.tile.textOnly && !String(item.token || '').trim())
+    )
     .map(item => {
+      if (item.tile.textOnly) {
+        return {
+          id: item.tile.id,
+          label: item.token,
+          vocalization: item.token,
+          image: '',
+          textOnly: true
+        };
+      }
       const displayLabel =
         item.tile.displayLabel ||
         item.tile.tile.label ||

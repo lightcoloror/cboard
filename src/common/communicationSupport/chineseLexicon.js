@@ -3,9 +3,60 @@ export const CHINESE_COMMUNICATION_LEXICON = [
   { zh: '你', synonyms: ['您'], category: 'daily' },
   { zh: '他', synonyms: [], category: 'daily' },
   { zh: '她', synonyms: [], category: 'daily' },
-  { zh: '好', synonyms: ['可以', '行', '嗯', '好的', '对'], category: 'daily' },
-  { zh: '不', synonyms: ['没', '不是', '否'], category: 'daily' },
-  { zh: '有', synonyms: ['是', '对', '有的'], category: 'daily' },
+  { zh: '好', synonyms: ['行', '嗯', '好的'], category: 'daily' },
+  {
+    zh: '是',
+    synonyms: [],
+    relatedTerms: ['有'],
+    exactOnly: true,
+    category: 'daily'
+  },
+  {
+    zh: '对',
+    synonyms: [],
+    relatedTerms: ['好', '有'],
+    exactOnly: true,
+    category: 'daily'
+  },
+  {
+    zh: '可以',
+    synonyms: [],
+    relatedTerms: ['好'],
+    exactOnly: true,
+    category: 'daily'
+  },
+  // Related negation forms are not interchangeable utterances. Keep them as
+  // independent segmentation terms; relatedTerms never enters the match index.
+  { zh: '不', synonyms: [], category: 'daily' },
+  {
+    zh: '没',
+    synonyms: [],
+    relatedTerms: ['不'],
+    exactOnly: true,
+    category: 'daily'
+  },
+  {
+    zh: '没有',
+    synonyms: [],
+    relatedTerms: ['没'],
+    exactOnly: true,
+    category: 'daily'
+  },
+  {
+    zh: '不是',
+    synonyms: [],
+    relatedTerms: ['不'],
+    exactOnly: true,
+    category: 'daily'
+  },
+  {
+    zh: '否',
+    synonyms: [],
+    relatedTerms: ['不'],
+    exactOnly: true,
+    category: 'daily'
+  },
+  { zh: '有', synonyms: ['有的'], category: 'daily' },
   { zh: '谢谢', synonyms: ['感谢', '多谢'], category: 'emotions' },
   {
     zh: '想',
@@ -13,7 +64,7 @@ export const CHINESE_COMMUNICATION_LEXICON = [
     category: 'actions'
   },
   { zh: '要', synonyms: ['想要', '需要', '需'], category: 'actions' },
-  { zh: '去', synonyms: ['走', '出去'], category: 'actions' },
+  { zh: '去', synonyms: ['出去'], category: 'actions' },
   { zh: '来', synonyms: ['过来'], category: 'actions' },
   { zh: '吃', synonyms: ['进食', '用餐', '吃饭'], category: 'actions' },
   { zh: '喝', synonyms: ['饮'], category: 'actions' },
@@ -22,11 +73,46 @@ export const CHINESE_COMMUNICATION_LEXICON = [
   { zh: '说', synonyms: ['讲', '告诉'], category: 'actions' },
   { zh: '玩', synonyms: ['游戏'], category: 'actions' },
   { zh: '休息', synonyms: ['歇', '歇歇'], category: 'actions' },
-  { zh: '睡觉', synonyms: ['睡', '躺', '困'], category: 'actions' },
-  { zh: '起床', synonyms: ['起来'], category: 'actions' },
+  { zh: '睡觉', synonyms: ['睡'], category: 'actions' },
+  {
+    zh: '躺',
+    synonyms: [],
+    relatedTerms: ['睡觉'],
+    exactOnly: true,
+    category: 'actions'
+  },
+  {
+    zh: '困',
+    synonyms: [],
+    relatedTerms: ['睡觉'],
+    exactOnly: true,
+    category: 'emotions'
+  },
+  { zh: '起床', synonyms: [], category: 'actions' },
+  {
+    zh: '起来',
+    synonyms: [],
+    relatedTerms: ['起床', '站'],
+    exactOnly: true,
+    category: 'actions'
+  },
   { zh: '坐', synonyms: ['坐下'], category: 'actions' },
   { zh: '站', synonyms: ['站起来'], category: 'actions' },
-  { zh: '走', synonyms: ['走路', '散步'], category: 'actions' },
+  {
+    zh: '走',
+    synonyms: ['走路'],
+    relatedTerms: ['去'],
+    exactOnly: true,
+    automaticLabels: ['走', '走路'],
+    category: 'actions'
+  },
+  {
+    zh: '散步',
+    synonyms: [],
+    relatedTerms: ['走'],
+    exactOnly: true,
+    category: 'actions'
+  },
   { zh: '跑', synonyms: ['跑步'], category: 'actions' },
   {
     zh: '帮忙',
@@ -35,28 +121,89 @@ export const CHINESE_COMMUNICATION_LEXICON = [
   },
   { zh: '叫', synonyms: ['喊', '叫人', '找'], category: 'actions' },
   { zh: '买', synonyms: ['购买', '购物'], category: 'actions' },
-  { zh: '洗手', synonyms: ['洗'], category: 'actions' },
-  { zh: '刷牙', synonyms: ['刷'], category: 'actions' },
-  { zh: '不要', synonyms: ['不想', '不需要', '不用'], category: 'actions' },
-  { zh: '回家', synonyms: ['回去'], category: 'actions' },
+  { zh: '洗手', synonyms: [], category: 'actions' },
+  {
+    zh: '洗',
+    synonyms: [],
+    relatedTerms: ['洗手'],
+    exactOnly: true,
+    category: 'actions'
+  },
+  { zh: '刷牙', synonyms: [], category: 'actions' },
+  {
+    zh: '刷',
+    synonyms: [],
+    relatedTerms: ['刷牙'],
+    exactOnly: true,
+    category: 'actions'
+  },
+  { zh: '不要', synonyms: [], category: 'actions' },
+  {
+    zh: '不想',
+    synonyms: [],
+    relatedTerms: ['不要'],
+    exactOnly: true,
+    category: 'actions'
+  },
+  {
+    zh: '不需要',
+    synonyms: [],
+    relatedTerms: ['不要'],
+    exactOnly: true,
+    category: 'actions'
+  },
+  {
+    zh: '不用',
+    synonyms: [],
+    relatedTerms: ['不要'],
+    exactOnly: true,
+    category: 'actions'
+  },
+  { zh: '回家', synonyms: [], category: 'actions' },
+  {
+    zh: '回去',
+    synonyms: [],
+    relatedTerms: ['回家'],
+    exactOnly: true,
+    category: 'actions'
+  },
   { zh: '开心', synonyms: ['高兴', '快乐', '愉快'], category: 'emotions' },
   { zh: '伤心', synonyms: ['难过', '不开心', '悲伤'], category: 'emotions' },
   { zh: '害怕', synonyms: ['怕', '恐惧', '吓'], category: 'emotions' },
   { zh: '喜欢', synonyms: ['爱', '喜爱'], category: 'emotions' },
   {
     zh: '痛',
-    synonyms: [
-      '疼',
-      '疼痛',
-      '腰疼',
-      '腰痛',
-      '牙疼',
-      '牙痛',
-      '背疼',
-      '背痛',
-      '腿疼',
-      '腿痛'
-    ],
+    synonyms: ['疼', '疼痛'],
+    category: 'medical'
+  },
+  // A generic pain tile cannot carry the body location. Explicit label pairs
+  // allow genuine spelling variants without accepting legacy broad synonyms.
+  {
+    zh: '腰痛',
+    synonyms: ['腰疼'],
+    exactOnly: true,
+    automaticLabels: ['腰痛', '腰疼'],
+    category: 'medical'
+  },
+  {
+    zh: '牙痛',
+    synonyms: ['牙疼'],
+    exactOnly: true,
+    automaticLabels: ['牙痛', '牙疼'],
+    category: 'medical'
+  },
+  {
+    zh: '背痛',
+    synonyms: ['背疼'],
+    exactOnly: true,
+    automaticLabels: ['背痛', '背疼'],
+    category: 'medical'
+  },
+  {
+    zh: '腿痛',
+    synonyms: ['腿疼'],
+    exactOnly: true,
+    automaticLabels: ['腿痛', '腿疼'],
     category: 'medical'
   },
   { zh: '头痛', synonyms: ['头疼'], category: 'medical' },
@@ -271,6 +418,20 @@ CHINESE_COMMUNICATION_LEXICON.forEach(entry => {
 
 export function findChineseCommunicationEntry(word) {
   return zhIndex.get(word) || synonymIndex.get(word);
+}
+
+export function isAutomaticCommunicationCandidateAllowed(
+  word,
+  displayLabel,
+  spokenLabel = displayLabel
+) {
+  const entry = findChineseCommunicationEntry(word);
+  return (
+    !(entry && entry.exactOnly) ||
+    [displayLabel, spokenLabel].every(
+      label => label === word || (entry.automaticLabels || []).includes(label)
+    )
+  );
 }
 
 export function getChineseCommunicationSegmentationTerms() {

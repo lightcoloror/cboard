@@ -1,6 +1,6 @@
 import { getChineseCommunicationSegmentationTerms } from './chineseLexicon';
 import {
-  getReviewedArasaacSegmentationRewrite,
+  getReviewedSourceSegments,
   getReviewedArasaacSegmentationTerms
 } from './reviewedArasaac';
 
@@ -34,7 +34,7 @@ const SPLIT_COMPOUNDS = {
   换衣服: ['换', '衣服'],
   冷不冷: ['冷', '不冷'],
   热不热: ['热', '不热'],
-  家里人: ['家人'],
+  家里人: ['家里人'],
   痛不痛: ['痛', '不', '痛'],
   不痛: ['不', '痛'],
   喝水: ['喝', '水'],
@@ -64,7 +64,7 @@ const MERGE_PAIRS = {
   '上+厕+所': '上厕所'
 };
 
-const STOP_CHARS = new Set([
+const BOUNDARY_CHARS = new Set([
   '，',
   '。',
   '？',
@@ -121,15 +121,15 @@ function findSegmentationTerm(text, index) {
   return null;
 }
 
-function segmentUnknownChunk(chunk, intlSegmenter) {
+function segmentUnknownRun(chunk, intlSegmenter) {
   if (!chunk) {
     return [];
   }
 
   if (intlSegmenter) {
-    return Array.from(intlSegmenter.segment(chunk))
-      .filter(segment => segment.isWordLike)
-      .map(segment => segment.segment);
+    return Array.from(intlSegmenter.segment(chunk)).map(
+      segment => segment.segment
+    );
   }
 
   const tokens = [];
@@ -155,12 +155,43 @@ function segmentUnknownChunk(chunk, intlSegmenter) {
   return tokens;
 }
 
+function segmentUnknownChunk(chunk, intlSegmenter) {
+  // Curated terms were already consumed before this fallback. Preserve an
+  // emphatic run occurrence by occurrence instead of allowing ICU to group
+  // its tail (e.g. one character followed by a two-character unknown word).
+  // Ordinary two-character reduplication and known terms stay untouched.
+  const repetition = /([\u3400-\u9fff])\1{2,}/g;
+  const tokens = [];
+  let cursor = 0;
+  let match;
+  while ((match = repetition.exec(chunk)) !== null) {
+    tokens.push.apply(
+      tokens,
+      segmentUnknownRun(chunk.slice(cursor, match.index), intlSegmenter)
+    );
+    tokens.push.apply(tokens, Array.from(match[0]));
+    cursor = match.index + match[0].length;
+  }
+  tokens.push.apply(tokens, segmentUnknownRun(chunk.slice(cursor), intlSegmenter));
+
+  return tokens.reduce((result, token) => {
+    // Narrow grammatical pairs, not a general negation-prefix splitter:
+    // keep words such as 别墅/不同 and curated 不想/不要 intact. Each source
+    // slice still goes through normal matching, including explicit unmatched.
+    const pair = /^([我你他她它])([还也都又才只就再])$/.exec(token) ||
+      /^([别勿莫])([给让帮碰拿推拉动走])$/.exec(token);
+    result.push.apply(result, pair ? pair.slice(1) : [token]);
+    return result;
+  }, []);
+}
+
 function segmentWithCommunicationTerms(text, intlSegmenter) {
   const raw = [];
   let index = 0;
 
   while (index < text.length) {
-    if (STOP_CHARS.has(text[index])) {
+    if (BOUNDARY_CHARS.has(text[index])) {
+      raw.push(text[index]);
       index += 1;
       continue;
     }
@@ -176,7 +207,7 @@ function segmentWithCommunicationTerms(text, intlSegmenter) {
     index += 1;
     while (
       index < text.length &&
-      !STOP_CHARS.has(text[index]) &&
+      !BOUNDARY_CHARS.has(text[index]) &&
       !findSegmentationTerm(text, index)
     ) {
       index += 1;
@@ -192,7 +223,7 @@ function segmentWithCommunicationTerms(text, intlSegmenter) {
 }
 
 export function segmentChineseCommunicationText(text) {
-  const cleaned = (text || '').trim();
+  const cleaned = String(text || '');
 
   if (!cleaned) {
     return { segments: [], engine: 'intl-segmenter' };
@@ -204,8 +235,10 @@ export function segmentChineseCommunicationText(text) {
   const split = [];
   raw.forEach(word => {
     const rewrite =
-      getReviewedArasaacSegmentationRewrite(word) || SPLIT_COMPOUNDS[word];
-    if (rewrite) {
+      getReviewedSourceSegments(word) ||
+      (Object.prototype.hasOwnProperty.call(SPLIT_COMPOUNDS, word) &&
+        SPLIT_COMPOUNDS[word]);
+    if (rewrite && rewrite.join('') === word) {
       split.push.apply(split, rewrite);
       return;
     }
@@ -241,21 +274,54 @@ export function segmentChineseCommunicationText(text) {
   }
 
   return {
-    segments: merged.filter(word => word && !STOP_CHARS.has(word)),
+    segments: merged,
     engine
   };
 }
 
 export function parseCommunicationSegmentationInput(value) {
-  return String(value || '')
-    .split(/[\s/|，,、]+/)
-    .map(token => token.trim())
-    .filter(Boolean);
+  const raw = String(value || '');
+  // A JSON array makes literal spaces and separator characters round-trip.
+  if (raw.trim().startsWith('[')) {
+    try {
+      const tokens = JSON.parse(raw);
+      if (
+        Array.isArray(tokens) &&
+        tokens.every(token => typeof token === 'string' && token.length > 0)
+      ) {
+        return tokens;
+      }
+    } catch (error) {
+      // Preserve the existing human-readable editing format for legacy input.
+    }
+  }
+  // JSON string escaping protects literal delimiters in the existing slash UI.
+  const tokens = [];
+  const pattern = /("(?:\\.|[^"\\])*")|([^\s/|，,、]+)/g;
+  let part;
+  while ((part = pattern.exec(raw)) !== null) {
+    let token = part[2];
+    if (part[1]) {
+      try {
+        token = JSON.parse(part[1]);
+      } catch (error) {
+        token = part[1];
+      }
+    }
+    if (typeof token === 'string' && token.length > 0) tokens.push(token);
+  }
+  return tokens;
 }
 
 export function formatCommunicationSegmentation(segments) {
-  return (Array.isArray(segments) ? segments : [])
-    .map(token => String(token || '').trim())
-    .filter(Boolean)
+  const tokens = (Array.isArray(segments) ? segments : [])
+    .map(token => String(token || ''))
+    .filter(token => token.length > 0);
+  return tokens
+    .map(token =>
+      /[\s/|，,、"\\]/.test(token) || token.startsWith('[')
+        ? JSON.stringify(token)
+        : token
+    )
     .join(' / ');
 }

@@ -5,6 +5,37 @@ import {
 } from './segmentation';
 
 describe('Chinese communication segmentation', () => {
+  test('shows readable slash boundaries while escaping literal source separators', () => {
+    const tokens = ['我', ' ', '不', '，', '喝水', '/', '"', '\\', '\n', '🙂'];
+    const formatted = formatCommunicationSegmentation(tokens);
+    expect(formatted.startsWith('我 / " " / 不 / "，"')).toBe(true);
+    expect(formatted.startsWith('[')).toBe(false);
+    expect(parseCommunicationSegmentationInput(formatted)).toEqual(tokens);
+    expect(parseCommunicationSegmentationInput(JSON.stringify(tokens))).toEqual(
+      tokens
+    );
+  });
+  test.each([
+    ' 不要不要水吗？ ',
+    '我不吃饭，吃药。',
+    '的了呢啊吧',
+    '🙂我想喝水\n水',
+    '__proto__',
+    '坐轮椅下楼散步'
+  ])('retains every source character in %s on both engines', input => {
+    const verify = () => {
+      const tokens = segmentChineseCommunicationText(input).segments;
+      expect(tokens.join('')).toBe(input);
+      expect(tokens.every(token => token.length > 0)).toBe(true);
+      expect(
+        parseCommunicationSegmentationInput(
+          formatCommunicationSegmentation(tokens)
+        )
+      ).toEqual(tokens);
+    };
+    verify();
+    withoutIntlSegmenter(verify);
+  });
   function withoutIntlSegmenter(run) {
     const segmenterDescriptor = Object.getOwnPropertyDescriptor(
       Intl,
@@ -60,7 +91,7 @@ describe('Chinese communication segmentation', () => {
     ['我不开心', ['我', '不开心']],
     ['我要上厕所', ['我', '要', '上厕所']],
     ['我肚子疼', ['我', '肚子疼']],
-    ['你肚子不舒服吗', ['你', '肚子', '不舒服']],
+    ['你肚子不舒服吗', ['你', '肚子', '不舒服', '吗']],
     ['我头晕', ['我', '头晕']],
     ['你现在痛不痛', ['你', '现在', '痛', '不', '痛']],
     ['痛是一点点还是很痛', ['痛', '是', '一点点', '还是', '很痛']],
@@ -68,20 +99,20 @@ describe('Chinese communication segmentation', () => {
     ['你热不热', ['你', '热', '不热']],
     ['我帮你叫护士', ['我', '帮你', '叫', '护士']],
     ['现在要换尿片', ['现在', '要', '换', '尿片']],
-    ['衣服湿了要换衣服', ['衣服', '湿', '要', '换', '衣服']],
+    ['衣服湿了要换衣服', ['衣服', '湿', '了', '要', '换', '衣服']],
     ['被子要不要盖上', ['被子', '要不要', '盖上']],
     ['枕头高一点', ['枕头', '高', '一点']],
     ['灯关掉好不好', ['灯', '关掉', '好不好']],
     ['要坐车还是走路', ['要', '坐车', '还是', '走路']],
     ['爸爸等一下来看你', ['爸爸', '等一下', '来', '看你']],
-    ['要不要给家里人发消息', ['要不要', '给', '家人', '发消息']],
+    ['要不要给家里人发消息', ['要不要', '给', '家里人', '发消息']],
     ['要不要画画', ['要不要', '画画']],
     ['我想打电话', ['我', '想', '打电话']],
     ['我需要休息', ['我', '需要', '休息']],
-    ['医生下午三点来看你', ['医生', '下午', '三点整', '来', '你']],
-    ['我叫护士', ['我', '说', '护士']],
-    ['坐轮椅下楼散步', ['轮椅', '电梯', '下', '散步']],
-    ['或者抬肘咳嗽', ['抬肘咳嗽']],
+    ['医生下午三点来看你', ['医生', '下午', '三点', '来', '看', '你']],
+    ['我叫护士', ['我', '叫', '护士']],
+    ['坐轮椅下楼散步', ['坐', '轮椅', '下楼', '散步']],
+    ['或者抬肘咳嗽', ['或者', '抬肘咳嗽']],
     ['开心果', ['开心果']],
     ['苹果手机', ['苹果手机']]
   ];
@@ -103,6 +134,9 @@ describe('Chinese communication segmentation', () => {
     'protects receiver semantics in %s',
     (input, expected) => {
       expect(segmentChineseCommunicationText(input).segments).toEqual(expected);
+      expect(segmentChineseCommunicationText(input).segments.join('')).toBe(
+        input
+      );
     }
   );
 
@@ -112,6 +146,9 @@ describe('Chinese communication segmentation', () => {
       withoutIntlSegmenter(() => {
         expect(segmentChineseCommunicationText(input).segments).toEqual(
           expected
+        );
+        expect(segmentChineseCommunicationText(input).segments.join('')).toBe(
+          input
         );
       });
     }
@@ -170,16 +207,16 @@ describe('Chinese communication segmentation', () => {
   test.each([
     ['我们去阳台坐一会儿。', ['一会儿']],
     ['晚上九点，我们睡觉。', ['九点']],
-    ['医生下午三点来看你。', ['三点整']],
+    ['医生下午三点来看你。', ['三点']],
     ['电视声音大，我降低音量。', ['声音大']],
     ['天气晴朗，我们坐轮椅下楼散步。', ['天气晴朗']],
     ['有人叫门，我去开门。', ['有人叫门']],
     ['眼镜在床头柜上面，我拿给你。', ['拿', '给']],
-    ['你呼吸困难，马上告诉我。', ['呼吸', '困难的']],
-    ['现在康复，抬手，然后走一点路。', ['抬起', '手', '走路', '少许']],
-    ['出门前，我拿钥匙上锁。', ['出去', '之前']],
-    ['有事告诉我。', ['说', '我']],
-    ['你想听安静的音乐吗？', ['听音乐', '安静的']]
+    ['你呼吸困难，马上告诉我。', ['呼吸', '困难']],
+    ['现在康复，抬手，然后走一点路。', ['抬', '手', '走', '一点', '路']],
+    ['出门前，我拿钥匙上锁。', ['出门', '前']],
+    ['有事告诉我。', ['有事', '告诉', '我']],
+    ['你想听安静的音乐吗？', ['听', '安静', '的', '音乐']]
   ])('keeps reviewed scenario phrase boundaries in %s', (input, concepts) => {
     expect(segmentChineseCommunicationText(input).segments).toEqual(
       expect.arrayContaining(concepts)
@@ -189,13 +226,13 @@ describe('Chinese communication segmentation', () => {
   test.each([
     ['杯子里的水，温度好。', ['杯子', '水']],
     ['现在第一步吃药。', ['第一']],
-    ['冰箱里的鸡汤还有一点。', ['冰箱', '鸡汤', '少许']],
+    ['冰箱里的鸡汤还有一点。', ['冰箱', '鸡汤', '一点']],
     ['太阳出来了。', ['太阳']],
-    ['我帮助你换干净的尿布。', ['换尿布', '干净的', '尿布']],
+    ['我帮助你换干净的尿布。', ['换', '干净', '的', '尿布']],
     ['我帮助你洗澡，然后用毛巾擦干。', ['毛巾', '擦干']],
     ['汤烫，用勺子慢慢喝。', ['勺子']],
     ['我们用手机打电话给妈妈。', ['手机', '打电话']],
-    ['吃药时间到了，先喝水。', ['时间', '药']],
+    ['吃药时间到了，先喝水。', ['吃药', '时间', '到', '了']],
     ['咳嗽，用纸巾遮住嘴。', ['纸巾', '嘴']],
     ['地面有水，小心走路。', ['地面', '水']]
   ])('reuses reviewed sequence fragments in %s', (input, concepts) => {
