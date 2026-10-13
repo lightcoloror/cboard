@@ -43,7 +43,7 @@ const CBOARD_COMMUNICATION_CONCEPT_PROFILES = {
   },
   'cboard.symbol.sad': {
     label: '伤心',
-    synonyms: ['难过', '不开心', '悲伤'],
+    synonyms: ['难过', '悲伤'],
     excludeTokens: [],
     category: 'emotions'
   },
@@ -67,7 +67,7 @@ const CBOARD_COMMUNICATION_CONCEPT_PROFILES = {
   },
   'symbol.drinkType.water': {
     label: '水',
-    synonyms: ['饮水', '喝水', '杯水'],
+    synonyms: ['杯水'],
     excludeTokens: [],
     category: 'food'
   },
@@ -79,7 +79,7 @@ const CBOARD_COMMUNICATION_CONCEPT_PROFILES = {
   },
   'symbol.drinkType.tea': {
     label: '茶',
-    synonyms: ['喝茶'],
+    synonyms: [],
     excludeTokens: [],
     category: 'food'
   },
@@ -169,7 +169,7 @@ const CBOARD_COMMUNICATION_CONCEPT_PROFILES = {
   },
   'symbol.healthcareMedicalItems.medicine': {
     label: '药',
-    synonyms: ['药物', '吃药', '服药'],
+    synonyms: ['药物'],
     excludeTokens: [],
     category: 'medical'
   },

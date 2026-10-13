@@ -195,7 +195,8 @@ function scoreCandidate(token, candidate, lexiconEntry) {
     !isAutomaticCommunicationCandidateAllowed(
       token,
       candidate.tile.displayLabel,
-      candidate.tile.tile.vocalization || candidate.tile.displayLabel
+      candidate.tile.tile.vocalization || candidate.tile.displayLabel,
+      candidate.tile.tile
     )
   ) {
     return Number.NEGATIVE_INFINITY;

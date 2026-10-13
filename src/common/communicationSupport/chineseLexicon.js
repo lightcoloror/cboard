@@ -226,7 +226,9 @@ export const CHINESE_COMMUNICATION_LEXICON = [
     category: 'actions'
   },
   { zh: '开心', synonyms: ['高兴', '快乐', '愉快'], category: 'emotions' },
-  { zh: '伤心', synonyms: ['难过', '不开心', '悲伤'], category: 'emotions' },
+  { zh: '伤心', synonyms: ['难过', '悲伤'], category: 'emotions' },
+  // Unhappy may mean angry, disappointed, etc.; do not infer sadness.
+  { zh: '不开心', synonyms: [], exactOnly: true, category: 'emotions' },
   { zh: '害怕', synonyms: ['怕', '恐惧', '吓'], category: 'emotions' },
   { zh: '喜欢', synonyms: ['爱', '喜爱'], category: 'emotions' },
   {
@@ -395,10 +397,12 @@ export const CHINESE_COMMUNICATION_LEXICON = [
   { zh: '公园', synonyms: ['花园'], category: 'places' },
   { zh: '超市', synonyms: ['商店', '商场', '购物'], category: 'places' },
   { zh: '厕所', synonyms: ['洗手间', '卫生间', '上厕所'], category: 'daily' },
-  { zh: '水', synonyms: ['饮水', '喝水', '杯水'], category: 'food' },
+  { zh: '水', synonyms: ['杯水'], category: 'food' },
+  { zh: '喝水', synonyms: ['饮水'], exactOnly: true, automaticLabels: ['喝水', '饮水'], category: 'actions' },
   { zh: '饭', synonyms: ['米饭', '餐'], category: 'food' },
   { zh: '牛奶', synonyms: ['奶'], category: 'food' },
-  { zh: '茶', synonyms: ['喝茶'], category: 'food' },
+  { zh: '茶', synonyms: [], category: 'food' },
+  { zh: '喝茶', synonyms: [], exactOnly: true, category: 'actions' },
   { zh: '咖啡', synonyms: [], category: 'food' },
   { zh: '面包', synonyms: [], category: 'food' },
   { zh: '苹果', synonyms: [], category: 'food' },
@@ -409,7 +413,7 @@ export const CHINESE_COMMUNICATION_LEXICON = [
   { zh: '糖', synonyms: ['糖果'], category: 'food' },
   { zh: '冰淇淋', synonyms: ['雪糕'], category: 'food' },
   { zh: '药', synonyms: ['药物'], category: 'objects' },
-  { zh: '吃药', synonyms: ['服药'], category: 'actions' },
+  { zh: '吃药', synonyms: ['服药'], exactOnly: true, automaticLabels: ['吃药', '服药'], category: 'actions' },
   // Unspecified slower movement/eating must not imply slower speech.
   { zh: '慢一点', synonyms: [], exactOnly: true, category: 'actions' },
   { zh: '慢点', synonyms: [], exactOnly: true, category: 'actions' },
@@ -545,8 +549,16 @@ export function findChineseCommunicationEntry(word) {
 export function isAutomaticCommunicationCandidateAllowed(
   word,
   displayLabel,
-  spokenLabel = displayLabel
+  spokenLabel = displayLabel,
+  tile = {}
 ) {
+  // Correct the English "can" noun/permission collision in saved boards and
+  // cached suggestions too. Explicit caregiver choices remain manual choices.
+  const attribution = tile.pictogramAttribution || {};
+  const isTinCan = String(tile.pictogramOriginalId || '') === '6544' ||
+    (attribution.provider === 'arasaac' && String(attribution.originalId) === '6544') ||
+    /(?:^|\/)6544\.png(?:[?#]|$)/.test(String(tile.image || ''));
+  if (isTinCan && ['可以', '能', '能够'].includes(word)) return false;
   const entry = findChineseCommunicationEntry(word);
   return (
     !(entry && entry.exactOnly) ||

@@ -98,7 +98,8 @@ export function findSafeLocalMissingTokenResolutions(records, catalog) {
         !isAutomaticCommunicationCandidateAllowed(
           normalizedToken,
           candidate.displayLabel || tile.label,
-          tile.vocalization || candidate.displayLabel || tile.label
+          tile.vocalization || candidate.displayLabel || tile.label,
+          tile
         )
       )
         return false;
@@ -465,7 +466,8 @@ export function applyMissingTokenResolutions(reviewItems, records, catalog) {
         candidate.displayLabel || (candidate.tile && candidate.tile.label),
         (candidate.tile && candidate.tile.vocalization) ||
           candidate.displayLabel ||
-          (candidate.tile && candidate.tile.label)
+          (candidate.tile && candidate.tile.label),
+        candidate.tile || {}
       )
     ) {
       return item;

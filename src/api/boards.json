@@ -948,7 +948,7 @@
         },
         {
           "labelKey": "symbol.drinkType.drink",
-          "image": "/symbols/mulberry/drink.svg",
+          "image": "/symbols/mulberry/drink_,_to.svg",
           "id": "ryctMA9amqtZ",
           "backgroundColor": "rgb(255, 241, 118)"
         },
@@ -5870,13 +5870,13 @@
           "pictogramOriginalId": "37160"
         },
         {
-          "label": "可以",
-          "vocalization": "可以",
+          "label": "罐头",
+          "vocalization": "罐头",
           "image": "/symbols/arasaac/picinterpreter-care/6544.png",
           "id": "pi-core-can",
           "backgroundColor": "rgb(255, 241, 118)",
-          "communicationSynonyms": "能,能够",
-          "communicationCategory": "core",
+          "communicationSynonyms": "罐头盒",
+          "communicationCategory": "food",
           "pictogramProvider": "arasaac",
           "pictogramOriginalId": "6544"
         },

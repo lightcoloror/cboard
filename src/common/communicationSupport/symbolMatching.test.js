@@ -610,9 +610,7 @@ describe('communication symbol matching with cboard defaults', () => {
       });
 
       expect(unhappy.segmentation.segments).toEqual(['我', '不开心']);
-      expect(findMatch(unhappy, '不开心').tile.tile.labelKey).toBe(
-        'cboard.symbol.sad'
-      );
+      expect(findMatch(unhappy, '不开心').tile).toBeNull();
       expect(stomachAche.segmentation.segments).toEqual(['我', '肚子疼']);
       expect(findMatch(stomachAche, '肚子疼').tile.tile.labelKey).toBe(
         'symbol.healthcareMedicalConditions.stomachAche'
@@ -651,12 +649,11 @@ describe('communication symbol matching with cboard defaults', () => {
     );
   });
 
-  test('uses the sad concept for negated happiness', () => {
+  test('does not infer sadness from negated happiness', () => {
     const result = matchSegments(['不开心']);
     const match = findMatch(result, '不开心');
 
-    expect(match.tile.tile.labelKey).toBe('cboard.symbol.sad');
-    expect(match.tile.tile.labelKey).not.toBe('cboard.symbol.happy');
+    expect(match.tile).toBeNull();
   });
 
   test('hard-blocks risky partial matches', () => {
@@ -753,9 +750,8 @@ describe('communication symbol matching with cboard defaults', () => {
     expect(findMatch(result, '手机').tile.tile.labelKey).toBe(
       'symbol.electricalPhone.iphone'
     );
-    expect(findMatch(result, '吃药').tile.tile.labelKey).toBe(
-      'symbol.healthcareMedicalItems.medicine'
-    );
+    // An object-only medicine drawing does not express taking medicine.
+    expect(findMatch(result, '吃药').tile).toBeNull();
 
     ['难受', '不舒服'].forEach(token => {
       expect(findMatch(result, token).tile.id).toBe('pi-home-uncomfortable');
