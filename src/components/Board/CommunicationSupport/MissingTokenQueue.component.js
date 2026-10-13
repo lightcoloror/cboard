@@ -44,6 +44,8 @@ const DEFAULT_COPY = {
   onlineEmpty: '在线搜索完成，暂时没有找到合适图片。',
   onlineFailed: '在线搜索失败，离线沟通不受影响。',
   onlineSuggestion: '在线建议',
+  semanticConflict: '图片来源含义与当前词语不同，请核对图片后再决定。',
+  semanticUnverified: '候选图片尚未确认含义，请结合原句核对。',
   confirmOnline: '确认使用',
   cachingOnline: '正在保存离线图片...',
   cacheFailed: '图片下载或本机保存失败，尚未采用，请重试。',
@@ -504,6 +506,12 @@ export default function MissingTokenQueue({
                               <span className="CommunicationSupportPanel__meta">
                                 {copy.onlineSuggestion}：{pictogram.label}
                               </span>
+                              {pictogram.semantics && pictogram.semantics.requiresReview && (
+                                <span className="CommunicationSupportPanel__meta">
+                                  {pictogram.semantics.relation === 'conflict'
+                                    ? copy.semanticConflict : copy.semanticUnverified}
+                                </span>
+                              )}
                               <span className="CommunicationSupportPanel__meta">
                                 {copy.sourceAndLicense}：{pictogram.source.name}{' '}
                                 · {pictogram.source.license}

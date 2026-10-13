@@ -348,6 +348,16 @@ export function reviewMissingTokenRecord(
       review && typeof review.reviewedByCaregiver === 'boolean'
         ? review.reviewedByCaregiver
         : true;
+    // The caregiver confirms a mapping for this source phrase. Keep its spoken
+    // Chinese text, without turning that choice into provider-label evidence.
+    if (updated.reviewedByCaregiver && updated.resolvedPictogram &&
+        updated.resolvedPictogram.semantics) {
+      updated.resolvedPictogram = {
+        ...updated.resolvedPictogram,
+        label: target.normalizedToken,
+        vocalization: target.normalizedToken
+      };
+    }
   } else if (status === MISSING_TOKEN_STATUSES.suggested) {
     updated.suggestedPictogramId = suggestedPictogramId;
     updated.suggestedPictogram = suggestedPictogram;

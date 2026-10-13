@@ -7,6 +7,7 @@ import { createScopedCommunicationStorage } from '../../../common/communicationS
 import { applyMissingTokenResolutions, filterMissingTokenResolutionsByCorrectionMemory } from '../../../common/communicationSupport/missingTokens';
 import { readPersonalImageBlob } from './PersonalImageManager.component';
 import { getReviewedArasaacIds } from '../../../common/communicationSupport/reviewedArasaac';
+import { buildArasaacSemanticFields } from '../../../common/communicationSupport/pictogramSemantics';
 
 jest.mock('../../../api', () => ({}));
 jest.mock('../Symbol', () => props => <img src={props.image} alt={props.label} />);
@@ -19,6 +20,7 @@ const picture = { id: 'arasaac-2392', label: '家里人', image: 'https://api.ex
 describe.each(['家里人', '尿片', '一点点'])('Web confirmed pictogram offline lifecycle: %s', token => {
   const id = getReviewedArasaacIds(token)[0];
   const candidate = { ...picture, id: `arasaac-${id}`, label: token,
+    semantics: buildArasaacSemanticFields(token, token, 'zh', id).semantics,
     image: `https://api.example.test/pictograms/arasaac/${id}/image`,
     source: { ...picture.source, originalId: String(id), sourceUrl: `https://arasaac.org/pictograms/${id}` } };
   let repository, storage, context, wrapper, download, onReview, clock;
@@ -52,8 +54,10 @@ describe.each(['家里人', '尿片', '一点点'])('Web confirmed pictogram off
     const saved = restarted.loadMissingTokens();
     expect(saved[0].resolvedPictogram.image).toBe(`data:image/png;base64,${png}`);
     expect(saved[0].resolvedPictogram.source.license).toBe(picture.source.license);
+    expect(saved[0].resolvedPictogram.semantics).toEqual(candidate.semantics);
     const result = applyMissingTokenResolutions(items, saved, []);
     expect(result[0].tile.tile.image).toBe(`data:image/png;base64,${png}`);
+    expect(result[0].tile.tile.vocalization).toBe(token);
     expect(download).toHaveBeenCalledTimes(1);
     // A later rejection still wins over the restored image, including offline.
     const allowed = filterMissingTokenResolutionsByCorrectionMemory(saved, { rules: [{ token,

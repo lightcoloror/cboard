@@ -1,3 +1,5 @@
+import { isPictogramSemanticMatchAllowed } from './pictogramSemantics';
+
 export const CHINESE_COMMUNICATION_LEXICON = [
   { zh: '我', synonyms: ['自己', '本人'], category: 'daily' },
   { zh: '你', synonyms: ['您'], category: 'daily' },
@@ -552,6 +554,9 @@ export function isAutomaticCommunicationCandidateAllowed(
   spokenLabel = displayLabel,
   tile = {}
 ) {
+  if ((tile.pictogramSemantics || tile.boardId === 'runtime-pictograms' ||
+       String(tile.id || '').startsWith('runtime_')) &&
+      !isPictogramSemanticMatchAllowed(word, tile.pictogramSemantics)) return false;
   // Correct the English "can" noun/permission collision in saved boards and
   // cached suggestions too. Explicit caregiver choices remain manual choices.
   const attribution = tile.pictogramAttribution || {};
