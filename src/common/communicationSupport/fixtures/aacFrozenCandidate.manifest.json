@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "frozenAt": "2026-10-01T11:14:23.747Z",
+  "evidenceType": "synthetic-frozen-candidate",
+  "independentBlindTest": false,
+  "cases": 20,
+  "sha256": "a823057a7f8b81a046f816f3fc79b5457530ec4b45b7f4e55db7fc5e24eb7a70",
+  "rule": "Do not tune product rules against this collection. Changes require a new version and explicit reset of comparison baseline. Assistant-authored, not clinically validated."
+}

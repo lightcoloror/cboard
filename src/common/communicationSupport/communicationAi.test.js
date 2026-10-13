@@ -6,6 +6,10 @@ import {
   buildCommunicationAiResegmentRequest,
   buildCommunicationAiSentenceRequest
 } from './communicationAi';
+import {
+  normalizeResegmentResponse,
+  validateResegmentSource
+} from './resegmentationContract';
 import { buildExpressionLoopState } from './expressionPipeline';
 import { buildReceiverLoopState } from './receiverPipeline';
 
@@ -107,7 +111,7 @@ describe('communicationAi contract', () => {
     );
   });
 
-  test('accepts only a non-worse AI resegmentation result', () => {
+  test('keeps unknown source words even when filtering them would improve match rate', () => {
     const boards = createBoards();
     const current = buildReceiverLoopState('想喝火星水', boards, {
       preSegmented: ['想', '喝', '火星', '水']
@@ -115,7 +119,7 @@ describe('communicationAi contract', () => {
     const applied = applyCommunicationAiResegmentation({
       currentReviewItems: current.reviewItems,
       response: {
-        tokens: ['想', '喝', '水'],
+        tokens: ['想', '喝', '火星', '水'],
         provider: 'test-ai'
       },
       text: '想喝火星水',
@@ -129,10 +133,98 @@ describe('communicationAi contract', () => {
     });
 
     expect(applied.applied).toBe(true);
-    expect(applied.reviewItems.every(item => item.matchType === 'ai')).toBe(
-      true
+    expect(applied.reviewItems.map(item => item.token)).toEqual([
+      '想',
+      '喝',
+      '火星',
+      '水'
+    ]);
+    expect(applied.reviewItems.find(item => item.token === '火星').tile).toBe(
+      null
     );
     expect(rejected.applied).toBe(false);
     expect(rejected.reviewItems).toBe(current.reviewItems);
+  });
+
+  test.each([
+    ['别打针', ['打针']],
+    ['喝水喝水', ['喝水']],
+    ['我不是不想吃饭', ['我', '吃饭']],
+    ['先吃药再喝水', ['先', '喝水', '再', '吃药']],
+    ['喝水？', ['喝水']]
+  ])(
+    'rejects lossy output for %s and leaves the editable state untouched',
+    (text, tokens) => {
+      const current = buildReceiverLoopState(text, createBoards());
+      const result = applyCommunicationAiResegmentation({
+        text,
+        response: { tokens },
+        boards: createBoards(),
+        currentReviewItems: current.reviewItems
+      });
+      expect(result.applied).toBe(false);
+      expect(result.reviewItems).toBe(current.reviewItems);
+    }
+  );
+
+  test('retains repeated occurrences and disables unsafe substring image matches', () => {
+    const text = '喝水喝水开心果';
+    const boards = [
+      {
+        id: 'test',
+        tiles: [
+          { id: 'water', label: '喝水', image: '/water.png' },
+          { id: 'happy', label: '开心', image: '/happy.png' }
+        ]
+      }
+    ];
+    const result = applyCommunicationAiResegmentation({
+      text,
+      response: { tokens: ['喝水', '喝水', '开心果'] },
+      boards,
+      currentReviewItems: []
+    });
+    expect(result.applied).toBe(true);
+    expect(result.reviewItems.map(item => item.token)).toEqual([
+      '喝水',
+      '喝水',
+      '开心果'
+    ]);
+    expect(result.reviewItems[2].tile).toBe(null);
+    expect(result.requiresConfirmation).toBe(true);
+  });
+
+  test('validates source identity, Unicode spans and supported response versions', () => {
+    const text = '🙂喝水 喝水？';
+    const normalized = normalizeResegmentResponse(text, {
+      tokens: ['🙂', '喝水', ' ', '喝水', '？']
+    });
+    expect(normalized.segments[0]).toEqual({ start: 0, end: 1, surface: '🙂' });
+    expect(normalizeResegmentResponse(text, normalized)).toEqual(normalized);
+    expect(
+      normalizeResegmentResponse(text, {
+        ...normalized,
+        sourceText: '另一个原文'
+      })
+    ).toBe(null);
+    expect(
+      normalizeResegmentResponse(text, { ...normalized, contractVersion: 99 })
+    ).toBe(null);
+    expect(
+      normalizeResegmentResponse(text, {
+        ...normalized,
+        segments: [{ start: 0, end: 2, surface: '🙂' }]
+      })
+    ).toBe(null);
+    expect(
+      normalizeResegmentResponse('🙂', { tokens: ['\ud83d', '\ude42'] })
+    ).toBe(null);
+    expect(validateResegmentSource('水'.repeat(121))).toBe(false);
+    expect(
+      buildCommunicationAiResegmentRequest({
+        text: '水'.repeat(121),
+        boards: []
+      }).text
+    ).toHaveLength(121);
   });
 });

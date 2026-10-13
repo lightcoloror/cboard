@@ -1,17 +1,53 @@
 import { getCboardCommunicationConceptProfile } from './cboardConceptProfiles';
-import { findChineseCommunicationEntry } from './chineseLexicon';
+import {
+  findChineseCommunicationEntry,
+  isAutomaticCommunicationCandidateAllowed
+} from './chineseLexicon';
 import {
   resolveCommunicationBoardName,
   resolveCommunicationTileLabel
 } from './resolvers';
-import { segmentChineseCommunicationText } from './segmentation';
+import { segmentChineseCommunicationText, splitCommunicationGrammarPair, hasHelpPossessiveContinuation } from './segmentation';
 import { getCommunicationTileMetadata } from './tileMetadata';
 import { applyWorkspaceCorrectionMemory } from './correctionMemory';
 import { getPictogramAttribution } from './pictogramAttribution';
+import { getReviewedLookupToken } from './reviewedArasaac';
 
 const NEGATION_PREFIXES = ['不', '没', '别', '勿', '莫', '未'];
+// Do not let picture availability change grammatical relationships on either
+// side of a boundary. Repairing character fragments remains available elsewhere.
+const COMPOSITION_BOUNDARY_TERMS = new Set([
+  ...NEGATION_PREFIXES, '没有', '不是', '不要', '想', '要', '有', '是'
+]);
 const MATCH_STAGE_GAP = 100;
 const DOMAIN_MATCH_BONUS = 40;
+const TEXT_SEPARATOR_CHARS = new Set(
+  Array.from('，。？！、；：,.!?;:"\'“”‘’（）()【】[]{}《》<>…—-')
+);
+
+function isSeparatorToken(token) {
+  return (
+    Boolean(token) &&
+    Array.from(token).every(
+      char => /\s/.test(char) || TEXT_SEPARATOR_CHARS.has(char)
+    )
+  );
+}
+
+export function createTextCommunicationCatalogItem(token, id) {
+  return {
+    id,
+    displayLabel: token,
+    textOnly: true,
+    boardId: '',
+    boardName: '',
+    labels: [token],
+    synonyms: [],
+    excludeTokens: [],
+    semanticDomain: null,
+    tile: { id, label: token, vocalization: token, image: '' }
+  };
+}
 
 const MATCH_STAGE_SCORE = {
   exact: MATCH_STAGE_GAP * 4,
@@ -153,6 +189,17 @@ function buildExclusionTerms(token, candidate, lexiconEntry) {
 }
 
 function scoreCandidate(token, candidate, lexiconEntry) {
+  // Old/default/user-saved board synonym fields may still contain the unsafe
+  // aliases. Apply the same guard at every automatic candidate stage.
+  if (
+    !isAutomaticCommunicationCandidateAllowed(
+      token,
+      candidate.tile.displayLabel,
+      candidate.tile.tile.vocalization || candidate.tile.displayLabel
+    )
+  ) {
+    return Number.NEGATIVE_INFINITY;
+  }
   const base = MATCH_STAGE_SCORE[candidate.matchType];
   const excludedTokens = new Set(candidate.tile.excludeTokens || []);
   const exclusionTerms = buildExclusionTerms(token, candidate, lexiconEntry);
@@ -211,10 +258,12 @@ function normalizeSegments(segments) {
     const token = segments[index];
     const nextToken = segments[index + 1];
     const tailChar = token ? token[token.length - 1] : '';
+    const entry = findChineseCommunicationEntry(token);
 
     if (
       token &&
       token.length > 1 &&
+      !(entry && entry.exactOnly) &&
       NEGATION_PREFIXES.includes(tailChar) &&
       nextToken &&
       nextToken.length >= 2
@@ -223,18 +272,9 @@ function normalizeSegments(segments) {
       if (headToken) {
         normalized.push(headToken);
       }
-      normalized.push(tailChar + nextToken);
-      index += 1;
-      continue;
-    }
-
-    if (
-      NEGATION_PREFIXES.includes(token) &&
-      nextToken &&
-      nextToken.length >= 2
-    ) {
-      normalized.push(token + nextToken);
-      index += 1;
+      // Keep the grammatical negation separate from the following action.
+      // Curated lexical units (不得不/不要/不舒服) are handled by segmentation.
+      normalized.push(tailChar);
       continue;
     }
 
@@ -244,14 +284,29 @@ function normalizeSegments(segments) {
   return normalized;
 }
 
-function mergeUnmatchedWithNextToken(matches, catalog) {
+function mergeUnmatchedWithNextToken(matches, catalog, personalTerms) {
   const merged = [];
 
   for (let index = 0; index < matches.length; index += 1) {
     const current = matches[index];
     const next = matches[index + 1];
 
-    if (!current.tile && next) {
+    const currentEntry = findChineseCommunicationEntry(current.token);
+    const nextEntry = next && findChineseCommunicationEntry(next.token);
+    if (
+      !current.tile &&
+      next &&
+      !hasHelpPossessiveContinuation(
+        current.token + next.token,
+        matches.slice(index + 2).map(item => item.token).join(''),
+        personalTerms
+      ) &&
+      !splitCommunicationGrammarPair(current.token + next.token) &&
+      !COMPOSITION_BOUNDARY_TERMS.has(current.token) &&
+      !COMPOSITION_BOUNDARY_TERMS.has(next.token) &&
+      !(currentEntry && currentEntry.exactOnly) &&
+      !(nextEntry && nextEntry.exactOnly)
+    ) {
       const combinedToken = current.token + next.token;
       const lexiconEntry = findChineseCommunicationEntry(combinedToken);
       const exactCandidates = catalog.filter(item =>
@@ -288,49 +343,42 @@ function mergeUnmatchedWithNextToken(matches, catalog) {
   return merged;
 }
 
+export function applyCommunicationPersonContextGuard(matches, catalog) {
+  const personalTerms = catalog
+    .filter(item => item.semanticDomain === 'people' && item.tile.label)
+    .map(item => item.tile.label);
+  return matches.map((match, index) =>
+    match.tile && !match.tile.textOnly && hasHelpPossessiveContinuation(
+      match.token,
+      matches.slice(index + 1).map(item => item.token).join(''),
+      personalTerms
+    )
+      ? { ...match, tile: null, matchType: 'none' }
+      : match
+  );
+}
+
 export function matchTextToCommunicationTiles(text, boards, options = {}) {
+  const catalog = buildCommunicationTileCatalog(boards, options.intl);
+  // Reuse the existing person/category metadata and labels. User phrases and
+  // synonyms are not a second segmentation dictionary; names stay workspace scoped.
+  const personalTerms = catalog
+    .filter(item => item.semanticDomain === 'people' && item.tile.label)
+    .map(item => item.tile.label);
   const rawSegmentation = options.preSegmented
     ? { segments: options.preSegmented, engine: 'intl-segmenter' }
-    : segmentChineseCommunicationText(text);
+    : segmentChineseCommunicationText(text, { personalTerms });
   const segmentation = {
     ...rawSegmentation,
-    segments: normalizeSegments(rawSegmentation.segments)
+    segments: options.preserveSegments
+      ? rawSegmentation.segments.slice()
+      : normalizeSegments(rawSegmentation.segments)
   };
-  const catalog = buildCommunicationTileCatalog(boards, options.intl);
   let matches = segmentation.segments.map((token, index) => {
-    const previousToken = index > 0 ? segmentation.segments[index - 1] : '';
-    const negatedToken = NEGATION_PREFIXES.includes(previousToken)
-      ? previousToken + token
-      : '';
     const lexiconEntry = findChineseCommunicationEntry(token);
-    const negatedLexiconEntry = negatedToken
-      ? findChineseCommunicationEntry(negatedToken)
-      : null;
     let matched = null;
-
-    if (negatedLexiconEntry) {
-      const negatedCandidate = pickBestCandidate(
-        negatedToken,
-        mapCandidates(
-          catalog.filter(item => item.labels.includes(negatedLexiconEntry.zh)),
-          'lexicon-synonym',
-          negatedLexiconEntry.zh
-        ),
-        negatedLexiconEntry
-      );
-
-      if (negatedCandidate) {
-        matched = negatedCandidate;
-      }
-    }
-
-    if (!matched && negatedToken) {
-      return {
-        token,
-        tile: null,
-        matchType: 'none'
-      };
-    }
+    // Match this occurrence only. Looking across a preserved boundary used to
+    // turn [不, 开心] into [不, 伤心], duplicating the negation in the output.
 
     const exactCandidate = pickBestCandidate(
       token,
@@ -363,10 +411,13 @@ export function matchTextToCommunicationTiles(text, boards, options = {}) {
     }
 
     if (!matched && lexiconEntry) {
+      const allowedLabels = lexiconEntry.automaticLabels || [lexiconEntry.zh];
       const lexiconCandidate = pickBestCandidate(
         token,
         mapCandidates(
-          catalog.filter(item => item.labels.includes(lexiconEntry.zh)),
+          catalog.filter(item =>
+            item.labels.some(label => allowedLabels.includes(label))
+          ),
           'lexicon-synonym',
           lexiconEntry.zh
         ),
@@ -378,8 +429,23 @@ export function matchTextToCommunicationTiles(text, boards, options = {}) {
       }
     }
 
+    // A curated lookup alias may select an image without replacing the source.
+    const lookupToken = getReviewedLookupToken(token);
+    if (!matched && lookupToken !== token) {
+      matched = pickBestCandidate(
+        token,
+        mapCandidates(
+          catalog.filter(item => item.labels.includes(lookupToken)),
+          'lexicon-synonym',
+          lookupToken
+        ),
+        findChineseCommunicationEntry(lookupToken)
+      );
+    }
+
     if (
       !matched &&
+      options.allowPartial !== false &&
       token.length >= 3 &&
       !NEGATION_PREFIXES.some(prefix => token.startsWith(prefix))
     ) {
@@ -416,15 +482,29 @@ export function matchTextToCommunicationTiles(text, boards, options = {}) {
       }
     }
 
+    if (!matched && isSeparatorToken(token)) {
+      return {
+        token,
+        tile: createTextCommunicationCatalogItem(
+          token,
+          `text-separator-${index}`
+        ),
+        matchType: 'manual',
+        source: 'text'
+      };
+    }
     return {
       token,
       tile: matched ? matched.tile : null,
-      matchType: matched ? matched.matchType : 'none'
+      matchType: matched ? matched.matchType : 'none',
+      ...(matched && matched.matchedKey !== token
+        ? { lookupToken: matched.matchedKey }
+        : {})
     };
   });
 
   if (!options.preSegmented) {
-    matches = mergeUnmatchedWithNextToken(matches, catalog);
+    matches = mergeUnmatchedWithNextToken(matches, catalog, personalTerms);
     segmentation.segments = matches.map(match => match.token);
   }
 
@@ -433,6 +513,20 @@ export function matchTextToCommunicationTiles(text, boards, options = {}) {
     catalog,
     options.correctionMemory
   );
+  // AI-provided boundaries and correction memory must obey the same person
+  // context guard as local segmentation: 帮我 / 的 / 女儿 is not help-me.
+  matches = applyCommunicationPersonContextGuard(matches, catalog);
+  if (matches.map(item => item.token).join('') === text) {
+    let cursor = 0;
+    matches = matches.map(item => {
+      const start = cursor;
+      cursor += Array.from(item.token).length;
+      return {
+        ...item,
+        sourceSpan: { start, end: cursor, offsetUnit: 'unicode-code-point' }
+      };
+    });
+  }
   const matchedCount = matches.filter(item => item.tile).length;
 
   return {
@@ -443,23 +537,47 @@ export function matchTextToCommunicationTiles(text, boards, options = {}) {
   };
 }
 
-export function createCommunicationOutputFromMatches(matches) {
+export function createCommunicationOutputFromMatches(matches, options = {}) {
   return (matches || [])
-    .filter(item => item.tile)
+    .filter(
+      item =>
+        item.tile && !(item.tile.textOnly && !String(item.token || '').trim())
+    )
     .map(item => {
+      if (item.tile.textOnly) {
+        return {
+          id: item.tile.id,
+          label: item.token,
+          vocalization: item.token,
+          image: '',
+          textOnly: true
+        };
+      }
       const displayLabel =
         item.tile.displayLabel ||
         item.tile.tile.label ||
         item.tile.tile.vocalization;
       const attribution = getPictogramAttribution(item.tile);
+      // Receiving words and choosing a picture are separate operations. Only
+      // an explicit manual replacement may change the received utterance.
+      // Expression-board callers keep their existing tile utterances.
+      const preserveSource =
+        options.preserveAutomaticSource === true &&
+        item.matchType !== 'manual' &&
+        item.source !== 'manual' &&
+        item.source !== 'corrected' &&
+        typeof item.token === 'string' &&
+        item.token.length > 0;
 
       return {
         id: item.tile.id,
         image: item.tile.tile.image,
         mediaType: item.tile.tile.mediaType,
         video: item.tile.tile.video,
-        label: displayLabel,
-        vocalization: item.tile.tile.vocalization || displayLabel,
+        label: preserveSource ? item.token : displayLabel,
+        vocalization: preserveSource
+          ? item.token
+          : item.tile.tile.vocalization || displayLabel,
         keyPath: item.tile.tile.keyPath,
         backgroundColor: item.tile.tile.backgroundColor,
         ...(attribution ? { attribution } : {})

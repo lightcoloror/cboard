@@ -66,6 +66,7 @@ function replayReviewedScenarios() {
       boardsFixture.advanced,
       { intl }
     );
+    expect(result.matches.map(match => match.token).join('')).toBe(finalText);
 
     result.matches.forEach(match => {
       if (match.tile) return;
@@ -102,18 +103,49 @@ describe('PicInterpreter reviewed scenario replay', () => {
     const result = replayReviewedScenarios();
 
     expect(result).toMatchObject({
-      unmatchedOccurrences: 133,
-      unmatchedUnique: 96,
-      reviewedOccurrences: 118,
-      reviewedUnique: 85
+      // 散步 no longer collapses to the generic 走 tile. Its existing reviewed
+      // image suggestion remains available for explicit caregiver selection.
+      // Three 睡觉 occurrences now reuse the built-in sleep action card;
+      // they no longer need an external reviewed-image suggestion.
+      // The bathing action also reuses its existing Mulberry card now.
+      // The verified bundled cards now cover ten occurrences of seven more
+      // concepts: 吃, 水果, 尿布, 刷牙, 照片, 走, 走路.
+      unmatchedOccurrences: 148,
+      unmatchedUnique: 100,
+      // 呼吸困难 is now one protected symptom, not separate 呼吸 / 困难
+      // suggestions. Keep the coverage decrease visible; do not invent an alias.
+      reviewedOccurrences: 98,
+      reviewedUnique: 70
     });
     expect(
       result.reviewedOccurrences / result.unmatchedOccurrences
-    ).toBeCloseTo(0.8872, 4);
+    ).toBeCloseTo(98 / 148, 4);
+  });
+
+  test('the three existing sleep scenarios reuse the bundled action picture', () => {
+    const sleepScenarios = REVIEWED_SCENARIOS.filter(([, text]) => text.includes('睡觉'));
+    expect(sleepScenarios).toHaveLength(3);
+    sleepScenarios.forEach(([, text]) => {
+      const result = matchTextToCommunicationTiles(text, boardsFixture.advanced, { intl });
+      expect(result.matches.find(item => item.token === '睡觉').tile.id).toBe('Syn2Q0cp7cYb');
+    });
+  });
+
+  test('keeps the walking activity explicit instead of hiding it behind a broad action', () => {
+    const result = matchTextToCommunicationTiles(
+      '我们坐轮椅下楼散步。',
+      boardsFixture.advanced,
+      { intl }
+    );
+    const walking = result.matches.find(item => item.token === '散步');
+    expect(walking).toBeDefined();
+    expect(walking.tile).toBeNull();
+    expect(getReviewedArasaacIds('散步').length).toBeGreaterThan(0);
   });
 
   test('keeps the remaining unreviewed tokens explicit for safe follow-up', () => {
     expect(replayReviewedScenarios().unreviewedCounts).toEqual({
+      呼吸困难: 1,
       先: 1,
       准确: 1,
       动作: 2,
@@ -123,8 +155,26 @@ describe('PicInterpreter reviewed scenario replay', () => {
       捂: 1,
       无: 3,
       还是: 1,
-      里: 1,
-      闷: 1
+      里: 3,
+      闷: 1,
+      下楼: 1,
+      了: 4,
+      出来: 1,
+      到: 1,
+      前: 1,
+      叫: 1,
+      吗: 5,
+      或者: 1,
+      抬: 1,
+      换: 1,
+      有事: 1,
+      步: 1,
+      用: 4,
+      的: 5,
+      路: 1,
+      还有: 1,
+      遮住: 1,
+      音乐: 1
     });
   });
 });

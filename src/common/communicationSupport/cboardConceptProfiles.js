@@ -1,4 +1,16 @@
 const CBOARD_COMMUNICATION_CONCEPT_PROFILES = {
+  'symbol.healthcareGroomingActivities.toBathe': {
+    label: '洗澡',
+    synonyms: [],
+    excludeTokens: ['洗头', '洗脸'],
+    category: 'actions'
+  },
+  'symbol.peopleActions.toSleepMale': {
+    label: '睡觉',
+    synonyms: ['睡'],
+    excludeTokens: ['困', '躺', '睡衣', '睡袋', '睡莲'],
+    category: 'actions'
+  },
   'cboard.symbol.iWant': {
     label: '想',
     synonyms: ['我想', '希望'],
@@ -181,7 +193,7 @@ const CBOARD_COMMUNICATION_CONCEPT_PROFILES = {
   },
   'symbol.peopleProfession.speechLanguageTherapist': {
     label: '语言治疗师',
-    synonyms: ['治疗师', '康复师'],
+    synonyms: ['言语治疗师'],
     excludeTokens: [],
     category: 'people'
   },
@@ -193,7 +205,7 @@ const CBOARD_COMMUNICATION_CONCEPT_PROFILES = {
   },
   'symbol.healthcareMedicalConditions.toVomit': {
     label: '想吐',
-    synonyms: ['恶心', '呕吐', '反胃', '吐', '干呕', '想呕吐'],
+    synonyms: ['恶心', '反胃', '想呕吐'],
     excludeTokens: [],
     category: 'medical'
   }

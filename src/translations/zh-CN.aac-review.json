@@ -270,5 +270,18 @@
   "symbol.workAndSchoolTimetable.noClass": "没有课",
   "symbol.workAndSchoolTimetable.scienceClass": "科学课",
   "symbol.clothesAccessories.schoolBag": "书包",
-  "symbol.healthcareGroomingItems.scissors": "剪刀"
+  "symbol.healthcareGroomingItems.scissors": "剪刀",
+  "symbol.foodFeedingAndEating.toEat": "吃",
+  "symbol.foodFruit.fruit": "水果",
+  "symbol.healthcareGroomingItems.nappy": "尿布",
+  "symbol.healthcareGroomingActivities.toBrushTeeth": "刷牙",
+  "symbol.healthcareGroomingActivities.toChangeClothes": "换衣服",
+  "symbol.peopleActions.toTurnOff": "关掉",
+  "symbol.descriptiveQuantity.high": "高",
+  "symbol.peopleActions.toWalk": "走路",
+  "symbol.artMaking.toPaint": "画画",
+  "symbol.holidayAndTravel.photographs": "照片",
+  "symbol.peopleActions.toPush": "推",
+  "symbol.healthcareMedicalItems.hearingAid": "助听器",
+  "symbol.buildingPublic.room": "房间"
 }

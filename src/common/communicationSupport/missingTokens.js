@@ -3,6 +3,10 @@ import {
   buildRuntimeCommunicationCatalogItem,
   normalizeRuntimePictogram
 } from './runtimePictogram';
+import {
+  findChineseCommunicationEntry,
+  isAutomaticCommunicationCandidateAllowed
+} from './chineseLexicon';
 
 export const MISSING_TOKEN_STATUSES = {
   new: 'new',
@@ -90,6 +94,14 @@ export function findSafeLocalMissingTokenResolutions(records, catalog) {
     const matchingCandidates = candidates.filter(candidate => {
       const tile = candidate && candidate.tile;
       if (!tile || !tile.id || !tile.image) return false;
+      if (
+        !isAutomaticCommunicationCandidateAllowed(
+          normalizedToken,
+          candidate.displayLabel || tile.label,
+          tile.vocalization || candidate.displayLabel || tile.label
+        )
+      )
+        return false;
 
       const excludeTokens = (candidate.excludeTokens || []).map(
         normalizeMissingTokenText
@@ -105,9 +117,13 @@ export function findSafeLocalMissingTokenResolutions(records, catalog) {
       const synonyms = (candidate.synonyms || []).map(
         normalizeMissingTokenText
       );
+      const entry = findChineseCommunicationEntry(normalizedToken);
+      const explicitVariants = (entry && entry.automaticLabels) || [];
 
       return (
-        labels.includes(normalizedToken) || synonyms.includes(normalizedToken)
+        labels.includes(normalizedToken) ||
+        synonyms.includes(normalizedToken) ||
+        labels.some(label => explicitVariants.includes(label))
       );
     });
     const uniqueCandidates = Array.from(
@@ -439,6 +455,21 @@ export function applyMissingTokenResolutions(reviewItems, records, catalog) {
     const candidate =
       catalogByPictogramId.get(record.resolvedPictogramId) ||
       buildRuntimeCommunicationCatalogItem(record.resolvedPictogram);
+    // Re-check old automatic resolutions as well as newly proposed ones. An
+    // explicitly reviewed caregiver choice remains available as a manual choice.
+    if (
+      candidate &&
+      record.reviewedByCaregiver !== true &&
+      !isAutomaticCommunicationCandidateAllowed(
+        normalizeMissingTokenText(item.token),
+        candidate.displayLabel || (candidate.tile && candidate.tile.label),
+        (candidate.tile && candidate.tile.vocalization) ||
+          candidate.displayLabel ||
+          (candidate.tile && candidate.tile.label)
+      )
+    ) {
+      return item;
+    }
     const runtimeProvider = String(
       record.resolvedPictogram &&
         record.resolvedPictogram.source &&

@@ -4,6 +4,19 @@ import { buildCommunicationAiSentenceRequest } from '../common/communicationSupp
 jest.mock('../store');
 
 describe('communication API calls', () => {
+  test('downloads bounded public pictograms and rejects other media routes', async () => {
+    const get = jest.spyOn(API.axiosInstance, 'get').mockResolvedValue({ data: new Blob(['png'], { type: 'image/png' }) });
+    await expect(API.downloadCommunicationPictogram({ image: '/pictograms/arasaac/2392/image' })).resolves.toBeInstanceOf(Blob);
+    for (const image of ['https://untrusted.invalid/pictograms/arasaac/2392/image', '/communication/private-library/download']) {
+      await expect(API.downloadCommunicationPictogram({ image })).rejects.toThrow('Invalid public');
+    }
+    expect(get).toHaveBeenCalledTimes(1);
+    await expect(API.downloadCommunicationPictogram({ image: `/pictograms/opensymbols/aGVsbG8.${'a'.repeat(32)}/image` })).resolves.toBeInstanceOf(Blob);
+    get.mockResolvedValue({ data: new Blob(['<svg/>'], { type: 'image/svg+xml' }) });
+    await expect(API.downloadCommunicationPictogram({ image: '/pictograms/arasaac/2392/image' })).rejects.toThrow('Invalid pictogram');
+    get.mockResolvedValue({ data: { size: 1024 * 1024 + 1, type: 'image/png' } });
+    await expect(API.downloadCommunicationPictogram({ image: '/pictograms/arasaac/2392/image' })).rejects.toThrow('exceeds');
+  });
   test('sends current expression without stored history at the API boundary', async () => {
     const post = jest.spyOn(API.axiosInstance, 'post').mockResolvedValue({
       data: { candidates: ['我要喝水。'] }

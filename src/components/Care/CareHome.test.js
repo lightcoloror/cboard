@@ -82,7 +82,7 @@ describe('patient collaboration home', () => {
     runtime.selectProfile.mockResolvedValue(undefined);
     runtime.newId.mockReturnValue('operation');
   });
-  async function render(role) {
+  async function render(role, intl = {}) {
     const relationship = {
       role,
       defaultMode: role === 'patient' ? 'expression' : 'receiver'
@@ -124,12 +124,27 @@ describe('patient collaboration home', () => {
     });
     let wrapper;
     await act(async () => {
-      wrapper = mount(<CareHome intl={{}} />);
+      wrapper = mount(<CareHome intl={intl} />);
       await flush();
     });
     wrapper.update();
     return wrapper;
   }
+  test('an existing patient keeps its own library while seeing the 15 updated bundled words', async () => {
+    const messages = require('../../translations/zh-CN.communication').default;
+    const intl = { messages, formatMessage: ({ id }) => messages[id] || id };
+    const fixture = require('../../common/communicationSupport/fixtures/builtin15Reuse.json');
+    const { matchTextToCommunicationTiles } = require('../../common/communicationSupport/symbolMatching');
+    const wrapper = await render('relative', intl);
+    const boards = wrapper.find(CommunicationSupportPanel).prop('boards');
+    for (const card of fixture.cards) for (const token of card.tokens) {
+      const result = matchTextToCommunicationTiles(token, boards, { intl });
+      expect(result.matches[0].tile.id).toBe(card.id);
+    }
+    expect(boards.find(board => board.id === 'board').tiles[0].label).toBe('喝水');
+    expect(runtime.request.mock.calls.filter(call => call[1] === 'POST')).toHaveLength(0);
+    wrapper.unmount();
+  });
   test.each([['patient', 'express'], ['relative', 'receive']])(
     'opens %s in the correct existing communication mode',
     async (role, mode) => {

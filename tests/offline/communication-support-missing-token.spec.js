@@ -22,7 +22,7 @@ async function readMissingTokens(page) {
 test.describe('Production missing-token maintenance', () => {
   test.use({ bypassCSP: true, serviceWorkers: 'block' });
 
-  test('confirms an attributed online pictogram and reuses it after reload', async ({
+  test('automatically finds candidates, confirms image bytes and reuses them after offline reload', async ({
     page
   }, testInfo) => {
     const useTouch = testInfo.project.name.startsWith('mobile-');
@@ -75,12 +75,13 @@ test.describe('Production missing-token maintenance', () => {
       receiverWorkspace.getByRole('button', { name: '生成图片序列' }),
       useTouch
     );
+    await expect.poll(() => searchRequests.length).toBe(1);
     const initialMissingTokens = await expect
       .poll(() => readMissingTokens(page))
       .not.toEqual([])
       .then(() => readMissingTokens(page));
     const pendingRecords = initialMissingTokens.filter(
-      record => record.status === 'new'
+      record => record.status === 'new' || record.status === 'suggested'
     );
     expect(pendingRecords.length).toBeGreaterThan(0);
     const pendingRecord = pendingRecords[0];
@@ -94,7 +95,7 @@ test.describe('Production missing-token maintenance', () => {
         has: page.getByText(pendingRecord.normalizedToken, { exact: true })
       })
       .first();
-    await expect(missingRow).toContainText('待处理');
+    await expect(missingRow).toContainText('有建议');
     await activate(missingRow.getByRole('button', { name: '忽略' }), useTouch);
     await expect(missingRow).toContainText('已忽略');
     await activate(
@@ -107,7 +108,7 @@ test.describe('Production missing-token maintenance', () => {
       missingQueue.getByRole('button', { name: '在线搜索缺图' }),
       useTouch
     );
-    await expect.poll(() => searchRequests.length).toBe(1);
+    await expect.poll(() => searchRequests.length).toBe(2);
     expect(searchRequests[0].body.tokens).toEqual(
       expect.arrayContaining(
         pendingRecords.map(record => record.normalizedToken)
@@ -142,6 +143,7 @@ test.describe('Production missing-token maintenance', () => {
           expect.objectContaining({
             id: record.id,
             resolvedPictogram: expect.objectContaining({
+              image: `data:image/png;base64,${PIXEL_PNG.toString('base64')}`,
               source: expect.objectContaining({
                 license: 'CC BY-NC-SA 4.0',
                 provider: 'arasaac'
@@ -163,6 +165,9 @@ test.describe('Production missing-token maintenance', () => {
       receiverWorkspace.getByRole('status').filter({ hasText: '匹配结果' })
     ).toContainText('已全部匹配');
 
+    // The application shell comes from the isolated local build; ALL image/API
+    // network requests now fail. Only persisted bytes can render the adopted image.
+    await page.route('**/pictograms/**', route => route.abort('internetdisconnected'));
     await page.reload({ waitUntil: 'domcontentloaded' });
     const restoredPanel = page.locator('.CommunicationSupportPanel');
     await activate(
@@ -186,5 +191,9 @@ test.describe('Production missing-token maintenance', () => {
         .locator('.CommunicationSupportPanel__resultMeta')
         .filter({ hasText: pendingRecord.normalizedToken })
     ).toBeVisible();
+    const cachedImages = receiverWorkspace.locator('img[src^="data:image/png;base64,"]');
+    await expect.poll(() => cachedImages.count()).toBeGreaterThan(0);
+    expect(await cachedImages.evaluateAll(images => images.every(image => image.complete && image.naturalWidth > 0))).toBe(true);
+    expect(searchRequests).toHaveLength(2);
   });
 });

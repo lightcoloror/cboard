@@ -128,6 +128,7 @@ jest.mock('../../../common/communicationSupport/localData', () => ({
   createReceiverDraft: jest.fn(),
   discardResumableReceiverRecord: jest.fn(),
   getActiveConversationSession: jest.fn(),
+  getCommunicationStorageScopeKey: jest.fn(() => 'local'),
   loadCommunicationHistory: jest.fn(),
   loadCommunicationPreferences: jest.fn(),
   loadCommunicationSavedPhrases: jest.fn(),
@@ -915,6 +916,44 @@ describe('CommunicationSupportPanel receiver flow', () => {
       })
     );
     expect(localData.reviewMissingToken).toHaveBeenCalledTimes(1);
+  });
+
+  test('automatically searches newly recorded gaps once without adopting candidates', async () => {
+    const missing = { id: 'auto-gap', normalizedToken: '家里人', status: 'new', updatedAt: 1, rawTextSamples: [] };
+    localData.loadCommunicationPreferences.mockReturnValue({ onlinePictogramSearchEnabled: true });
+    localData.recordMissingTokens.mockReturnValue([missing]);
+    localData.loadMissingTokens.mockReturnValue([missing]);
+    API.searchCommunicationPictograms.mockReset();
+    API.searchCommunicationPictograms.mockResolvedValue([]);
+    const wrapper = mount(<CommunicationSupportPanel {...props} initialMode="receive" />);
+    const record = wrapper.find('ReceiverLoopPanel').first().prop('onRecordMissingTokens');
+    await act(async () => { record({ tokens: ['家里人'] }); record({ tokens: ['家里人'] }); });
+    expect(API.searchCommunicationPictograms).toHaveBeenCalledTimes(1);
+    expect(API.searchCommunicationPictograms).toHaveBeenCalledWith(['家里人']);
+    expect(localData.reviewMissingToken).not.toHaveBeenCalled();
+    wrapper.unmount();
+    localData.loadCommunicationPreferences.mockReturnValue({});
+  });
+
+  test.each(['scope', 'review', 'unmount'])('discards late search results after %s changes', async change => {
+    const missing = { id: 'late-gap', normalizedToken: '家里人', status: 'new', updatedAt: 1, rawTextSamples: [] };
+    localData.loadMissingTokens.mockReturnValue([missing]);
+    localData.getCommunicationStorageScopeKey.mockReturnValue('family-a');
+    let complete;
+    API.searchCommunicationPictograms.mockImplementation(() => new Promise(resolve => { complete = resolve; }));
+    const wrapper = mount(<CommunicationSupportPanel {...props} initialMode="receive" />);
+    const pending = wrapper.find('MissingTokenQueue').first().prop('onSearchOnline')([missing.id]);
+    if (change === 'scope') localData.getCommunicationStorageScopeKey.mockReturnValue('family-b');
+    if (change === 'review') localData.loadMissingTokens.mockReturnValue([{ ...missing, status: 'ignored', updatedAt: 2 }]);
+    if (change === 'unmount') wrapper.unmount();
+    await act(async () => {
+      complete([{ token: '家里人', pictogram: { id: 'p2392', label: '家里人', image: '/p.png',
+        source: { provider: 'arasaac', name: 'ARASAAC', originalId: '2392', license: 'CC BY-NC-SA 4.0', sourceUrl: 'https://arasaac.org/pictograms/2392' } } }]);
+      await pending;
+    });
+    expect(localData.reviewMissingToken).not.toHaveBeenCalled();
+    if (change !== 'unmount') wrapper.unmount();
+    localData.getCommunicationStorageScopeKey.mockReturnValue('local');
   });
 
   test('starts a new local conversation without deleting history', () => {

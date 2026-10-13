@@ -1,0 +1,26 @@
+{
+  "evidenceType": "synthetic-engineering-regression-not-blind-evaluation",
+  "decision": "2026-10-12: preserve negation, intention, action order and lexical exceptions; no inferred clinical meaning",
+  "cases": [
+    {"id":"negated-intention","text":"我不想吃药","tokens":["我","不","想","吃药"]},
+    {"id":"intended-negation","text":"我想不吃药","tokens":["我","想","不","吃药"]},
+    {"id":"positive-intention","text":"我想吃药","tokens":["我","想","吃药"]},
+    {"id":"double-negation","text":"我不是不想吃饭","tokens":["我","不是","不","想","吃饭"]},
+    {"id":"single-negation","text":"我不想吃饭","tokens":["我","不","想","吃饭"]},
+    {"id":"sleep-intention","text":"我不想睡觉","tokens":["我","不","想","睡觉"]},
+    {"id":"prohibition","text":"不要出门","tokens":["不要","出门"]},
+    {"id":"question","text":"要不要出门？","tokens":["要不要","出门","？"]},
+    {"id":"repeated-negation","text":"不是不是","tokens":["不是","不是"]},
+    {"id":"not-yet","text":"我没吃饭","tokens":["我","没","吃饭"]},
+    {"id":"imperative-negation","text":"别回家","tokens":["别","回家"]},
+    {"id":"negative-symptom","text":"没有呼吸困难","tokens":["没有","呼吸困难"]},
+    {"id":"positive-symptom","text":"有呼吸困难","tokens":["有","呼吸困难"]},
+    {"id":"fixed-phrase","text":"没关系","tokens":["没关系"]},
+    {"id":"uncertainty","text":"不一定去医院","tokens":["不一定","去","医院"]},
+    {"id":"necessity","text":"不得不吃药","tokens":["不得不","吃药"]},
+    {"id":"two-negative-positions","text":"我不想不吃药","tokens":["我","不","想","不","吃药"]},
+    {"id":"repeated-intention","text":"不想不想吃饭","tokens":["不","想","不","想","吃饭"]},
+    {"id":"different-action","text":"我想不回家吃饭","tokens":["我","想","不","回家","吃饭"]},
+    {"id":"speed-ambiguity","text":"慢一点，慢一点","tokens":["慢一点","，","慢一点"]}
+  ]
+}

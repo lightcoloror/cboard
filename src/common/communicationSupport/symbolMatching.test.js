@@ -47,6 +47,273 @@ function withoutIntlSegmenter(run) {
   }
 }
 describe('communication symbol matching with cboard defaults', () => {
+  test('keeps negation separate and eating intact through local picture matching on both engines', () => {
+    const verify = () => {
+      const result = matchTextToCommunicationTiles('我今晚不回家吃饭', boards, { intl });
+      expect(result.segmentation.segments).toEqual(['我', '今晚', '不', '回家', '吃饭']);
+      expect(result.matches.map(item => item.token).join('')).toBe('我今晚不回家吃饭');
+      expect(findMatch(result, '吃饭').tile).toBeNull();
+      expect(findMatch(result, '吃饭').sourceSpan).toEqual({
+        start: 6, end: 8, offsetUnit: 'unicode-code-point'
+      });
+    };
+    verify();
+    withoutIntlSegmenter(verify);
+  });
+
+  test('an available negated picture cannot absorb a separate unmatched negation', () => {
+    const result = matchTextToCommunicationTiles('不回家吃饭', [{
+      id: 'meal',
+      tiles: [
+        { id: 'negative', label: '不回家', image: '/negative.png' },
+        { id: 'home', label: '回家', image: '/home.png' },
+        { id: 'meal', label: '吃饭', image: '/meal.png' }
+      ]
+    }]);
+    expect(result.segmentation.segments).toEqual(['不', '回家', '吃饭']);
+    expect(findMatch(result, '不').tile).toBeNull();
+    expect(findMatch(result, '回家').tile.displayLabel).toBe('回家');
+    expect(findMatch(result, '吃饭').tile.displayLabel).toBe('吃饭');
+  });
+
+  test('never substitutes rice or a generic eating action for the eating-meal unit', () => {
+    const result = matchTextToCommunicationTiles('吃饭', [{
+      id: 'food', tiles: [
+        { id: 'rice', label: '米饭', image: '/rice.png' },
+        { id: 'eat', label: '吃', image: '/eat.png' }
+      ]
+    }]);
+    expect(result.segmentation.segments).toEqual(['吃饭']);
+    expect(findMatch(result, '吃饭').tile).toBeNull();
+  });
+
+  test('checks spoken text as well as display text for a protected body location', () => {
+    const result = matchTextToCommunicationTiles(
+      '腰疼',
+      [
+        {
+          id: 'b',
+          tiles: [
+            {
+              id: 'misleading',
+              label: '腰痛',
+              vocalization: '痛',
+              image: '/pain.png'
+            }
+          ]
+        }
+      ],
+      { preSegmented: ['腰疼'], preserveSegments: true }
+    );
+    expect(result.matches[0].tile).toBeNull();
+  });
+
+  test.each([
+    ['是', '有'],
+    ['对', '好'],
+    ['对', '有'],
+    ['可以', '好'],
+    ['躺', '睡觉'],
+    ['困', '睡觉'],
+    ['起来', '起床'],
+    ['走', '去'],
+    ['回去', '回家'],
+    ['洗', '洗手'],
+    ['刷', '刷牙'],
+    ['腰疼', '痛'],
+    ['牙痛', '痛'],
+    ['背疼', '痛'],
+    ['腿痛', '痛'],
+    ['散步', '走']
+  ])('keeps %s distinct from the legacy candidate %s', (token, generic) => {
+    const legacyBoards = [
+      {
+        id: 'legacy',
+        tiles: [
+          {
+            id: 'generic',
+            label: generic,
+            synonyms: [token],
+            image: '/generic.png'
+          }
+        ]
+      }
+    ];
+    const result = matchTextToCommunicationTiles(token, legacyBoards, {
+      preSegmented: [token],
+      preserveSegments: true,
+      allowPartial: false
+    });
+    expect(result.matches.map(item => item.token).join('')).toBe(token);
+    expect(result.matches[0].tile).toBeNull();
+    const exact = matchTextToCommunicationTiles(
+      token,
+      [
+        {
+          id: 'exact',
+          tiles: [{ id: 'exact', label: token, image: '/exact.png' }]
+        }
+      ],
+      { preSegmented: [token], preserveSegments: true }
+    );
+    expect(exact.matches[0].tile.displayLabel).toBe(token);
+  });
+
+  test.each([
+    ['腰疼', '腰痛'],
+    ['腰痛', '腰疼'],
+    ['牙疼', '牙痛'],
+    ['牙痛', '牙疼'],
+    ['背疼', '背痛'],
+    ['背痛', '背疼'],
+    ['腿疼', '腿痛'],
+    ['腿痛', '腿疼'],
+    ['走', '走路'],
+    ['走路', '走'],
+    ['头疼', '头痛'],
+    ['大夫', '医生']
+  ])('preserves the genuine variant %s to %s', (token, label) => {
+    const result = matchTextToCommunicationTiles(
+      token,
+      [
+        {
+          id: 'variants',
+          tiles: [{ id: 'variant', label, image: '/variant.png' }]
+        }
+      ],
+      { preSegmented: [token], preserveSegments: true, allowPartial: false }
+    );
+    expect(result.matches[0].tile.displayLabel).toBe(label);
+    expect(result.matches[0].token).toBe(token);
+  });
+
+  test.each(['对', '腰疼', '背疼', '腿痛'])(
+    'does not silently substitute %s in the actual default boards',
+    token => {
+      const result = matchTextToCommunicationTiles(token, boards, {
+        intl,
+        preSegmented: [token],
+        preserveSegments: true,
+        allowPartial: false
+      });
+      expect(result.matches[0].tile).toBeNull();
+      expect(result.matches[0].token).toBe(token);
+    }
+  );
+
+  test.each(['不是', '没', '没有', '否', '不想', '不需要', '不用'])(
+    'does not substitute the distinct negation form %s with a generic negation',
+    token => {
+      const genericBoards = [
+        {
+          id: 'negation',
+          tiles: [
+            { id: 'not', label: '不', image: '/not.png' },
+            { id: 'refuse', label: '不要', image: '/refuse.png' }
+          ]
+        }
+      ];
+      const result = matchTextToCommunicationTiles(token, genericBoards, {
+        preSegmented: [token],
+        preserveSegments: true
+      });
+      expect(result.matches[0].token).toBe(token);
+      expect(result.matches[0].tile).toBeNull();
+      const exact = matchTextToCommunicationTiles(
+        token,
+        [
+          {
+            id: 'exact',
+            tiles: [{ id: 'exact-negation', label: token, image: '/exact.png' }]
+          }
+        ],
+        { preSegmented: [token], preserveSegments: true }
+      );
+      expect(createCommunicationOutputFromMatches(exact.matches)[0]).toEqual(
+        expect.objectContaining({ label: token, vocalization: token })
+      );
+    }
+  );
+
+  test('does not add a second negation across preserved AI token boundaries', () => {
+    const result = matchTextToCommunicationTiles('不开心', boards, {
+      intl,
+      preSegmented: ['不', '开心'],
+      preserveSegments: true,
+      allowPartial: false
+    });
+    expect(result.matches.map(item => item.token)).toEqual(['不', '开心']);
+    expect(
+      createCommunicationOutputFromMatches(result.matches).map(
+        item => item.label
+      )
+    ).toEqual(['不', '开心']);
+  });
+
+  test('preserves both negative positions without reducing a double negation', () => {
+    const result = matchTextToCommunicationTiles('我不是不想吃饭', boards, {
+      intl
+    });
+    expect(result.matches.map(item => item.token).join('')).toBe(
+      '我不是不想吃饭'
+    );
+    expect(findMatch(result, '不是').tile).toBeNull();
+    expect(result.segmentation.segments).toEqual(['我', '不是', '不', '想', '吃饭']);
+    expect(findMatch(result, '不').tile).not.toBeNull();
+  });
+
+  test('keeps lookup aliases separate from the source and its codepoint positions', () => {
+    const result = matchTextToCommunicationTiles(
+      '🙂家里人家里人？',
+      [
+        {
+          id: 'b',
+          tiles: [{ id: 'family', label: '家人', image: '/family.png' }]
+        }
+      ],
+      {
+        preSegmented: ['🙂', '家里人', '家里人', '？'],
+        preserveSegments: true,
+        allowPartial: false
+      }
+    );
+    expect(result.matches.map(item => item.token).join('')).toBe(
+      result.inputText
+    );
+    expect(result.matches.slice(1, 3)).toEqual([
+      expect.objectContaining({
+        token: '家里人',
+        lookupToken: '家人',
+        tile: expect.objectContaining({ id: 'family' }),
+        sourceSpan: { start: 1, end: 4, offsetUnit: 'unicode-code-point' }
+      }),
+      expect.objectContaining({
+        token: '家里人',
+        lookupToken: '家人',
+        sourceSpan: { start: 4, end: 7, offsetUnit: 'unicode-code-point' }
+      })
+    ]);
+    expect(result.matches[3].tile.textOnly).toBe(true);
+    expect(
+      createCommunicationOutputFromMatches(result.matches).map(
+        item => item.label
+      )
+    ).toEqual(['家人', '家人', '？']);
+  });
+
+  test('never inserts an elevator or rewrites calling a nurse during local matching', () => {
+    const result = matchTextToCommunicationTiles(
+      '我叫护士，坐轮椅下楼散步',
+      boards,
+      { intl }
+    );
+    expect(result.matches.map(item => item.token).join('')).toBe(
+      result.inputText
+    );
+    expect(result.segmentation.segments).toContain('叫');
+    expect(result.segmentation.segments).not.toContain('电梯');
+    expect(result.segmentation.segments).not.toContain('说');
+  });
   test('keeps reviewed default translations aligned with concept profiles', () => {
     const catalog = buildCommunicationTileCatalog(boards, intl);
     const doctor = catalog.find(
@@ -480,12 +747,9 @@ describe('communication symbol matching with cboard defaults', () => {
     expect(findMatch(result, '护士').tile.tile.labelKey).toBe(
       'symbol.peopleProfession.nurse'
     );
-    expect(findMatch(result, '治疗师').tile.tile.labelKey).toBe(
-      'symbol.peopleProfession.speechLanguageTherapist'
-    );
-    expect(findMatch(result, '康复师').tile.tile.labelKey).toBe(
-      'symbol.peopleProfession.speechLanguageTherapist'
-    );
+    // A general profession must not be narrowed to a particular specialty.
+    expect(findMatch(result, '治疗师').tile).toBeNull();
+    expect(findMatch(result, '康复师').tile).toBeNull();
     expect(findMatch(result, '手机').tile.tile.labelKey).toBe(
       'symbol.electricalPhone.iphone'
     );
@@ -502,9 +766,10 @@ describe('communication symbol matching with cboard defaults', () => {
   });
 
   test.each([
-    ['干呕', 'symbol.healthcareMedicalConditions.toVomit'],
     ['想呕吐', 'symbol.healthcareMedicalConditions.toVomit'],
-    ['看个电视', 'cboard.symbol.toWatchTv']
+    ['看个电视', 'cboard.symbol.toWatchTv'],
+    ['走', 'symbol.peopleActions.toWalk'],
+    ['换件衣服', 'symbol.healthcareGroomingActivities.toChangeClothes']
   ])('matches the migrated spoken alias %s', (token, expectedLabelKey) => {
     const result = matchTextToCommunicationTiles(token, boards, { intl });
 
@@ -512,13 +777,13 @@ describe('communication symbol matching with cboard defaults', () => {
   });
 
   test.each([
+    '干呕',
     '精力不足',
     '体温高',
     '老是咳嗽',
     '头昏脑涨',
     '呼吸不顺',
     '在出血',
-    '换件衣服',
     '看一本书'
   ])('preserves missing spoken concept %s without a partial guess', token => {
     const result = matchTextToCommunicationTiles(token, boards, { intl });

@@ -47,7 +47,7 @@ const HIGH_RISK_CAREGIVER_FIXTURES = [
     id: 6,
     text: '你还要不要吃苹果？',
     expectedLabelKeys: ['symbol.foodFruit.apple'],
-    preservedTokens: ['还要', '吃']
+    preservedTokens: ['还', '要不要', '吃']
   },
   {
     id: 7,
@@ -93,9 +93,10 @@ const HIGH_RISK_CAREGIVER_FIXTURES = [
   {
     id: 15,
     text: '衣服湿了，要换衣服。',
-    preservedTokens: ['湿'],
+    preservedTokens: ['湿', '换衣服'],
     expectedTokenCounts: {
-      衣服: 2
+      衣服: 1,
+      换衣服: 1
     }
   },
   {
@@ -253,7 +254,7 @@ const HIGH_RISK_CAREGIVER_FIXTURES = [
   {
     id: 44,
     text: '今晚不回家吃饭。',
-    preservedTokens: ['今晚', '不回家', '吃', '饭']
+    preservedTokens: ['今晚', '不', '回家', '吃饭']
   },
   {
     id: 45,
@@ -313,7 +314,7 @@ const HIGH_RISK_CAREGIVER_FIXTURES = [
   {
     id: 56,
     text: '不是这个，对吗？',
-    preservedTokens: ['不是', '这个', '对']
+    preservedTokens: ['不是这个', '对']
   },
   {
     id: 57,
@@ -338,7 +339,7 @@ const HIGH_RISK_CAREGIVER_FIXTURES = [
   {
     id: 61,
     text: '现在吃饭。',
-    preservedTokens: ['现在', '吃', '饭']
+    preservedTokens: ['现在', '吃饭']
   },
   {
     id: 62,
@@ -393,7 +394,7 @@ const HIGH_RISK_CAREGIVER_FIXTURES = [
   {
     id: 72,
     text: '要不要给家里人发消息？',
-    preservedTokens: ['要不要', '家人', '发消息']
+    preservedTokens: ['要不要', '家里人', '发消息']
   },
   {
     id: 73,

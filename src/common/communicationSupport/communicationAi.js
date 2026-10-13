@@ -8,6 +8,14 @@ import {
 } from './receiverPipeline';
 import { buildCommunicationTileCatalog } from './symbolMatching';
 import { normalizeConversationScene } from './conversationSession';
+import {
+  RESEGMENT_CONTRACT_VERSION,
+  normalizeResegmentResponse
+} from './resegmentationContract';
+export {
+  normalizeResegmentResponse,
+  validateResegmentSource
+} from './resegmentationContract';
 
 export const COMMUNICATION_AI_CONTRACT_VERSION = 1;
 export const MAX_COMMUNICATION_AI_LABELS = 12;
@@ -121,10 +129,8 @@ export function buildCommunicationAiResegmentRequest({
   });
 
   return {
-    contractVersion: COMMUNICATION_AI_CONTRACT_VERSION,
-    text: String(text || '')
-      .trim()
-      .slice(0, 120),
+    contractVersion: RESEGMENT_CONTRACT_VERSION,
+    text: String(text || ''),
     unmatchedTokens: normalizeStringList(
       (Array.isArray(reviewItems) ? reviewItems : [])
         .filter(item => item && !item.tile)
@@ -154,32 +160,35 @@ export function applyCommunicationAiResegmentation({
     ? currentReviewItems
     : [];
   const currentQuality = buildReceiverMatchQuality(currentItems);
-  const candidateTokens = normalizeStringList(
-    response && response.tokens,
-    MAX_COMMUNICATION_AI_LABELS,
-    24
-  );
+  const normalized = normalizeResegmentResponse(text, response);
 
-  if (!candidateTokens.length) {
+  if (!normalized) {
     return {
       applied: false,
+      reason: 'source-mismatch',
       reviewItems: currentItems,
       quality: currentQuality
     };
   }
+  const candidateTokens = normalized.tokens;
 
   const next = buildReceiverLoopState(text, boards, {
     intl,
     preSegmented: candidateTokens,
+    preserveSegments: true,
+    allowPartial: false,
     missingTokenRecords,
     correctionMemory,
     createId
   });
   const nextQuality = buildReceiverMatchQuality(next.reviewItems);
 
-  if (nextQuality.matchRate < currentQuality.matchRate) {
+  // No image-count optimization may erase original text. Check the mapped
+  // sequence too, including existing correction-memory/missing-token hooks.
+  if (next.reviewItems.map(item => item.token).join('') !== text) {
     return {
       applied: false,
+      reason: 'source-mismatch',
       reviewItems: currentItems,
       quality: currentQuality
     };
@@ -187,6 +196,9 @@ export function applyCommunicationAiResegmentation({
 
   return {
     applied: true,
+    requiresConfirmation: true,
+    sourceText: normalized.sourceText,
+    segments: normalized.segments,
     reviewItems: next.reviewItems.map(item => ({
       ...item,
       matchType: item.tile ? 'ai' : item.matchType

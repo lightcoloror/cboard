@@ -13,6 +13,7 @@ export function createScopedCommunicationStorage(storage, resolve) {
     return `communication-v2:${ids.map(encodeURIComponent).join(':')}:${key}`;
   };
   return {
+    getScopeKey: () => keyFor(''),
     getItem: key => {
       const context = resolve();
       if (context?.profileId && key === 'cboard_communication_patient_id')

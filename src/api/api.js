@@ -809,6 +809,21 @@ class API {
       .filter(Boolean);
   }
 
+  async downloadCommunicationPictogram(pictogram) {
+    const url = resolveTrustedApiMediaUrl(pictogram && pictogram.image);
+    if (!url || !/\/pictograms\/(arasaac\/[0-9]+|opensymbols\/[a-zA-Z0-9_-]+\.[a-f0-9]{32})\/image$/.test(new URL(url).pathname)) {
+      throw new Error('Invalid public pictogram media URL');
+    }
+    const { data } = await this.axiosInstance.get(url, {
+      responseType: 'blob', timeout: 15000
+    });
+    if (!data || !data.size || data.size > 1024 * 1024 ||
+        !/^image\/(png|jpeg|gif|webp)$/.test(data.type)) {
+      throw new Error('Invalid pictogram image or image exceeds 1 MiB');
+    }
+    return data;
+  }
+
   async getPrivatePictureLibraryMetadata() {
     const authToken = getAuthToken();
     if (!(authToken && authToken.length)) {

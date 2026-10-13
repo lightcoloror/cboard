@@ -1,0 +1,30 @@
+{
+  "cases": [
+    {"text":"请帮我","tokens":["请帮我"],"picture":["请帮我","pi-home-help"]},
+    {"text":"请帮我翻身","tokens":["请帮我","翻身"],"picture":["请帮我","pi-home-help"]},
+    {"text":"请帮我找眼镜","tokens":["请帮我","找","眼镜"],"picture":["请帮我","pi-home-help"]},
+    {"text":"请帮我妈妈","tokens":["请","帮","我","妈妈"]},
+    {"text":"请帮我的妈妈","tokens":["请","帮","我","的","妈妈"],"miniTokens":["请","帮","我的","妈妈"]},
+    {"text":"请帮我爸爸","tokens":["请","帮","我","爸爸"]},
+    {"text":"请稍等","tokens":["请稍等"],"picture":["请稍等","pi-repair-wait"]},
+    {"text":"请稍等一下","tokens":["请稍等一下"],"picture":["请稍等一下","pi-repair-wait"]},
+    {"text":"请等一等","tokens":["请等一等"],"picture":["请等一等","pi-repair-wait"]},
+    {"text":"不要等一等","tokens":["不要","等一等"],"picture":["等一等","pi-repair-wait"]},
+    {"text":"慢点说","tokens":["慢点说"],"picture":["慢点说","pi-repair-slowly"]},
+    {"text":"请慢点说","tokens":["请慢点说"],"picture":["请慢点说","pi-repair-slowly"]},
+    {"text":"说慢点","tokens":["说慢点"],"picture":["说慢点","pi-repair-slowly"]},
+    {"text":"请说慢点","tokens":["请说慢点"],"picture":["请说慢点","pi-repair-slowly"]},
+    {"text":"慢一点说","tokens":["慢一点说"],"picture":["慢一点说","pi-repair-slowly"]},
+    {"text":"请慢一点说","tokens":["请慢一点说"],"picture":["请慢一点说","pi-repair-slowly"]},
+    {"text":"不要慢点说","tokens":["不要","慢点说"],"picture":["慢点说","pi-repair-slowly"]},
+    {"text":"慢点说，慢点说","tokens":["慢点说","，","慢点说"]},
+    {"text":"慢点走","tokens":["慢点","走"]},
+    {"text":"慢点吃饭","tokens":["慢点","吃饭"]},
+    {"text":"不是慢点说，是再说一次","tokens":["不是","慢点说","，","是","再说一次"]}
+  ],
+  "unsafePairs": [
+    ["慢点","请说慢一点"], ["慢一点","请说慢一点"],
+    ["慢点说","说"], ["请慢点说","慢点"],
+    ["请帮我","帮你"], ["请稍等","停止"]
+  ]
+}

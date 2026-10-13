@@ -12,7 +12,8 @@ import TextField from '@material-ui/core/TextField';
 import Symbol from '../Symbol';
 import {
   applyCommunicationAiResegmentation,
-  buildCommunicationAiResegmentRequest
+  buildCommunicationAiResegmentRequest,
+  validateResegmentSource
 } from '../../../common/communicationSupport/communicationAi';
 import {
   COMMUNICATION_ENHANCEMENT_LIMIT_SCOPES,
@@ -33,6 +34,7 @@ import {
   moveReceiverReviewItem,
   normalizeReceiverMatchType,
   replaceReceiverReviewItem,
+  retainReceiverReviewItemAsText,
   restoreReceiverLoopState
 } from '../../../common/communicationSupport/receiverPipeline';
 import {
@@ -169,7 +171,7 @@ const DEFAULT_COPY = {
   matchTypeManual: '手工选择',
   matchTypeMissing: '未匹配',
   segmentationLabel: '分词结果（可修改）',
-  segmentationHint: '使用空格、斜线或逗号分隔词语，修改后请重新应用。',
+  segmentationHint: '用 / 分开词语；引号内的标点和空白属于原文，请保留。修改后请重新应用。',
   applySegmentation: '按此分词重新匹配',
   segmentationRequired: '请至少保留一个词语。',
   segmentationApplied: '已按人工分词重新匹配，可以继续确认。',
@@ -181,7 +183,7 @@ const DEFAULT_COPY = {
   aiFailed: 'AI 服务暂时不可用，当前结果仍可人工修改。',
   aiRateLimited: 'AI 增强请求较多，请稍后重试；当前结果仍可人工修改。',
   aiMonthlyQuota: '本月 AI 增强额度已用完，当前结果仍可人工修改。',
-  aiNoImprovement: 'AI 分词没有改善匹配率，已保留当前结果。',
+  aiNoImprovement: 'AI 建议未完整保留原文，已保留当前结果。',
   aiApplied: 'AI 分词已应用，可以继续人工确认。',
   aiNeedsReview: 'AI 分词已应用，请继续处理未匹配词。',
   feedbackQuestion: '你明白了吗？',
@@ -321,6 +323,7 @@ function MatchRow({
   onDelete,
   onInsert,
   onSwap,
+  onKeepText,
   copy
 }) {
   const hasMatch = Boolean(match.tile);
@@ -353,7 +356,11 @@ function MatchRow({
                 : 'CommunicationSupportPanel__status CommunicationSupportPanel__status--miss'
             }
           >
-            {hasMatch ? matchedLabel : copy.unmatched}
+            {hasMatch
+              ? match.tile.textOnly
+                ? '保留文字'
+                : matchedLabel
+              : copy.unmatched}
           </span>
           {hasMatch && (
             <span className="CommunicationSupportPanel__meta">
@@ -364,6 +371,11 @@ function MatchRow({
         </div>
       </div>
       <div className="CommunicationSupportPanel__matchActions">
+        {!hasMatch && (
+          <Button size="small" onClick={() => onKeepText(match.id)}>
+            保留文字
+          </Button>
+        )}
         <Button color="primary" size="small" onClick={() => onSwap(match.id)}>
           {copy.replaceAction}
         </Button>
@@ -394,6 +406,7 @@ function MatchRow({
 }
 
 MatchRow.propTypes = {
+  onKeepText: PropTypes.func.isRequired,
   match: PropTypes.shape({
     id: PropTypes.string.isRequired,
     token: PropTypes.string.isRequired,
@@ -488,6 +501,7 @@ export default function ReceiverLoopPanel({
   });
   const [learnFromCorrections, setLearnFromCorrections] = useState(true);
   const [isAiResegmenting, setIsAiResegmenting] = useState(false);
+  const [pendingAiSuggestion, setPendingAiSuggestion] = useState(null);
   const [isCantoneseMode, setIsCantoneseMode] = useState(false);
   const [preferOnDeviceSpeech, setPreferOnDeviceSpeech] = useState(false);
   const [dialectSourceText, setDialectSourceText] = useState('');
@@ -509,6 +523,15 @@ export default function ReceiverLoopPanel({
   const dialectGenerationRef = useRef(0);
   const dialectAudioGenerationRef = useRef(0);
   const ocrGenerationRef = useRef(0);
+
+  useEffect(
+    () => {
+      aiGenerationRef.current += 1;
+      setIsAiResegmenting(false);
+      setPendingAiSuggestion(null);
+    },
+    [inputText, reviewItems, boards, segmentationDraft]
+  );
 
   useEffect(() => {
     return () => {
@@ -649,9 +672,9 @@ export default function ReceiverLoopPanel({
   }
 
   function scheduleReviewForText(text) {
-    const normalizedText = String(text || '').trim();
+    const normalizedText = String(text || '');
 
-    if (!normalizedText) {
+    if (!normalizedText.trim()) {
       return;
     }
 
@@ -687,6 +710,10 @@ export default function ReceiverLoopPanel({
   }
 
   function handleApplyReceiveOutput() {
+    if (reviewItems.some(item => !item.tile)) {
+      setReviewNotice('请先处理未匹配词，避免输出时遗漏原意。');
+      return;
+    }
     const outputItems = buildReceiverOutputPreview(reviewItems);
 
     if (!outputItems.length) {
@@ -697,6 +724,10 @@ export default function ReceiverLoopPanel({
   }
 
   function handleOpenDisplay() {
+    if (reviewItems.some(item => !item.tile)) {
+      setReviewNotice('请先处理未匹配词，避免输出时遗漏原意。');
+      return;
+    }
     const outputItems = buildReceiverOutputPreview(reviewItems);
 
     if (!outputItems.length) {
@@ -1120,6 +1151,10 @@ export default function ReceiverLoopPanel({
       setReviewNotice(copy.aiLoginRequired);
       return;
     }
+    if (!validateResegmentSource(inputText)) {
+      setReviewNotice('AI 优化支持 1–120 字，请分段处理；原文已保留。');
+      return;
+    }
 
     const request = buildCommunicationAiResegmentRequest({
       text: inputText,
@@ -1129,6 +1164,7 @@ export default function ReceiverLoopPanel({
     });
     const generation = aiGenerationRef.current + 1;
     aiGenerationRef.current = generation;
+    setPendingAiSuggestion(null);
     setIsAiResegmenting(true);
     setReviewNotice('');
 
@@ -1148,35 +1184,8 @@ export default function ReceiverLoopPanel({
         setReviewNotice(copy.aiNoImprovement);
         return;
       }
-
-      const nextItems = applied.reviewItems;
-      const nextMissingTokens = nextItems
-        .filter(item => !item.tile)
-        .map(item => item.token);
-      if (nextMissingTokens.length && onRecordMissingTokens) {
-        try {
-          onRecordMissingTokens({
-            tokens: nextMissingTokens,
-            rawText: inputText.trim(),
-            scene: 'receiver'
-          });
-        } catch (error) {
-          // Optional AI must not block the local receiver loop.
-        }
-      }
-      persistReceiverEdit(
-        RECEIVER_CORRECTION_ACTIONS.resegment,
-        'segmentation-ai',
-        nextItems
-      );
-      setSegmentationDraft(
-        formatCommunicationSegmentation(
-          applied.segmentation || nextItems.map(item => item.token)
-        )
-      );
-      setReviewNotice(
-        applied.quality.needsReview ? copy.aiNeedsReview : copy.aiApplied
-      );
+      setPendingAiSuggestion({ applied, generation });
+      setReviewNotice('AI 建议已返回，请比较后选择采用；当前结果尚未改变。');
     } catch (error) {
       if (aiGenerationRef.current === generation) {
         setReviewNotice(getAiFailureMessage(error, copy));
@@ -1186,6 +1195,39 @@ export default function ReceiverLoopPanel({
         setIsAiResegmenting(false);
       }
     }
+  }
+
+  function handleAcceptAiSuggestion() {
+    if (
+      !pendingAiSuggestion ||
+      pendingAiSuggestion.generation !== aiGenerationRef.current
+    )
+      return;
+    const { applied } = pendingAiSuggestion;
+    const nextItems = applied.reviewItems;
+    const nextMissingTokens = nextItems
+      .filter(item => !item.tile)
+      .map(item => item.token);
+    if (nextMissingTokens.length && onRecordMissingTokens) {
+      try {
+        onRecordMissingTokens({
+          tokens: nextMissingTokens,
+          rawText: inputText,
+          scene: 'receiver'
+        });
+      } catch (error) {
+        // Optional missing-word recording must not block local editing.
+      }
+    }
+    persistReceiverEdit(
+      RECEIVER_CORRECTION_ACTIONS.resegment,
+      'segmentation-ai',
+      nextItems
+    );
+    setPendingAiSuggestion(null);
+    setReviewNotice(
+      applied.quality.needsReview ? copy.aiNeedsReview : copy.aiApplied
+    );
   }
 
   function handleApplySegmentation() {
@@ -1564,6 +1606,7 @@ export default function ReceiverLoopPanel({
             </div>
             <div className="CommunicationSupportPanel__segmentationEditor">
               <TextField
+                id="receiver-segmentation-draft"
                 fullWidth
                 label={copy.segmentationLabel}
                 helperText={copy.segmentationHint}
@@ -1592,6 +1635,29 @@ export default function ReceiverLoopPanel({
                   {isAiResegmenting ? copy.aiResegmenting : copy.aiResegment}
                 </Button>
               </div>
+              {pendingAiSuggestion && (
+                <section aria-label="AI 分词建议">
+                  <p>原文：{inputText}</p>
+                  <p>
+                    当前分词：{reviewItems.map(item => item.token).join(' / ')}
+                  </p>
+                  <p>
+                    建议分词：
+                    {pendingAiSuggestion.applied.segmentation.join(' / ')}
+                  </p>
+                  <Button onClick={handleAcceptAiSuggestion}>
+                    采用分词建议
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      setPendingAiSuggestion(null);
+                      setReviewNotice('已保留当前结果。');
+                    }}
+                  >
+                    保留当前结果
+                  </Button>
+                </section>
+              )}
               <div className="CommunicationSupportPanel__learningControl">
                 <FormControlLabel
                   control={
@@ -1640,6 +1706,13 @@ export default function ReceiverLoopPanel({
                     setShowSwapId(id);
                     setSwapQuery('');
                   }}
+                  onKeepText={id => {
+                    persistReceiverEdit(
+                      RECEIVER_CORRECTION_ACTIONS.replace,
+                      id,
+                      retainReceiverReviewItemAsText(reviewItems, id)
+                    );
+                  }}
                   copy={copy}
                 />
               ))}
@@ -1654,7 +1727,9 @@ export default function ReceiverLoopPanel({
                 color="primary"
                 variant="contained"
                 onClick={handleApplyReceiveOutput}
-                disabled={!receiveOutputPreview.length}
+                disabled={
+                  !receiveOutputPreview.length || missingTokens.length > 0
+                }
               >
                 {copy.sendToOutput}
               </Button>
@@ -1662,7 +1737,9 @@ export default function ReceiverLoopPanel({
                 color="primary"
                 variant="outlined"
                 onClick={handleOpenDisplay}
-                disabled={!receiveOutputPreview.length}
+                disabled={
+                  !receiveOutputPreview.length || missingTokens.length > 0
+                }
               >
                 {copy.fullscreen}
               </Button>

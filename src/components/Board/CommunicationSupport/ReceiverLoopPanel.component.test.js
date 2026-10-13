@@ -51,6 +51,9 @@ const mockedMatches = [
 ];
 
 jest.mock('../../../common/communicationSupport/symbolMatching', () => ({
+  createTextCommunicationCatalogItem: jest.requireActual(
+    '../../../common/communicationSupport/symbolMatching'
+  ).createTextCommunicationCatalogItem,
   buildCommunicationTileCatalog: jest.fn(),
   createCommunicationOutputFromMatches: jest.fn(),
   matchTextToCommunicationTiles: jest.fn()
@@ -106,6 +109,63 @@ async function setInput(wrapper, value) {
 }
 
 describe('ReceiverLoopPanel', () => {
+  test('blocks incomplete output until the caregiver explicitly retains a missing word as text', async () => {
+    symbolMatching.matchTextToCommunicationTiles.mockReturnValue({
+      matches: [{ token: '不要', tile: null, matchType: 'none' }],
+      matchRate: 0
+    });
+    const wrapper = mount(
+      <ReceiverLoopPanel
+        boards={[]}
+        intl={null}
+        onApplyOutput={onApplyOutput}
+        onJumpBoard={jest.fn()}
+        historyItems={[]}
+        onAppendHistory={onAppendHistory}
+      />
+    );
+    await setInput(wrapper, '不要');
+    wrapper
+      .find('ForwardRef(Button)')
+      .filterWhere(node => node.text() === '生成图片序列')
+      .first()
+      .simulate('click');
+    await act(async () => {
+      jest.runAllTimers();
+    });
+    wrapper.update();
+    expect(
+      wrapper
+        .find('ForwardRef(Button)')
+        .filterWhere(node => node.text() === '全屏展示')
+        .first()
+        .prop('disabled')
+    ).toBe(true);
+    expect(onApplyOutput).not.toHaveBeenCalled();
+    wrapper
+      .find('ForwardRef(Button)')
+      .filterWhere(node => node.text() === '保留文字')
+      .first()
+      .simulate('click');
+    wrapper.update();
+    expect(
+      wrapper
+        .find('ForwardRef(Button)')
+        .filterWhere(node => node.text() === '全屏展示')
+        .first()
+        .prop('disabled')
+    ).toBe(false);
+    wrapper
+      .find('ForwardRef(Button)')
+      .filterWhere(node => node.text() === '全屏展示')
+      .first()
+      .simulate('click');
+    expect(onApplyOutput.mock.calls[0][0][0].label).toBe('不要');
+    expect(onAppendHistory.mock.calls[0][0].pictogramSequence[0]).toMatchObject(
+      { originalToken: '不要', textOnly: true, pictogramId: null }
+    );
+    wrapper.unmount();
+  });
   const onApplyOutput = jest.fn();
   const onAppendHistory = jest.fn();
 
@@ -1161,7 +1221,7 @@ describe('ReceiverLoopPanel', () => {
       />
     );
 
-    await setInput(wrapper, '我想喝水');
+    await setInput(wrapper, '想喝水');
     wrapper
       .find('ForwardRef(Button)')
       .filterWhere(node => node.text() === '生成图片序列')
@@ -1184,11 +1244,134 @@ describe('ReceiverLoopPanel', () => {
 
     expect(onAiResegment).toHaveBeenCalledWith(
       expect.objectContaining({
-        text: '我想喝水',
+        text: '想喝水',
         pictogramVocabulary: expect.any(Array)
       })
     );
+    expect(wrapper.text()).toContain('当前结果尚未改变');
+    expect(onApplyOutput).not.toHaveBeenCalled();
+    await act(async () => {
+      wrapper
+        .find('ForwardRef(Button)')
+        .filterWhere(node => node.text() === '采用分词建议')
+        .first()
+        .simulate('click');
+    });
+    wrapper.update();
     expect(wrapper.text()).toContain('AI 分词已应用，可以继续人工确认。');
+    expect(wrapper.find('[aria-label="AI 分词建议"]')).toHaveLength(0);
+  });
+
+  test.each(['dismiss', 'edit', 'late', 'lossy'])(
+    'does not replace the current draft for an AI suggestion that is %s',
+    async mode => {
+      let resolveSuggestion;
+      const onAiResegment = jest.fn(
+        () =>
+          new Promise(resolve => {
+            resolveSuggestion = resolve;
+          })
+      );
+      const wrapper = mount(
+        <ReceiverLoopPanel
+          boards={[]}
+          intl={null}
+          onApplyOutput={onApplyOutput}
+          onJumpBoard={jest.fn()}
+          historyItems={[]}
+          aiAvailable
+          onAiResegment={onAiResegment}
+        />
+      );
+      await setInput(wrapper, '想喝水');
+      wrapper
+        .find('ForwardRef(Button)')
+        .filterWhere(node => node.text() === '生成图片序列')
+        .first()
+        .simulate('click');
+      await act(async () => {
+        jest.runAllTimers();
+      });
+      wrapper.update();
+      await act(async () => {
+        wrapper
+          .find('ForwardRef(Button)')
+          .filterWhere(node => node.text() === 'AI 优化分词')
+          .first()
+          .simulate('click');
+      });
+      if (mode === 'late') await setInput(wrapper, '不要喝水');
+      await act(async () => {
+        resolveSuggestion({
+          tokens: mode === 'lossy' ? ['喝', '水'] : ['想', '喝', '水']
+        });
+        await Promise.resolve();
+      });
+      wrapper.update();
+      if (mode === 'dismiss') {
+        await act(async () => {
+          wrapper
+            .find('ForwardRef(Button)')
+            .filterWhere(node => node.text() === '保留当前结果')
+            .first()
+            .simulate('click');
+        });
+      }
+      if (mode === 'edit') await setInput(wrapper, '不要喝水');
+      wrapper.update();
+      expect(wrapper.find('[aria-label="AI 分词建议"]')).toHaveLength(0);
+      expect(wrapper.text()).not.toContain('AI 分词已应用');
+      expect(onApplyOutput).not.toHaveBeenCalled();
+      if (mode === 'lossy') expect(wrapper.text()).toContain('未完整保留原文');
+      wrapper.unmount();
+    }
+  );
+
+  test('blocks final output and display while an unmatched negation would be omitted', async () => {
+    symbolMatching.matchTextToCommunicationTiles.mockReturnValue({
+      segmentation: {
+        segments: ['不', '想', '喝', '水'],
+        engine: 'intl-segmenter'
+      },
+      matches: [
+        { token: '不', tile: null, matchType: 'none' },
+        ...mockedMatches
+      ],
+      matchRate: 0.75
+    });
+    const wrapper = mount(
+      <ReceiverLoopPanel
+        boards={[]}
+        intl={null}
+        onApplyOutput={onApplyOutput}
+        onJumpBoard={jest.fn()}
+        historyItems={[]}
+        onAppendHistory={onAppendHistory}
+      />
+    );
+    await setInput(wrapper, '不想喝水');
+    wrapper
+      .find('ForwardRef(Button)')
+      .filterWhere(node => node.text() === '生成图片序列')
+      .first()
+      .simulate('click');
+    await act(async () => {
+      jest.runAllTimers();
+    });
+    wrapper.update();
+    for (const label of ['发送到输出栏', '全屏展示']) {
+      const button = wrapper
+        .find('ForwardRef(Button)')
+        .filterWhere(node => node.text() === label)
+        .first();
+      expect(button.prop('disabled')).toBe(true);
+      await act(async () => {
+        button.prop('onClick')();
+      });
+    }
+    expect(onApplyOutput).not.toHaveBeenCalled();
+    expect(onAppendHistory).not.toHaveBeenCalled();
+    wrapper.unmount();
   });
 
   test('keeps editable segmentation when the monthly AI quota is exhausted', async () => {

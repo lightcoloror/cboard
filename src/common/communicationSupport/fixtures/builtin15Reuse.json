@@ -1,0 +1,18 @@
+{
+  "cards": [
+    {"id":"tuyujia-builtin-eat","key":"symbol.foodFeedingAndEating.toEat","image":"eat_1_,_to.svg","board":"r1-FTvnvaW","label":"吃","tokens":["吃"],"category":"actions"},
+    {"id":"tuyujia-builtin-fruit","key":"symbol.foodFruit.fruit","image":"fruit.svg","board":"S1It6P2Pp-","label":"水果","tokens":["水果"],"category":"food"},
+    {"id":"tuyujia-builtin-nappy","key":"symbol.healthcareGroomingItems.nappy","image":"nappy.svg","board":"H1iZY6DnvT-","label":"尿布","tokens":["尿片"],"category":"objects"},
+    {"id":"tuyujia-builtin-brush-teeth","key":"symbol.healthcareGroomingActivities.toBrushTeeth","image":"brush_teeth_,_to.svg","board":"H1iZY6DnvT-","label":"刷牙","tokens":["刷牙"],"category":"actions"},
+    {"id":"tuyujia-builtin-change-clothes","key":"symbol.healthcareGroomingActivities.toChangeClothes","image":"change_clothes_,_to.svg","board":"H1iZY6DnvT-","label":"换衣服","tokens":["换衣服","换件衣服"],"category":"actions"},
+    {"id":"tuyujia-builtin-turn-off","key":"symbol.peopleActions.toTurnOff","image":"turn_off_,_to.svg","board":"SywlK6Phv6Z","label":"关掉","tokens":["关掉"],"category":"actions"},
+    {"id":"tuyujia-builtin-high","key":"symbol.descriptiveQuantity.high","image":"high.svg","board":"HkclK6DnDTb","label":"高","tokens":["高"],"category":"daily"},
+    {"id":"tuyujia-builtin-walk","key":"symbol.peopleActions.toWalk","image":"walk_,_to.svg","board":"SywlK6Phv6Z","label":"走路","tokens":["走路","走"],"category":"actions"},
+    {"id":"tuyujia-builtin-paint","key":"symbol.artMaking.toPaint","image":"paint_1_,_to.svg","board":"BkmeFaw3DpZ","label":"画画","tokens":["画画"],"category":"actions"},
+    {"id":"tuyujia-builtin-photographs","key":"symbol.holidayAndTravel.photographs","image":"photographs.svg","board":"BkmeFaw3DpZ","label":"照片","tokens":["照片"],"category":"objects"},
+    {"id":"tuyujia-builtin-push","key":"symbol.peopleActions.toPush","image":"push_,_to.svg","board":"SywlK6Phv6Z","label":"推","tokens":["推"],"category":"actions"},
+    {"id":"tuyujia-builtin-hearing-aid","key":"symbol.healthcareMedicalItems.hearingAid","image":"hearing_aid_1.svg","board":"SkmWY6DhwpW","label":"助听器","tokens":["助听器"],"category":"objects"},
+    {"id":"tuyujia-builtin-room","key":"symbol.buildingPublic.room","image":"room.svg","board":"S1uxKpvhPpb","label":"房间","tokens":["房间"],"category":"places"}
+  ],
+  "unsafePairs": [["吃饭","吃"],["换衣服","穿衣服"],["散步","走路"],["助听器","听"],["高血压","高"],["尿片","快照"],["刷牙","画笔牙"]]
+}

@@ -1,4 +1,5 @@
 import { expect } from '@playwright/test';
+import { fulfillVirtualProductionRequest } from './virtualProductionBuild';
 
 const LOCAL_HOSTS = new Set(['127.0.0.1', 'localhost']);
 
@@ -19,6 +20,13 @@ export async function blockRemoteHttpRequests(page) {
 
     if (isHttp && !LOCAL_HOSTS.has(requestUrl.hostname)) {
       return route.abort('internetdisconnected');
+    }
+
+    if (isHttp && process.env.PLAYWRIGHT_VIRTUAL_BUILD_PATH) {
+      return fulfillVirtualProductionRequest(
+        route,
+        process.env.PLAYWRIGHT_VIRTUAL_BUILD_PATH
+      );
     }
 
     return route.continue();

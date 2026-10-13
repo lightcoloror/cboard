@@ -24,6 +24,7 @@ import {
   createReceiverDraft,
   discardResumableReceiverRecord,
   getActiveConversationSession,
+  getCommunicationStorageScopeKey,
   loadCommunicationHistory,
   loadPersonalImagePreferences,
   loadPersonalImageRuntime,
@@ -390,6 +391,15 @@ export default function CommunicationSupportPanel({
   );
   const latestSavedRef = useRef([]);
   const latestHistoryRef = useRef([]);
+  const autoSearchAttempts = useRef(new Set());
+  const searchEpoch = useRef(0);
+  const scopeKey = getCommunicationStorageScopeKey();
+  useEffect(() => {
+    autoSearchAttempts.current.clear();
+    searchEpoch.current += 1;
+    setMissingTokenRecords(loadMissingTokens());
+    return () => { searchEpoch.current += 1; };
+  }, [scopeKey]);
 
   useEffect(() => {
     setSavedPhrases(loadCommunicationSavedPhrases());
@@ -621,10 +631,19 @@ export default function CommunicationSupportPanel({
   function handleMissingTokens(entry) {
     const next = recordMissingTokens(entry);
     setMissingTokenRecords(next);
+    if (preferences.onlinePictogramSearchEnabled && !demoMode) {
+      const ids = next.filter(record => record.status === 'new' &&
+        !autoSearchAttempts.current.has(record.id)).slice(0, 12).map(record => record.id);
+      ids.forEach(id => autoSearchAttempts.current.add(id));
+      if (ids.length) handleSearchMissingTokensOnline(ids, next).catch(() => {
+        // Keep missing text and the manual retry entry available when offline.
+      });
+    }
     return next;
   }
 
   function handleReviewMissingToken(recordId, review) {
+    if (scopeKey !== getCommunicationStorageScopeKey()) return null;
     const updated = reviewMissingToken(recordId, review);
     if (!updated) {
       return null;
@@ -634,13 +653,17 @@ export default function CommunicationSupportPanel({
     return updated;
   }
 
-  async function handleSearchMissingTokensOnline(recordIds) {
-    const selectedRecords = missingTokenRecords.filter(record =>
-      recordIds.includes(record.id)
+  async function handleSearchMissingTokensOnline(recordIds, records = missingTokenRecords) {
+    const epoch = searchEpoch.current;
+    const selectedRecords = records.filter(record =>
+      recordIds.includes(record.id) && ['new', 'suggested'].includes(record.status)
     );
+    if (!selectedRecords.length) return { foundCount: 0, candidateCount: 0 };
     const results = await API.searchCommunicationPictograms(
       selectedRecords.map(record => record.normalizedToken)
     );
+    if (epoch !== searchEpoch.current || scopeKey !== getCommunicationStorageScopeKey())
+      return { foundCount: 0, candidateCount: 0 };
     const suggestionsByToken = new Map();
     let foundCount = 0;
     let candidateCount = 0;
@@ -660,6 +683,8 @@ export default function CommunicationSupportPanel({
     });
 
     selectedRecords.forEach(record => {
+      const current = loadMissingTokens().find(item => item.id === record.id);
+      if (!current || current.status !== record.status || current.updatedAt !== record.updatedAt) return;
       const suggestions =
         suggestionsByToken.get(
           normalizeMissingTokenText(record.normalizedToken)

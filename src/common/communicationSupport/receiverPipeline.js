@@ -1,6 +1,8 @@
 import {
+  applyCommunicationPersonContextGuard,
   buildCommunicationTileCatalog,
   createCommunicationOutputFromMatches,
+  createTextCommunicationCatalogItem,
   matchTextToCommunicationTiles
 } from './symbolMatching';
 import {
@@ -56,6 +58,8 @@ export function buildReceiverReviewItems(
     token: match.token,
     tile: match.tile,
     matchType: match.matchType,
+    ...(match.lookupToken ? { lookupToken: match.lookupToken } : {}),
+    ...(match.sourceSpan ? { sourceSpan: match.sourceSpan } : {}),
     ...(match.source ? { source: match.source } : {})
   }));
 }
@@ -73,11 +77,17 @@ export function buildReceiverLoopState(text, boards, options = {}) {
     missingTokenRecords,
     options.correctionMemory
   );
+  const catalog = missingTokenRecords.length
+    ? buildCommunicationTileCatalog(boards, options.intl)
+    : [];
   const reviewItems = missingTokenRecords.length
-    ? applyMissingTokenResolutions(
-        initialReviewItems,
-        applicableMissingTokenRecords,
-        buildCommunicationTileCatalog(boards, options.intl)
+    ? applyCommunicationPersonContextGuard(
+        applyMissingTokenResolutions(
+          initialReviewItems,
+          applicableMissingTokenRecords,
+          catalog
+        ),
+        catalog
       )
     : initialReviewItems;
   const matchedCount = reviewItems.filter(item => item.tile).length;
@@ -90,7 +100,7 @@ export function buildReceiverLoopState(text, boards, options = {}) {
     missingTokens: reviewItems
       .filter(item => !item.tile)
       .map(item => item.token),
-    outputPreview: createCommunicationOutputFromMatches(reviewItems),
+    outputPreview: buildReceiverOutputPreview(reviewItems),
     matchRate: reviewItems.length
       ? matchedCount / reviewItems.length
       : result.matchRate
@@ -147,7 +157,7 @@ export function restoreReceiverLoopState(entry, boards, options = {}) {
     return null;
   }
 
-  const inputText = String(entry.inputText || '').trim();
+  const inputText = String(entry.inputText || '');
   const sequence = entry.pictogramSequence.filter(
     item => item && (item.originalToken || item.label)
   );
@@ -170,16 +180,25 @@ export function restoreReceiverLoopState(entry, boards, options = {}) {
       : createReceiverReviewId;
   const reviewItems = sequence.map(item => {
     const pictogramId = String(item.pictogramId || '').trim();
-    const tile = pictogramId
-      ? catalogById.get(pictogramId) ||
-        createPersistedCatalogItem(item, outputById.get(pictogramId))
-      : null;
+    const token = String(item.originalToken || item.label || '');
+    const tile =
+      item.textOnly === true
+        ? createTextCommunicationCatalogItem(
+            token,
+            `text-restored-${createId('text')}`
+          )
+        : pictogramId
+        ? catalogById.get(pictogramId) ||
+          createPersistedCatalogItem(item, outputById.get(pictogramId))
+        : null;
 
     return {
       id: createId('review'),
-      token: String(item.originalToken || item.label || '').trim(),
+      token,
       tile: tile || null,
       matchType: normalizeReceiverMatchType(item.matchType),
+      ...(item.lookupToken ? { lookupToken: item.lookupToken } : {}),
+      ...(item.sourceSpan ? { sourceSpan: item.sourceSpan } : {}),
       ...(item.source ? { source: String(item.source) } : {})
     };
   });
@@ -268,13 +287,25 @@ export function replaceReceiverReviewItem(reviewItems, itemId, candidate) {
       ...item,
       tile: candidate,
       matchType: 'manual',
-      source: 'corrected'
+      source: candidate && candidate.textOnly ? 'text' : 'corrected'
     };
   });
 }
 
+export function retainReceiverReviewItemAsText(reviewItems, itemId) {
+  const item = reviewItems.find(value => value.id === itemId);
+  if (!item) return reviewItems;
+  return replaceReceiverReviewItem(
+    reviewItems,
+    itemId,
+    createTextCommunicationCatalogItem(item.token, `text-${itemId}`)
+  );
+}
+
 export function buildReceiverOutputPreview(reviewItems) {
-  return createCommunicationOutputFromMatches(reviewItems);
+  return createCommunicationOutputFromMatches(reviewItems, {
+    preserveAutomaticSource: true
+  });
 }
 
 export function buildReceiverHistoryEntry(inputText, reviewItems) {
@@ -298,13 +329,16 @@ export function buildReceiverHistoryEntry(inputText, reviewItems) {
       : explicitSource || (matchType === 'online' ? 'online' : 'local_dict');
 
     return {
-      pictogramId: tile ? tile.id : null,
+      pictogramId: tile && !tile.textOnly ? tile.id : null,
       label: getReceiverItemDisplayLabel(item) || String(item.token || ''),
       source,
       boardId: (tile && tile.boardId) || '',
       matchType,
       confidence: getReceiverMatchConfidence(matchType),
       originalToken: String((item && item.token) || ''),
+      ...(tile && tile.textOnly ? { textOnly: true } : {}),
+      ...(item.lookupToken ? { lookupToken: item.lookupToken } : {}),
+      ...(item.sourceSpan ? { sourceSpan: item.sourceSpan } : {}),
       ...(attribution ? { attribution } : {})
     };
   });

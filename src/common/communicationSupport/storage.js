@@ -85,7 +85,7 @@ function normalizeReceiverSequence(value) {
   return value
     .filter(item => item && typeof item === 'object')
     .map(item => {
-      const originalToken = String(item.originalToken || '').trim();
+      const originalToken = String(item.originalToken || '');
       const label = String(item.label || originalToken).trim();
       const requestedMatchType = String(item.matchType || '').trim();
       const matchType = normalizeReceiverMatchType(requestedMatchType);
@@ -103,6 +103,9 @@ function normalizeReceiverSequence(value) {
         matchType,
         confidence,
         originalToken,
+        ...(item.textOnly === true ? { textOnly: true } : {}),
+        ...(item.lookupToken ? { lookupToken: String(item.lookupToken) } : {}),
+        ...(item.sourceSpan ? { sourceSpan: item.sourceSpan } : {}),
         ...(attribution ? { attribution } : {})
       };
     })
@@ -176,7 +179,7 @@ function normalizeHistoryEntry(entry) {
     candidateSentences
   );
   const sentence = entry.sentence ? String(entry.sentence).trim() : '';
-  const inputText = entry.inputText ? String(entry.inputText).trim() : '';
+  const inputText = entry.inputText ? String(entry.inputText) : '';
 
   if (!labels.length && !sentence && !inputText) {
     return null;
@@ -370,6 +373,9 @@ function sanitizeCloudReceiverSequence(value) {
       matchType: item.matchType,
       confidence: item.confidence,
       originalToken: item.originalToken,
+      ...(item.textOnly === true ? { textOnly: true } : {}),
+      ...(item.lookupToken ? { lookupToken: item.lookupToken } : {}),
+      ...(item.sourceSpan ? { sourceSpan: item.sourceSpan } : {}),
       ...(publicAttribution ? { attribution: publicAttribution } : {})
     };
   });

@@ -1,0 +1,268 @@
+{
+  "schemaVersion": 1,
+  "evidenceType": "synthetic-engineering-corpus",
+  "createdAt": "2026-10-01T11:13:11.169Z",
+  "evaluationRole": "frozen-candidate",
+  "scope": "Assistant-authored synthetic engineering references, not real patients or clinical gold. Frozen candidate was authored and inspected in this session; not an independent blind test.",
+  "cases": [
+    {
+      "id": "frozen-candidate-negation-1",
+      "category": "negation",
+      "text": "我还不想睡觉",
+      "referenceTokens": [
+        "我",
+        "还",
+        "不",
+        "想",
+        "睡觉"
+      ]
+    },
+    {
+      "id": "frozen-candidate-negation-2",
+      "category": "negation",
+      "text": "我没有说不要水",
+      "referenceTokens": [
+        "我",
+        "没有",
+        "说",
+        "不要",
+        "水"
+      ]
+    },
+    {
+      "id": "frozen-candidate-repetition-1",
+      "category": "repetition",
+      "text": "慢一点，慢一点",
+      "referenceTokens": [
+        "慢",
+        "一点",
+        "，",
+        "慢",
+        "一点"
+      ]
+    },
+    {
+      "id": "frozen-candidate-repetition-2",
+      "category": "repetition",
+      "text": "不不不，别走",
+      "referenceTokens": [
+        "不",
+        "不",
+        "不",
+        "，",
+        "别",
+        "走"
+      ]
+    },
+    {
+      "id": "frozen-candidate-body-1",
+      "category": "body",
+      "text": "我右肩疼，左肩不疼",
+      "referenceTokens": [
+        "我",
+        "右",
+        "肩",
+        "疼",
+        "，",
+        "左",
+        "肩",
+        "不",
+        "疼"
+      ]
+    },
+    {
+      "id": "frozen-candidate-body-2",
+      "category": "body",
+      "text": "不是牙痛，是耳朵痛",
+      "referenceTokens": [
+        "不",
+        "是",
+        "牙痛",
+        "，",
+        "是",
+        "耳朵",
+        "痛"
+      ]
+    },
+    {
+      "id": "frozen-candidate-order-1",
+      "category": "order",
+      "text": "刷牙以后再喝水",
+      "referenceTokens": [
+        "刷牙",
+        "以后",
+        "再",
+        "喝",
+        "水"
+      ]
+    },
+    {
+      "id": "frozen-candidate-order-2",
+      "category": "order",
+      "text": "先等治疗师来再走",
+      "referenceTokens": [
+        "先",
+        "等",
+        "治疗师",
+        "来",
+        "再",
+        "走"
+      ]
+    },
+    {
+      "id": "frozen-candidate-quantity-1",
+      "category": "quantity",
+      "text": "只要半杯温水",
+      "referenceTokens": [
+        "只",
+        "要",
+        "半",
+        "杯",
+        "温水"
+      ]
+    },
+    {
+      "id": "frozen-candidate-quantity-2",
+      "category": "quantity",
+      "text": "后天早上八点再来",
+      "referenceTokens": [
+        "后天",
+        "早上",
+        "八",
+        "点",
+        "再",
+        "来"
+      ]
+    },
+    {
+      "id": "frozen-candidate-alternatives-1",
+      "category": "alternatives",
+      "text": "我要热水，不要冷水",
+      "referenceTokens": [
+        "我",
+        "要",
+        "热水",
+        "，",
+        "不要",
+        "冷水"
+      ]
+    },
+    {
+      "id": "frozen-candidate-alternatives-2",
+      "category": "alternatives",
+      "text": "不是坐车，我想走路",
+      "referenceTokens": [
+        "不",
+        "是",
+        "坐车",
+        "，",
+        "我",
+        "想",
+        "走路"
+      ]
+    },
+    {
+      "id": "frozen-candidate-care-1",
+      "category": "care",
+      "text": "请帮我调整靠背",
+      "referenceTokens": [
+        "请",
+        "帮",
+        "我",
+        "调整",
+        "靠背"
+      ]
+    },
+    {
+      "id": "frozen-candidate-care-2",
+      "category": "care",
+      "text": "我想换一个枕头",
+      "referenceTokens": [
+        "我",
+        "想",
+        "换",
+        "一",
+        "个",
+        "枕头"
+      ]
+    },
+    {
+      "id": "frozen-candidate-compounds-1",
+      "category": "compounds",
+      "text": "不要把指甲油当成油",
+      "referenceTokens": [
+        "不要",
+        "把",
+        "指甲油",
+        "当成",
+        "油"
+      ]
+    },
+    {
+      "id": "frozen-candidate-compounds-2",
+      "category": "compounds",
+      "text": "请找眼镜盒，不是眼镜",
+      "referenceTokens": [
+        "请",
+        "找",
+        "眼镜盒",
+        "，",
+        "不",
+        "是",
+        "眼镜"
+      ]
+    },
+    {
+      "id": "frozen-candidate-formatting-1",
+      "category": "formatting",
+      "text": " 我想休息。\n谢谢 ",
+      "referenceTokens": [
+        " 我",
+        "想",
+        "休息",
+        "。",
+        "\n",
+        "谢谢 "
+      ]
+    },
+    {
+      "id": "frozen-candidate-formatting-2",
+      "category": "formatting",
+      "text": "不要🚫，我要水",
+      "referenceTokens": [
+        "不",
+        "要",
+        "🚫",
+        "，",
+        "我",
+        "要",
+        "水"
+      ]
+    },
+    {
+      "id": "frozen-candidate-unknown-1",
+      "category": "unknown",
+      "text": "请帮我找小岚",
+      "referenceTokens": [
+        "请",
+        "帮",
+        "我",
+        "找",
+        "小岚"
+      ]
+    },
+    {
+      "id": "frozen-candidate-unknown-2",
+      "category": "unknown",
+      "text": "去B07，不是B17",
+      "referenceTokens": [
+        "去",
+        "B07",
+        "，",
+        "不",
+        "是",
+        "B17"
+      ]
+    }
+  ]
+}
