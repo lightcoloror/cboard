@@ -20,6 +20,7 @@
   }
   function sequence(container,id){
     const generation=epoch;
+    container.style.setProperty('--picture-count',byId.get(id).pictures.length);
     byId.get(id).pictures.forEach((p,i)=>{
       if(i){const arrow=document.createElement('span');arrow.className='arrow';arrow.textContent='→';arrow.setAttribute('aria-hidden','true');container.append(arrow);}
       const img=document.createElement('img');img.className='picture';img.src=p.src;img.alt='图卡 '+(i+1);img.draggable=false;

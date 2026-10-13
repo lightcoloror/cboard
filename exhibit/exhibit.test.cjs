@@ -6,7 +6,7 @@ const path=require('node:path');
 const vm=require('node:vm');
 const {webcrypto,createHash}=require('node:crypto');
 const {JSDOM}=require('jsdom');
-const root=path.resolve(__dirname,'../../../outputs/tuyujia-ipad-booth-20261012/site');
+const root=path.resolve(process.env.BOOTH_OUT||path.join(__dirname,'../../../outputs/tuyujia-exhibit-game-20261013/site'));
 const read=f=>fs.readFileSync(path.join(root,f),'utf8');
 const scope='http://127.0.0.1:18778/exhibit/';
 function storage(){const stores=new Map();return {stores,async open(name){if(!stores.has(name))stores.set(name,new Map());const m=stores.get(name);return {
@@ -34,27 +34,6 @@ test('package sequences are unmodified actual runtime output and all bytes match
   original.examples.forEach((x,i)=>assert.deepEqual(Array.from(data.BOOTH_DATA.examples[i].pictures,p=>p.src),x.output.map(p=>'project-assets/'+p.image.replace(/^\//,''))));
   for(const a of original.assets)assert.equal(createHash('sha256').update(fs.readFileSync(path.join(root,a.artifactPath))).digest('hex'),a.sha256);
 });
-test('all groups support selection, human confirmation and reselection without captions',()=>{
-  const dom=ui(),d=dom.window.document;
-  for(let i=0;i<3;i++){
-    d.querySelectorAll('#examples button')[i].click();assert.equal(d.querySelector('#confirm').disabled,true);
-    assert.equal(d.querySelector('#pictures').textContent,'');
-    d.querySelectorAll('#choices button')[i].click();assert.equal(d.querySelector('#confirm').disabled,false);
-    d.querySelector('#confirm').click();assert.match(d.querySelector('#feedback').textContent,/表达者已确认/);
-    d.querySelector('#retry').click();assert.equal(d.querySelector('#confirm').disabled,true);
-  }
-  d.querySelectorAll('#choices button')[0].click();d.querySelector('#confirm').click();assert.match(d.querySelector('#feedback').textContent,/以表达者确认的意思为准/);
-  assert.equal(dom.window.localStorage.length,0);assert.match(d.querySelector('#cache-status').textContent,/不能安装离线缓存/);dom.window.close();
-});
-test('missing image disables confirmation and produces actionable error',()=>{const dom=ui(),d=dom.window.document;d.querySelector('#pictures img').dispatchEvent(new dom.window.Event('error'));d.querySelector('#choices button').click();assert.equal(d.querySelector('#confirm').disabled,true);assert.match(d.querySelector('#feedback').textContent,/图片未完整加载/);dom.window.close();});
-test('example mode selects actual sentence output and switching back clears confirmation',()=>{
-  const dom=ui(),d=dom.window.document;d.querySelector('#example-mode').click();
-  assert.equal(d.querySelector('#meaning-section').hidden,true);
-  d.querySelectorAll('#examples button')[2].click();
-  assert.equal(d.querySelectorAll('#pictures img').length,dom.window.BOOTH_DATA.examples[2].pictures.length);
-  assert.equal(d.querySelectorAll('#examples button')[2].textContent,'请叫家人');
-  d.querySelector('#pair-mode').click();assert.equal(d.querySelector('#meaning-section').hidden,false);assert.equal(d.querySelector('#confirm').disabled,true);dom.window.close();
-});
 test('generated worker installs all resources, audits bytes, and serves after offline worker restart',async()=>{
   const caches=storage(),first=worker(caches);await first.dispatch('install');await first.dispatch('activate');assert.equal((await first.audit()).ok,true);assert.equal(first.skips,0);assert.equal(first.claims,1);
   const restarted=worker(caches,{offline:true});
@@ -78,4 +57,69 @@ test('404 and 200-but-corrupt update fail install and preserve original offline 
 test('worker only activates requested installed update and does not intercept APIs',async()=>{
   const w=worker(storage());await w.dispatch('install');await w.dispatch('message',{data:{type:'BOOTH_ACTIVATE_UPDATE'}});assert.equal(w.skips,1);
   assert.equal(await w.dispatch('fetch',{request:new Request(new URL('/api/private',scope))}),undefined);
+});
+
+function click(d,id){d.getElementById(id).click();}
+function handoff(dom,group=0,phrase=0){const d=dom.window.document;d.querySelectorAll('#examples button')[group].click();click(d,'to-choose');d.querySelectorAll('#own-choices button')[phrase].click();click(d,'handoff');return d;}
+test('all four paper groups and twelve exact phrases are present; old rejected phrase is excluded',()=>{
+  const dom=ui(),data=dom.window.BOOTH_DATA;
+  assert.equal(data.groups.length,4);assert.equal(data.examples.length,12);
+  assert.deepEqual(Array.from(data.groups,g=>Array.from(g.exampleIds,id=>data.examples.find(x=>x.id===id).text)),[
+    ['我想喝水','我想上厕所','我肚子痛'],['我想休息','帮帮我','我想看电视'],
+    ['我想吃苹果','我想吃面包','我想出去'],['我头痛','我牙痛','我热']]);
+  assert(!data.examples.some(x=>x.text==='请叫家人'));dom.window.close();
+});
+test('pairing is editable one-to-one, independent of position, and needs no correct score to continue',()=>{
+  const dom=ui(),d=dom.window.document;
+  const pictures=[...d.querySelectorAll('#picture-cards button')],words=[...d.querySelectorAll('#word-cards button')];
+  assert.equal(pictures.length,3);assert.equal(words.length,3);
+  assert(pictures.every(b=>!words.some(w=>b.textContent.includes(w.textContent))));
+  words[0].click();assert.match(d.querySelector('#match-feedback').textContent,/先点选/);
+  for(let i=0;i<3;i++){pictures[i].click();words[i].click();}
+  assert.equal(d.querySelector('#check-pairs').disabled,false);click(d,'check-pairs');
+  assert.match(d.querySelector('#match-feedback').textContent,/不是图片唯一/);
+  pictures[0].click();words[1].click();assert.equal(d.querySelector('#check-pairs').disabled,true);
+  assert.equal(pictures[1].querySelector('.pair-label').textContent,'点选这张图片卡');
+  click(d,'to-choose');assert.equal(d.querySelector('#choose-stage').hidden,false);dom.window.close();
+});
+test('all 12 phrases can be passed with no answer visible, then confirmed only by the human',()=>{
+  const dom=ui(),d=dom.window.document;
+  for(let g=0;g<4;g++)for(let i=0;i<3;i++){
+    handoff(dom,g,i);assert.equal(d.querySelector('#communicate-stage').hidden,false);
+    assert.equal(d.querySelector('#own-choices').children.length,0);assert.equal(d.querySelector('#word-cards').children.length,0);
+    assert.equal(d.querySelector('#picture-cards').children.length,0);assert.equal(d.querySelector('#repair-options').hidden,true);
+    assert(!dom.window.BOOTH_DATA.examples.some(x=>d.querySelector('#communicate-stage').textContent.includes(x.text)));
+    const id=dom.window.BOOTH_DATA.groups[g].exampleIds[i],expected=dom.window.BOOTH_DATA.examples.find(x=>x.id===id);
+    assert.equal(d.querySelectorAll('#pictures img').length,expected.pictures.length);
+    assert.equal(d.querySelector('#confirm').disabled,false);click(d,'confirm');
+    assert.match(d.querySelector('#feedback').textContent,/由表达者确认/);assert.equal(d.querySelector('#confirm').disabled,true);
+  }
+  assert.equal(dom.window.localStorage.length,0);dom.window.close();
+});
+test('denial, repeat, other interpretations and none-of-these do not force preset meaning',()=>{
+  const dom=ui(),d=handoff(dom,2,0);click(d,'deny');assert.match(d.querySelector('#feedback').textContent,/还不是/);
+  click(d,'repeat');assert.match(d.querySelector('#feedback').textContent,/再说一次/);
+  click(d,'options');assert.equal(d.querySelectorAll('#repair-options button').length,4);
+  [...d.querySelectorAll('#repair-options button')].find(b=>b.textContent==='这些都不是').click();
+  assert.match(d.querySelector('#feedback').textContent,/手势补充/);
+  click(d,'options');[...d.querySelectorAll('#repair-options button')].find(b=>b.textContent==='我想吃面包').click();
+  click(d,'confirm');assert.match(d.querySelector('#feedback').textContent,/表达者已确认：“我想吃面包”/);
+  assert.match(d.querySelector('#feedback').textContent,/以表达者此刻确认/);
+  click(d,'next');assert.equal(d.querySelector('#match-stage').hidden,false);assert.match(d.querySelector('#step-status').textContent,/第 4 组/);dom.window.close();
+});
+test('missing images block passing and confirmation; restart recovers and stale image events cannot poison new round',()=>{
+  const dom=ui(),d=dom.window.document,stale=d.querySelector('#picture-cards img');
+  stale.dispatchEvent(new dom.window.Event('error'));assert.equal(d.querySelector('#to-choose').disabled,true);
+  d.querySelectorAll('#examples button')[1].click();stale.dispatchEvent(new dom.window.Event('error'));
+  assert.equal(d.querySelector('#to-choose').disabled,false);
+  handoff(dom,1,0);d.querySelector('#pictures img').dispatchEvent(new dom.window.Event('error'));
+  assert.equal(d.querySelector('#confirm').disabled,true);assert.match(d.querySelector('#feedback').textContent,/未完整加载/);
+  click(d,'restart');assert.equal(d.querySelector('#to-choose').disabled,false);dom.window.close();
+});
+test('changing groups or phrases clears prior choices and reload starts a fresh game without stored audience data',()=>{
+  const dom=ui(),d=handoff(dom,3,2);click(d,'options');click(d,'change-phrase');
+  assert.equal(d.querySelector('#repair-options').children.length,0);assert.equal(d.querySelector('#handoff').disabled,true);
+  click(d,'back-match');assert.equal(d.querySelectorAll('#picture-cards button').length,3);
+  assert.equal(d.querySelector('#check-pairs').disabled,true);dom.window.close();
+  const fresh=ui();assert.equal(fresh.window.document.querySelector('#match-stage').hidden,false);assert.equal(fresh.window.localStorage.length,0);fresh.window.close();
 });
