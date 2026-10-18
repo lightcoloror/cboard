@@ -7,6 +7,9 @@ export async function encodeCareMedia(value, engine, readImage, depth = 0) {
   if (!value || typeof value !== 'object') return value;
   const result = {};
   for (const [key, item] of Object.entries(value)) {
+    // Recordings/video remain device-local, as in queueCareBoards. They are not
+    // image assets and must not leak as raw data/file URLs inside favorites.
+    if (['sound', 'video', 'mediaType'].includes(key)) continue;
     if (key === 'image' && typeof item === 'string' && item) {
       const asset = await readImage(item);
       if (asset.builtinImage) {

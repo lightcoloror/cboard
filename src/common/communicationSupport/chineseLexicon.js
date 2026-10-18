@@ -1,62 +1,410 @@
+import {
+  isPictogramSemanticMatchAllowed,
+  getPictogramSegmentationTerms
+} from './pictogramSemantics';
+
 export const CHINESE_COMMUNICATION_LEXICON = [
-  { zh: '我', synonyms: ['自己', '本人'], category: 'daily' },
+  // Keep the action intact for retrieval; temperature/sensation pictures are
+  // not substitutes, even when an upstream tokenizer splits 热 / 一下.
+  {
+    zh: '加热',
+    synonyms: ['热一下', '热一热'],
+    exactOnly: true,
+    automaticLabels: ['加热', '热一下', '热一热'],
+    category: 'actions'
+  },
+  { zh: '刹车', synonyms: [], exactOnly: true, category: 'actions' },
+  { zh: '分叉', synonyms: [], exactOnly: true, category: 'daily' },
+  {
+    zh: '洗手液',
+    synonyms: ['液体皂', '液体肥皂'],
+    exactOnly: true,
+    automaticLabels: ['洗手液', '液体皂', '液体肥皂'],
+    category: 'objects'
+  },
+  {
+    zh: '肥皂块',
+    synonyms: ['固体皂'],
+    exactOnly: true,
+    automaticLabels: ['肥皂块', '固体皂', '肥皂'],
+    category: 'objects'
+  },
+  { zh: '我', synonyms: [], category: 'daily' },
+  // Reflexives resolve to the sentence's subject, not always to the speaker.
+  // Keep them whole for lookup without inserting a first-person picture.
+  { zh: '自己', synonyms: [], exactOnly: true, category: 'daily' },
+  { zh: '本人', synonyms: [], exactOnly: true, category: 'daily' },
   { zh: '你', synonyms: ['您'], category: 'daily' },
   { zh: '他', synonyms: [], category: 'daily' },
   { zh: '她', synonyms: [], category: 'daily' },
-  { zh: '好', synonyms: ['可以', '行', '嗯', '好的', '对'], category: 'daily' },
-  { zh: '不', synonyms: ['没', '不是', '否'], category: 'daily' },
-  { zh: '有', synonyms: ['是', '对', '有的'], category: 'daily' },
+  // Reviewed object-specific actions reuse existing CBoard drawings. Keep the
+  // whole phrase, but never borrow the jar-opening picture for generic 打开.
+  {
+    zh: '开门',
+    synonyms: ['打开门'],
+    exactOnly: true,
+    automaticLabels: ['开门', '打开门'],
+    category: 'actions'
+  },
+  {
+    zh: '开罐头',
+    synonyms: ['打开罐头'],
+    exactOnly: true,
+    automaticLabels: ['开罐头', '打开罐头'],
+    category: 'actions'
+  },
+  {
+    zh: '拧开盖子',
+    synonyms: ['拧开瓶盖'],
+    exactOnly: true,
+    automaticLabels: ['拧开盖子', '拧开瓶盖'],
+    category: 'actions'
+  },
+  { zh: '打开', synonyms: [], exactOnly: true, category: 'actions' },
+  { zh: '好', synonyms: ['行', '嗯', '好的'], category: 'daily' },
+  {
+    zh: '是',
+    synonyms: [],
+    relatedTerms: ['有'],
+    exactOnly: true,
+    category: 'daily'
+  },
+  {
+    zh: '对',
+    synonyms: [],
+    relatedTerms: ['好', '有'],
+    exactOnly: true,
+    category: 'daily'
+  },
+  {
+    zh: '可以',
+    synonyms: [],
+    relatedTerms: ['好'],
+    exactOnly: true,
+    category: 'daily'
+  },
+  // Related negation forms are not interchangeable utterances. Keep them as
+  // independent segmentation terms; relatedTerms never enters the match index.
+  { zh: '不', synonyms: [], category: 'daily' },
+  {
+    zh: '没',
+    synonyms: [],
+    relatedTerms: ['不'],
+    exactOnly: true,
+    category: 'daily'
+  },
+  {
+    zh: '没有',
+    synonyms: [],
+    relatedTerms: ['没'],
+    exactOnly: true,
+    category: 'daily'
+  },
+  {
+    zh: '不是',
+    synonyms: [],
+    relatedTerms: ['不'],
+    exactOnly: true,
+    category: 'daily'
+  },
+  {
+    zh: '否',
+    synonyms: [],
+    relatedTerms: ['不'],
+    exactOnly: true,
+    category: 'daily'
+  },
+  { zh: '有', synonyms: ['有的'], category: 'daily' },
   { zh: '谢谢', synonyms: ['感谢', '多谢'], category: 'emotions' },
+  {
+    zh: '尿布',
+    synonyms: ['尿片'],
+    exactOnly: true,
+    automaticLabels: ['尿布', '尿片'],
+    category: 'objects'
+  },
+  ...['助听器', '照片', '水果', '房间'].map(zh => ({
+    zh,
+    synonyms: [],
+    exactOnly: true,
+    category: 'objects'
+  })),
+  { zh: '高血压', synonyms: [], exactOnly: true, category: 'medical' },
+  {
+    zh: '谢谢你',
+    synonyms: ['谢谢您'],
+    exactOnly: true,
+    automaticLabels: ['谢谢', '谢谢你', '谢谢您'],
+    category: 'emotions'
+  },
+  ...['你好', '再见', '早上好', '晚上好'].map(zh => ({
+    zh,
+    synonyms: [],
+    exactOnly: true,
+    category: 'daily'
+  })),
+  // Preserve complete objects: 水 and 刀 are not pictures for 须后水 or 剃须刀.
+  ...[
+    '创可贴',
+    '指甲剪',
+    '电动剃须刀',
+    '须后水',
+    '护发素',
+    '止汗剂',
+    '睡衣',
+    '睡袋',
+    '睡莲'
+  ].map(zh => ({
+    zh,
+    synonyms: [],
+    exactOnly: true,
+    category: 'daily'
+  })),
   {
     zh: '想',
     synonyms: ['希望'],
     category: 'actions'
   },
   { zh: '要', synonyms: ['想要', '需要', '需'], category: 'actions' },
-  { zh: '去', synonyms: ['走', '出去'], category: 'actions' },
+  { zh: '去', synonyms: ['出去'], category: 'actions' },
   { zh: '来', synonyms: ['过来'], category: 'actions' },
-  { zh: '吃', synonyms: ['进食', '用餐', '吃饭'], category: 'actions' },
+  { zh: '吃', synonyms: ['进食', '用餐'], category: 'actions' },
+  {
+    zh: '吃饭',
+    synonyms: [],
+    relatedTerms: ['吃', '饭'],
+    exactOnly: true,
+    category: 'actions'
+  },
   { zh: '喝', synonyms: ['饮'], category: 'actions' },
   { zh: '看', synonyms: ['看看', '瞧'], category: 'actions' },
   { zh: '听', synonyms: ['听听'], category: 'actions' },
   { zh: '说', synonyms: ['讲', '告诉'], category: 'actions' },
   { zh: '玩', synonyms: ['游戏'], category: 'actions' },
   { zh: '休息', synonyms: ['歇', '歇歇'], category: 'actions' },
-  { zh: '睡觉', synonyms: ['睡', '躺', '困'], category: 'actions' },
-  { zh: '起床', synonyms: ['起来'], category: 'actions' },
+  { zh: '睡觉', synonyms: ['睡'], category: 'actions' },
+  {
+    zh: '躺',
+    synonyms: [],
+    relatedTerms: ['睡觉'],
+    exactOnly: true,
+    category: 'actions'
+  },
+  {
+    zh: '困',
+    synonyms: [],
+    relatedTerms: ['睡觉'],
+    exactOnly: true,
+    category: 'emotions'
+  },
+  { zh: '起床', synonyms: [], category: 'actions' },
+  {
+    zh: '起来',
+    synonyms: [],
+    relatedTerms: ['起床', '站'],
+    exactOnly: true,
+    category: 'actions'
+  },
   { zh: '坐', synonyms: ['坐下'], category: 'actions' },
   { zh: '站', synonyms: ['站起来'], category: 'actions' },
-  { zh: '走', synonyms: ['走路', '散步'], category: 'actions' },
+  {
+    zh: '走',
+    synonyms: ['走路'],
+    relatedTerms: ['去'],
+    exactOnly: true,
+    automaticLabels: ['走', '走路'],
+    category: 'actions'
+  },
+  {
+    zh: '散步',
+    synonyms: [],
+    relatedTerms: ['走'],
+    exactOnly: true,
+    category: 'actions'
+  },
   { zh: '跑', synonyms: ['跑步'], category: 'actions' },
   {
     zh: '帮忙',
     synonyms: ['帮', '帮你', '帮助', '请帮', '求助'],
     category: 'actions'
   },
-  { zh: '叫', synonyms: ['喊', '叫人', '找'], category: 'actions' },
+  // A conventional request can be one AAC unit; do not force 请 / 帮忙.
+  // The receiver retains the original polite wording when using a help image.
+  {
+    zh: '请帮忙',
+    synonyms: [],
+    relatedTerms: ['帮忙'],
+    exactOnly: true,
+    automaticLabels: ['请帮忙', '帮忙'],
+    category: 'actions'
+  },
+  // Reuse complete requests already present on CBoard's repair/quick-chat
+  // boards. These are curated AAC units, not a generic "please + anything" rule.
+  ...[
+    ['再说一次', '再说一遍', '请再说一次', '请再说一遍'],
+    [
+      '等一下',
+      '请等一下',
+      '稍等一下',
+      '稍等',
+      '等一等',
+      '请稍等',
+      '请稍等一下',
+      '请等一等'
+    ],
+    ['帮帮我', '请帮帮我', '请帮我'],
+    [
+      '说慢一点',
+      '请说慢一点',
+      '慢点说',
+      '请慢点说',
+      '说慢点',
+      '请说慢点',
+      '慢一点说',
+      '请慢一点说'
+    ],
+    ['叫医生', '请叫医生'],
+    ['停止', '停下', '停下来'],
+    ['写下来', '请写下来'],
+    ['指给我看', '请指给我看'],
+    ['给我选项', '请给我选项'],
+    ['不是这个'],
+    ['我说不出话']
+  ].map(labels => ({
+    zh: labels[0],
+    synonyms: labels.slice(1),
+    exactOnly: true,
+    automaticLabels: labels,
+    category: 'actions'
+  })),
+  // A complete expression stays available as text when no equivalent picture
+  // exists. In particular, generic repetition is not necessarily spoken speech.
+  ...[
+    '说不出来',
+    '表达不了',
+    '听不懂',
+    '看不懂',
+    '听不清',
+    '看不清',
+    '不知道',
+    '对不起',
+    '不客气',
+    '不用谢',
+    '没问题',
+    '重复一遍',
+    '再做一遍'
+  ].map(zh => ({ zh, synonyms: [], exactOnly: true, category: 'daily' })),
+  {
+    zh: '叫',
+    synonyms: ['喊', '叫人'],
+    relatedTerms: ['找'],
+    exactOnly: true,
+    automaticLabels: ['叫', '喊', '叫人'],
+    category: 'actions'
+  },
+  {
+    zh: '找',
+    synonyms: ['寻找'],
+    relatedTerms: ['叫'],
+    exactOnly: true,
+    automaticLabels: ['找', '寻找'],
+    category: 'actions'
+  },
   { zh: '买', synonyms: ['购买', '购物'], category: 'actions' },
-  { zh: '洗手', synonyms: ['洗'], category: 'actions' },
-  { zh: '刷牙', synonyms: ['刷'], category: 'actions' },
-  { zh: '不要', synonyms: ['不想', '不需要', '不用'], category: 'actions' },
-  { zh: '回家', synonyms: ['回去'], category: 'actions' },
+  { zh: '洗手', synonyms: [], exactOnly: true, category: 'actions' },
+  { zh: '洗脸', synonyms: [], exactOnly: true, category: 'actions' },
+  { zh: '翻身', synonyms: [], exactOnly: true, category: 'actions' },
+  { zh: '躺下', synonyms: [], exactOnly: true, category: 'actions' },
+  {
+    zh: '洗',
+    synonyms: [],
+    relatedTerms: ['洗手'],
+    exactOnly: true,
+    category: 'actions'
+  },
+  { zh: '刷牙', synonyms: [], exactOnly: true, category: 'actions' },
+  {
+    zh: '刷',
+    synonyms: [],
+    relatedTerms: ['刷牙'],
+    exactOnly: true,
+    category: 'actions'
+  },
+  { zh: '不要', synonyms: [], category: 'actions' },
+  // These are whole lexical meanings, not a generic negative prefix + action.
+  { zh: '没关系', synonyms: [], exactOnly: true, category: 'daily' },
+  { zh: '不一定', synonyms: [], exactOnly: true, category: 'daily' },
+  { zh: '不得不', synonyms: [], exactOnly: true, category: 'actions' },
+  {
+    zh: '不想',
+    synonyms: [],
+    relatedTerms: ['不要'],
+    exactOnly: true,
+    category: 'actions'
+  },
+  {
+    zh: '不需要',
+    synonyms: [],
+    relatedTerms: ['不要'],
+    exactOnly: true,
+    category: 'actions'
+  },
+  {
+    zh: '不用',
+    synonyms: [],
+    relatedTerms: ['不要'],
+    exactOnly: true,
+    category: 'actions'
+  },
+  { zh: '回家', synonyms: [], category: 'actions' },
+  {
+    zh: '回去',
+    synonyms: [],
+    relatedTerms: ['回家'],
+    exactOnly: true,
+    category: 'actions'
+  },
   { zh: '开心', synonyms: ['高兴', '快乐', '愉快'], category: 'emotions' },
-  { zh: '伤心', synonyms: ['难过', '不开心', '悲伤'], category: 'emotions' },
+  { zh: '伤心', synonyms: ['难过', '悲伤'], category: 'emotions' },
+  // Unhappy may mean angry, disappointed, etc.; do not infer sadness.
+  { zh: '不开心', synonyms: [], exactOnly: true, category: 'emotions' },
   { zh: '害怕', synonyms: ['怕', '恐惧', '吓'], category: 'emotions' },
   { zh: '喜欢', synonyms: ['爱', '喜爱'], category: 'emotions' },
   {
     zh: '痛',
-    synonyms: [
-      '疼',
-      '疼痛',
-      '腰疼',
-      '腰痛',
-      '牙疼',
-      '牙痛',
-      '背疼',
-      '背痛',
-      '腿疼',
-      '腿痛'
-    ],
+    synonyms: ['疼', '疼痛'],
+    category: 'medical'
+  },
+  // A generic pain tile cannot carry the body location. Explicit label pairs
+  // allow genuine spelling variants without accepting legacy broad synonyms.
+  { zh: '腰背痛', synonyms: [], exactOnly: true, category: 'medical' },
+  { zh: '指甲', synonyms: [], exactOnly: true, category: 'medical' },
+  {
+    zh: '腰痛',
+    synonyms: ['腰疼'],
+    exactOnly: true,
+    automaticLabels: ['腰痛', '腰疼'],
+    category: 'medical'
+  },
+  {
+    zh: '牙痛',
+    synonyms: ['牙疼'],
+    exactOnly: true,
+    automaticLabels: ['牙痛', '牙疼'],
+    category: 'medical'
+  },
+  {
+    zh: '背痛',
+    synonyms: ['背疼'],
+    exactOnly: true,
+    automaticLabels: ['背痛', '背疼'],
+    category: 'medical'
+  },
+  {
+    zh: '腿痛',
+    synonyms: ['腿疼'],
+    exactOnly: true,
+    automaticLabels: ['腿痛', '腿疼'],
     category: 'medical'
   },
   { zh: '头痛', synonyms: ['头疼'], category: 'medical' },
@@ -103,12 +451,34 @@ export const CHINESE_COMMUNICATION_LEXICON = [
   },
   {
     zh: '恶心',
-    synonyms: ['想吐', '呕吐', '反胃', '吐', '干呕', '想呕吐'],
+    synonyms: ['想吐', '反胃', '想呕吐'],
+    relatedTerms: ['呕吐', '吐', '干呕'],
+    exactOnly: true,
+    automaticLabels: ['恶心', '想吐', '反胃', '想呕吐'],
+    category: 'medical'
+  },
+  // Feeling nauseated, vomiting, and retching need distinct candidates even
+  // when an older saved board lists all three in one synonym field.
+  {
+    zh: '呕吐',
+    synonyms: ['吐'],
+    relatedTerms: ['恶心', '干呕'],
+    exactOnly: true,
+    automaticLabels: ['呕吐', '吐'],
+    category: 'medical'
+  },
+  {
+    zh: '干呕',
+    synonyms: [],
+    relatedTerms: ['恶心', '呕吐'],
+    exactOnly: true,
     category: 'medical'
   },
   {
     zh: '呼吸困难',
     synonyms: ['喘不过气', '气促', '透不过气', '呼吸不顺'],
+    exactOnly: true,
+    automaticLabels: ['呼吸困难', '喘不过气', '气促', '透不过气', '呼吸不顺'],
     category: 'medical'
   },
   {
@@ -118,9 +488,13 @@ export const CHINESE_COMMUNICATION_LEXICON = [
   },
   {
     zh: '换衣服',
-    synonyms: ['换衣', '换件衣服', '换身衣服', '穿衣服'],
+    synonyms: ['换衣', '换件衣服', '换身衣服'],
+    relatedTerms: ['穿衣服'],
+    exactOnly: true,
+    automaticLabels: ['换衣服', '换衣', '换件衣服', '换身衣服'],
     category: 'daily'
   },
+  { zh: '穿衣服', synonyms: [], exactOnly: true, category: 'daily' },
   {
     zh: '运动',
     synonyms: ['锻炼', '健身', '做运动', '活动一下'],
@@ -150,7 +524,24 @@ export const CHINESE_COMMUNICATION_LEXICON = [
   { zh: '护士', synonyms: [], category: 'people' },
   {
     zh: '治疗师',
-    synonyms: ['康复师', '语言治疗师'],
+    synonyms: [],
+    relatedTerms: ['康复师', '语言治疗师'],
+    exactOnly: true,
+    category: 'people'
+  },
+  {
+    zh: '康复师',
+    synonyms: [],
+    relatedTerms: ['治疗师'],
+    exactOnly: true,
+    category: 'people'
+  },
+  {
+    zh: '语言治疗师',
+    synonyms: ['言语治疗师'],
+    relatedTerms: ['治疗师'],
+    exactOnly: true,
+    automaticLabels: ['语言治疗师', '言语治疗师'],
     category: 'people'
   },
   {
@@ -167,10 +558,18 @@ export const CHINESE_COMMUNICATION_LEXICON = [
   { zh: '公园', synonyms: ['花园'], category: 'places' },
   { zh: '超市', synonyms: ['商店', '商场', '购物'], category: 'places' },
   { zh: '厕所', synonyms: ['洗手间', '卫生间', '上厕所'], category: 'daily' },
-  { zh: '水', synonyms: ['饮水', '喝水', '杯水'], category: 'food' },
-  { zh: '饭', synonyms: ['米饭', '吃饭', '餐'], category: 'food' },
+  { zh: '水', synonyms: ['杯水'], category: 'food' },
+  {
+    zh: '喝水',
+    synonyms: ['饮水'],
+    exactOnly: true,
+    automaticLabels: ['喝水', '饮水'],
+    category: 'actions'
+  },
+  { zh: '饭', synonyms: ['米饭', '餐'], category: 'food' },
   { zh: '牛奶', synonyms: ['奶'], category: 'food' },
-  { zh: '茶', synonyms: ['喝茶'], category: 'food' },
+  { zh: '茶', synonyms: [], category: 'food' },
+  { zh: '喝茶', synonyms: [], exactOnly: true, category: 'actions' },
   { zh: '咖啡', synonyms: [], category: 'food' },
   { zh: '面包', synonyms: [], category: 'food' },
   { zh: '苹果', synonyms: [], category: 'food' },
@@ -181,7 +580,16 @@ export const CHINESE_COMMUNICATION_LEXICON = [
   { zh: '糖', synonyms: ['糖果'], category: 'food' },
   { zh: '冰淇淋', synonyms: ['雪糕'], category: 'food' },
   { zh: '药', synonyms: ['药物'], category: 'objects' },
-  { zh: '吃药', synonyms: ['服药'], category: 'actions' },
+  {
+    zh: '吃药',
+    synonyms: ['服药'],
+    exactOnly: true,
+    automaticLabels: ['吃药', '服药'],
+    category: 'actions'
+  },
+  // Unspecified slower movement/eating must not imply slower speech.
+  { zh: '慢一点', synonyms: [], exactOnly: true, category: 'actions' },
+  { zh: '慢点', synonyms: [], exactOnly: true, category: 'actions' },
   { zh: '手机', synonyms: ['电话'], category: 'objects' },
   {
     zh: '打电话',
@@ -197,19 +605,104 @@ export const CHINESE_COMMUNICATION_LEXICON = [
   { zh: '现在', synonyms: [], category: 'time' },
   { zh: '早上', synonyms: ['上午'], category: 'time' },
   { zh: '下午', synonyms: [], category: 'time' },
-  { zh: '今晚', synonyms: ['晚上'], category: 'time' },
+  {
+    zh: '今晚',
+    synonyms: ['今夜', '今天晚上'],
+    relatedTerms: ['晚上', '夜晚'],
+    exactOnly: true,
+    category: 'time'
+  },
+  { zh: '晚上', synonyms: ['夜晚', '夜间'], category: 'time' },
   { zh: '早饭', synonyms: ['早餐'], category: 'food' },
   { zh: '午饭', synonyms: ['午餐', '中饭'], category: 'food' },
   { zh: '晚饭', synonyms: ['晚餐'], category: 'food' },
-  { zh: '和', synonyms: ['跟', '与'], category: 'daily' }
+  { zh: '和', synonyms: ['跟', '与'], category: 'daily' },
+  { zh: '口水', synonyms: [], exactOnly: true, category: 'medical' },
+  // Whole objects and question operators must not borrow a picture for an
+  // embedded word (e.g. 助行器 -> 行/好, 眼镜盒 -> 眼镜).
+  ...['助行器', '助听器', '洗发水', '指甲油', '眼镜盒', '保温杯'].map(zh => ({
+    zh,
+    synonyms: [],
+    exactOnly: true,
+    category: 'objects'
+  })),
+  ...['是不是', '要不要', '可不可以', '好不好'].map(zh => ({
+    zh,
+    synonyms: [],
+    exactOnly: true,
+    category: 'daily'
+  }))
 ];
 
 // These terms come from PicInterpreter's receiver fixtures and high-risk
 // vocabulary review. They must survive tokenization even when no picture is
 // available, otherwise partial matching can reverse or dilute the meaning.
 const SEGMENTATION_GUARD_TERMS = [
+  '蓝色',
+  '洗头',
+  '这里',
+  '这个',
+  '那个',
+  '复查',
+  '理解',
+  '危险',
+  '打针',
+  // Existing CBoard emergency actions remain whole after guarding 叫/找.
+  '叫医生',
+  '叫家人',
+  '翻身',
+  '调整',
+  '靠背',
+  '温开水',
+  '冷水',
+  '热水',
+  '温水',
+  '水温',
+  '不能',
+  '代表',
+  '当成',
+  '如果',
+  '一下',
+  '房间',
+  '后天',
+  '右腿',
+  '右肩',
+  '左肩',
   '苹果手机',
+  // These are distinct objects, not an ingredient/action plus a loose suffix.
+  // Keep their full query on Intl and fallback paths so backfill can find them.
+  '葡萄柚',
+  '葡萄干',
+  '葡萄汁',
+  '葡萄酒',
+  '苹果汁',
+  '苹果醋',
+  '菠萝蜜',
+  '胡萝卜汁',
+  '西红柿酱',
+  '花生油',
+  '花生酱',
+  '牛肉面',
+  '牛肉丸',
+  '鸡蛋糕',
+  '蛋糕卷',
+  '洗手液',
+  '自行车道',
+  '牙刷架',
+  '牙膏盒',
+  '手机壳',
+  '游泳池',
   '开心果',
+  // Preserve the object identity; fragments may describe a different object
+  // or action and would prevent an exact whole-object backfill request.
+  '鸡肉卷',
+  '豆腐脑',
+  '洗衣液',
+  '洗衣机',
+  '电动车',
+  '电话卡',
+  '热水袋',
+  '饮用水',
   '要不要',
   '好不好',
   '等一下',
@@ -252,12 +745,7 @@ const SEGMENTATION_GUARD_TERMS = [
 
 // CBoard has useful standalone action and object tiles for these expressions.
 // Keeping the compound would hide those concepts from the receiver sequence.
-const SEGMENTATION_COMPOSITION_TERMS = new Set([
-  '吃饭',
-  '喝水',
-  '饮水',
-  '喝茶'
-]);
+const SEGMENTATION_COMPOSITION_TERMS = new Set(['喝水', '饮水', '喝茶']);
 
 const zhIndex = new Map();
 const synonymIndex = new Map();
@@ -273,8 +761,89 @@ export function findChineseCommunicationEntry(word) {
   return zhIndex.get(word) || synonymIndex.get(word);
 }
 
+export function isAutomaticCommunicationCandidateAllowed(
+  word,
+  displayLabel,
+  spokenLabel = displayLabel,
+  tile = {}
+) {
+  if (
+    (tile.pictogramSemantics ||
+      tile.boardId === 'runtime-pictograms' ||
+      String(tile.id || '').startsWith('runtime_')) &&
+    !isPictogramSemanticMatchAllowed(word, tile.pictogramSemantics)
+  )
+    return false;
+  // Correct the English "can" noun/permission collision in saved boards and
+  // cached suggestions too. Explicit caregiver choices remain manual choices.
+  const attribution = tile.pictogramAttribution || {};
+  const isTinCan =
+    String(tile.pictogramOriginalId || '') === '6544' ||
+    (attribution.provider === 'arasaac' &&
+      String(attribution.originalId) === '6544') ||
+    /(?:^|\/)6544\.png(?:[?#]|$)/.test(String(tile.image || ''));
+  if (isTinCan && ['可以', '能', '能够'].includes(word)) return false;
+  // Old boards may retain the translated alias even after the profile is fixed.
+  const isCutleryFork =
+    tile.labelKey === 'symbol.foodKitchenItems.fork' ||
+    /(?:^|\/)fork\.svg(?:[?#]|$)/.test(String(tile.image || ''));
+  if (isCutleryFork && word === '分叉') return false;
+  // Pixel review 2026-10-16: old iNeed cards use the helping-hands drawing.
+  // The fingerprint is the existing generated WeChat copy of that same SVG;
+  // retain the guard for saved boards after the default image is replaced.
+  const isHelpingHands =
+    /(?:^|\/)(?:help_,_to\.svg|5083f4d4500e0f76\.png)(?:[?#]|$)/.test(
+      String(tile.image || '')
+    ) ||
+    (attribution.provider === 'mulberry' &&
+      attribution.originalId === 'help_,_to.svg');
+  if (isHelpingHands && ['要', '想要', '需要', '需', '我需要'].includes(word))
+    return false;
+  const isFirstPerson =
+    (tile.pictogramProvider === 'arasaac' &&
+      String(tile.pictogramOriginalId) === '6632') ||
+    (attribution.provider === 'arasaac' &&
+      String(attribution.originalId) === '6632') ||
+    /(?:^|\/)6632\.png(?:[?#]|$)/.test(String(tile.image || ''));
+  if (isFirstPerson && ['自己', '本人'].includes(word)) return false;
+  const image = String(tile.image || '');
+  const isMalePronoun =
+    (tile.pictogramProvider === 'arasaac' &&
+      String(tile.pictogramOriginalId) === '6480') ||
+    (attribution.provider === 'arasaac' &&
+      String(attribution.originalId) === '6480') ||
+    /(?:^|\/)(?:6480|27542f3f4b2084cc)\.png(?:[?#]|$)/.test(image);
+  if (isMalePronoun && word === '她') return false;
+  const isFemalePronoun =
+    (tile.pictogramProvider === 'arasaac' &&
+      tile.pictogramOriginalId === 'she.png') ||
+    (attribution.provider === 'arasaac' &&
+      attribution.originalId === 'she.png') ||
+    /\/symbols\/arasaac\/she\.png(?:[?#]|$)/.test(image);
+  if (isFemalePronoun && word === '他') return false;
+  const isJarOpening =
+    /(?:^|\/)(?:open_,_to\.svg|157a1fa5acb46be1\.png)(?:[?#]|$)/.test(image) ||
+    (attribution.provider === 'mulberry' &&
+      attribution.originalId === 'open_,_to.svg');
+  if (isJarOpening && !['拧开盖子', '拧开瓶盖'].includes(word)) return false;
+  const isOpenState =
+    /(?:^|\/)(?:open_2\.svg|8a84c933d83a7e2b\.png)(?:[?#]|$)/.test(image) ||
+    (attribution.provider === 'mulberry' &&
+      attribution.originalId === 'open_2.svg');
+  if (isOpenState && word === '打开') return false;
+  const entry = findChineseCommunicationEntry(word);
+  return (
+    !(entry && entry.exactOnly) ||
+    [displayLabel, spokenLabel].every(
+      label => label === word || (entry.automaticLabels || []).includes(label)
+    )
+  );
+}
+
 export function getChineseCommunicationSegmentationTerms() {
-  const terms = new Set(SEGMENTATION_GUARD_TERMS);
+  const terms = new Set(
+    SEGMENTATION_GUARD_TERMS.concat(getPictogramSegmentationTerms())
+  );
 
   CHINESE_COMMUNICATION_LEXICON.forEach(entry => {
     [entry.zh].concat(entry.synonyms || []).forEach(term => {

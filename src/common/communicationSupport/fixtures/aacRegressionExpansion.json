@@ -1,0 +1,249 @@
+{
+  "schemaVersion": 1,
+  "evidenceType": "synthetic-engineering-corpus",
+  "createdAt": "2026-10-01T11:13:11.168Z",
+  "evaluationRole": "regression",
+  "scope": "Assistant-authored synthetic engineering references, not real patients or clinical gold. Frozen candidate was authored and inspected in this session; not an independent blind test.",
+  "cases": [
+    {
+      "id": "regression-negation-1",
+      "category": "negation",
+      "text": "我不要吃药",
+      "referenceTokens": ["我", "不", "要", "吃", "药"]
+    },
+    {
+      "id": "regression-negation-2",
+      "category": "negation",
+      "text": "我没有头痛",
+      "referenceTokens": ["我", "没有", "头痛"]
+    },
+    {
+      "id": "regression-negation-3",
+      "category": "negation",
+      "text": "别给我喝冷水",
+      "referenceTokens": ["别", "给", "我", "喝", "冷水"]
+    },
+    {
+      "id": "regression-negation-4",
+      "category": "negation",
+      "text": "我不是不饿",
+      "referenceTokens": ["我", "不", "是", "不", "饿"]
+    },
+    {
+      "id": "regression-repetition-1",
+      "category": "repetition",
+      "text": "痛痛痛",
+      "referenceTokens": ["痛", "痛", "痛"]
+    },
+    {
+      "id": "regression-repetition-2",
+      "category": "repetition",
+      "text": "不要不要打针",
+      "referenceTokens": ["不要", "不要", "打针"]
+    },
+    {
+      "id": "regression-repetition-3",
+      "category": "repetition",
+      "text": "水水水，我要水",
+      "referenceTokens": ["水", "水", "水", "，", "我", "要", "水"]
+    },
+    {
+      "id": "regression-repetition-4",
+      "category": "repetition",
+      "text": "我要去，我要去",
+      "referenceTokens": ["我", "要", "去", "，", "我", "要", "去"]
+    },
+    {
+      "id": "regression-body-1",
+      "category": "body",
+      "text": "我左手疼",
+      "referenceTokens": ["我", "左", "手", "疼"]
+    },
+    {
+      "id": "regression-body-2",
+      "category": "body",
+      "text": "右腿麻",
+      "referenceTokens": ["右", "腿", "麻"]
+    },
+    {
+      "id": "regression-body-3",
+      "category": "body",
+      "text": "我牙痛，不是头痛",
+      "referenceTokens": ["我", "牙痛", "，", "不", "是", "头痛"]
+    },
+    {
+      "id": "regression-body-4",
+      "category": "body",
+      "text": "肚子疼，背不疼",
+      "referenceTokens": ["肚子", "疼", "，", "背", "不", "疼"]
+    },
+    {
+      "id": "regression-order-1",
+      "category": "order",
+      "text": "先喝水再吃药",
+      "referenceTokens": ["先", "喝", "水", "再", "吃", "药"]
+    },
+    {
+      "id": "regression-order-2",
+      "category": "order",
+      "text": "吃饭以后再散步",
+      "referenceTokens": ["吃饭", "以后", "再", "散步"]
+    },
+    {
+      "id": "regression-order-3",
+      "category": "order",
+      "text": "先坐下，然后站起来",
+      "referenceTokens": ["先", "坐下", "，", "然后", "站起来"]
+    },
+    {
+      "id": "regression-order-4",
+      "category": "order",
+      "text": "别先走，等家属",
+      "referenceTokens": ["别", "先", "走", "，", "等", "家属"]
+    },
+    {
+      "id": "regression-quantity-1",
+      "category": "quantity",
+      "text": "只喝两口水",
+      "referenceTokens": ["只", "喝", "两", "口", "水"]
+    },
+    {
+      "id": "regression-quantity-2",
+      "category": "quantity",
+      "text": "今天吃了三次药",
+      "referenceTokens": ["今天", "吃", "了", "三", "次", "药"]
+    },
+    {
+      "id": "regression-quantity-3",
+      "category": "quantity",
+      "text": "明天下午三点来",
+      "referenceTokens": ["明天", "下午", "三", "点", "来"]
+    },
+    {
+      "id": "regression-quantity-4",
+      "category": "quantity",
+      "text": "水温是37.5℃",
+      "referenceTokens": ["水温", "是", "37.5", "℃"]
+    },
+    {
+      "id": "regression-alternatives-1",
+      "category": "alternatives",
+      "text": "要喝水还是喝牛奶？",
+      "referenceTokens": ["要", "喝", "水", "还是", "喝", "牛奶", "？"]
+    },
+    {
+      "id": "regression-alternatives-2",
+      "category": "alternatives",
+      "text": "你想坐还是躺？",
+      "referenceTokens": ["你", "想", "坐", "还是", "躺", "？"]
+    },
+    {
+      "id": "regression-alternatives-3",
+      "category": "alternatives",
+      "text": "是左边，不是右边",
+      "referenceTokens": ["是", "左边", "，", "不", "是", "右边"]
+    },
+    {
+      "id": "regression-alternatives-4",
+      "category": "alternatives",
+      "text": "可以等，不能走",
+      "referenceTokens": ["可以", "等", "，", "不能", "走"]
+    },
+    {
+      "id": "regression-care-1",
+      "category": "care",
+      "text": "请帮我翻身",
+      "referenceTokens": ["请", "帮", "我", "翻身"]
+    },
+    {
+      "id": "regression-care-2",
+      "category": "care",
+      "text": "我想上厕所",
+      "referenceTokens": ["我", "想", "上", "厕所"]
+    },
+    {
+      "id": "regression-care-3",
+      "category": "care",
+      "text": "请把轮椅推过来",
+      "referenceTokens": ["请", "把", "轮椅", "推", "过来"]
+    },
+    {
+      "id": "regression-care-4",
+      "category": "care",
+      "text": "请叫护士来",
+      "referenceTokens": ["请", "叫", "护士", "来"]
+    },
+    {
+      "id": "regression-compounds-1",
+      "category": "compounds",
+      "text": "我想吃开心果",
+      "referenceTokens": ["我", "想", "吃", "开心果"]
+    },
+    {
+      "id": "regression-compounds-2",
+      "category": "compounds",
+      "text": "苹果手机需要充电",
+      "referenceTokens": ["苹果手机", "需要", "充电"]
+    },
+    {
+      "id": "regression-compounds-3",
+      "category": "compounds",
+      "text": "不要把洗发水当成洗头",
+      "referenceTokens": ["不要", "把", "洗发水", "当成", "洗头"]
+    },
+    {
+      "id": "regression-compounds-4",
+      "category": "compounds",
+      "text": "我要找充电器",
+      "referenceTokens": ["我", "要", "找", "充电器"]
+    },
+    {
+      "id": "regression-formatting-1",
+      "category": "formatting",
+      "text": "  我不要水！  ",
+      "referenceTokens": ["  ", "我", "不", "要", "水", "！", "  "]
+    },
+    {
+      "id": "regression-formatting-2",
+      "category": "formatting",
+      "text": "不 喝水",
+      "referenceTokens": ["不", " ", "喝", "水"]
+    },
+    {
+      "id": "regression-formatting-3",
+      "category": "formatting",
+      "text": "我要水\n别加冰",
+      "referenceTokens": ["我", "要", "水", "\n", "别", "加", "冰"]
+    },
+    {
+      "id": "regression-formatting-4",
+      "category": "formatting",
+      "text": "请给我水💧，谢谢",
+      "referenceTokens": ["请", "给", "我", "水", "💧", "，", "谢谢"]
+    },
+    {
+      "id": "regression-unknown-1",
+      "category": "unknown",
+      "text": "我要阿澈来",
+      "referenceTokens": ["我", "要", "阿澈", "来"]
+    },
+    {
+      "id": "regression-unknown-2",
+      "category": "unknown",
+      "text": "请带蓝色保温杯",
+      "referenceTokens": ["请", "带", "蓝色", "保温杯"]
+    },
+    {
+      "id": "regression-unknown-3",
+      "category": "unknown",
+      "text": "我的助听器没有电",
+      "referenceTokens": ["我", "的", "助听器", "没有", "电"]
+    },
+    {
+      "id": "regression-unknown-4",
+      "category": "unknown",
+      "text": "请找A12房间",
+      "referenceTokens": ["请", "找", "A12", "房间"]
+    }
+  ]
+}

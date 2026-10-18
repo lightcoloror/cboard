@@ -23,6 +23,10 @@ export const mapStateToProps = ({ board, app, speech = {} }, ownProps) => ({
   isLogged: Boolean(
     !ownProps.demoMode && app && app.userData && app.userData.authToken
   ),
+  accountId:
+    !ownProps.demoMode && app && app.userData
+      ? String(app.userData.id || app.userData._id || '')
+      : '',
   displaySettings: (app && app.displaySettings) || {},
   speechSettings: {
     voiceURI: speech.options && speech.options.voiceURI,

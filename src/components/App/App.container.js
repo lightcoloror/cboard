@@ -36,6 +36,8 @@ export const resetSyncThrottle = () => {
 };
 
 export class AppContainer extends Component {
+  state = { offlineReadiness: { status: 'preparing' } };
+
   static propTypes = {
     /**
      * App language direction
@@ -123,9 +125,10 @@ export class AppContainer extends Component {
       }
     };
 
-    registerServiceWorker(
+    this.stopServiceWorkerUpdates = registerServiceWorker(
       this.handleNewContentAvailable,
-      this.handleContentCached
+      this.handleContentCached,
+      this.handleOfflineReadinessChange
     );
 
     localizeUser();
@@ -153,6 +156,7 @@ export class AppContainer extends Component {
   }
 
   componentWillUnmount() {
+    if (this.stopServiceWorkerUpdates) this.stopServiceWorkerUpdates();
     cleanUpCvaOnResume(this.handleCvaResume);
     document.removeEventListener(
       'visibilitychange',
@@ -224,6 +228,10 @@ export class AppContainer extends Component {
     showNotification(intl.formatMessage(messages.contentIsCached));
   };
 
+  handleOfflineReadinessChange = offlineReadiness => {
+    this.setState({ offlineReadiness });
+  };
+
   render() {
     const {
       dir,
@@ -255,6 +263,7 @@ export class AppContainer extends Component {
         dark={displaySettings.darkThemeActive}
         isDownloadingLang={isDownloadingLang}
         demoMode={demoMode}
+        offlineReadiness={this.state.offlineReadiness}
       />
     );
   }

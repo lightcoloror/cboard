@@ -35,6 +35,40 @@ const receiverEntry = {
 };
 
 describe('communication repository receiver lifecycle', () => {
+  test('restores unfinished work after idle expiry without restoring old AI context', () => {
+    const storage = createMemoryStorage();
+    let timestamp = 100;
+    let sequence = 0;
+    const open = () =>
+      createCommunicationRepository({
+        storage,
+        now: () => timestamp,
+        createId: prefix => `${prefix}-${++sequence}`
+      });
+    const first = open();
+    first.appendCommunicationHistory({
+      direction: 'express',
+      sentence: '旧对话',
+      labels: ['旧对话']
+    });
+    const draft = first.createReceiverDraft(receiverEntry);
+    timestamp += 31 * 60 * 1000;
+    const reopened = open();
+    const restored = reopened.loadResumableReceiverRecord();
+    expect(restored).toEqual(
+      expect.objectContaining({
+        id: draft.id,
+        inputText: receiverEntry.inputText,
+        pictogramSequence: draft.pictogramSequence
+      })
+    );
+    expect(restored.sessionId).not.toBe(draft.sessionId);
+    expect(reopened.loadConversationContext().turns).toEqual([]);
+    expect(open().loadResumableReceiverRecord().id).toBe(draft.id);
+    reopened.resetConversationSession();
+    expect(open().loadResumableReceiverRecord()).toBeNull();
+    expect(open().loadCommunicationHistory()).toHaveLength(1);
+  });
   test('supports the 51st draft without treating it as legacy history needing a backup', () => {
     const storage = createMemoryStorage();
     const originalSet = storage.setItem;

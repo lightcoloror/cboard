@@ -128,6 +128,7 @@ jest.mock('../../../common/communicationSupport/localData', () => ({
   createReceiverDraft: jest.fn(),
   discardResumableReceiverRecord: jest.fn(),
   getActiveConversationSession: jest.fn(),
+  getCommunicationStorageScopeKey: jest.fn(() => 'local'),
   loadCommunicationHistory: jest.fn(),
   loadCommunicationPreferences: jest.fn(),
   loadCommunicationSavedPhrases: jest.fn(),
@@ -277,6 +278,61 @@ describe('CommunicationSupportPanel receiver flow', () => {
     ).not.toContainEqual(shared);
     wrapper.unmount();
   });
+
+  test.each(
+    ['disabled', 'login', 'profile', 'funding', 'ready'].flatMap(state =>
+      ['express', 'receive'].map(mode => [state, mode])
+    )
+  )(
+    'shows the controlled text AI state for %s in %s without calling the service',
+    (state, mode) => {
+      const previous = { ...process.env };
+      let wrapper;
+      process.env.REACT_APP_TUYUJIA_CLOUD_TRIAL = 'true';
+      process.env.REACT_APP_CARE_AI_TRIAL =
+        state === 'disabled' ? 'false' : 'true';
+      const accountId = 'synthetic-ai-ui';
+      try {
+        if (['funding', 'ready'].includes(state))
+          localStorage.setItem(
+            `care-selection-v1:${accountId}`,
+            JSON.stringify({ id: 'profile-ui' })
+          );
+        if (state === 'ready')
+          localStorage.setItem(
+            `care-funding-v1:${accountId}:profile-ui`,
+            'fund-ui'
+          );
+        wrapper = mount(
+          <CommunicationSupportPanel
+            {...props}
+            careMode
+            accountId={accountId}
+            isLogged={state !== 'login'}
+            initialMode={mode}
+          />
+        );
+        const panel = wrapper.find(
+          mode === 'express' ? 'ExpressionLoopPanel' : 'ReceiverLoopPanel'
+        );
+        expect(panel.prop('aiAvailable')).toBe(state === 'ready');
+        const expected = {
+          disabled: '尚未开放在线 AI',
+          login: '请先登录',
+          profile: '选择患者档案',
+          funding: '选择 AI 额度来源'
+        };
+        if (state !== 'ready') expect(panel.text()).toContain(expected[state]);
+        expect(API.resegmentCommunicationText).not.toHaveBeenCalled();
+        expect(API.generateCommunicationSentences).not.toHaveBeenCalled();
+      } finally {
+        if (wrapper) wrapper.unmount();
+        process.env = previous;
+        localStorage.removeItem(`care-selection-v1:${accountId}`);
+        localStorage.removeItem(`care-funding-v1:${accountId}:profile-ui`);
+      }
+    }
+  );
 
   beforeEach(() => {
     jest.useFakeTimers();
@@ -802,6 +858,40 @@ describe('CommunicationSupportPanel receiver flow', () => {
     );
   });
 
+  test('reveals three choices after board selection and respects deliberate collapse', () => {
+    const wrapper = mount(
+      <CommunicationSupportPanel
+        {...props}
+        initiallyExpanded={false}
+        initialMode="receive"
+        autoExpandOnOutput
+        output={[]}
+      />
+    );
+    expect(wrapper.find('ExpressionLoopPanel').exists()).toBe(false);
+    wrapper.setProps({ output: mockedOutput });
+    wrapper.update();
+    expect(wrapper.find('ExpressionLoopPanel').exists()).toBe(true);
+    expect(
+      wrapper.find('button.CommunicationSupportPanel__candidate')
+    ).toHaveLength(3);
+    wrapper
+      .find(PatientActionButton)
+      .filterWhere(
+        button => button.prop('action') === PATIENT_ACTION_IDS.express
+      )
+      .first()
+      .simulate('click');
+    wrapper.setProps({ output: mockedOutput.map(item => ({ ...item })) });
+    expect(wrapper.find('ExpressionLoopPanel').exists()).toBe(false);
+    wrapper.setProps({
+      output: [...mockedOutput, { id: 'please', label: '请' }]
+    });
+    wrapper.update();
+    expect(wrapper.find('ExpressionLoopPanel').exists()).toBe(true);
+    wrapper.unmount();
+  });
+
   test('wires optional AI through the existing authenticated API client', async () => {
     let wrapper;
     await act(async () => {
@@ -916,6 +1006,156 @@ describe('CommunicationSupportPanel receiver flow', () => {
     );
     expect(localData.reviewMissingToken).toHaveBeenCalledTimes(1);
   });
+
+  test('ranks a later qualified candidate before the four-picture UI limit', async () => {
+    const missing = {
+      id: 'rank-gap',
+      normalizedToken: '回家',
+      status: 'new',
+      updatedAt: 1,
+      rawTextSamples: [],
+      occurrenceCount: 1
+    };
+    localData.loadMissingTokens.mockReturnValue([missing]);
+    const { buildArasaacSemanticFields } = jest.requireActual(
+      '../../../common/communicationSupport/pictogramSemantics'
+    );
+    API.searchCommunicationPictograms.mockResolvedValue(
+      [1, 2, 3, 4, 29714].map(id => ({
+        token: '回家',
+        pictogram: {
+          id: `rank-${id}`,
+          image: `/pictures/${id}.png`,
+          ...buildArasaacSemanticFields(
+            '回家',
+            id === 29714 ? 'come back' : 'go home',
+            'en',
+            id,
+            {
+              keywords: [{ keyword: id === 29714 ? 'come back' : 'go home' }]
+            }
+          ),
+          source: {
+            provider: 'arasaac',
+            originalId: String(id),
+            name: 'ARASAAC',
+            license: 'CC BY-NC-SA 4.0',
+            sourceUrl: `https://arasaac.org/pictograms/${id}`
+          }
+        }
+      }))
+    );
+    const wrapper = mount(
+      <CommunicationSupportPanel {...props} initialMode="receive" />
+    );
+    await act(async () => {
+      await wrapper
+        .find('MissingTokenQueue')
+        .first()
+        .prop('onSearchOnline')([missing.id]);
+    });
+    const review = localData.reviewMissingToken.mock.calls[0][1];
+    expect(review.suggestedPictograms.map(p => p.source.originalId)).toEqual([
+      '29714',
+      '1',
+      '2',
+      '3'
+    ]);
+    expect(review.status).toBe('suggested');
+    wrapper.unmount();
+  });
+
+  test('automatically searches newly recorded gaps once without adopting candidates', async () => {
+    const missing = {
+      id: 'auto-gap',
+      normalizedToken: '家里人',
+      status: 'new',
+      updatedAt: 1,
+      rawTextSamples: []
+    };
+    localData.loadCommunicationPreferences.mockReturnValue({
+      onlinePictogramSearchEnabled: true
+    });
+    localData.recordMissingTokens.mockReturnValue([missing]);
+    localData.loadMissingTokens.mockReturnValue([missing]);
+    API.searchCommunicationPictograms.mockReset();
+    API.searchCommunicationPictograms.mockResolvedValue([]);
+    const wrapper = mount(
+      <CommunicationSupportPanel {...props} initialMode="receive" />
+    );
+    const record = wrapper
+      .find('ReceiverLoopPanel')
+      .first()
+      .prop('onRecordMissingTokens');
+    await act(async () => {
+      record({ tokens: ['家里人'] });
+      record({ tokens: ['家里人'] });
+    });
+    expect(API.searchCommunicationPictograms).toHaveBeenCalledTimes(1);
+    expect(API.searchCommunicationPictograms).toHaveBeenCalledWith(['家里人']);
+    expect(localData.reviewMissingToken).not.toHaveBeenCalled();
+    wrapper.unmount();
+    localData.loadCommunicationPreferences.mockReturnValue({});
+  });
+
+  test.each(['scope', 'review', 'unmount'])(
+    'discards late search results after %s changes',
+    async change => {
+      const missing = {
+        id: 'late-gap',
+        normalizedToken: '家里人',
+        status: 'new',
+        updatedAt: 1,
+        rawTextSamples: []
+      };
+      localData.loadMissingTokens.mockReturnValue([missing]);
+      localData.getCommunicationStorageScopeKey.mockReturnValue('family-a');
+      let complete;
+      API.searchCommunicationPictograms.mockImplementation(
+        () =>
+          new Promise(resolve => {
+            complete = resolve;
+          })
+      );
+      const wrapper = mount(
+        <CommunicationSupportPanel {...props} initialMode="receive" />
+      );
+      const pending = wrapper
+        .find('MissingTokenQueue')
+        .first()
+        .prop('onSearchOnline')([missing.id]);
+      if (change === 'scope')
+        localData.getCommunicationStorageScopeKey.mockReturnValue('family-b');
+      if (change === 'review')
+        localData.loadMissingTokens.mockReturnValue([
+          { ...missing, status: 'ignored', updatedAt: 2 }
+        ]);
+      if (change === 'unmount') wrapper.unmount();
+      await act(async () => {
+        complete([
+          {
+            token: '家里人',
+            pictogram: {
+              id: 'p2392',
+              label: '家里人',
+              image: '/p.png',
+              source: {
+                provider: 'arasaac',
+                name: 'ARASAAC',
+                originalId: '2392',
+                license: 'CC BY-NC-SA 4.0',
+                sourceUrl: 'https://arasaac.org/pictograms/2392'
+              }
+            }
+          }
+        ]);
+        await pending;
+      });
+      expect(localData.reviewMissingToken).not.toHaveBeenCalled();
+      if (change !== 'unmount') wrapper.unmount();
+      localData.getCommunicationStorageScopeKey.mockReturnValue('local');
+    }
+  );
 
   test('starts a new local conversation without deleting history', () => {
     const wrapper = mount(

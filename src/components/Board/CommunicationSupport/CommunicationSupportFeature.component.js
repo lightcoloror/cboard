@@ -18,6 +18,7 @@ export default function CommunicationSupportFeature({
         demoMode={demoMode}
         copyOverrides={TUYUJIA_COMMUNICATION_SUPPORT_COPY}
         initialMode="receive"
+        autoExpandOnOutput
         pictogramOrdering={pictogramOrdering}
         onPictogramUsed={onPictogramUsed}
       />

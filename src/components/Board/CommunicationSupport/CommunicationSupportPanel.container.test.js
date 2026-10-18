@@ -49,6 +49,7 @@ describe('CommunicationSupportPanel container', () => {
       activeBoardId: 'home',
       intl: ownProps.intl,
       isLogged: true,
+      accountId: '',
       displaySettings: state.app.displaySettings,
       speechSettings: {
         voiceURI: 'voice',

@@ -1,0 +1,118 @@
+{
+  "schemaVersion": 1,
+  "evidenceType": "synthetic-engineering-corpus",
+  "scope": "Hand-written synthetic AAC regression references; not clinical gold annotations or real patient samples.",
+  "cases": [
+    {
+      "id": "negative-injection",
+      "text": "别打针",
+      "referenceTokens": ["别", "打针"]
+    },
+    {
+      "id": "negative-drink",
+      "text": "不要喝水",
+      "referenceTokens": ["不要", "喝", "水"]
+    },
+    {
+      "id": "negative-fever",
+      "text": "我没有发烧",
+      "referenceTokens": ["我", "没有", "发烧"]
+    },
+    {
+      "id": "double-negative",
+      "text": "我不是不想吃饭",
+      "referenceTokens": ["我", "不是", "不想", "吃饭"]
+    },
+    {
+      "id": "repeated-drink",
+      "text": "喝水喝水",
+      "referenceTokens": ["喝", "水", "喝", "水"]
+    },
+    {
+      "id": "question-pain",
+      "text": "你现在痛不痛？",
+      "referenceTokens": ["你", "现在", "痛", "不", "痛", "？"]
+    },
+    {
+      "id": "nurse-call",
+      "text": "我叫护士",
+      "referenceTokens": ["我", "叫", "护士"]
+    },
+    {
+      "id": "wheelchair-stairs",
+      "text": "坐轮椅下楼散步",
+      "referenceTokens": ["坐", "轮椅", "下楼", "散步"]
+    },
+    {
+      "id": "doctor-time",
+      "text": "医生下午三点来看你",
+      "referenceTokens": ["医生", "下午", "三点", "来", "看", "你"]
+    },
+    {
+      "id": "family-repeat",
+      "text": "家里人家里人",
+      "referenceTokens": ["家里人", "家里人"]
+    },
+    {
+      "id": "medicine-order",
+      "text": "先吃药再喝水",
+      "referenceTokens": ["先", "吃药", "再", "喝", "水"]
+    },
+    {
+      "id": "conditional",
+      "text": "如果不舒服就告诉我",
+      "referenceTokens": ["如果", "不舒服", "就", "告诉", "我"]
+    },
+    {
+      "id": "amount",
+      "text": "只喝一点水",
+      "referenceTokens": ["只", "喝", "一点", "水"]
+    },
+    {
+      "id": "choice",
+      "text": "要坐车还是走路",
+      "referenceTokens": ["要", "坐车", "还是", "走路"]
+    },
+    {
+      "id": "pistachio",
+      "text": "我买开心果",
+      "referenceTokens": ["我", "买", "开心果"]
+    },
+    {
+      "id": "phone",
+      "text": "苹果手机没电了",
+      "referenceTokens": ["苹果手机", "没电", "了"]
+    },
+    {
+      "id": "device-action",
+      "text": "充电器不能代表充电",
+      "referenceTokens": ["充电器", "不能", "代表", "充电"]
+    },
+    {
+      "id": "wash-action",
+      "text": "洗发水不能代表洗头",
+      "referenceTokens": ["洗发水", "不能", "代表", "洗头"]
+    },
+    {
+      "id": "punctuation",
+      "text": " 我不喝水，喝药。 ",
+      "referenceTokens": [
+        " ",
+        "我",
+        "不",
+        "喝",
+        "水",
+        "，",
+        "喝",
+        "药",
+        "。",
+        " "
+      ]
+    },
+    {
+      "id": "unicode",
+      "text": "🙂我想喝水\n水",
+      "referenceTokens": ["🙂", "我", "想", "喝", "水", "\n", "水"]
+    }
+  ]
+}

@@ -57,7 +57,7 @@ function resolveId(createId, prefix) {
 }
 
 function getReviewItemPictogramId(item) {
-  return item && item.tile ? item.tile.id || null : null;
+  return item && item.tile && !item.tile.textOnly ? item.tile.id || null : null;
 }
 
 function requireConfirmedRecord(record) {
@@ -100,13 +100,19 @@ function buildReceiverRevisionSnapshot(items) {
       getPictogramAttribution(candidate) || getPictogramAttribution(tile);
 
     return {
-      pictogramId: candidate ? String(candidate.id || '').trim() || null : null,
+      pictogramId:
+        candidate && !candidate.textOnly
+          ? String(candidate.id || '').trim() || null
+          : null,
       label: getReviewItemLabel(item),
       source: String((item && item.source) || '').trim(),
       boardId: String((candidate && candidate.boardId) || '').trim(),
       matchType,
       confidence: getReceiverMatchConfidence(matchType),
-      originalToken: String((item && item.token) || '').trim(),
+      originalToken: String((item && item.token) || ''),
+      ...(candidate && candidate.textOnly ? { textOnly: true } : {}),
+      ...(item && item.lookupToken ? { lookupToken: item.lookupToken } : {}),
+      ...(item && item.sourceSpan ? { sourceSpan: item.sourceSpan } : {}),
       ...(attribution ? { attribution } : {})
     };
   });
@@ -115,6 +121,16 @@ function buildReceiverRevisionSnapshot(items) {
       const candidate = item && item.tile;
       const tile = candidate && candidate.tile;
       if (!candidate || !tile) return null;
+      if (candidate.textOnly)
+        return String(item.token || '').trim()
+          ? {
+              id: candidate.id,
+              label: item.token,
+              vocalization: item.token,
+              image: '',
+              textOnly: true
+            }
+          : null;
 
       const image = String(tile.image || '').trim();
       const attribution =
@@ -137,7 +153,7 @@ function buildReceiverRevisionSnapshot(items) {
 
   return {
     labels: pictogramSequence
-      .filter(item => item.pictogramId)
+      .filter(item => item.pictogramId || item.textOnly)
       .map(item => item.label)
       .filter(Boolean),
     output,

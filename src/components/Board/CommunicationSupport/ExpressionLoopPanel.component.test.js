@@ -176,9 +176,9 @@ describe('ExpressionLoopPanel', () => {
     expect(wrapper.text()).toContain('想水。');
 
     findPatientAction(wrapper, PATIENT_ACTION_IDS.playAll).simulate('click');
-    await finishSpeechRun(wrapper, onSpeak, 4);
+    await finishSpeechRun(wrapper, onSpeak, 3);
 
-    expect(onSpeak).toHaveBeenCalledTimes(4);
+    expect(onSpeak).toHaveBeenCalledTimes(3);
     expect(wrapper.text()).toContain('想水。');
 
     onSpeak.mockClear();
@@ -189,7 +189,11 @@ describe('ExpressionLoopPanel', () => {
     await finishSpeechRun(wrapper, onSpeak, 1);
 
     expect(onSpeak).toHaveBeenCalledTimes(1);
-    expect(onSpeak).toHaveBeenCalledWith('我想水。', expect.any(Function));
+    expect(onSpeak).toHaveBeenCalledWith(
+      '我想水。',
+      expect.any(Function),
+      output
+    );
 
     findPatientAction(wrapper, PATIENT_ACTION_IDS.save).simulate('click');
     findPatientAction(wrapper, PATIENT_ACTION_IDS.confirm).simulate('click');
@@ -261,7 +265,7 @@ describe('ExpressionLoopPanel', () => {
       ).toHaveLength(2);
       expect(
         wrapper.find('button.CommunicationSupportPanel__candidate')
-      ).toHaveLength(4);
+      ).toHaveLength(3);
       expect(findConfirm().prop('disabled')).toBe(false);
 
       findConfirm().simulate('click');
@@ -518,6 +522,179 @@ describe('ExpressionLoopPanel', () => {
     );
   });
 
+  test('plays all AI choices without replacing them or calling AI again, then saves the selected one', async () => {
+    const candidates = ['我想喝水。', '请给我一杯水。', '我需要喝水。'];
+    onGenerateAiSentences.mockResolvedValue({
+      candidates,
+      provider: 'synthetic-ai'
+    });
+    const wrapper = mount(
+      <ExpressionLoopPanel
+        {...props}
+        aiAvailable
+        onGenerateAiSentences={onGenerateAiSentences}
+      />
+    );
+    await act(async () => {
+      findPatientAction(wrapper, PATIENT_ACTION_IDS.improve).simulate('click');
+    });
+    wrapper.update();
+    const readCandidates = () =>
+      wrapper
+        .find('button.CommunicationSupportPanel__candidate')
+        .map(node => node.text());
+    expect(readCandidates()).toEqual(candidates);
+    expect(onGenerateAiSentences.mock.calls[0][0].candidateCount).toBe(3);
+    findPatientAction(wrapper, PATIENT_ACTION_IDS.playAll).simulate('click');
+    await finishSpeechRun(wrapper, onSpeak, 3);
+    expect(onSpeak.mock.calls.map(call => call[0])).toEqual(candidates);
+    expect(readCandidates()).toEqual(candidates);
+    onSpeak.mockClear();
+    wrapper
+      .find('button.CommunicationSupportPanel__candidate')
+      .at(1)
+      .simulate('click');
+    await finishSpeechRun(wrapper, onSpeak, 1);
+    findPatientAction(wrapper, PATIENT_ACTION_IDS.confirm).simulate('click');
+    findPatientAction(wrapper, PATIENT_ACTION_IDS.save).simulate('click');
+    expect(onAppendHistory).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        sentence: candidates[1],
+        candidateSentences: candidates,
+        output
+      })
+    );
+    expect(onSavePhrase).toHaveBeenLastCalledWith(
+      expect.objectContaining({ sentence: candidates[1], output })
+    );
+    expect(onGenerateAiSentences).toHaveBeenCalledTimes(1);
+    wrapper.unmount();
+  });
+
+  test('suspends local autoplay while AI is pending, rejects duplicate clicks and autoplays the resulting three choices', async () => {
+    jest.useFakeTimers();
+    let resolveAi;
+    const candidates = ['我要喝水。', '请给我水。', '我想喝水。'];
+    onGenerateAiSentences.mockImplementation(
+      () =>
+        new Promise(resolve => {
+          resolveAi = resolve;
+        })
+    );
+    const wrapper = mount(
+      <ExpressionLoopPanel
+        {...props}
+        aiAvailable
+        candidateAutoplayDelaySeconds={5}
+        onGenerateAiSentences={onGenerateAiSentences}
+      />
+    );
+    try {
+      const generate = findPatientAction(
+        wrapper,
+        PATIENT_ACTION_IDS.improve
+      ).prop('onClick');
+      act(() => {
+        generate();
+        generate();
+      });
+      expect(onGenerateAiSentences).toHaveBeenCalledTimes(1);
+      await act(async () => {
+        jest.advanceTimersByTime(6000);
+      });
+      expect(onSpeak).not.toHaveBeenCalled();
+      await act(async () => {
+        resolveAi({ candidates });
+      });
+      wrapper.update();
+      await act(async () => {
+        jest.advanceTimersByTime(4999);
+      });
+      expect(onSpeak).not.toHaveBeenCalled();
+      await act(async () => {
+        jest.advanceTimersByTime(1);
+      });
+      await finishSpeechRun(wrapper, onSpeak, 3);
+      expect(onSpeak.mock.calls.map(call => call[0])).toEqual(candidates);
+    } finally {
+      wrapper.unmount();
+      jest.useRealTimers();
+    }
+  });
+
+  test('does not let a late AI result replace a manual choice, confirmation or favorite', async () => {
+    let resolveAi;
+    onGenerateAiSentences.mockImplementation(
+      () =>
+        new Promise(resolve => {
+          resolveAi = resolve;
+        })
+    );
+    const wrapper = mount(
+      <ExpressionLoopPanel
+        {...props}
+        aiAvailable
+        onGenerateAiSentences={onGenerateAiSentences}
+      />
+    );
+    act(() => {
+      findPatientAction(wrapper, PATIENT_ACTION_IDS.improve).simulate('click');
+    });
+    wrapper
+      .find('button.CommunicationSupportPanel__candidate')
+      .at(1)
+      .simulate('click');
+    await finishSpeechRun(wrapper, onSpeak, 1);
+    findPatientAction(wrapper, PATIENT_ACTION_IDS.confirm).simulate('click');
+    findPatientAction(wrapper, PATIENT_ACTION_IDS.save).simulate('click');
+    await act(async () => {
+      resolveAi({ candidates: ['迟到的结果。'] });
+    });
+    wrapper.update();
+    expect(wrapper.text()).not.toContain('迟到的结果。');
+    expect(
+      wrapper.find('button.CommunicationSupportPanel__candidate--active').text()
+    ).toBe('我想水。');
+    expect(onSavePhrase).toHaveBeenLastCalledWith(
+      expect.objectContaining({ sentence: '我想水。' })
+    );
+    expect(onAppendHistory).toHaveBeenCalledTimes(1);
+    wrapper.unmount();
+  });
+
+  test('generates three local choices without online availability and cancels autoplay on keyboard confirmation', async () => {
+    jest.useFakeTimers();
+    const wrapper = mount(
+      <ExpressionLoopPanel
+        {...props}
+        output={[{ id: 'i', label: '我想喝水' }]}
+        candidateAutoplayDelaySeconds={5}
+        onGenerateAiSentences={onGenerateAiSentences}
+      />
+    );
+    try {
+      expect(
+        findPatientAction(wrapper, PATIENT_ACTION_IDS.improve).prop('label')
+      ).toBe('生成三个候选句');
+      findPatientAction(wrapper, PATIENT_ACTION_IDS.improve).simulate('click');
+      expect(
+        wrapper.find('button.CommunicationSupportPanel__candidate')
+      ).toHaveLength(3);
+      expect(onGenerateAiSentences).not.toHaveBeenCalled();
+      findPatientAction(wrapper, PATIENT_ACTION_IDS.confirm).simulate('click');
+      await act(async () => {
+        jest.advanceTimersByTime(5000);
+      });
+      expect(onSpeak).not.toHaveBeenCalled();
+      expect(onAppendHistory).toHaveBeenLastCalledWith(
+        expect.objectContaining({ sentence: '我想喝水。' })
+      );
+    } finally {
+      wrapper.unmount();
+      jest.useRealTimers();
+    }
+  });
+
   test('recovers when the speech engine never reports completion', async () => {
     jest.useFakeTimers();
     const stalledSpeak = jest.fn();
@@ -601,7 +778,8 @@ describe('ExpressionLoopPanel', () => {
     expect(onApplyOutput).not.toHaveBeenCalled();
     expect(onSpeak).toHaveBeenCalledWith(
       '请给我一点水。',
-      expect.any(Function)
+      expect.any(Function),
+      savedPhrase.output
     );
 
     let replayPromise;

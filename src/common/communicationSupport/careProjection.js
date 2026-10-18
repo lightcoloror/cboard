@@ -46,7 +46,11 @@ export function projectCareBoards(
 export async function queueCareBoards(engine, boards, readImage) {
   const wantedBoards = new Set(),
     wantedTiles = new Set();
-  for (const board of boards) {
+  for (const sourceBoard of boards) {
+    // CBoard UI callbacks return native boards with flat communication hints.
+    // Reuse the shared DTO adapter before queuing, so private people retain
+    // their category and cannot fall through to public matching after restore.
+    const board = createBoardDTO(sourceBoard);
     wantedBoards.add(board.id);
     for (const tile of board.tiles || []) {
       wantedTiles.add(tile.id);

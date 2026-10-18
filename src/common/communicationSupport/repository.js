@@ -577,12 +577,29 @@ export function createCommunicationRepository({
   }
 
   function getActiveConversationSession() {
-    const resolved = resolveConversationSession(readConversationSession(), {
+    const previous = readConversationSession();
+    const resolved = resolveConversationSession(previous, {
       now,
       createId: createRepositoryId
     });
 
     if (resolved.reason !== 'active') {
+      // Idle expiry clears AI context, not unfinished human work. Carry only
+      // this patient's draft forward; an explicit new conversation stays empty.
+      if (resolved.reason === 'idle' && previous) {
+        const identity = loadCommunicationIdentity();
+        const records = loadReceiverRecords();
+        overwriteReceiverRecords(
+          records.map(record =>
+            record.recordStatus === 'draft' &&
+            record.sessionId === previous.id &&
+            record.patientId === identity.patientId &&
+            record.workspaceId === identity.workspaceId
+              ? { ...record, sessionId: resolved.session.id }
+              : record
+          )
+        );
+      }
       writeConversationSession(resolved.session);
     }
 
@@ -1188,16 +1205,22 @@ export function createCommunicationRepository({
   }
 
   function updateReceiverDraft(draft, entry) {
+    getActiveConversationSession();
+    const current =
+      loadReceiverRecords().find(record => record.id === draft.id) || draft;
     const updated = upsertReceiverRecord(
-      updateReceiverDraftEntry(draft, entry, { now })
+      updateReceiverDraftEntry(current, entry, { now })
     );
     touchConversationSessionId(updated.sessionId);
     return updated;
   }
 
   function confirmReceiverDraft(draft, entry) {
+    getActiveConversationSession();
+    const current =
+      loadReceiverRecords().find(record => record.id === draft.id) || draft;
     const confirmed = upsertReceiverRecord(
-      confirmReceiverDraftEntry(draft, entry, { now })
+      confirmReceiverDraftEntry(current, entry, { now })
     );
     appendCommunicationHistory(confirmed);
     touchConversationSessionId(confirmed.sessionId);

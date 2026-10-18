@@ -1,4 +1,6 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { getSemanticCandidateHint } from '../../../common/communicationSupport/pictogramSemantics';
+import API, { resolveTrustedApiMediaUrl } from '../../../api';
 import PropTypes from 'prop-types';
 import Button from '@material-ui/core/Button';
 import Dialog from '@material-ui/core/Dialog';
@@ -16,7 +18,8 @@ import {
 } from '../../../common/communicationSupport/missingTokens';
 import {
   buildAiGeneratedRuntimePictogram,
-  buildDevicePrivateRuntimePictogram
+  buildDevicePrivateRuntimePictogram,
+  getRuntimePictogramStorageState
 } from '../../../common/communicationSupport/runtimePictogram';
 import { readPersonalImageBlob } from './PersonalImageManager.component';
 
@@ -43,7 +46,11 @@ const DEFAULT_COPY = {
   onlineEmpty: '在线搜索完成，暂时没有找到合适图片。',
   onlineFailed: '在线搜索失败，离线沟通不受影响。',
   onlineSuggestion: '在线建议',
+  semanticConflict: '图片来源含义与当前词语不同，请核对图片后再决定。',
+  semanticUnverified: '候选图片尚未确认含义，请结合原句核对。',
   confirmOnline: '确认使用',
+  cachingOnline: '正在保存离线图片...',
+  cacheFailed: '图片下载或本机保存失败，尚未采用，请重试。',
   sourceAndLicense: '来源与许可',
   choosePrivateImage: '选择本机图片',
   privateImageTitle: '建立本机私有词图',
@@ -104,6 +111,7 @@ export default function MissingTokenQueue({
   aiImageGenerationAvailable,
   onGeneratePictogram,
   readPrivateImage,
+  downloadOnlineImage,
   copyOverrides
 }) {
   const copy = { ...DEFAULT_COPY, ...(copyOverrides || {}) };
@@ -116,6 +124,54 @@ export default function MissingTokenQueue({
   const [isSearchingOnline, setIsSearchingOnline] = useState(false);
   const [generatingRecordId, setGeneratingRecordId] = useState(null);
   const [generatedCandidate, setGeneratedCandidate] = useState(null);
+  const [cachingRecordId, setCachingRecordId] = useState(null);
+  const cachingRef = useRef(false);
+  const mountedRef = useRef(true);
+  const recordsRef = useRef(records);
+  recordsRef.current = records;
+  useEffect(
+    () => () => {
+      mountedRef.current = false;
+    },
+    []
+  );
+
+  async function confirmOnlinePictogram(record, pictogram) {
+    if (cachingRef.current) return;
+    cachingRef.current = true;
+    setCachingRecordId(record.id);
+    try {
+      // Reuse the private-image byte representation and the scoped repository.
+      // A remote URL alone is never evidence of offline availability.
+      const blob = await downloadOnlineImage(pictogram);
+      const image = await readPrivateImage(blob);
+      if (!/^data:image\/(png|jpeg|gif|webp);base64,/.test(image))
+        throw new Error('Image bytes unavailable');
+      const current = recordsRef.current.find(item => item.id === record.id);
+      if (
+        !mountedRef.current ||
+        !current ||
+        current.status !== 'suggested' ||
+        current.updatedAt !== record.updatedAt ||
+        !getMissingTokenSuggestions(current).some(
+          item => item.id === pictogram.id && item.image === pictogram.image
+        )
+      )
+        return;
+      const saved = applyReview(record.id, {
+        status: 'resolved',
+        resolvedPictogramId: pictogram.id,
+        resolvedPictogram: { ...pictogram, image },
+        source: 'online'
+      });
+      if (!saved) setNotice(copy.cacheFailed);
+    } catch (_) {
+      if (mountedRef.current) setNotice(copy.cacheFailed);
+    } finally {
+      cachingRef.current = false;
+      if (mountedRef.current) setCachingRecordId(null);
+    }
+  }
   const visibleRecords = useMemo(
     () =>
       (records || [])
@@ -422,7 +478,10 @@ export default function MissingTokenQueue({
                         record.status
                       }`}
                     >
-                      {STATUS_LABELS[record.status] || record.status}
+                      {record.status === 'suggested' &&
+                      !onlineSuggestions.length
+                        ? STATUS_LABELS.new
+                        : STATUS_LABELS[record.status] || record.status}
                     </span>
                   </div>
                   <span className="CommunicationSupportPanel__meta">
@@ -442,6 +501,17 @@ export default function MissingTokenQueue({
                           : resolvedPictogram.label}
                       </span>
                     )}
+                  {record.status === 'resolved' && resolvedPictogram && (
+                    <span
+                      className="CommunicationSupportPanel__meta"
+                      role="status"
+                    >
+                      {getRuntimePictogramStorageState(resolvedPictogram) ===
+                      'embedded'
+                        ? '图片已保存到本机，可离线复用'
+                        : '尚未确认离线可用，请联网重新保存图片'}
+                    </span>
+                  )}
                   {record.status === 'resolved' &&
                     record.source === 'device-private' && (
                       <span className="CommunicationSupportPanel__meta">
@@ -458,7 +528,7 @@ export default function MissingTokenQueue({
                           >
                             <Symbol
                               className="CommunicationSupportPanel__symbol CommunicationSupportPanel__symbol--online"
-                              image={pictogram.image}
+                              image={resolveTrustedApiMediaUrl(pictogram.image)}
                               label={pictogram.label}
                               labelpos="Below"
                             />
@@ -466,6 +536,16 @@ export default function MissingTokenQueue({
                               <span className="CommunicationSupportPanel__meta">
                                 {copy.onlineSuggestion}：{pictogram.label}
                               </span>
+                              {pictogram.semantics &&
+                                pictogram.semantics.requiresReview && (
+                                  <span className="CommunicationSupportPanel__meta">
+                                    {pictogram.semantics.relation === 'conflict'
+                                      ? copy.semanticConflict
+                                      : getSemanticCandidateHint(
+                                          pictogram.semantics
+                                        ) || copy.semanticUnverified}
+                                  </span>
+                                )}
                               <span className="CommunicationSupportPanel__meta">
                                 {copy.sourceAndLicense}：{pictogram.source.name}{' '}
                                 · {pictogram.source.license}
@@ -474,15 +554,14 @@ export default function MissingTokenQueue({
                                 size="small"
                                 color="primary"
                                 variant="contained"
+                                disabled={Boolean(cachingRecordId)}
                                 onClick={() =>
-                                  applyReview(record.id, {
-                                    status: 'resolved',
-                                    resolvedPictogramId: pictogram.id,
-                                    source: 'online'
-                                  })
+                                  confirmOnlinePictogram(record, pictogram)
                                 }
                               >
-                                {copy.confirmOnline}
+                                {cachingRecordId === record.id
+                                  ? copy.cachingOnline
+                                  : copy.confirmOnline}
                               </Button>
                             </div>
                           </div>
@@ -694,6 +773,7 @@ MissingTokenQueue.propTypes = {
   aiImageGenerationAvailable: PropTypes.bool,
   onGeneratePictogram: PropTypes.func,
   readPrivateImage: PropTypes.func,
+  downloadOnlineImage: PropTypes.func,
   copyOverrides: PropTypes.object
 };
 
@@ -705,5 +785,7 @@ MissingTokenQueue.defaultProps = {
   aiImageGenerationAvailable: false,
   onGeneratePictogram: null,
   readPrivateImage: readPersonalImageBlob,
+  downloadOnlineImage: pictogram =>
+    API.downloadCommunicationPictogram(pictogram),
   copyOverrides: null
 };

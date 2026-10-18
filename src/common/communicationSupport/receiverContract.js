@@ -40,6 +40,12 @@ export function buildReceiverMatchQuality(
   const items = Array.isArray(reviewItems) ? reviewItems : [];
   const totalCount = items.length;
   const matchedCount = items.filter(item => item && item.tile).length;
+  // Keep matchedCount as output readiness for existing callers. Explicit text
+  // fallback makes an item usable, but must never inflate pictogram coverage.
+  const textOnlyCount = items.filter(
+    item => item && item.tile && item.tile.textOnly
+  ).length;
+  const imageCount = matchedCount - textOnlyCount;
   const missingCount = totalCount - matchedCount;
   const partialCount = items.filter(
     item => normalizeReceiverMatchType(item && item.matchType) === 'partial'
@@ -53,6 +59,8 @@ export function buildReceiverMatchQuality(
   return {
     totalCount,
     matchedCount,
+    imageCount,
+    textOnlyCount,
     missingCount,
     partialCount,
     matchRate,

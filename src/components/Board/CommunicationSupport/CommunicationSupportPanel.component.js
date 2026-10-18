@@ -1,3 +1,5 @@
+import { filterPublicPictureTokens } from '../../../common/communicationSupport/personalPeople';
+import { buildCommunicationTileCatalog } from '../../../common/communicationSupport/symbolMatching';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import CareExpressionBoard from '../../Care/CareExpressionBoard';
 import PropTypes from 'prop-types';
@@ -14,6 +16,7 @@ import {
   getCommunicationSupportSettings
 } from '../../../common/communicationSupport/settingsAdapter';
 import { CONVERSATION_SCENES } from '../../../common/communicationSupport/conversationSession';
+import { buildExpressionOutputSignature } from '../../../common/communicationSupport/expressionPipeline';
 import { browserCommunicationSharePort } from '../../../common/communicationSupport/browserCommunicationShare';
 import {
   appendCommunicationHistory,
@@ -24,6 +27,7 @@ import {
   createReceiverDraft,
   discardResumableReceiverRecord,
   getActiveConversationSession,
+  getCommunicationStorageScopeKey,
   loadCommunicationHistory,
   loadPersonalImagePreferences,
   loadPersonalImageRuntime,
@@ -97,6 +101,7 @@ import CommunicationNetworkStatusNotice from './CommunicationNetworkStatusNotice
 import PatientActionButton from './PatientActionButton.component';
 import ReceiverLoopPanel from './ReceiverLoopPanel.component';
 import './CommunicationSupportPanel.css';
+import { getCareTextAiAvailability } from '../../../common/communicationSupport/careAiAvailability';
 
 const DEFAULT_COPY = {
   title: '双向沟通支持',
@@ -110,7 +115,7 @@ const DEFAULT_COPY = {
   noBoard: '未选择',
   currentOutput: '当前输出',
   selectSymbolsFirst: '请先选图',
-  generateAndSpeak: '生成并播报',
+  generateAndSpeak: '立即全部播报',
   stopSpeech: '停止播报',
   speechUnavailable: '当前语音引擎无法完成播报，候选句仍可继续使用。',
   replayAll: '全部重播',
@@ -190,10 +195,14 @@ const CBOARD_GRID_TO_COMMUNICATION = {
 };
 
 async function loadMergedReceiverCloudData() {
+  const requestScope = getCommunicationStorageScopeKey();
   const localRecords = loadReceiverRecords();
   const response = await API.syncConfirmedReceiverRecords(localRecords);
+  if (requestScope !== getCommunicationStorageScopeKey())
+    throw new Error('Communication profile changed during synchronization');
   const receiverRecords = mergeConfirmedReceiverRecords(
-    localRecords,
+    // A draft may have been created/edited while the request was in flight.
+    loadReceiverRecords(),
     response.records,
     response.deletedRecordIds
   );
@@ -239,6 +248,7 @@ export default function CommunicationSupportPanel({
   onCancelSpeech,
   intl,
   isLogged,
+  accountId,
   demoMode,
   speechSettings,
   displaySettings,
@@ -251,6 +261,7 @@ export default function CommunicationSupportPanel({
   copyOverrides,
   initialMode,
   initiallyExpanded,
+  autoExpandOnOutput,
   careMode = false,
   careSharedPhrases = [],
   onCareFavoritesChanged,
@@ -258,11 +269,14 @@ export default function CommunicationSupportPanel({
   careDataVersion
 }) {
   const copy = { ...DEFAULT_COPY, ...(copyOverrides || {}) };
+  const textAi = getCareTextAiAvailability({ isLogged, accountId, careMode });
   const cboardSpeechRate = speechSettings && speechSettings.rate;
   const cboardFontSize = displaySettings && displaySettings.fontSize;
   const cboardUiSize = displaySettings && displaySettings.uiSize;
   const [isExpanded, setIsExpanded] = useState(
-    () => initiallyExpanded && initialMode === 'express'
+    () =>
+      (initiallyExpanded && initialMode === 'express') ||
+      (autoExpandOnOutput && output.length > 0 && initialMode !== 'receive')
   );
   const [showReceiver, setShowReceiver] = useState(
     () => initiallyExpanded && initialMode === 'receive'
@@ -333,6 +347,18 @@ export default function CommunicationSupportPanel({
     personalImagePreferences,
     personalImageRuntime.identity
   );
+  const expressionOutputSignature = buildExpressionOutputSignature(output);
+  const lastExpressionOutputRef = useRef(null);
+
+  useEffect(
+    () => {
+      if (!autoExpandOnOutput || showReceiver) return;
+      if (lastExpressionOutputRef.current === expressionOutputSignature) return;
+      lastExpressionOutputRef.current = expressionOutputSignature;
+      if (output.length) setIsExpanded(true);
+    },
+    [autoExpandOnOutput, expressionOutputSignature, output.length, showReceiver]
+  );
   const correctionMemory = buildWorkspaceCorrectionMemory(receiverCorrections, {
     workspaceId: personalImageRuntime.identity.workspaceId
   });
@@ -390,6 +416,20 @@ export default function CommunicationSupportPanel({
   );
   const latestSavedRef = useRef([]);
   const latestHistoryRef = useRef([]);
+  const autoSearchAttempts = useRef(new Set());
+  const searchEpoch = useRef(0);
+  const scopeKey = getCommunicationStorageScopeKey();
+  useEffect(
+    () => {
+      autoSearchAttempts.current.clear();
+      searchEpoch.current += 1;
+      setMissingTokenRecords(loadMissingTokens());
+      return () => {
+        searchEpoch.current += 1;
+      };
+    },
+    [scopeKey]
+  );
 
   useEffect(() => {
     setSavedPhrases(loadCommunicationSavedPhrases());
@@ -621,10 +661,26 @@ export default function CommunicationSupportPanel({
   function handleMissingTokens(entry) {
     const next = recordMissingTokens(entry);
     setMissingTokenRecords(next);
+    if (preferences.onlinePictogramSearchEnabled && !demoMode) {
+      const ids = next
+        .filter(
+          record =>
+            record.status === 'new' &&
+            !autoSearchAttempts.current.has(record.id)
+        )
+        .slice(0, 12)
+        .map(record => record.id);
+      ids.forEach(id => autoSearchAttempts.current.add(id));
+      if (ids.length)
+        handleSearchMissingTokensOnline(ids, next).catch(() => {
+          // Keep missing text and the manual retry entry available when offline.
+        });
+    }
     return next;
   }
 
   function handleReviewMissingToken(recordId, review) {
+    if (scopeKey !== getCommunicationStorageScopeKey()) return null;
     const updated = reviewMissingToken(recordId, review);
     if (!updated) {
       return null;
@@ -634,13 +690,29 @@ export default function CommunicationSupportPanel({
     return updated;
   }
 
-  async function handleSearchMissingTokensOnline(recordIds) {
-    const selectedRecords = missingTokenRecords.filter(record =>
-      recordIds.includes(record.id)
+  async function handleSearchMissingTokensOnline(
+    recordIds,
+    records = missingTokenRecords
+  ) {
+    const epoch = searchEpoch.current;
+    const selectedRecords = records.filter(
+      record =>
+        recordIds.includes(record.id) &&
+        ['new', 'suggested'].includes(record.status) &&
+        filterPublicPictureTokens(
+          [record.normalizedToken],
+          buildCommunicationTileCatalog(communicationBoards)
+        ).length > 0
     );
+    if (!selectedRecords.length) return { foundCount: 0, candidateCount: 0 };
     const results = await API.searchCommunicationPictograms(
       selectedRecords.map(record => record.normalizedToken)
     );
+    if (
+      epoch !== searchEpoch.current ||
+      scopeKey !== getCommunicationStorageScopeKey()
+    )
+      return { foundCount: 0, candidateCount: 0 };
     const suggestionsByToken = new Map();
     let foundCount = 0;
     let candidateCount = 0;
@@ -652,19 +724,31 @@ export default function CommunicationSupportPanel({
 
       suggestionsByToken.set(
         normalizedToken,
-        normalizeMissingTokenSuggestions([
-          ...(suggestionsByToken.get(normalizedToken) || []),
-          pictogram
-        ])
+        normalizeMissingTokenSuggestions(
+          [...(suggestionsByToken.get(normalizedToken) || []), pictogram],
+          null,
+          normalizedToken
+        )
       );
     });
 
     selectedRecords.forEach(record => {
+      const current = loadMissingTokens().find(item => item.id === record.id);
+      if (
+        !current ||
+        current.status !== record.status ||
+        current.updatedAt !== record.updatedAt
+      )
+        return;
       const suggestions =
         suggestionsByToken.get(
           normalizeMissingTokenText(record.normalizedToken)
         ) || [];
-      if (!suggestions.length) return;
+      if (!suggestions.length) {
+        if (current.status === 'suggested')
+          reviewMissingToken(record.id, { status: 'new' });
+        return;
+      }
 
       const updated = reviewMissingToken(record.id, {
         status: 'suggested',
@@ -1030,6 +1114,8 @@ export default function CommunicationSupportPanel({
           {careMode && (
             <CareExpressionBoard
               preferences={preferences}
+              pictogramOrdering={pictogramOrdering}
+              onPictogramUsed={onPictogramUsed}
               boards={expressionBoardDtos}
               activeBoardId={activeBoardId}
               output={output}
@@ -1047,7 +1133,8 @@ export default function CommunicationSupportPanel({
             pictogramOrdering={pictogramOrdering}
             savedPhrases={[...savedPhrases, ...careSharedPhrases]}
             conversationContext={getConversationContext()}
-            aiAvailable={isLogged}
+            aiAvailable={textAi.available}
+            aiUnavailableReason={textAi.message}
             onGenerateAiSentences={request =>
               API.generateCommunicationSentences(request)
             }
@@ -1197,7 +1284,8 @@ export default function CommunicationSupportPanel({
               speech={speech}
               onSpeak={onSpeak}
               onCancelSpeech={onCancelSpeech}
-              aiAvailable={isLogged}
+              aiAvailable={textAi.available}
+              aiUnavailableReason={textAi.message}
               onAiResegment={request => API.resegmentCommunicationText(request)}
               dialectNormalizationAvailable={isLogged}
               onNormalizeDialectText={request =>
@@ -1274,6 +1362,7 @@ CommunicationSupportPanel.propTypes = {
   activeBoardId: PropTypes.string,
   intl: PropTypes.object,
   isLogged: PropTypes.bool,
+  accountId: PropTypes.string,
   demoMode: PropTypes.bool,
   speechSettings: PropTypes.object,
   displaySettings: PropTypes.object,
@@ -1290,6 +1379,7 @@ CommunicationSupportPanel.propTypes = {
   copyOverrides: PropTypes.object,
   initialMode: PropTypes.oneOf(['express', 'receive']),
   initiallyExpanded: PropTypes.bool,
+  autoExpandOnOutput: PropTypes.bool,
   careMode: PropTypes.bool,
   careSharedPhrases: PropTypes.arrayOf(PropTypes.object),
   careDataVersion: PropTypes.string,
@@ -1301,6 +1391,7 @@ CommunicationSupportPanel.defaultProps = {
   activeBoardId: null,
   intl: null,
   isLogged: false,
+  accountId: '',
   demoMode: false,
   speechSettings: { rate: 1 },
   displaySettings: {
@@ -1311,5 +1402,6 @@ CommunicationSupportPanel.defaultProps = {
   onCreateCommunicationBoard: () => false,
   onUpdateCommunicationBoard: () => false,
   initialMode: 'express',
-  initiallyExpanded: false
+  initiallyExpanded: false,
+  autoExpandOnOutput: false
 };

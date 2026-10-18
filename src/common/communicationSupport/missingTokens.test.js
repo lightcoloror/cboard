@@ -11,6 +11,148 @@ import {
 import { buildDevicePrivateRuntimePictogram } from './runtimePictogram';
 
 describe('missing token records', () => {
+  test('does not restore a location-specific label with generic spoken text unless manually reviewed', () => {
+    const candidate = {
+      id: 'specific',
+      displayLabel: '腰痛',
+      labels: ['腰痛'],
+      synonyms: ['腰疼'],
+      tile: {
+        id: 'specific',
+        label: '腰痛',
+        vocalization: '痛',
+        image: '/pain.png'
+      }
+    };
+    const record = { id: 'missing', normalizedToken: '腰疼', status: 'new' };
+    expect(findSafeLocalMissingTokenResolutions([record], [candidate])).toEqual(
+      []
+    );
+    const item = { id: 'review', token: '腰疼', tile: null };
+    const resolved = {
+      ...record,
+      status: 'resolved',
+      resolvedPictogramId: candidate.id,
+      reviewedByCaregiver: false
+    };
+    expect(
+      applyMissingTokenResolutions([item], [resolved], [candidate])[0]
+    ).toBe(item);
+    expect(
+      applyMissingTokenResolutions(
+        [item],
+        [{ ...resolved, reviewedByCaregiver: true }],
+        [candidate]
+      )[0].tile
+    ).toBe(candidate);
+  });
+
+  test.each([
+    ...['不是', '没', '没有', '否', '不想', '不需要', '不用'].map(token => [
+      token,
+      '不要'
+    ]),
+    ['是', '有'],
+    ['对', '好'],
+    ['可以', '好'],
+    ['躺', '睡觉'],
+    ['困', '睡觉'],
+    ['起来', '起床'],
+    ['走', '去'],
+    ['回去', '回家'],
+    ['洗', '洗手'],
+    ['刷', '刷牙'],
+    ['腰疼', '痛'],
+    ['牙痛', '痛'],
+    ['背疼', '痛'],
+    ['腿痛', '痛']
+  ])(
+    'does not auto-resolve protected word %s through legacy catalog label %s',
+    (token, label) => {
+      const candidate = {
+        id: 'generic-negative',
+        displayLabel: label,
+        labels: [label],
+        synonyms: [token],
+        tile: { id: 'generic-negative', label, image: '/not.png' }
+      };
+      const record = { id: 'missing', normalizedToken: token, status: 'new' };
+      expect(
+        findSafeLocalMissingTokenResolutions([record], [candidate])
+      ).toEqual([]);
+      const resolved = {
+        ...record,
+        status: 'resolved',
+        source: 'catalog-auto',
+        resolvedPictogramId: candidate.id,
+        reviewedByCaregiver: false
+      };
+      const item = { id: 'review', token, tile: null, matchType: 'none' };
+      expect(
+        applyMissingTokenResolutions([item], [resolved], [candidate])[0]
+      ).toBe(item);
+      expect(
+        applyMissingTokenResolutions(
+          [item],
+          [{ ...resolved, reviewedByCaregiver: true }],
+          [candidate]
+        )[0].tile
+      ).toBe(candidate);
+      const exact = {
+        ...candidate,
+        displayLabel: token,
+        labels: [token],
+        tile: { ...candidate.tile, label: token }
+      };
+      expect(
+        findSafeLocalMissingTokenResolutions([record], [exact])
+      ).toHaveLength(1);
+    }
+  );
+
+  test.each([
+    ['腰疼', '腰痛'],
+    ['腰痛', '腰疼'],
+    ['牙疼', '牙痛'],
+    ['牙痛', '牙疼'],
+    ['背疼', '背痛'],
+    ['背痛', '背疼'],
+    ['腿疼', '腿痛'],
+    ['腿痛', '腿疼']
+  ])(
+    'allows the explicit same-location variant %s to %s in missing-word recovery',
+    (token, label) => {
+      const candidate = {
+        id: 'specific',
+        displayLabel: label,
+        labels: [label],
+        synonyms: [],
+        tile: { id: 'specific', label, image: '/specific.png' }
+      };
+      const record = { id: 'missing', normalizedToken: token, status: 'new' };
+      const resolutions = findSafeLocalMissingTokenResolutions(
+        [record],
+        [candidate]
+      );
+      expect(resolutions).toHaveLength(1);
+      const item = { id: 'review', token, tile: null, matchType: 'none' };
+      expect(
+        applyMissingTokenResolutions(
+          [item],
+          [
+            {
+              ...record,
+              status: 'resolved',
+              resolvedPictogramId: candidate.id,
+              reviewedByCaregiver: false
+            }
+          ],
+          [candidate]
+        )[0].tile
+      ).toBe(candidate);
+    }
+  );
+
   test('normalizes and aggregates repeated unresolved tokens', () => {
     const records = recordMissingTokenOccurrences(
       [],

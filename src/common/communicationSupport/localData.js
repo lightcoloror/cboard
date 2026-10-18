@@ -56,6 +56,12 @@ function createDefaultStore() {
   });
 }
 
+// Async searches/downloads must not write into a newly selected account/profile.
+export function getCommunicationStorageScopeKey() {
+  const storage = createDefaultStoragePort();
+  return storage.getScopeKey ? storage.getScopeKey() : 'local';
+}
+
 function createDefaultPreferencesStore() {
   return createCommunicationPreferencesStore(createDefaultStoragePort());
 }

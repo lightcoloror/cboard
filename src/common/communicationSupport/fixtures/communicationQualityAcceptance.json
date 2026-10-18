@@ -1,0 +1,834 @@
+{
+  "schema": "tuyujia-quality-reference.v2",
+  "evidenceType": "synthetic-engineering-corpus",
+  "annotationAuthority": "Codex engineering review, not independent human gold",
+  "version": "2026-10-16.1",
+  "note": "All families are exposed regression material. No item is claimed to be blind holdout. Keep a family together in any future split.",
+  "sourceReference": "D:\\used-by-codex\\outputs\\tuyujia-semantic-repair-20261013\\cases.private.json",
+  "sourceSha256": "6e3de9d9a4a72682e099c21ec9a1317dcf54d3ce97ff60a5608ce56e7def23a0",
+  "changes": [
+    {
+      "id": "h01",
+      "before": {
+        "text": "姐姐",
+        "alternatives": [["姐姐"]]
+      },
+      "after": {
+        "text": "我姐姐",
+        "alternatives": [["我姐姐"], ["我", "姐姐"]]
+      },
+      "reason": "允许亲属所属表达整体保留；亲属与说话者的选图仍另验"
+    },
+    {
+      "id": "h05",
+      "before": {
+        "text": "打开",
+        "alternatives": [["打开"]]
+      },
+      "after": {
+        "text": "把门打开",
+        "alternatives": [["把门打开"], ["把", "门", "打开"], ["把门", "打开"]]
+      },
+      "reason": "整体动作与动作对象可以一起表达，不能吞掉前面的不要"
+    },
+    {
+      "id": "h07",
+      "before": {
+        "text": "再说一次",
+        "alternatives": [["再说一次"], ["再", "说", "一次"]]
+      },
+      "after": {
+        "text": "请再说一次",
+        "alternatives": [
+          ["请再说一次"],
+          ["请", "再说一次"],
+          ["请", "再", "说", "一次"],
+          ["请", "再说", "一次"]
+        ]
+      },
+      "reason": "允许完整请求及合理组成，不强迫拆成单字"
+    },
+    {
+      "id": "h08",
+      "before": {
+        "text": "一会儿",
+        "alternatives": [["一会儿"]]
+      },
+      "after": {
+        "text": "坐一会儿",
+        "alternatives": [["坐一会儿"], ["坐", "一会儿"]]
+      },
+      "reason": "短时动作可作为整体；她仍保留独立约束"
+    }
+  ],
+  "cases": [
+    {
+      "id": "h01",
+      "text": "请帮我姐姐拿保温杯，别拿我的。",
+      "group": "prior-prompt-comparison",
+      "split": "regression-posthoc-reviewed",
+      "constraints": [
+        {
+          "text": "我姐姐",
+          "alternatives": [["我姐姐"], ["我", "姐姐"]]
+        },
+        {
+          "text": "保温杯",
+          "alternatives": [["保温杯"]]
+        },
+        {
+          "text": "别",
+          "alternatives": [["别"]]
+        }
+      ],
+      "referenceVersion": "2026-10-16.1",
+      "critical": ["别", "姐姐"],
+      "pictureRules": [
+        {
+          "text": "请帮我姐姐",
+          "scope": "contained",
+          "forbiddenLabels": ["帮帮我"],
+          "reason": "受助者是姐姐，不能换成帮助说话者"
+        }
+      ]
+    },
+    {
+      "id": "h02",
+      "text": "爷爷不是不想散步，是想先休息。",
+      "group": "prior-prompt-comparison",
+      "split": "regression-posthoc-reviewed",
+      "constraints": [
+        {
+          "text": "爷爷",
+          "alternatives": [["爷爷"]]
+        },
+        {
+          "text": "不是",
+          "alternatives": [["不是"]]
+        },
+        {
+          "text": "不想",
+          "alternatives": [["不", "想"]]
+        },
+        {
+          "text": "散步",
+          "alternatives": [["散步"]]
+        }
+      ],
+      "referenceVersion": "2026-10-16.1",
+      "critical": ["不是", "不想", "爷爷"],
+      "pictureRules": []
+    },
+    {
+      "id": "h03",
+      "text": "喝茶以后再吃药，现在不要喝水。",
+      "group": "prior-prompt-comparison",
+      "split": "regression-posthoc-reviewed",
+      "constraints": [
+        {
+          "text": "喝茶",
+          "alternatives": [["喝茶"], ["喝", "茶"]]
+        },
+        {
+          "text": "吃药",
+          "alternatives": [["吃药"]]
+        },
+        {
+          "text": "不要",
+          "alternatives": [["不要"]]
+        },
+        {
+          "text": "喝水",
+          "alternatives": [["喝水"], ["喝", "水"]]
+        }
+      ],
+      "referenceVersion": "2026-10-16.1",
+      "critical": ["不要"],
+      "pictureRules": []
+    },
+    {
+      "id": "h04",
+      "text": "你哪里不舒服，是头痛还是牙痛？",
+      "group": "prior-prompt-comparison",
+      "split": "regression-posthoc-reviewed",
+      "constraints": [
+        {
+          "text": "不舒服",
+          "alternatives": [["不舒服"]]
+        },
+        {
+          "text": "头痛",
+          "alternatives": [["头痛"]]
+        },
+        {
+          "text": "牙痛",
+          "alternatives": [["牙痛"]]
+        }
+      ],
+      "referenceVersion": "2026-10-16.1",
+      "critical": [],
+      "pictureRules": []
+    },
+    {
+      "id": "h05",
+      "text": "可以开窗，但不要把门打开。",
+      "group": "prior-prompt-comparison",
+      "split": "regression-posthoc-reviewed",
+      "constraints": [
+        {
+          "text": "可以",
+          "alternatives": [["可以"]]
+        },
+        {
+          "text": "开窗",
+          "alternatives": [["开窗"], ["开", "窗"]]
+        },
+        {
+          "text": "不要",
+          "alternatives": [["不要"]]
+        },
+        {
+          "text": "把门打开",
+          "alternatives": [["把门打开"], ["把", "门", "打开"], ["把门", "打开"]]
+        }
+      ],
+      "referenceVersion": "2026-10-16.1",
+      "critical": ["不要"],
+      "pictureRules": [
+        {
+          "text": "可以",
+          "scope": "exact",
+          "forbiddenLabels": ["罐头"]
+        }
+      ]
+    },
+    {
+      "id": "h06",
+      "text": "请帮忙找眼镜盒，眼镜在桌上。",
+      "group": "prior-prompt-comparison",
+      "split": "regression-posthoc-reviewed",
+      "constraints": [
+        {
+          "text": "请帮忙",
+          "alternatives": [["请帮忙"], ["请", "帮忙"]]
+        },
+        {
+          "text": "眼镜盒",
+          "alternatives": [["眼镜盒"]]
+        },
+        {
+          "text": "眼镜",
+          "alternatives": [["眼镜"]]
+        }
+      ],
+      "referenceVersion": "2026-10-16.1",
+      "critical": [],
+      "pictureRules": []
+    },
+    {
+      "id": "h07",
+      "text": "明早七点半叫醒我，请再说一次。",
+      "group": "prior-prompt-comparison",
+      "split": "regression-posthoc-reviewed",
+      "constraints": [
+        {
+          "text": "七点半",
+          "alternatives": [["七点半"], ["七", "点", "半"]]
+        },
+        {
+          "text": "叫醒",
+          "alternatives": [["叫醒"]]
+        },
+        {
+          "text": "请再说一次",
+          "alternatives": [
+            ["请再说一次"],
+            ["请", "再说一次"],
+            ["请", "再", "说", "一次"],
+            ["请", "再说", "一次"]
+          ]
+        }
+      ],
+      "referenceVersion": "2026-10-16.1",
+      "critical": [],
+      "pictureRules": []
+    },
+    {
+      "id": "h08",
+      "text": "妈妈不开心，想请你陪她坐一会儿。",
+      "group": "prior-prompt-comparison",
+      "split": "regression-posthoc-reviewed",
+      "constraints": [
+        {
+          "text": "妈妈",
+          "alternatives": [["妈妈"]]
+        },
+        {
+          "text": "不开心",
+          "alternatives": [["不开心"], ["不", "开心"]]
+        },
+        {
+          "text": "她",
+          "alternatives": [["她"]]
+        },
+        {
+          "text": "坐一会儿",
+          "alternatives": [["坐一会儿"], ["坐", "一会儿"]]
+        }
+      ],
+      "referenceVersion": "2026-10-16.1",
+      "critical": ["妈妈", "她"],
+      "pictureRules": [
+        {
+          "text": "不开心",
+          "scope": "exact",
+          "forbiddenLabels": ["开心"],
+          "reason": "整体否定表达不能只画肯定情绪"
+        }
+      ]
+    },
+    {
+      "id": "sense-ability",
+      "group": "can",
+      "split": "paired-regression-not-blind",
+      "referenceVersion": "2026-10-16.1",
+      "text": "我可以自己吃饭。",
+      "constraints": [
+        {
+          "text": "可以",
+          "alternatives": [["可以"]]
+        }
+      ],
+      "critical": ["可以"],
+      "pictureRules": [
+        {
+          "text": "可以",
+          "scope": "exact",
+          "forbiddenLabels": ["罐头", "罐头盒"],
+          "reason": "同词异义或部分词匹配不能替代目标概念"
+        }
+      ]
+    },
+    {
+      "id": "sense-tin",
+      "group": "can",
+      "split": "paired-regression-not-blind",
+      "referenceVersion": "2026-10-16.1",
+      "text": "请打开罐头。",
+      "constraints": [
+        {
+          "text": "罐头",
+          "alternatives": [["罐头"]]
+        }
+      ],
+      "critical": ["罐头"],
+      "pictureRules": [
+        {
+          "text": "罐头",
+          "scope": "exact",
+          "forbiddenLabels": ["可以", "能"],
+          "reason": "同词异义或部分词匹配不能替代目标概念"
+        }
+      ]
+    },
+    {
+      "id": "sense-park",
+      "group": "park",
+      "split": "paired-regression-not-blind",
+      "referenceVersion": "2026-10-16.1",
+      "text": "我想去公园。",
+      "constraints": [
+        {
+          "text": "公园",
+          "alternatives": [["公园"]]
+        }
+      ],
+      "critical": ["公园"],
+      "pictureRules": [
+        {
+          "text": "公园",
+          "scope": "exact",
+          "forbiddenLabels": ["停车", "停车场"],
+          "reason": "同词异义或部分词匹配不能替代目标概念"
+        }
+      ]
+    },
+    {
+      "id": "sense-parking-action",
+      "group": "park",
+      "split": "paired-regression-not-blind",
+      "referenceVersion": "2026-10-16.1",
+      "text": "请在这里停车。",
+      "constraints": [
+        {
+          "text": "停车",
+          "alternatives": [["停车"]]
+        }
+      ],
+      "critical": ["停车"],
+      "pictureRules": [
+        {
+          "text": "停车",
+          "scope": "exact",
+          "forbiddenLabels": ["公园", "停车场"],
+          "reason": "同词异义或部分词匹配不能替代目标概念"
+        }
+      ]
+    },
+    {
+      "id": "sense-parking-place",
+      "group": "park",
+      "split": "paired-regression-not-blind",
+      "referenceVersion": "2026-10-16.1",
+      "text": "停车场在哪里？",
+      "constraints": [
+        {
+          "text": "停车场",
+          "alternatives": [["停车场"]]
+        }
+      ],
+      "critical": ["停车场"],
+      "pictureRules": [
+        {
+          "text": "停车场",
+          "scope": "exact",
+          "forbiddenLabels": ["公园", "停车"],
+          "reason": "同词异义或部分词匹配不能替代目标概念"
+        }
+      ]
+    },
+    {
+      "id": "sense-cold-feeling",
+      "group": "cold",
+      "split": "paired-regression-not-blind",
+      "referenceVersion": "2026-10-16.1",
+      "text": "我很冷。",
+      "constraints": [
+        {
+          "text": "冷",
+          "alternatives": [["冷"]]
+        }
+      ],
+      "critical": ["冷"],
+      "pictureRules": [
+        {
+          "text": "冷",
+          "scope": "exact",
+          "forbiddenLabels": ["感冒"],
+          "reason": "同词异义或部分词匹配不能替代目标概念"
+        }
+      ]
+    },
+    {
+      "id": "sense-cold-illness",
+      "group": "cold",
+      "split": "paired-regression-not-blind",
+      "referenceVersion": "2026-10-16.1",
+      "text": "我感冒了。",
+      "constraints": [
+        {
+          "text": "感冒",
+          "alternatives": [["感冒"]]
+        }
+      ],
+      "critical": ["感冒"],
+      "pictureRules": [
+        {
+          "text": "感冒",
+          "scope": "contained",
+          "forbiddenLabels": ["冷"],
+          "reason": "同词异义或部分词匹配不能替代目标概念"
+        }
+      ]
+    },
+    {
+      "id": "sense-orange-fruit",
+      "group": "orange",
+      "split": "paired-regression-not-blind",
+      "referenceVersion": "2026-10-16.1",
+      "text": "我要橙子。",
+      "constraints": [
+        {
+          "text": "橙子",
+          "alternatives": [["橙子"]]
+        }
+      ],
+      "critical": ["橙子"],
+      "pictureRules": [
+        {
+          "text": "橙子",
+          "scope": "exact",
+          "forbiddenLabels": ["橙色"],
+          "reason": "同词异义或部分词匹配不能替代目标概念"
+        }
+      ]
+    },
+    {
+      "id": "sense-orange-colour",
+      "group": "orange",
+      "split": "paired-regression-not-blind",
+      "referenceVersion": "2026-10-16.1",
+      "text": "我要橙色的杯子。",
+      "constraints": [
+        {
+          "text": "橙色",
+          "alternatives": [["橙色"]]
+        }
+      ],
+      "critical": ["橙色"],
+      "pictureRules": [
+        {
+          "text": "橙色",
+          "scope": "exact",
+          "forbiddenLabels": ["橙子"],
+          "reason": "同词异义或部分词匹配不能替代目标概念"
+        }
+      ]
+    },
+    {
+      "id": "sense-paternal",
+      "group": "grandmother",
+      "split": "paired-regression-not-blind",
+      "referenceVersion": "2026-10-16.1",
+      "text": "请叫奶奶来。",
+      "constraints": [
+        {
+          "text": "奶奶",
+          "alternatives": [["奶奶"]]
+        }
+      ],
+      "critical": ["奶奶"],
+      "pictureRules": [
+        {
+          "text": "奶奶",
+          "scope": "exact",
+          "forbiddenLabels": ["外婆", "姥姥"],
+          "reason": "同词异义或部分词匹配不能替代目标概念"
+        }
+      ]
+    },
+    {
+      "id": "sense-maternal",
+      "group": "grandmother",
+      "split": "paired-regression-not-blind",
+      "referenceVersion": "2026-10-16.1",
+      "text": "请叫外婆来。",
+      "constraints": [
+        {
+          "text": "外婆",
+          "alternatives": [["外婆"]]
+        }
+      ],
+      "critical": ["外婆"],
+      "pictureRules": [
+        {
+          "text": "外婆",
+          "scope": "exact",
+          "forbiddenLabels": ["奶奶"],
+          "reason": "同词异义或部分词匹配不能替代目标概念"
+        }
+      ]
+    },
+    {
+      "id": "sense-pistachio",
+      "group": "pistachio",
+      "split": "paired-regression-not-blind",
+      "referenceVersion": "2026-10-16.1",
+      "text": "我想吃开心果。",
+      "constraints": [
+        {
+          "text": "开心果",
+          "alternatives": [["开心果"]]
+        }
+      ],
+      "critical": ["开心果"],
+      "pictureRules": [
+        {
+          "text": "开心果",
+          "scope": "contained",
+          "forbiddenLabels": ["开心", "水果", "苹果"],
+          "reason": "同词异义或部分词匹配不能替代目标概念"
+        }
+      ]
+    },
+    {
+      "id": "sense-happy",
+      "group": "pistachio",
+      "split": "paired-regression-not-blind",
+      "referenceVersion": "2026-10-16.1",
+      "text": "我今天很开心。",
+      "constraints": [
+        {
+          "text": "开心",
+          "alternatives": [["开心"]]
+        }
+      ],
+      "critical": ["开心"],
+      "pictureRules": [
+        {
+          "text": "开心",
+          "scope": "exact",
+          "forbiddenLabels": ["开心果"],
+          "reason": "同词异义或部分词匹配不能替代目标概念"
+        }
+      ]
+    },
+    {
+      "id": "sense-liquid-soap",
+      "group": "soap",
+      "split": "paired-regression-not-blind",
+      "referenceVersion": "2026-10-16.1",
+      "text": "我要洗手液。",
+      "constraints": [
+        {
+          "text": "洗手液",
+          "alternatives": [["洗手液"]]
+        }
+      ],
+      "critical": ["洗手液"],
+      "pictureRules": [
+        {
+          "text": "洗手液",
+          "scope": "exact",
+          "forbiddenLabels": ["肥皂块", "固体皂", "沐浴露", "洗碗液"],
+          "reason": "同词异义或部分词匹配不能替代目标概念"
+        }
+      ]
+    },
+    {
+      "id": "sense-bar-soap",
+      "group": "soap",
+      "split": "paired-regression-not-blind",
+      "referenceVersion": "2026-10-16.1",
+      "text": "我要肥皂块。",
+      "constraints": [
+        {
+          "text": "肥皂块",
+          "alternatives": [["肥皂块"]]
+        }
+      ],
+      "critical": ["肥皂块"],
+      "pictureRules": [
+        {
+          "text": "肥皂块",
+          "scope": "exact",
+          "forbiddenLabels": ["洗手液", "液体皂"],
+          "reason": "同词异义或部分词匹配不能替代目标概念"
+        }
+      ]
+    },
+    {
+      "id": "sense-grapefruit",
+      "group": "grape",
+      "split": "paired-regression-not-blind",
+      "referenceVersion": "2026-10-16.1",
+      "text": "我要葡萄柚。",
+      "constraints": [
+        {
+          "text": "葡萄柚",
+          "alternatives": [["葡萄柚"]]
+        }
+      ],
+      "critical": ["葡萄柚"],
+      "pictureRules": [
+        {
+          "text": "葡萄柚",
+          "scope": "contained",
+          "forbiddenLabels": ["葡萄"],
+          "reason": "同词异义或部分词匹配不能替代目标概念"
+        }
+      ]
+    },
+    {
+      "id": "sense-grape",
+      "group": "grape",
+      "split": "paired-regression-not-blind",
+      "referenceVersion": "2026-10-16.1",
+      "text": "我要葡萄。",
+      "constraints": [
+        {
+          "text": "葡萄",
+          "alternatives": [["葡萄"]]
+        }
+      ],
+      "critical": ["葡萄"],
+      "pictureRules": [
+        {
+          "text": "葡萄",
+          "scope": "exact",
+          "forbiddenLabels": ["葡萄柚"],
+          "reason": "同词异义或部分词匹配不能替代目标概念"
+        }
+      ]
+    },
+    {
+      "id": "sense-fork-road",
+      "group": "fork",
+      "split": "paired-regression-not-blind",
+      "referenceVersion": "2026-10-16.1",
+      "text": "前面有分叉。",
+      "constraints": [
+        {
+          "text": "分叉",
+          "alternatives": [["分叉"]]
+        }
+      ],
+      "critical": ["分叉"],
+      "pictureRules": [
+        {
+          "text": "分叉",
+          "scope": "exact",
+          "forbiddenLabels": ["叉子", "餐叉"],
+          "reason": "同词异义或部分词匹配不能替代目标概念"
+        }
+      ]
+    },
+    {
+      "id": "sense-fork-food",
+      "group": "fork",
+      "split": "paired-regression-not-blind",
+      "referenceVersion": "2026-10-16.1",
+      "text": "请给我餐叉。",
+      "constraints": [
+        {
+          "text": "餐叉",
+          "alternatives": [["餐叉"]]
+        }
+      ],
+      "critical": ["餐叉"],
+      "pictureRules": [
+        {
+          "text": "餐叉",
+          "scope": "exact",
+          "forbiddenLabels": ["分叉"],
+          "reason": "同词异义或部分词匹配不能替代目标概念"
+        }
+      ]
+    },
+    {
+      "id": "sense-return",
+      "group": "home",
+      "split": "paired-regression-not-blind",
+      "referenceVersion": "2026-10-16.1",
+      "text": "我想回家。",
+      "constraints": [
+        {
+          "text": "回家",
+          "alternatives": [["回家"]]
+        }
+      ],
+      "critical": ["回家"],
+      "pictureRules": [
+        {
+          "text": "回家",
+          "scope": "exact",
+          "forbiddenLabels": ["离家", "离开家"],
+          "reason": "同词异义或部分词匹配不能替代目标概念"
+        }
+      ]
+    },
+    {
+      "id": "sense-leave",
+      "group": "home",
+      "split": "paired-regression-not-blind",
+      "referenceVersion": "2026-10-16.1",
+      "text": "我要离家。",
+      "constraints": [
+        {
+          "text": "离家",
+          "alternatives": [["离家"]]
+        }
+      ],
+      "critical": ["离家"],
+      "pictureRules": [
+        {
+          "text": "离家",
+          "scope": "exact",
+          "forbiddenLabels": ["回家"],
+          "reason": "同词异义或部分词匹配不能替代目标概念"
+        }
+      ]
+    },
+    {
+      "id": "sense-not-return",
+      "group": "home",
+      "split": "paired-regression-not-blind",
+      "referenceVersion": "2026-10-16.1",
+      "text": "我今晚不回家。",
+      "constraints": [
+        {
+          "text": "不回家",
+          "alternatives": [["不", "回家"]]
+        }
+      ],
+      "critical": ["不回家"],
+      "pictureRules": [
+        {
+          "text": "不回家",
+          "scope": "exact",
+          "forbiddenLabels": ["回家", "家"],
+          "reason": "同词异义或部分词匹配不能替代目标概念"
+        }
+      ]
+    },
+    {
+      "id": "sense-double-negation",
+      "group": "home",
+      "split": "paired-regression-not-blind",
+      "referenceVersion": "2026-10-16.1",
+      "text": "我不是不想回家。",
+      "constraints": [
+        {
+          "text": "不是不想回家",
+          "alternatives": [["不是", "不", "想", "回家"]]
+        }
+      ],
+      "critical": ["不是不想回家"],
+      "pictureRules": [
+        {
+          "text": "不是不想回家",
+          "scope": "exact",
+          "forbiddenLabels": ["回家", "家"],
+          "reason": "同词异义或部分词匹配不能替代目标概念"
+        }
+      ]
+    },
+    {
+      "id": "sense-whole-help",
+      "group": "help",
+      "split": "paired-regression-not-blind",
+      "referenceVersion": "2026-10-16.1",
+      "text": "请帮忙。",
+      "constraints": [
+        {
+          "text": "请帮忙",
+          "alternatives": [["请帮忙"], ["请", "帮忙"]]
+        }
+      ],
+      "critical": ["请帮忙"],
+      "pictureRules": []
+    },
+    {
+      "id": "sense-relative-help",
+      "group": "help",
+      "split": "paired-regression-not-blind",
+      "referenceVersion": "2026-10-16.1",
+      "text": "请帮我姐姐。",
+      "constraints": [
+        {
+          "text": "我姐姐",
+          "alternatives": [["我姐姐"], ["我", "姐姐"]]
+        }
+      ],
+      "critical": ["我姐姐"],
+      "pictureRules": [
+        {
+          "text": "我姐姐",
+          "scope": "exact",
+          "forbiddenLabels": ["我", "妈妈", "女儿"],
+          "reason": "同词异义或部分词匹配不能替代目标概念"
+        }
+      ]
+    }
+  ]
+}

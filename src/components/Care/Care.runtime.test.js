@@ -1,6 +1,20 @@
 import { runtime } from './Care';
 import { getStore } from '../../store';
 import history from '../../history';
+import {
+  speak,
+  cancelSpeech
+} from '../../providers/SpeechProvider/SpeechProvider.actions';
+jest.mock('../../providers/SpeechProvider/SpeechProvider.actions', () => ({
+  speak: jest.fn((text, done, options) => ({
+    type: 'SYNTHETIC_SPEAK',
+    text,
+    done,
+    options
+  })),
+  cancelSpeech: jest.fn(() => ({ type: 'SYNTHETIC_CANCEL' })),
+  changeRate: jest.fn(rate => ({ type: 'SYNTHETIC_RATE', rate }))
+}));
 jest.mock('../../history', () => ({ replace: jest.fn() }));
 jest.mock('../../store', () => ({ getStore: jest.fn() }));
 jest.mock('../../constants', () => ({ API_URL: 'http://synthetic.invalid' }));
@@ -23,6 +37,51 @@ beforeEach(() => {
   });
 });
 afterEach(() => jest.restoreAllMocks());
+test('Care speech waits for the original SpeechProvider completion and forwards only an explicit rate override', async () => {
+  let completed = false;
+  const task = runtime.speak('第一句').then(() => {
+    completed = true;
+  });
+  await Promise.resolve();
+  expect(completed).toBe(false);
+  expect(speak).toHaveBeenLastCalledWith('第一句', expect.any(Function), {});
+  speak.mock.calls[speak.mock.calls.length - 1][1]();
+  await task;
+  expect(completed).toBe(true);
+  const second = runtime.speak('第二句', 0.8);
+  expect(speak).toHaveBeenLastCalledWith('第二句', expect.any(Function), {
+    rate: 0.8
+  });
+  speak.mock.calls[speak.mock.calls.length - 1][1]();
+  await second;
+});
+
+test('Care speech cancellation and provider errors settle without starting a successor', async () => {
+  const first = runtime.speak('待取消');
+  const cancelled = expect(first).rejects.toMatchObject({ name: 'AbortError' });
+  runtime.cancelSpeech();
+  await cancelled;
+  expect(cancelSpeech).toHaveBeenCalled();
+  const second = runtime.speak('失败');
+  const failed = expect(second).rejects.toThrow('播报失败');
+  speak.mock.calls[speak.mock.calls.length - 1][1]({ error: true });
+  await failed;
+});
+test.each([['false', false], ['true', true]])(
+  'restricted trial exposes existing funding selection only when text AI is explicitly %s',
+  (flag, enabled) => {
+    const previous = { ...process.env };
+    try {
+      process.env.REACT_APP_TUYUJIA_CLOUD_TRIAL = 'true';
+      process.env.REACT_APP_CARE_AI_TRIAL = flag;
+      jest.isolateModules(() => {
+        expect(require('./Care').runtime.fundingEnabled).toBe(enabled);
+      });
+    } finally {
+      process.env = previous;
+    }
+  }
+);
 test('waits for asynchronous logout before opening the login route', async () => {
   const previous = global.fetch;
   let finishLogout;

@@ -4,6 +4,12 @@ import shortid from 'shortid';
 import Button from '@material-ui/core/Button';
 import TextField from '@material-ui/core/TextField';
 import InputImage from '../../UI/InputImage';
+import { getPersonalPeople } from '../../../common/communicationSupport/personalPeople';
+import {
+  buildPersonalPictogramTileDTO,
+  appendPersonalPictogramToBoard,
+  updatePersonalPictogramInBoards
+} from '../../../common/communicationSupport/pictogramMetadataSuggestion';
 import { buildCommunicationTileCatalog } from '../../../common/communicationSupport/symbolMatching';
 import {
   normalizeExpressionPictogramSearchQuery,
@@ -89,6 +95,12 @@ export default function PersonalImageManager({
   createCuratedId
 }) {
   const [query, setQuery] = useState('');
+  const [person, setPerson] = useState({
+    id: '',
+    boardId: '',
+    label: '',
+    image: ''
+  });
   const [selectedKey, setSelectedKey] = useState('');
   const [targetBoardId, setTargetBoardId] = useState('');
   const [newBoardName, setNewBoardName] = useState('我的常用图卡');
@@ -185,6 +197,7 @@ export default function PersonalImageManager({
   const selectedCandidate = candidateByKey.get(selectedKey) || null;
   const selectedPreference = preferenceByKey.get(selectedKey) || null;
   const personalBoards = editableBoardDtos.filter(isPersonalCommunicationBoard);
+  const people = getPersonalPeople(editableCatalog);
   const selectedTargetBoardId = personalBoards.some(
     board => board.id === targetBoardId
   )
@@ -281,7 +294,41 @@ export default function PersonalImageManager({
       return;
     }
     setTargetBoardId(boardId);
-    setNotice(`已创建个人板“${newBoardName.trim()}”，现在可以收纳公开图卡。`);
+    setNotice(
+      `已创建个人板“${newBoardName.trim()}”，现在可以添加人物或收纳公开图卡。`
+    );
+  }
+
+  function savePerson() {
+    const boardId = person.boardId || selectedTargetBoardId;
+    if (!boardId || !person.label.trim() || !person.image) {
+      setNotice('请先选择个人板，填写全名并选择本人照片。');
+      return;
+    }
+    try {
+      const tile = buildPersonalPictogramTileDTO({
+        ...person,
+        boardId,
+        id: person.id || `device_private_custom_${createCuratedId()}`,
+        category: 'people'
+      });
+      const next = person.id
+        ? updatePersonalPictogramInBoards(
+            editableBoardDtos,
+            person.boardId,
+            boardId,
+            tile
+          )
+        : appendPersonalPictogramToBoard(editableBoardDtos, boardId, tile);
+      if (!onBoardSave(next.find(board => board.id === boardId)))
+        throw new Error('save');
+      setPerson({ id: '', boardId: '', label: '', image: '' });
+      setNotice(
+        '人物已保存到个人图库。使用全名匹配；照片不会用于公共补图或模型建议。'
+      );
+    } catch (error) {
+      setNotice('人物保存失败，草稿仍保留，请重试。');
+    }
   }
 
   function curatePublicPictogram(sourceTile) {
@@ -336,6 +383,86 @@ export default function PersonalImageManager({
       <div className="PersonalImageManager__privacy" role="status">
         {notice}
       </div>
+      <section
+        className="PersonalImageManager__section"
+        aria-label="人物全名与照片"
+      >
+        <h3>人物全名与照片</h3>
+        <p>
+          录入全名与本人照片，接收文字中使用全名。同名时由你选择照片确认，暂不使用亲属称呼或昵称判断人物。
+        </p>
+        <TextField
+          select
+          SelectProps={{ native: true }}
+          label="新增或编辑人物"
+          value={person.id}
+          onChange={event => {
+            const entry = people.find(item => item.id === event.target.value);
+            setPerson(
+              entry
+                ? {
+                    id: entry.id,
+                    boardId: entry.boardId,
+                    label: entry.tile.label,
+                    synonyms: entry.synonyms.join(','),
+                    image: entry.tile.image
+                  }
+                : { id: '', boardId: '', label: '', image: '' }
+            );
+          }}
+        >
+          <option value="">新增人物</option>
+          {people.map(item => (
+            <option key={item.id} value={item.id}>
+              {item.displayLabel} · {item.boardName}
+            </option>
+          ))}
+        </TextField>
+        <TextField
+          label="全名"
+          value={person.label}
+          onChange={event =>
+            setPerson({ ...person, label: event.target.value })
+          }
+        />
+        <TextField
+          select
+          SelectProps={{ native: true }}
+          label="保存到个人板"
+          value={person.boardId || selectedTargetBoardId}
+          disabled={Boolean(person.id)}
+          onChange={event =>
+            setPerson({ ...person, boardId: event.target.value })
+          }
+        >
+          <option value="">请先在下方创建个人板</option>
+          {personalBoards.map(board => (
+            <option key={board.id} value={board.id}>
+              {board.name}
+            </option>
+          ))}
+        </TextField>
+        {person.image && (
+          <img alt="本人照片预览" src={person.image} width="80" />
+        )}
+        <InputImage
+          setIsLoadingImage={setIsLoadingImage}
+          onChange={async blob => {
+            try {
+              const image = await readPersonalImageBlob(blob);
+              setPerson(current => ({ ...current, image }));
+            } catch (error) {
+              setNotice('照片读取失败，请重新选择。');
+            }
+          }}
+        />
+        <small>
+          照片在本地读取，不发送给视觉模型；使用前请获得照片本人的同意。
+        </small>
+        <Button color="primary" disabled={isLoadingImage} onClick={savePerson}>
+          保存人物
+        </Button>
+      </section>
 
       {configured.length > 0 && (
         <section className="PersonalImageManager__section">

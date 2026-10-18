@@ -211,6 +211,18 @@ function buildDeclaredPublicAttribution(value) {
   ).toLocaleLowerCase();
   const originalId = normalizeString(value && value.pictogramOriginalId);
 
+  // Bundled sources sometimes use filenames rather than remote numeric IDs.
+  // Retain that identity when platform packaging replaces the image URL.
+  if (
+    ['arasaac', 'mulberry'].includes(provider) &&
+    /^[a-zA-Z0-9_,.-]+\.(png|svg)$/.test(originalId)
+  ) {
+    return buildBundledAttribution({
+      id: originalId,
+      image: `/symbols/${provider}/${originalId}`
+    });
+  }
+
   if (provider !== 'arasaac' || !/^\d+$/.test(originalId)) {
     return null;
   }

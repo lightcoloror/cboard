@@ -3961,5 +3961,6 @@
   "symbol.descriptiveQuantity.slow": "slow",
   "symbol.descriptiveQuantity.different": "different",
   "symbol.buildingContents.bathroom": "bathroom",
-  "symbol.descriptiveQuantity.categories": "categories"
+  "symbol.descriptiveQuantity.categories": "categories",
+  "symbol.descriptiveTemperature.objectHot": "hot object"
 }

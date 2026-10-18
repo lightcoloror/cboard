@@ -22,7 +22,7 @@ function containsAny(text, patterns) {
 
 export function generateCommunicationCandidateSentences(
   labels,
-  candidateCount = 4
+  candidateCount = 3
 ) {
   if (!labels || !labels.length) {
     return ['（请先选择图片）'];
@@ -49,6 +49,10 @@ export function generateCommunicationCandidateSentences(
   }
 
   raw.push(base + '，好吗？');
+
+  // Complete the three-choice offline flow without changing the selected
+  // person, negation, action or quantity when the sentence has a subject.
+  raw.push('我的意思是：' + base + '。');
 
   const seen = new Set();
   return raw

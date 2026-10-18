@@ -165,8 +165,10 @@ describe('communication support DTO v1', () => {
     expect(calibrated.label).toBe('想吐');
     expect(calibrated.vocalization).toBe('想吐');
     expect(calibrated.communication.synonyms).toEqual(
-      expect.arrayContaining(['恶心', '呕吐', '反胃'])
+      expect.arrayContaining(['恶心', '想呕吐', '反胃'])
     );
+    expect(calibrated.communication.synonyms).not.toContain('呕吐');
+    expect(calibrated.communication.synonyms).not.toContain('干呕');
     expect(custom.label).toBe('我的专用图');
     expect(custom.vocalization).toBe('我的专用图');
   });

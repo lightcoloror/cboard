@@ -5,6 +5,9 @@ import ClearIcon from '@material-ui/icons/Clear';
 import IconButton from '@material-ui/core/IconButton';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Switch from '@material-ui/core/Switch';
+import Tooltip from '@material-ui/core/Tooltip';
+import UndoIcon from '@material-ui/icons/Undo';
+import { Scannable } from 'react-scannable';
 
 import Symbol from '../../Symbol';
 import BackspaceButton from './BackspaceButton';
@@ -82,6 +85,8 @@ class SymbolOutput extends PureComponent {
       intl,
       onBackspaceClick,
       onClearClick,
+      onUndoDelete,
+      canUndoDelete,
       getPhraseToShare,
       onCopyClick,
       onRemoveClick,
@@ -159,6 +164,33 @@ class SymbolOutput extends PureComponent {
             minWidth: 'fit-content'
           }}
         >
+          {canUndoDelete && (
+            <Scannable>
+              <Tooltip
+                placement="bottom"
+                title={intl.formatMessage(messages.undoDeletion)}
+              >
+                <IconButton
+                  aria-label={intl.formatMessage(messages.undoDeletion)}
+                  className={
+                    increaseOutputButtons
+                      ? 'Output__button__lg'
+                      : 'Output__button__sm'
+                  }
+                  color="inherit"
+                  onClick={onUndoDelete}
+                >
+                  <UndoIcon
+                    className={
+                      increaseOutputButtons
+                        ? 'Output__icon__lg'
+                        : 'Output__icon__sm'
+                    }
+                  />
+                </IconButton>
+              </Tooltip>
+            </Scannable>
+          )}
           {navigationSettings.shareShowActive && (
             <PhraseShare
               label={intl.formatMessage(messages.share)}

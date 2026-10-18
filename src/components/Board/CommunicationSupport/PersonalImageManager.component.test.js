@@ -4,6 +4,7 @@ import { mount } from 'enzyme';
 import Button from '@material-ui/core/Button';
 import TextField from '@material-ui/core/TextField';
 import PersonalImageManager from './PersonalImageManager.component';
+import InputImage from '../../UI/InputImage';
 
 jest.mock('../../UI/InputImage', () => () => null);
 
@@ -55,6 +56,50 @@ const personalBoard = {
 };
 
 describe('PersonalImageManager', () => {
+  test('creates a full-name private person in the existing board using a local image', async () => {
+    const onBoardSave = jest.fn(() => true);
+    const wrapper = mount(
+      <PersonalImageManager
+        boards={[personalBoard]}
+        editableBoards={[personalBoard]}
+        preferences={[]}
+        onSave={jest.fn()}
+        onRemove={jest.fn()}
+        onBoardSave={onBoardSave}
+        createCuratedId={() => 'synthetic-person'}
+      />
+    );
+    act(() =>
+      wrapper
+        .find(TextField)
+        .filterWhere(node => node.prop('label') === '全名')
+        .prop('onChange')({ target: { value: '林知岚' } })
+    );
+    wrapper.update();
+    await act(async () =>
+      wrapper
+        .find(InputImage)
+        .first()
+        .prop('onChange')(
+        new Blob(['synthetic-image'.repeat(100)], { type: 'image/png' })
+      )
+    );
+    wrapper.update();
+    act(() => {
+      wrapper
+        .find(Button)
+        .filterWhere(node => node.text() === '保存人物')
+        .simulate('click');
+    });
+    expect(onBoardSave).toHaveBeenCalledTimes(1);
+    const tile = onBoardSave.mock.calls[0][0].tiles[0];
+    expect(tile.label).toBe('林知岚');
+    expect(tile.image.length).toBeGreaterThan(500);
+    expect(tile.communication.category).toBe('people');
+    expect(tile.pictogramAttribution.provider).toBe('device-private');
+    expect(wrapper.text()).not.toContain('谁会这样称呼此人');
+    wrapper.unmount();
+  });
   test('finds a cross-board tile by its Chinese synonym for caregiver maintenance', () => {
     const spoonBoard = {
       id: 'food',

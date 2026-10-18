@@ -122,7 +122,7 @@ describe('expressionPipeline', () => {
     );
 
     expect(state.candidateSentences[0]).toBe('请帮我喝一点水。');
-    expect(state.candidateSentences).toHaveLength(4);
+    expect(state.candidateSentences).toHaveLength(3);
   });
 
   test('falls back to the first candidate for an invalid selection', () => {

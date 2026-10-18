@@ -310,7 +310,7 @@ export function cancelSpeech() {
   };
 }
 
-export function speak(text, onend = () => {}) {
+export function speak(text, onend = () => {}, overrides = {}) {
   return (dispatch, getState) => {
     const options = getState().speech.options;
     const setCloudSpeakAlertTimeout = () => {
@@ -325,8 +325,9 @@ export function speak(text, onend = () => {}) {
       text,
       {
         ...options,
+        ...overrides,
         onend: event => {
-          onend();
+          onend(event);
           dispatch(endSpeech());
           if (event?.error) dispatch(showNotification('', 'cloudSpeakError'));
         }

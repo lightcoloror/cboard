@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
+import { equals } from 'ramda';
 import { careErrorMessage } from '../../../common/communicationSupport/careErrors';
 import Button from '@material-ui/core/Button';
 import Dialog from '@material-ui/core/Dialog';
@@ -12,7 +13,8 @@ import TextField from '@material-ui/core/TextField';
 import Symbol from '../Symbol';
 import {
   applyCommunicationAiResegmentation,
-  buildCommunicationAiResegmentRequest
+  buildCommunicationAiResegmentRequest,
+  validateResegmentSource
 } from '../../../common/communicationSupport/communicationAi';
 import {
   COMMUNICATION_ENHANCEMENT_LIMIT_SCOPES,
@@ -22,6 +24,10 @@ import ReceiverDisplay from './ReceiverDisplay.component';
 import MissingTokenQueue from './MissingTokenQueue.component';
 import { CBOARD_COMMUNICATION_EXAMPLE_PHRASES } from '../../../common/communicationSupport/cboardConceptProfiles';
 import { buildCommunicationTileCatalog } from '../../../common/communicationSupport/symbolMatching';
+import {
+  applyMissingTokenResolutions,
+  filterMissingTokenResolutionsByCorrectionMemory
+} from '../../../common/communicationSupport/missingTokens';
 import {
   buildReceiverHistoryEntry,
   buildReceiverLoopState,
@@ -33,6 +39,7 @@ import {
   moveReceiverReviewItem,
   normalizeReceiverMatchType,
   replaceReceiverReviewItem,
+  retainReceiverReviewItemAsText,
   restoreReceiverLoopState
 } from '../../../common/communicationSupport/receiverPipeline';
 import {
@@ -156,9 +163,10 @@ const DEFAULT_COPY = {
   moveRight: '右移',
   remove: '删除',
   unmatched: '未匹配',
-  matchSummaryLabel: '匹配结果',
+  matchSummaryLabel: '图片匹配',
   reviewRecommended: '请重点复核未匹配或部分匹配项',
-  reviewReady: '已全部匹配，发送前请确认',
+  reviewReady: '已全部配图，发送前请确认',
+  textReady: '含保留文字，可以展示；发送前请确认',
   voiceUnavailable: '当前环境不支持浏览器语音输入，请使用文字输入。',
   matchTypeExact: '精确匹配',
   matchTypeSynonym: '同义词匹配',
@@ -169,7 +177,8 @@ const DEFAULT_COPY = {
   matchTypeManual: '手工选择',
   matchTypeMissing: '未匹配',
   segmentationLabel: '分词结果（可修改）',
-  segmentationHint: '使用空格、斜线或逗号分隔词语，修改后请重新应用。',
+  segmentationHint:
+    '用 / 分开词语；引号内的标点和空白属于原文，请保留。修改后请重新应用。',
   applySegmentation: '按此分词重新匹配',
   segmentationRequired: '请至少保留一个词语。',
   segmentationApplied: '已按人工分词重新匹配，可以继续确认。',
@@ -181,7 +190,7 @@ const DEFAULT_COPY = {
   aiFailed: 'AI 服务暂时不可用，当前结果仍可人工修改。',
   aiRateLimited: 'AI 增强请求较多，请稍后重试；当前结果仍可人工修改。',
   aiMonthlyQuota: '本月 AI 增强额度已用完，当前结果仍可人工修改。',
-  aiNoImprovement: 'AI 分词没有改善匹配率，已保留当前结果。',
+  aiNoImprovement: 'AI 建议未完整保留原文，已保留当前结果。',
   aiApplied: 'AI 分词已应用，可以继续人工确认。',
   aiNeedsReview: 'AI 分词已应用，请继续处理未匹配词。',
   feedbackQuestion: '你明白了吗？',
@@ -215,8 +224,6 @@ function getMatchTypeLabel(matchType, copy) {
 }
 
 function getAiFailureMessage(error, copy) {
-  if (error?.response?.data?.code || error?.data?.code)
-    return careErrorMessage(error);
   const limitScope = getCommunicationEnhancementLimitScope(error);
   if (limitScope === COMMUNICATION_ENHANCEMENT_LIMIT_SCOPES.month) {
     return copy.aiMonthlyQuota;
@@ -224,6 +231,13 @@ function getAiFailureMessage(error, copy) {
   if (limitScope === COMMUNICATION_ENHANCEMENT_LIMIT_SCOPES.minute) {
     return copy.aiRateLimited;
   }
+  if (
+    error?.response?.data?.code ||
+    error?.response?.data?.error?.code ||
+    error?.data?.code ||
+    error?.code?.startsWith('AI_REQUEST_')
+  )
+    return careErrorMessage(error);
   const status = error && error.response && Number(error.response.status);
   if (status === 401 || status === 403) return copy.aiLoginRequired;
   if (status === 503) return copy.aiUnavailable;
@@ -321,6 +335,8 @@ function MatchRow({
   onDelete,
   onInsert,
   onSwap,
+  onKeepText,
+  onPersonPick,
   copy
 }) {
   const hasMatch = Boolean(match.tile);
@@ -353,7 +369,11 @@ function MatchRow({
                 : 'CommunicationSupportPanel__status CommunicationSupportPanel__status--miss'
             }
           >
-            {hasMatch ? matchedLabel : copy.unmatched}
+            {hasMatch
+              ? match.tile.textOnly
+                ? '保留文字'
+                : matchedLabel
+              : copy.unmatched}
           </span>
           {hasMatch && (
             <span className="CommunicationSupportPanel__meta">
@@ -364,6 +384,36 @@ function MatchRow({
         </div>
       </div>
       <div className="CommunicationSupportPanel__matchActions">
+        {!hasMatch &&
+          match.personCandidates &&
+          match.personCandidates.length > 0 && (
+            <div
+              className="CommunicationSupportPanel__personChoices"
+              role="group"
+              aria-label={`确认${match.token}指谁`}
+            >
+              <span>请确认“{match.token}”指谁：</span>
+              {match.personCandidates.map(candidate => (
+                <Button
+                  key={candidate.id}
+                  onClick={() => onPersonPick(match.id, candidate)}
+                >
+                  <Symbol
+                    className="CommunicationSupportPanel__symbol CommunicationSupportPanel__symbol--preview"
+                    image={candidate.tile.image}
+                    label={candidate.displayLabel}
+                    labelpos="Below"
+                  />
+                  {candidate.displayLabel} · {candidate.boardName}
+                </Button>
+              ))}
+            </div>
+          )}
+        {!hasMatch && (
+          <Button size="small" onClick={() => onKeepText(match.id)}>
+            保留文字
+          </Button>
+        )}
         <Button color="primary" size="small" onClick={() => onSwap(match.id)}>
           {copy.replaceAction}
         </Button>
@@ -394,6 +444,8 @@ function MatchRow({
 }
 
 MatchRow.propTypes = {
+  onPersonPick: PropTypes.func.isRequired,
+  onKeepText: PropTypes.func.isRequired,
   match: PropTypes.shape({
     id: PropTypes.string.isRequired,
     token: PropTypes.string.isRequired,
@@ -437,6 +489,7 @@ export default function ReceiverLoopPanel({
   onSpeak,
   onCancelSpeech,
   aiAvailable,
+  aiUnavailableReason,
   onAiResegment,
   dialectNormalizationAvailable,
   onNormalizeDialectText,
@@ -460,7 +513,9 @@ export default function ReceiverLoopPanel({
     restoredReceiverState ? restoredReceiverState.inputText : ''
   );
   const [receivePhase, setReceivePhase] = useState(() =>
-    restoredReceiverState ? 'review' : 'idle'
+    restoredReceiverState && restoredReceiverState.reviewItems.length
+      ? 'review'
+      : 'idle'
   );
   const [reviewItems, setReviewItems] = useState(() =>
     restoredReceiverState ? restoredReceiverState.reviewItems : []
@@ -488,6 +543,7 @@ export default function ReceiverLoopPanel({
   });
   const [learnFromCorrections, setLearnFromCorrections] = useState(true);
   const [isAiResegmenting, setIsAiResegmenting] = useState(false);
+  const [pendingAiSuggestion, setPendingAiSuggestion] = useState(null);
   const [isCantoneseMode, setIsCantoneseMode] = useState(false);
   const [preferOnDeviceSpeech, setPreferOnDeviceSpeech] = useState(false);
   const [dialectSourceText, setDialectSourceText] = useState('');
@@ -506,9 +562,72 @@ export default function ReceiverLoopPanel({
   const pendingMatchTimerRef = useRef(null);
   const matchGenerationRef = useRef(0);
   const aiGenerationRef = useRef(0);
+  const aiContextRef = useRef(null);
   const dialectGenerationRef = useRef(0);
   const dialectAudioGenerationRef = useRef(0);
   const ocrGenerationRef = useRef(0);
+  const restoredGapsRecordedRef = useRef(false);
+
+  useEffect(
+    () => {
+      if (restoredGapsRecordedRef.current || !onRecordMissingTokens) return;
+      restoredGapsRecordedRef.current = true;
+      if (
+        !restoredReceiverState ||
+        !initialRecord ||
+        initialRecord.recordStatus !== 'draft'
+      )
+        return;
+      const tokens = restoredReceiverState.missingTokens.filter(
+        token =>
+          !missingTokenRecords.some(record => record.normalizedToken === token)
+      );
+      if (tokens.length) {
+        try {
+          onRecordMissingTokens({
+            tokens,
+            rawText: restoredReceiverState.inputText,
+            scene: 'receiver'
+          });
+        } catch (error) {
+          /* A queue write failure must not prevent local review. */
+        }
+      }
+    },
+    [
+      restoredReceiverState,
+      initialRecord,
+      missingTokenRecords,
+      onRecordMissingTokens
+    ]
+  );
+
+  useEffect(
+    () => {
+      const previous = aiContextRef.current;
+      aiContextRef.current = {
+        inputText,
+        reviewItems,
+        boards,
+        segmentationDraft
+      };
+      // A cloud refresh can recreate identical boards while a paid result is
+      // arriving. Only changed board content invalidates that result.
+      if (
+        previous &&
+        previous.inputText === inputText &&
+        previous.reviewItems === reviewItems &&
+        previous.segmentationDraft === segmentationDraft &&
+        equals(previous.boards, boards)
+      ) {
+        return;
+      }
+      aiGenerationRef.current += 1;
+      setIsAiResegmenting(false);
+      setPendingAiSuggestion(null);
+    },
+    [inputText, reviewItems, boards, segmentationDraft]
+  );
 
   useEffect(() => {
     return () => {
@@ -526,6 +645,27 @@ export default function ReceiverLoopPanel({
   const tileCatalog = useMemo(
     () => buildCommunicationTileCatalog(boards, intl),
     [boards, intl]
+  );
+
+  // Match the existing mini-program refresh path: confirming a cached image
+  // updates this review immediately, without regenerating words or losing edits.
+  useEffect(
+    () => {
+      setReviewItems(current => {
+        const next = applyMissingTokenResolutions(
+          current,
+          filterMissingTokenResolutionsByCorrectionMemory(
+            missingTokenRecords,
+            correctionMemory
+          ),
+          tileCatalog
+        );
+        return next.every((item, index) => item === current[index])
+          ? current
+          : next;
+      });
+    },
+    [missingTokenRecords, correctionMemory, tileCatalog]
   );
 
   const swapResults = useMemo(
@@ -550,7 +690,9 @@ export default function ReceiverLoopPanel({
 
   const missingTokens = useMemo(
     () => {
-      return reviewItems.filter(item => !item.tile).map(item => item.token);
+      return reviewItems
+        .filter(item => !item.tile && !item.personalReference)
+        .map(item => item.token);
     },
     [reviewItems]
   );
@@ -649,9 +791,9 @@ export default function ReceiverLoopPanel({
   }
 
   function scheduleReviewForText(text) {
-    const normalizedText = String(text || '').trim();
+    const normalizedText = String(text || '');
 
-    if (!normalizedText) {
+    if (!normalizedText.trim()) {
       return;
     }
 
@@ -680,6 +822,24 @@ export default function ReceiverLoopPanel({
     setReceivePhase('idle');
     setDisplayRecordId(null);
     closeSymbolPicker();
+    try {
+      if (!nextText.trim()) {
+        if (activeDraft && onDiscardResumableRecord)
+          onDiscardResumableRecord(activeDraft.id);
+        setActiveDraft(null);
+      } else {
+        const entry = buildReceiverHistoryEntry(nextText, []);
+        if (
+          activeDraft &&
+          activeDraft.recordStatus === 'draft' &&
+          onUpdateDraft
+        )
+          setActiveDraft(onUpdateDraft(activeDraft, entry));
+        else if (onCreateDraft) setActiveDraft(onCreateDraft(entry));
+      }
+    } catch (_) {
+      setInputNotice('本机草稿保存失败，请先保留文字，避免刷新后丢失。');
+    }
   }
 
   function handleMatch() {
@@ -687,6 +847,10 @@ export default function ReceiverLoopPanel({
   }
 
   function handleApplyReceiveOutput() {
+    if (reviewItems.some(item => !item.tile)) {
+      setReviewNotice('请先处理未匹配词，避免输出时遗漏原意。');
+      return;
+    }
     const outputItems = buildReceiverOutputPreview(reviewItems);
 
     if (!outputItems.length) {
@@ -697,6 +861,10 @@ export default function ReceiverLoopPanel({
   }
 
   function handleOpenDisplay() {
+    if (reviewItems.some(item => !item.tile)) {
+      setReviewNotice('请先处理未匹配词，避免输出时遗漏原意。');
+      return;
+    }
     const outputItems = buildReceiverOutputPreview(reviewItems);
 
     if (!outputItems.length) {
@@ -1117,7 +1285,11 @@ export default function ReceiverLoopPanel({
 
   async function handleAiResegmentation() {
     if (!aiAvailable || typeof onAiResegment !== 'function') {
-      setReviewNotice(copy.aiLoginRequired);
+      setReviewNotice(aiUnavailableReason || copy.aiLoginRequired);
+      return;
+    }
+    if (!validateResegmentSource(inputText)) {
+      setReviewNotice('AI 优化支持 1–120 字，请分段处理；原文已保留。');
       return;
     }
 
@@ -1129,6 +1301,7 @@ export default function ReceiverLoopPanel({
     });
     const generation = aiGenerationRef.current + 1;
     aiGenerationRef.current = generation;
+    setPendingAiSuggestion(null);
     setIsAiResegmenting(true);
     setReviewNotice('');
 
@@ -1148,35 +1321,8 @@ export default function ReceiverLoopPanel({
         setReviewNotice(copy.aiNoImprovement);
         return;
       }
-
-      const nextItems = applied.reviewItems;
-      const nextMissingTokens = nextItems
-        .filter(item => !item.tile)
-        .map(item => item.token);
-      if (nextMissingTokens.length && onRecordMissingTokens) {
-        try {
-          onRecordMissingTokens({
-            tokens: nextMissingTokens,
-            rawText: inputText.trim(),
-            scene: 'receiver'
-          });
-        } catch (error) {
-          // Optional AI must not block the local receiver loop.
-        }
-      }
-      persistReceiverEdit(
-        RECEIVER_CORRECTION_ACTIONS.resegment,
-        'segmentation-ai',
-        nextItems
-      );
-      setSegmentationDraft(
-        formatCommunicationSegmentation(
-          applied.segmentation || nextItems.map(item => item.token)
-        )
-      );
-      setReviewNotice(
-        applied.quality.needsReview ? copy.aiNeedsReview : copy.aiApplied
-      );
+      setPendingAiSuggestion({ applied, generation });
+      setReviewNotice('AI 建议已返回，请比较后选择采用；当前结果尚未改变。');
     } catch (error) {
       if (aiGenerationRef.current === generation) {
         setReviewNotice(getAiFailureMessage(error, copy));
@@ -1186,6 +1332,39 @@ export default function ReceiverLoopPanel({
         setIsAiResegmenting(false);
       }
     }
+  }
+
+  function handleAcceptAiSuggestion() {
+    if (
+      !pendingAiSuggestion ||
+      pendingAiSuggestion.generation !== aiGenerationRef.current
+    )
+      return;
+    const { applied } = pendingAiSuggestion;
+    const nextItems = applied.reviewItems;
+    const nextMissingTokens = nextItems
+      .filter(item => !item.tile)
+      .map(item => item.token);
+    if (nextMissingTokens.length && onRecordMissingTokens) {
+      try {
+        onRecordMissingTokens({
+          tokens: nextMissingTokens,
+          rawText: inputText,
+          scene: 'receiver'
+        });
+      } catch (error) {
+        // Optional missing-word recording must not block local editing.
+      }
+    }
+    persistReceiverEdit(
+      RECEIVER_CORRECTION_ACTIONS.resegment,
+      'segmentation-ai',
+      nextItems
+    );
+    setPendingAiSuggestion(null);
+    setReviewNotice(
+      applied.quality.needsReview ? copy.aiNeedsReview : copy.aiApplied
+    );
   }
 
   function handleApplySegmentation() {
@@ -1236,6 +1415,9 @@ export default function ReceiverLoopPanel({
             {copy.receiveHint}
           </span>
         </div>
+        {!aiAvailable && aiUnavailableReason && (
+          <p role="status">{aiUnavailableReason}</p>
+        )}
         <FormControlLabel
           control={
             <Checkbox
@@ -1554,16 +1736,22 @@ export default function ReceiverLoopPanel({
               aria-live="polite"
             >
               <strong>{copy.matchSummaryLabel}：</strong>
-              {matchQuality.matchedCount}/{matchQuality.totalCount}
+              {matchQuality.imageCount}/{matchQuality.totalCount}
+              {matchQuality.textOnlyCount > 0 && (
+                <span> · 保留文字 {matchQuality.textOnlyCount} 项</span>
+              )}
               <span>
                 {' · '}
                 {matchQuality.needsReview
                   ? copy.reviewRecommended
+                  : matchQuality.textOnlyCount > 0
+                  ? copy.textReady
                   : copy.reviewReady}
               </span>
             </div>
             <div className="CommunicationSupportPanel__segmentationEditor">
               <TextField
+                id="receiver-segmentation-draft"
                 fullWidth
                 label={copy.segmentationLabel}
                 helperText={copy.segmentationHint}
@@ -1587,11 +1775,36 @@ export default function ReceiverLoopPanel({
                   color="primary"
                   variant="outlined"
                   onClick={handleAiResegmentation}
-                  disabled={!reviewItems.length || isAiResegmenting}
+                  disabled={
+                    !reviewItems.length || isAiResegmenting || !aiAvailable
+                  }
                 >
                   {isAiResegmenting ? copy.aiResegmenting : copy.aiResegment}
                 </Button>
               </div>
+              {pendingAiSuggestion && (
+                <section aria-label="AI 分词建议">
+                  <p>原文：{inputText}</p>
+                  <p>
+                    当前分词：{reviewItems.map(item => item.token).join(' / ')}
+                  </p>
+                  <p>
+                    建议分词：
+                    {pendingAiSuggestion.applied.segmentation.join(' / ')}
+                  </p>
+                  <Button onClick={handleAcceptAiSuggestion}>
+                    采用分词建议
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      setPendingAiSuggestion(null);
+                      setReviewNotice('已保留当前结果。');
+                    }}
+                  >
+                    保留当前结果
+                  </Button>
+                </section>
+              )}
               <div className="CommunicationSupportPanel__learningControl">
                 <FormControlLabel
                   control={
@@ -1626,6 +1839,13 @@ export default function ReceiverLoopPanel({
                 <MatchRow
                   key={match.id}
                   match={match}
+                  onPersonPick={(id, candidate) =>
+                    persistReceiverEdit(
+                      RECEIVER_CORRECTION_ACTIONS.replace,
+                      id,
+                      replaceReceiverReviewItem(reviewItems, id, candidate)
+                    )
+                  }
                   onJumpBoard={onJumpBoard}
                   onMoveLeft={id => moveReviewItem(id, -1)}
                   onMoveRight={id => moveReviewItem(id, 1)}
@@ -1639,6 +1859,13 @@ export default function ReceiverLoopPanel({
                     setShowInsertAfterId(null);
                     setShowSwapId(id);
                     setSwapQuery('');
+                  }}
+                  onKeepText={id => {
+                    persistReceiverEdit(
+                      RECEIVER_CORRECTION_ACTIONS.replace,
+                      id,
+                      retainReceiverReviewItemAsText(reviewItems, id)
+                    );
                   }}
                   copy={copy}
                 />
@@ -1654,7 +1881,9 @@ export default function ReceiverLoopPanel({
                 color="primary"
                 variant="contained"
                 onClick={handleApplyReceiveOutput}
-                disabled={!receiveOutputPreview.length}
+                disabled={
+                  !receiveOutputPreview.length || missingTokens.length > 0
+                }
               >
                 {copy.sendToOutput}
               </Button>
@@ -1662,7 +1891,9 @@ export default function ReceiverLoopPanel({
                 color="primary"
                 variant="outlined"
                 onClick={handleOpenDisplay}
-                disabled={!receiveOutputPreview.length}
+                disabled={
+                  !receiveOutputPreview.length || missingTokens.length > 0
+                }
               >
                 {copy.fullscreen}
               </Button>
@@ -1927,6 +2158,7 @@ ReceiverLoopPanel.propTypes = {
     startListening: PropTypes.func
   }),
   aiAvailable: PropTypes.bool,
+  aiUnavailableReason: PropTypes.string,
   onAiResegment: PropTypes.func,
   dialectNormalizationAvailable: PropTypes.bool,
   onNormalizeDialectText: PropTypes.func,
@@ -1964,6 +2196,7 @@ ReceiverLoopPanel.defaultProps = {
   onCancelSpeech: null,
   speech: null,
   aiAvailable: false,
+  aiUnavailableReason: '',
   onAiResegment: null,
   dialectNormalizationAvailable: false,
   onNormalizeDialectText: null,

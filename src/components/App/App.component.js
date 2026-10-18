@@ -4,6 +4,8 @@ import PropTypes from 'prop-types';
 import Helmet from 'react-helmet';
 import { Route, Switch, Redirect } from 'react-router-dom';
 import classNames from 'classnames';
+import { FormattedMessage } from 'react-intl';
+import messages from './App.messages';
 
 import Activate from '../Account/Activate';
 import ChangePassword from '../Account/ChangePassword';
@@ -51,7 +53,10 @@ export class App extends Component {
     /**
      * If 'true', run the isolated no-login product demo
      */
-    demoMode: PropTypes.bool
+    demoMode: PropTypes.bool,
+    offlineReadiness: PropTypes.shape({
+      status: PropTypes.oneOf(['preparing', 'ready', 'error', 'unavailable'])
+    })
   };
 
   render() {
@@ -62,14 +67,24 @@ export class App extends Component {
       isLogged,
       dark,
       isDownloadingLang,
-      demoMode
+      demoMode,
+      offlineReadiness
     } = this.props;
+    const offlineStatus =
+      (offlineReadiness && offlineReadiness.status) || 'preparing';
+    const offlineMessage = {
+      preparing: messages.offlinePreparing,
+      ready: messages.offlineReady,
+      error: messages.offlineError,
+      unavailable: messages.offlineUnavailable
+    }[offlineStatus];
 
     return (
       <div
         className={classNames('App', {
           'is-dark': dark,
-          'is-demo': demoMode
+          'is-demo': demoMode,
+          'has-filing': process.env.REACT_APP_CARE_COLLABORATION === 'true'
         })}
       >
         <Helmet>
@@ -84,60 +99,97 @@ export class App extends Component {
             <a href="/">了解完整版</a>
           </div>
         )}
-        <Switch>
-          <RedirectIfLogged
-            component={AuthScreen}
-            isLogged={isLogged}
-            path="/login-signup"
-            to="/"
-          />
-          <Route path="/settings" component={Settings} />
-          <Route path="/care" component={Care} />
-          <Route path="/analytics" component={Analytics} />
-          <Route path="/activate/:url" component={Activate} />
-          <Route path="/reset/:userid/:url" component={ChangePassword} />
-          <Route path="/login/:type/callback" component={OAuthLogin} />
-          <Route
-            exact
-            path="/demo"
-            render={routeProps => <BoardContainer {...routeProps} demoMode />}
-          />
-          <Route
-            path="/board/:id"
-            render={props =>
-              isLogged &&
-              process.env.REACT_APP_CARE_COLLABORATION === 'true' ? (
-                <CareHome {...props} />
-              ) : (
-                <BoardContainer {...props} />
-              )
-            }
-          />
-          {isDownloadingLang && (
-            <Route exact path={'/'}>
-              <Redirect to={'/settings/language'} />
-            </Route>
-          )}
-          <Route
-            exact
-            path="/"
-            render={routeProps => {
-              if (demoMode) {
-                return <BoardContainer {...routeProps} demoMode />;
+        <div className="App__content">
+          <Switch>
+            <RedirectIfLogged
+              component={AuthScreen}
+              isLogged={isLogged}
+              path="/login-signup"
+              to="/"
+            />
+            <Route path="/settings" component={Settings} />
+            <Route path="/care" component={Care} />
+            <Route path="/analytics" component={Analytics} />
+            <Route path="/activate/:url" component={Activate} />
+            <Route path="/reset/:userid/:url" component={ChangePassword} />
+            <Route path="/login/:type/callback" component={OAuthLogin} />
+            <Route
+              exact
+              path="/demo"
+              render={routeProps => <BoardContainer {...routeProps} demoMode />}
+            />
+            <Route
+              path="/board/:id"
+              render={props =>
+                isLogged &&
+                process.env.REACT_APP_CARE_COLLABORATION === 'true' ? (
+                  <CareHome {...props} />
+                ) : (
+                  <BoardContainer {...props} />
+                )
               }
-              if (
-                (isLogged ||
-                  localStorage.getItem('care-offline-selection-v1')) &&
-                process.env.REACT_APP_CARE_COLLABORATION === 'true'
-              )
-                return <CareHome {...routeProps} />;
-              const RootComponent =
-                isFirstVisit && !isLogged ? WelcomeScreen : BoardContainer;
-              return <RootComponent {...routeProps} />;
-            }}
-          />
-          <Route component={NotFound} />
-        </Switch>
+            />
+            {isDownloadingLang && (
+              <Route exact path={'/'}>
+                <Redirect to={'/settings/language'} />
+              </Route>
+            )}
+            <Route
+              exact
+              path="/"
+              render={routeProps => {
+                if (demoMode) {
+                  return <BoardContainer {...routeProps} demoMode />;
+                }
+                if (
+                  (isLogged ||
+                    localStorage.getItem('care-offline-selection-v1')) &&
+                  process.env.REACT_APP_CARE_COLLABORATION === 'true'
+                )
+                  return <CareHome {...routeProps} />;
+                const RootComponent =
+                  isFirstVisit && !isLogged ? WelcomeScreen : BoardContainer;
+                return <RootComponent {...routeProps} />;
+              }}
+            />
+            <Route component={NotFound} />
+          </Switch>
+        </div>
+        {process.env.REACT_APP_CARE_COLLABORATION === 'true' && !demoMode && (
+          <div
+            className="App__offlineStatus"
+            role="status"
+            aria-live="polite"
+            data-offline-status={offlineStatus}
+          >
+            <FormattedMessage {...offlineMessage} />
+          </div>
+        )}
+        {process.env.REACT_APP_CARE_COLLABORATION === 'true' && (
+          <footer className="App__filing" aria-label="网站备案信息">
+            <a
+              href="https://beian.miit.gov.cn/"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              粤ICP备2026141465号-1
+            </a>
+            <a
+              href="https://beian.mps.gov.cn/#/query/webSearch?code=44060602003657"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="App__policeFiling"
+            >
+              <img
+                src="/police-filing.png"
+                width="20"
+                height="22"
+                alt="公安备案图标"
+              />
+              <span>粤公网安备44060602003657号</span>
+            </a>
+          </footer>
+        )}
         {!demoMode && legacyServicesEnabled && <PremiumRequiredModal />}
         {!demoMode && <LoginRequiredModal />}
         <OfflineNotificationModal />

@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Button from '@material-ui/core/Button';
+import { sortPictogramsForDisplay } from '../../common/communicationSupport/pictogramOrdering';
 
 export default function CareExpressionBoard({
   boards,
@@ -7,8 +8,11 @@ export default function CareExpressionBoard({
   output,
   onApplyOutput,
   onJumpBoard,
-  preferences = {}
+  preferences = {},
+  pictogramOrdering = {},
+  onPictogramUsed = () => {}
 }) {
+  const [notice, setNotice] = useState('');
   const columns = [2, 3, 4].includes(preferences.gridColumns)
     ? preferences.gridColumns
     : 3;
@@ -17,9 +21,37 @@ export default function CareExpressionBoard({
   const board = boards.find(item => item.id === activeBoardId) || boards[0];
   const order =
     board?.layout?.tileIds || board?.tiles.map(tile => tile.id) || [];
-  const tiles = order
+  const manualTiles = order
     .map(id => board.tiles.find(tile => tile.id === id))
     .filter(Boolean);
+  const tiles = sortPictogramsForDisplay(
+    manualTiles,
+    preferences.pictogramSortMode,
+    {
+      ...pictogramOrdering,
+      manualOrderByBoard: {
+        ...pictogramOrdering.manualOrderByBoard,
+        [board?.id]: order
+      }
+    },
+    board?.id
+  );
+  const select = tile => {
+    const target = tile.loadBoardId || tile.loadBoard;
+    if (target) {
+      const next =
+        boards.find(item => item.id === target) ||
+        boards.find(item => item.name === tile.label);
+      if (next) {
+        setNotice('');
+        onJumpBoard(next.id);
+      } else setNotice('目标图板已不存在，请从上方选择其他图板。');
+      return;
+    }
+    setNotice('');
+    onPictogramUsed(board.id, tile.id);
+    onApplyOutput([...output, tile]);
+  };
   return (
     <section aria-label="患者选图表达">
       <nav aria-label="选择沟通图板">
@@ -47,7 +79,7 @@ export default function CareExpressionBoard({
             key={tile.id}
             variant="outlined"
             aria-label={`选择图卡：${tile.label}`}
-            onClick={() => onApplyOutput([...output, tile])}
+            onClick={() => select(tile)}
             style={{
               minHeight: 120,
               minWidth: 0,
@@ -76,6 +108,7 @@ export default function CareExpressionBoard({
       {!tiles.length && (
         <p>此图板还没有图卡，请由有编辑权限的成员从设置添加。</p>
       )}
+      {notice && <p role="status">{notice}</p>}
       <p aria-live="polite">
         已选：
         {output.map(tile => tile.label || tile.vocalization).join(' · ') ||

@@ -1,6 +1,7 @@
 import API from './api';
 
 export {
+  resolveTrustedApiMediaUrl,
   isPrivateDeviceDataReencryptionRequiredError,
   isPrivatePictureLibraryReencryptionRequiredError,
   isPrivatePictureLibraryUnavailableError

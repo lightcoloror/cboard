@@ -18,6 +18,11 @@ import {
 import { logout } from '../components/Account/Login/Login.actions.js';
 import { cvaFileToBlob, isAndroid } from '../cordova-util';
 import { buildConfirmedReceiverSyncPayload } from '../common/communicationSupport/receiverSync';
+import { createCareAiRequestJournal } from '../common/communicationSupport/careAiRequestJournal';
+import {
+  getPrivatePersonRequestIdentity,
+  restorePrivatePersonAiResponse
+} from '../common/communicationSupport/privatePersonAi';
 import {
   buildCommunicationSavedPhraseSyncPayload,
   normalizeSavedPhraseTombstones
@@ -32,10 +37,20 @@ const isUnrecoverableFileError = error =>
   !!error &&
   (error.code === FILE_NOT_FOUND_ERR || error.code === FILE_ENCODING_ERR);
 
-const resolveTrustedApiMediaUrl = value => {
+export const resolveTrustedApiMediaUrl = value => {
   try {
     const apiUrl = new URL(BASE_URL, window.location.href);
-    const mediaUrl = new URL(String(value || ''), apiUrl);
+    const raw = String(value || '');
+    // Pictogram paths are relative to the API mount, not the website root.
+    // Keep /api/ when using the same-origin production gateway.
+    const mediaUrl = new URL(raw, apiUrl);
+    if (
+      mediaUrl.origin === apiUrl.origin &&
+      mediaUrl.pathname.startsWith('/pictograms/')
+    ) {
+      mediaUrl.pathname =
+        apiUrl.pathname.replace(/\/$/, '') + mediaUrl.pathname;
+    }
     return mediaUrl.origin === apiUrl.origin ? mediaUrl.href : '';
   } catch (error) {
     return '';
@@ -85,6 +100,40 @@ const getAuthToken = () => {
   return userData.authToken || null;
 };
 
+const careAiFailure = code => Object.assign(new Error(code), { code });
+const careAiJournal = () =>
+  createCareAiRequestJournal({ storage: window.localStorage });
+const careAiTargetUrl = config =>
+  new URL(axios.getUri(config), window.location.href).href;
+
+function currentCareAiScope() {
+  const user = getUserData();
+  const accountId = user && (user.id || user._id);
+  if (!accountId || !user.authToken) throw careAiFailure('LOGIN_REQUIRED');
+  let selected;
+  try {
+    selected = JSON.parse(
+      localStorage.getItem(`care-selection-v1:${accountId}`) || 'null'
+    );
+  } catch (_) {
+    throw careAiFailure('AI_REQUEST_STORAGE_UNAVAILABLE');
+  }
+  const profileId = selected && selected.id;
+  const fundingId =
+    profileId &&
+    localStorage.getItem(`care-funding-v1:${accountId}:${profileId}`);
+  if (!profileId || !fundingId)
+    throw careAiFailure('EXPLICIT_FUNDING_REQUIRED');
+  if (selected.locked) throw careAiFailure('PROFILE_ACCESS_DENIED');
+  return {
+    origin: new URL(BASE_URL, window.location.href).href.replace(/\/+$/, ''),
+    accountId: String(accountId),
+    familyId: String(selected.familyId || ''),
+    profileId: String(profileId),
+    fundingId: String(fundingId)
+  };
+}
+
 const getQueryParameters = (obj = {}) => {
   return Object.keys(obj)
     .map(k => `${encodeURIComponent(k)}=${encodeURIComponent(obj[k])}`)
@@ -96,6 +145,37 @@ export const applyCareRequestHeaders = (
   configuredBaseUrl = BASE_URL
 ) => {
   if (request.accountClosure) return request;
+  if (request.careAiRequestScope) {
+    const frozen = request.careAiRequestScope;
+    const expectedUrl = careAiTargetUrl({
+      ...request,
+      baseURL: request.baseURL || configuredBaseUrl
+    });
+    let current;
+    try {
+      current = currentCareAiScope();
+    } catch (_) {
+      throw careAiFailure('AI_REQUEST_CONTEXT_CHANGED');
+    }
+    if (
+      process.env.REACT_APP_CARE_COLLABORATION !== 'true' ||
+      JSON.stringify(current) !== JSON.stringify(frozen.scope) ||
+      getAuthToken() !== frozen.token ||
+      expectedUrl !== frozen.target ||
+      request.headers?.['Idempotency-Key'] !== frozen.requestId
+    ) {
+      throw careAiFailure('AI_REQUEST_CONTEXT_CHANGED');
+    }
+    // Fixed scope is verified here, immediately before transport. Do not let
+    // the generic interceptor silently move an old intent to another family.
+    request.headers = {
+      ...request.headers,
+      'X-Care-Profile-Id': current.profileId,
+      'X-Care-Funding-Id': current.fundingId
+    };
+    delete request.careAiRequestScope;
+    return request;
+  }
   if (process.env.REACT_APP_CARE_COLLABORATION !== 'true') return request;
   const user = getUserData();
   const id = user && (user.id || user._id);
@@ -143,11 +223,19 @@ class API {
     this.axiosInstance.interceptors.response.use(
       response => response,
       error => {
+        const failedAuthorization =
+          error.config?.headers?.Authorization ||
+          error.config?.headers?.authorization;
+        const currentToken = getAuthToken();
         if (
           error.response?.status === 401 &&
           !error.config?.accountClosure &&
-          error.config?.baseURL === BASE_URL
+          error.config?.baseURL === BASE_URL &&
+          currentToken &&
+          failedAuthorization === `Bearer ${currentToken}`
         ) {
+          // An expired response from an older account/login must not log out
+          // the newer session that is now using this same Axios instance.
           if (isAndroid()) {
             window.FirebasePlugin?.unregister?.();
             window.facebookConnectPlugin.logout(
@@ -504,7 +592,11 @@ class API {
     return data;
   }
 
-  async generateCommunicationSentences(request = {}, options = {}) {
+  async requestCareTextAi(path, operation, request, options = {}) {
+    const originalRequest = request;
+    const localIdentity = getPrivatePersonRequestIdentity(request);
+    // The hash and wire payload must describe the same immutable submission.
+    request = JSON.parse(JSON.stringify(request));
     const authToken = getAuthToken();
     if (!(authToken && authToken.length)) {
       throw new Error('Need to be authenticated to perform this request');
@@ -517,13 +609,90 @@ class API {
     if (Number.isFinite(timeout) && timeout > 0) {
       requestConfig.timeout = Math.min(Math.round(timeout), 60000);
     }
+    let ticket;
+    let journal;
+    if (process.env.REACT_APP_CARE_COLLABORATION === 'true') {
+      const scope = currentCareAiScope();
+      journal = careAiJournal();
+      ticket = journal.prepare({
+        ...scope,
+        operation,
+        body: request,
+        localIdentity
+      });
+      requestConfig.headers['Idempotency-Key'] = ticket.requestId;
+      requestConfig.careAiRequestScope = {
+        scope,
+        token: authToken,
+        requestId: ticket.requestId,
+        target: careAiTargetUrl({ baseURL: BASE_URL, url: path })
+      };
+    }
+    try {
+      const response = await this.axiosInstance.post(
+        path,
+        request,
+        requestConfig
+      );
+      if (ticket) {
+        try {
+          journal.observe(ticket, { status: response.status || 200 });
+        } catch (_) {
+          /* Identity was durably written before send. */
+        }
+        // Drop responses delivered after changing identity; the server receipt
+        // remains available under the original account and request identity.
+        let unchanged = false;
+        try {
+          unchanged =
+            getAuthToken() === authToken &&
+            JSON.stringify(currentCareAiScope()) ===
+              JSON.stringify(ticket.scope);
+        } catch (_) {
+          /* Context became unavailable. */
+        }
+        if (!unchanged) throw careAiFailure('AI_REQUEST_CONTEXT_CHANGED');
+      }
+      return restorePrivatePersonAiResponse(
+        originalRequest,
+        response.data,
+        operation
+      );
+    } catch (error) {
+      if (ticket) {
+        const code =
+          error?.response?.data?.code ||
+          error?.response?.data?.error?.code ||
+          error?.code;
+        try {
+          journal.observe(ticket, { status: error?.response?.status, code });
+        } catch (_) {
+          /* Keep original pending identity. */
+        }
+        if (
+          !error.response &&
+          ![
+            'AI_REQUEST_CONTEXT_CHANGED',
+            'LOGIN_REQUIRED',
+            'PROFILE_ACCESS_DENIED',
+            'AI_REQUEST_STORAGE_UNAVAILABLE',
+            'AI_PERSON_REFERENCE_MISMATCH'
+          ].includes(code)
+        ) {
+          error.code = 'AI_REQUEST_RESULT_UNKNOWN';
+        }
+      }
+      throw error;
+    }
+  }
 
-    const { data } = await this.axiosInstance.post(
+  async generateCommunicationSentences(request = {}, options = {}) {
+    return this.requestCareTextAi(
       '/gpt/communication/sentences',
+      'communication-sentences',
       request,
-      requestConfig
+      options
     );
-    return data;
   }
 
   async generateCommunicationPictogram(request = {}, options = {}) {
@@ -611,17 +780,11 @@ class API {
   }
 
   async resegmentCommunicationText(request = {}) {
-    const authToken = getAuthToken();
-    if (!(authToken && authToken.length)) {
-      throw new Error('Need to be authenticated to perform this request');
-    }
-
-    const { data } = await this.axiosInstance.post(
+    return this.requestCareTextAi(
       '/gpt/communication/resegment',
-      request,
-      { headers: { Authorization: `Bearer ${authToken}` } }
+      'communication-resegment',
+      request
     );
-    return data;
   }
 
   async normalizeCommunicationDialectText(request = {}) {
@@ -807,6 +970,31 @@ class API {
         };
       })
       .filter(Boolean);
+  }
+
+  async downloadCommunicationPictogram(pictogram) {
+    const url = resolveTrustedApiMediaUrl(pictogram && pictogram.image);
+    if (
+      !url ||
+      !/\/pictograms\/(arasaac\/[0-9]+|(?:opensymbols|globalsymbols)\/[a-zA-Z0-9_-]+\.[a-f0-9]{32})\/image$/.test(
+        new URL(url).pathname
+      )
+    ) {
+      throw new Error('Invalid public pictogram media URL');
+    }
+    const { data } = await this.axiosInstance.get(url, {
+      responseType: 'blob',
+      timeout: 15000
+    });
+    if (
+      !data ||
+      !data.size ||
+      data.size > 1024 * 1024 ||
+      !/^image\/(png|jpeg|gif|webp)$/.test(data.type)
+    ) {
+      throw new Error('Invalid pictogram image or image exceeds 1 MiB');
+    }
+    return data;
   }
 
   async getPrivatePictureLibraryMetadata() {

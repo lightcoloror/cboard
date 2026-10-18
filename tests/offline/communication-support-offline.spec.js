@@ -5,6 +5,7 @@ import {
   completeCommunicationOnboarding,
   dismissBoardTour,
   openCaregiverTools,
+  openPatientExpression,
   waitForProductionServiceWorker
 } from './helpers/communicationSupport';
 
@@ -59,8 +60,8 @@ test.describe('Production offline - communication support', () => {
     );
     const matchStatus = receiverWorkspace
       .getByRole('status')
-      .filter({ hasText: '匹配结果' });
-    await expect(matchStatus).toContainText('已全部匹配');
+      .filter({ hasText: /^图片匹配：/ });
+    await expect(matchStatus).toContainText('已全部配图');
     const preview = receiverWorkspace.locator(
       '.CommunicationSupportPanel__resultMeta'
     );
@@ -157,11 +158,14 @@ test.describe('Production offline - communication support', () => {
       useTouch
     );
 
-    await activate(panel.getByRole('button', { name: '患者表达' }), useTouch);
+    await openPatientExpression(panel, useTouch);
     const currentOutput = panel.getByText(/^当前输出：/);
     await expect(currentOutput).toContainText('想');
     await expect(currentOutput).toContainText('水');
-    await activate(panel.getByRole('button', { name: '生成并播报' }), useTouch);
+    await activate(
+      panel.getByRole('button', { name: '立即全部播报' }),
+      useTouch
+    );
     await expect(
       panel.locator('.CommunicationSupportPanel__candidate').first()
     ).toBeVisible();
@@ -197,7 +201,7 @@ test.describe('Production offline - communication support', () => {
       page.getByRole('heading', { name: '图语家双向沟通' })
     ).toBeVisible();
     await dismissBoardTour(page, useTouch);
-    await activate(panel.getByRole('button', { name: '患者表达' }), useTouch);
+    await openPatientExpression(panel, useTouch);
     await expect(helpfulFeedback).toHaveAttribute('aria-pressed', 'true');
     const restoredFeedbackDrafts = await page.evaluate(() =>
       JSON.parse(

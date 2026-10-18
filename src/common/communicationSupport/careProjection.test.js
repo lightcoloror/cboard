@@ -1,5 +1,59 @@
 import { createBoardDTO } from './dto';
 import { projectCareBoards, queueCareBoards } from './careProjection';
+import { boardDTOToCboardBoard } from './cboardBoardAdapter';
+import { buildPersonalPictogramTileDTO } from './pictogramMetadataSuggestion';
+import { buildCommunicationTileCatalog } from './symbolMatching';
+import { getPersonalPeople, filterPublicPictureTokens } from './personalPeople';
+
+test('native CBoard person cards retain their identity category across queued offline projection', async () => {
+  const snapshot = { resources: {}, media: {}, locked: false };
+  const engine = {
+    view: () => snapshot,
+    edit: async (kind, id, value) => {
+      snapshot.resources[`${kind}:${id}`] = { kind, id, value };
+    },
+    addMedia: async asset => {
+      snapshot.media[asset.mediaId] = asset;
+    }
+  };
+  const boardId = 'device_private_board_people';
+  const board = createBoardDTO({
+    id: boardId,
+    name: 'Synthetic people',
+    tiles: ['one', 'two'].map(id =>
+      buildPersonalPictogramTileDTO({
+        id,
+        boardId,
+        label: '欧阳明澈',
+        image: `synthetic-private:${id}`,
+        category: 'people'
+      })
+    )
+  });
+  const native = boardDTOToCboardBoard(board);
+  expect(native.tiles[0].communicationCategory).toBe('people');
+  await queueCareBoards(engine, [native], async source => ({
+    type: 'image/png',
+    data: source,
+    sha256: source
+  }));
+  const restored = projectCareBoards(
+    JSON.parse(JSON.stringify(snapshot)),
+    asset => asset.data
+  );
+  const catalog = buildCommunicationTileCatalog(restored);
+  expect(getPersonalPeople(catalog).map(item => item.id)).toEqual([
+    'one',
+    'two'
+  ]);
+  expect(restored[0].tiles.map(tile => tile.image)).toEqual(
+    board.tiles.map(tile => tile.image)
+  );
+  expect(filterPublicPictureTokens(['欧阳明澈', '苹果'], catalog)).toEqual([
+    '苹果'
+  ]);
+  expect(restored[0].layout.tileIds).toEqual(['one', 'two']);
+});
 
 test('shared boards preserve expression, navigation, matching hints and manual order through a round trip', async () => {
   const snapshot = { resources: {}, media: {}, locked: false };

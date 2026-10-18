@@ -1,0 +1,60 @@
+{
+  "cards": [
+    {
+      "id": "tuyujia-builtin-roll-over",
+      "key": "symbol.peopleActions.toRollOver",
+      "image": "roll_over_,_to.svg",
+      "board": "SywlK6Phv6Z",
+      "label": "翻身",
+      "tokens": ["翻身"],
+      "category": "actions"
+    },
+    {
+      "id": "tuyujia-builtin-wash-face",
+      "key": "symbol.healthcareGroomingActivities.toWashFace",
+      "image": "wash_face_,_to.svg",
+      "board": "H1iZY6DnvT-",
+      "label": "洗脸",
+      "tokens": ["洗脸"],
+      "category": "actions"
+    },
+    {
+      "id": "tuyujia-builtin-wash-hands",
+      "key": "symbol.healthcareGroomingActivities.toWashHands",
+      "image": "wash_hands_,_to.svg",
+      "board": "H1iZY6DnvT-",
+      "label": "洗手",
+      "tokens": ["洗手"],
+      "category": "actions"
+    },
+    {
+      "id": "tuyujia-builtin-open-door",
+      "key": "symbol.peopleActions.toOpenDoor",
+      "image": "open_door_2_,_to.svg",
+      "board": "SywlK6Phv6Z",
+      "label": "开门",
+      "tokens": ["开门", "打开门"],
+      "category": "actions"
+    },
+    {
+      "id": "tuyujia-builtin-open-tin",
+      "key": "symbol.peopleActions.toOpenTin",
+      "image": "open_tin_,_to.svg",
+      "board": "SywlK6Phv6Z",
+      "label": "开罐头",
+      "tokens": ["开罐头", "打开罐头"],
+      "category": "actions"
+    }
+  ],
+  "unsafePairs": [
+    ["翻身", "翻书"],
+    ["翻身", "翻转"],
+    ["洗脸", "洗头"],
+    ["洗手", "洗澡"],
+    ["躺下", "仰卧"],
+    ["开门", "开罐头"],
+    ["开门", "打开"],
+    ["开罐头", "罐头"],
+    ["开罐头", "打开"]
+  ]
+}

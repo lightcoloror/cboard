@@ -310,6 +310,12 @@ describe('MissingTokenQueue', () => {
         onReview={onReview}
         onlineSearchAvailable
         onSearchOnline={onSearchOnline}
+        downloadOnlineImage={() =>
+          Promise.resolve(new Blob(['pixels'], { type: 'image/png' }))
+        }
+        readPrivateImage={() =>
+          Promise.resolve('data:image/png;base64,cGl4ZWxz')
+        }
       />
     );
 
@@ -334,15 +340,21 @@ describe('MissingTokenQueue', () => {
         }
       ]
     });
-    wrapper
-      .find('ForwardRef(Button)')
-      .filterWhere(node => node.text() === '确认使用')
-      .at(1)
-      .simulate('click');
+    await act(async () => {
+      wrapper
+        .find('ForwardRef(Button)')
+        .filterWhere(node => node.text() === '确认使用')
+        .at(1)
+        .simulate('click');
+    });
 
     expect(onReview).toHaveBeenCalledWith('missing-1', {
       status: 'resolved',
       resolvedPictogramId: 'runtime-dizzy-alternative',
+      resolvedPictogram: expect.objectContaining({
+        id: alternativePictogram.id,
+        image: 'data:image/png;base64,cGl4ZWxz'
+      }),
       source: 'online'
     });
   });

@@ -4,7 +4,11 @@ import { injectIntl, intlShape } from 'react-intl';
 import { connect } from 'react-redux';
 import keycode from 'keycode';
 import shortid from 'shortid';
-import { loadPersonalImageRuntime } from '../../../common/communicationSupport/localData';
+import { equals } from 'ramda';
+import {
+  getCommunicationStorageScopeKey,
+  loadPersonalImageRuntime
+} from '../../../common/communicationSupport/localData';
 import { applyPersonalImagePreferencesToItems } from '../../../common/communicationSupport/personalImagePreferences';
 import {
   EXPRESSION_PLAYBACK_FRAME_TYPES,
@@ -59,15 +63,35 @@ export class OutputContainer extends Component {
   };
 
   static getDerivedStateFromProps(props, state) {
-    if (props.output.length !== state.translatedOutput.length) {
+    const scopeChanged = props.outputScope !== state.outputScope;
+    if (
+      scopeChanged ||
+      !equals(props.output, state.observedOutput) ||
+      props.intl.messages !== state.intlMessages
+    ) {
       const translatedOutput = translateOutput(props.output, props.intl);
-      return { translatedOutput };
+      // An unrelated new sequence must never be replaced by an old deletion.
+      const retainUndo =
+        !scopeChanged && equals(props.output, state.undoTarget);
+      return {
+        translatedOutput,
+        observedOutput: props.output,
+        intlMessages: props.intl.messages,
+        outputScope: props.outputScope,
+        undoHistory: retainUndo ? state.undoHistory : [],
+        undoTarget: retainUndo ? state.undoTarget : null
+      };
     }
     return null;
   }
 
   state = {
-    translatedOutput: []
+    translatedOutput: [],
+    observedOutput: null,
+    intlMessages: null,
+    outputScope: undefined,
+    undoHistory: [],
+    undoTarget: null
   };
 
   componentDidMount() {
@@ -81,28 +105,78 @@ export class OutputContainer extends Component {
   }
 
   clearOutput() {
-    const { changeOutput, isLiveMode } = this.props;
-    const output = [];
-    isLiveMode ? this.addLiveOutputTileClearOutput() : changeOutput(output);
+    const { output, isLiveMode } = this.props;
+    if (
+      !output.length ||
+      (isLiveMode &&
+        output.length === 1 &&
+        output[0].type === 'live' &&
+        !output[0].label)
+    )
+      return;
+    this.applyDeletion(isLiveMode ? [this.createEmptyLiveTile()] : []);
   }
 
   popOutput() {
-    const { changeOutput, isLiveMode } = this.props;
-    const output = [...this.props.output];
-    output.pop();
-    isLiveMode && output.length === 0
-      ? this.addLiveOutputTileClearOutput()
-      : changeOutput(output);
+    this.spliceOutput(this.props.output.length - 1);
   }
 
   spliceOutput(index) {
-    const { changeOutput, isLiveMode } = this.props;
+    const { isLiveMode } = this.props;
+    if (
+      !Number.isInteger(index) ||
+      index < 0 ||
+      index >= this.props.output.length
+    )
+      return;
+    // Clearing live mode leaves a blank input tile. Backspace on that placeholder
+    // is not a new deletion and must not hide the real sequence behind an empty undo.
+    if (
+      isLiveMode &&
+      this.props.output.length === 1 &&
+      this.props.output[0].type === 'live' &&
+      !this.props.output[0].label
+    )
+      return;
     const output = [...this.props.output];
     output.splice(index, 1);
-    isLiveMode && output.length === 0
-      ? this.addLiveOutputTileClearOutput()
-      : changeOutput(output);
+    this.applyDeletion(
+      isLiveMode && !output.length ? [this.createEmptyLiveTile()] : output
+    );
   }
+
+  applyDeletion(nextOutput) {
+    const before = this.props.output;
+    if (equals(before, nextOutput)) return;
+    // Session-only snapshots: do not persist or sync personal pictures. Keep
+    // complete tile fields (text, audio, video and chosen image), not a rematch.
+    this.setState(
+      state => ({
+        undoHistory: [...state.undoHistory, before.slice()].slice(-20),
+        undoTarget: nextOutput
+      }),
+      () => this.props.changeOutput(nextOutput)
+    );
+  }
+
+  handleUndoDelete = () => {
+    const { undoHistory, undoTarget, outputScope } = this.state;
+    if (
+      !undoHistory.length ||
+      outputScope !== this.props.outputScope ||
+      !equals(this.props.output, undoTarget)
+    )
+      return;
+    const restored = undoHistory[undoHistory.length - 1];
+    this.props.cancelSpeech();
+    this.setState(
+      {
+        undoHistory: undoHistory.slice(0, -1),
+        undoTarget: restored
+      },
+      () => this.props.changeOutput(restored)
+    );
+  };
   async speakOutput(text) {
     this.props.clickOutput(text.trim());
     return new Promise(resolve => {
@@ -261,17 +335,19 @@ export class OutputContainer extends Component {
     type: 'live'
   };
 
+  createEmptyLiveTile() {
+    return { ...this.defaultLiveTile, id: shortid.generate() };
+  }
+
   addLiveOutputTile() {
     const { changeOutput } = this.props;
-    this.defaultLiveTile.id = shortid.generate();
-    changeOutput([...this.state.translatedOutput, this.defaultLiveTile]);
+    changeOutput([...this.state.translatedOutput, this.createEmptyLiveTile()]);
   }
 
   addLiveOutputTileClearOutput() {
     const { changeOutput } = this.props;
     this.setState({ translatedOutput: [] });
-    this.defaultLiveTile.id = shortid.generate();
-    changeOutput([this.defaultLiveTile]);
+    changeOutput([this.createEmptyLiveTile()]);
   }
 
   handleSwitchLiveMode = event => {
@@ -308,6 +384,11 @@ export class OutputContainer extends Component {
       <SymbolOutput
         onBackspaceClick={this.handleBackspaceClick}
         onClearClick={this.handleClearClick}
+        onUndoDelete={this.handleUndoDelete}
+        canUndoDelete={
+          this.state.undoHistory.length > 0 &&
+          equals(output, this.state.undoTarget)
+        }
         onCopyClick={this.handleCopyClick}
         onRemoveClick={this.handleRemoveClick}
         onClick={isLiveMode ? undefined : this.handleOutputClick}
@@ -325,7 +406,7 @@ export class OutputContainer extends Component {
   }
 }
 
-const mapStateToProps = ({ board, app }) => {
+const mapStateToProps = ({ board, app, communicator }) => {
   const personalImageRuntime = loadPersonalImageRuntime();
 
   return {
@@ -334,6 +415,12 @@ const mapStateToProps = ({ board, app }) => {
       personalImageRuntime.preferences,
       personalImageRuntime.identity
     ),
+    outputScope: JSON.stringify([
+      getCommunicationStorageScopeKey(),
+      app.userData &&
+        (app.userData.id || app.userData._id || app.userData.email),
+      communicator && communicator.activeCommunicatorId
+    ]),
     isLiveMode: board.isLiveMode,
     navigationSettings: app.navigationSettings,
     increaseOutputButtons: app.displaySettings.increaseOutputButtons

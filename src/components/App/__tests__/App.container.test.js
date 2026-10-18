@@ -1,5 +1,7 @@
 import { AppContainer, resetSyncThrottle } from '../App.container';
 import { setDemoModeOverride } from '../../../demoMode';
+import React from 'react';
+import { shallow } from 'enzyme';
 
 jest.mock('../App.component', () => () => null);
 jest.mock('../App.messages', () => ({
@@ -140,5 +142,30 @@ describe('AppContainer service worker notifications', () => {
     expect(instance.props.showNotification).toHaveBeenCalledWith(
       'Content is cached for offline use.'
     );
+  });
+
+  it('passes lifecycle readiness into the persistent App view', () => {
+    const wrapper = shallow(
+      <AppContainer
+        dir="ltr"
+        lang="zh-CN"
+        intl={{ formatMessage: descriptor => descriptor.defaultMessage }}
+        displaySettings={{}}
+        getApiObjects={jest.fn()}
+      />,
+      { disableLifecycleMethods: true }
+    );
+    expect(wrapper.prop('offlineReadiness')).toEqual({ status: 'preparing' });
+    wrapper.instance().handleOfflineReadinessChange({ status: 'ready' });
+    expect(wrapper.prop('offlineReadiness')).toEqual({ status: 'ready' });
+    wrapper.instance().handleOfflineReadinessChange({ status: 'error' });
+    expect(wrapper.prop('offlineReadiness')).toEqual({ status: 'error' });
+  });
+
+  it('unsubscribes from worker lifecycle updates when the App unmounts', () => {
+    const instance = buildInstance();
+    instance.stopServiceWorkerUpdates = jest.fn();
+    instance.componentWillUnmount();
+    expect(instance.stopServiceWorkerUpdates).toHaveBeenCalledTimes(1);
   });
 });

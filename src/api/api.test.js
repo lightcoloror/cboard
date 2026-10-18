@@ -657,7 +657,7 @@ describe('Cboard API calls', () => {
     expect(results).toHaveLength(1);
     expect(results[0].picto.image_url).toBe(
       new URL(
-        '/pictograms/globalsymbols/signed.image/image',
+        'pictograms/globalsymbols/signed.image/image',
         new URL(API_URL, window.location.href)
       ).href
     );

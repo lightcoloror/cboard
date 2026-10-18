@@ -37,17 +37,17 @@ const HIGH_RISK_CAREGIVER_FIXTURES = [
   {
     id: 5,
     text: '先喝水，再吃药。',
-    expectedLabelKeys: [
-      'symbol.drinkType.water',
-      'symbol.healthcareMedicalItems.medicine'
-    ],
-    preservedTokens: ['先', '再']
+    expectedLabelKeys: ['symbol.drinkType.water'],
+    // Taking medicine is an action; the medicine object is not an equivalent image.
+    forbiddenLabelKeys: ['symbol.healthcareMedicalItems.medicine'],
+    unmatchedTokens: ['吃药'],
+    preservedTokens: ['先', '再', '吃药']
   },
   {
     id: 6,
     text: '你还要不要吃苹果？',
     expectedLabelKeys: ['symbol.foodFruit.apple'],
-    preservedTokens: ['还要', '吃']
+    preservedTokens: ['还', '要不要', '吃']
   },
   {
     id: 7,
@@ -93,9 +93,10 @@ const HIGH_RISK_CAREGIVER_FIXTURES = [
   {
     id: 15,
     text: '衣服湿了，要换衣服。',
-    preservedTokens: ['湿'],
+    preservedTokens: ['湿', '换衣服'],
     expectedTokenCounts: {
-      衣服: 2
+      衣服: 1,
+      换衣服: 1
     }
   },
   {
@@ -155,17 +156,19 @@ const HIGH_RISK_CAREGIVER_FIXTURES = [
   {
     id: 25,
     text: '你冷不冷？',
-    preservedTokens: ['冷', '不冷']
+    preservedTokens: ['冷', '不']
   },
   {
     id: 26,
     text: '你热不热？',
-    preservedTokens: ['热', '不热']
+    preservedTokens: ['热', '不']
   },
   {
     id: 27,
     text: '现在该吃药了。',
-    expectedLabelKeys: ['symbol.healthcareMedicalItems.medicine']
+    forbiddenLabelKeys: ['symbol.healthcareMedicalItems.medicine'],
+    unmatchedTokens: ['吃药'],
+    preservedTokens: ['吃药']
   },
   {
     id: 28,
@@ -253,7 +256,7 @@ const HIGH_RISK_CAREGIVER_FIXTURES = [
   {
     id: 44,
     text: '今晚不回家吃饭。',
-    preservedTokens: ['今晚', '不回家', '吃', '饭']
+    preservedTokens: ['今晚', '不', '回家', '吃饭']
   },
   {
     id: 45,
@@ -313,7 +316,7 @@ const HIGH_RISK_CAREGIVER_FIXTURES = [
   {
     id: 56,
     text: '不是这个，对吗？',
-    preservedTokens: ['不是', '这个', '对']
+    preservedTokens: ['不是这个', '对']
   },
   {
     id: 57,
@@ -338,7 +341,7 @@ const HIGH_RISK_CAREGIVER_FIXTURES = [
   {
     id: 61,
     text: '现在吃饭。',
-    preservedTokens: ['现在', '吃', '饭']
+    preservedTokens: ['现在', '吃饭']
   },
   {
     id: 62,
@@ -393,7 +396,7 @@ const HIGH_RISK_CAREGIVER_FIXTURES = [
   {
     id: 72,
     text: '要不要给家里人发消息？',
-    preservedTokens: ['要不要', '家人', '发消息']
+    preservedTokens: ['要不要', '家里人', '发消息']
   },
   {
     id: 73,
@@ -443,6 +446,8 @@ describe('evidence-tagged caregiver receiver fixtures', () => {
     ({
       text,
       expectedLabelKeys = [],
+      forbiddenLabelKeys = [],
+      unmatchedTokens = [],
       expectedTileIds = [],
       preservedTokens = [],
       expectedTokenCounts = {}
@@ -457,6 +462,14 @@ describe('evidence-tagged caregiver receiver fixtures', () => {
 
       expectedLabelKeys.forEach(labelKey => {
         expect(labelKeys).toContain(labelKey);
+      });
+      forbiddenLabelKeys.forEach(labelKey => {
+        expect(labelKeys).not.toContain(labelKey);
+      });
+      unmatchedTokens.forEach(token => {
+        expect(
+          result.matches.some(match => match.token === token && !match.tile)
+        ).toBe(true);
       });
       expectedTileIds.forEach(tileId => {
         expect(tileIds).toContain(tileId);

@@ -36,6 +36,88 @@ const boards = [
 ];
 
 describe('receiverPipeline', () => {
+  test.each([
+    'exact',
+    'synonym',
+    'lexicon',
+    'lexicon-synonym',
+    'partial',
+    'ai'
+  ])(
+    'revalidates obsolete %s draft matches without rewriting confirmed history',
+    matchType => {
+      const entry = {
+        direction: 'receive',
+        recordStatus: 'draft',
+        inputText: '分叉',
+        output: [{ id: 'fork', label: '叉子', image: '/fork.svg' }],
+        pictogramSequence: [
+          {
+            pictogramId: 'fork',
+            label: '叉子',
+            originalToken: '分叉',
+            matchType
+          }
+        ]
+      };
+      expect(restoreReceiverLoopState(entry, []).missingTokens).toEqual([
+        '分叉'
+      ]);
+      expect(
+        restoreReceiverLoopState({ ...entry, recordStatus: 'confirmed' }, [])
+          .missingTokens
+      ).toEqual([]);
+      // Old AI records may still carry explicit human-choice provenance.
+      const explicit = {
+        ...entry,
+        pictogramSequence: [
+          { ...entry.pictogramSequence[0], source: 'corrected' }
+        ]
+      };
+      expect(restoreReceiverLoopState(explicit, []).missingTokens).toEqual([]);
+    }
+  );
+
+  test.each([
+    ['分叉', '叉子', '/fork.svg'],
+    ['可以', '可以', '/6544.png'],
+    ['吃药', '药', '/medicine.svg']
+  ])(
+    'rechecks obsolete automatic draft picture for %s without discarding manual choices',
+    (token, label, image) => {
+      const entry = {
+        direction: 'receive',
+        recordStatus: 'draft',
+        inputText: token,
+        output: [{ id: 'old-picture', label, image }],
+        pictogramSequence: [
+          {
+            pictogramId: 'old-picture',
+            label,
+            originalToken: token,
+            matchType: 'synonym'
+          }
+        ]
+      };
+      expect(restoreReceiverLoopState(entry, []).missingTokens).toEqual([
+        token
+      ]);
+      const manual = {
+        ...entry,
+        pictogramSequence: [
+          { ...entry.pictogramSequence[0], matchType: 'manual' }
+        ]
+      };
+      expect(
+        restoreReceiverLoopState(manual, []).reviewItems[0].tile
+      ).not.toBeNull();
+      expect(
+        restoreReceiverLoopState({ ...entry, recordStatus: 'confirmed' }, [])
+          .reviewItems[0].tile
+      ).not.toBeNull();
+    }
+  );
+
   test('builds a pure text-token-image review state', () => {
     const result = buildReceiverLoopState('我想喝水', boards, {
       preSegmented: ['想', '水'],
@@ -267,6 +349,8 @@ describe('receiverPipeline', () => {
     expect(quality).toEqual({
       totalCount: 3,
       matchedCount: 2,
+      imageCount: 2,
+      textOnlyCount: 0,
       missingCount: 1,
       partialCount: 1,
       matchRate: 2 / 3,
@@ -277,6 +361,33 @@ describe('receiverPipeline', () => {
       buildReceiverMatchQuality([{ tile: { id: 'exact' }, matchType: 'exact' }])
         .needsReview
     ).toBe(false);
+  });
+
+  test('text fallback enables output without increasing pictogram coverage', () => {
+    const image = { tile: { id: 'image' }, matchType: 'exact' };
+    const text = { tile: { id: 'text', textOnly: true }, matchType: 'manual' };
+    expect(
+      buildReceiverMatchQuality([image, image, image, text, text])
+    ).toMatchObject({
+      totalCount: 5,
+      matchedCount: 5,
+      imageCount: 3,
+      textOnlyCount: 2,
+      missingCount: 0,
+      needsReview: false
+    });
+    expect(buildReceiverMatchQuality([text, { tile: null }])).toMatchObject({
+      imageCount: 0,
+      textOnlyCount: 1,
+      missingCount: 1,
+      needsReview: true
+    });
+    expect(buildReceiverMatchQuality([])).toMatchObject({
+      imageCount: 0,
+      textOnlyCount: 0,
+      totalCount: 0,
+      needsReview: false
+    });
   });
 
   test('ignores invalid review items when building confirmed history', () => {

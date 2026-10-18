@@ -1,5 +1,9 @@
 export function careErrorMessage(error) {
-  const code = error?.data?.code || error?.response?.data?.code || error?.code;
+  const code =
+    error?.data?.code ||
+    error?.response?.data?.code ||
+    error?.response?.data?.error?.code ||
+    error?.code;
   const messages = {
     LOGIN_REQUIRED: '登录已失效，请重新登录；本地内容仍保留。',
     USER_ACCESS_FORBIDDEN: '您没有执行此操作的权限；请核对当前账号和家庭授权。',
@@ -26,6 +30,20 @@ export function careErrorMessage(error) {
     AI_REQUEST_PENDING_RECONCILIATION:
       '这次 AI 请求的结果尚待核对，系统不会重复执行或扣减。',
     AI_REQUEST_ALREADY_COMPLETED: '这次 AI 请求已处理，不会重复执行或扣减。',
+    AI_REQUEST_STORAGE_UNAVAILABLE:
+      '无法保存本次 AI 请求标识，已停止发送；请检查本机存储，本地沟通仍可使用。',
+    AI_REQUEST_INPUT_CHANGED:
+      '该原句已有 AI 请求，但辅助词表或缺图信息已变化。已停止再次发送，避免重复调用；本地分词仍可使用，请联系支持人员核对原请求。',
+    USAGE_ID_REUSED:
+      '该 AI 请求的内容或计费配置与原记录不一致，已停止执行；不会另建请求重复扣费，请联系支持人员核对。',
+    AI_REQUEST_CONTEXT_CHANGED:
+      '账号、档案或额度来源已变化，本次 AI 请求已停止；请在当前档案重新操作。',
+    AI_REQUEST_RESULT_UNKNOWN:
+      '暂未收到 AI 的确定结果。再次点击会核对同一请求，不会另建请求重复调用或扣费；本地结果仍保留。',
+    CARE_AI_REPLAY_PENDING:
+      '这次 AI 请求仍在处理中，请稍后核对同一请求；不会另建请求重复扣费。',
+    AI_RESPONSE_PERSISTENCE_UNAVAILABLE:
+      'AI 结果尚未可靠保存，请稍后核对同一请求；不会重新调用模型。',
     FUNDING_ACCESS_DENIED: '没有使用此额度来源的授权，请在设置中核对。',
     CARE_TRIAL_DISABLED: '家庭体验暂未开放。',
     CARE_TRIAL_CONFIGURATION_INVALID:

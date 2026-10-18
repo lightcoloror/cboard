@@ -3,7 +3,8 @@ import {
   activate,
   blockRemoteHttpRequests,
   completeCommunicationOnboarding,
-  dismissBoardTour
+  dismissBoardTour,
+  openPatientExpression
 } from './helpers/communicationSupport';
 
 const HISTORY_KEY = 'cboard_communication_history';
@@ -91,13 +92,16 @@ test.describe('Production demo - isolated two-way communication', () => {
     await expect(tiles.first()).toBeVisible();
     expect(await tiles.count()).toBeGreaterThanOrEqual(2);
     await activate(tiles.nth(0), useTouch);
+    await completeCommunicationOnboarding(page, useTouch);
     await activate(tiles.nth(1), useTouch);
 
     const panel = page.locator('.CommunicationSupportPanel');
-    await activate(panel.getByRole('button', { name: '患者表达' }), useTouch);
-    await completeCommunicationOnboarding(page, useTouch);
+    await openPatientExpression(panel, useTouch);
     await expect(panel.getByText(/^当前输出：/)).not.toHaveText('当前输出：');
-    await activate(panel.getByRole('button', { name: '生成并播报' }), useTouch);
+    await activate(
+      panel.getByRole('button', { name: '立即全部播报' }),
+      useTouch
+    );
     await expect(
       panel.locator('.CommunicationSupportPanel__candidate').first()
     ).toBeVisible();
@@ -117,8 +121,8 @@ test.describe('Production demo - isolated two-way communication', () => {
       useTouch
     );
     await expect(
-      receiverWorkspace.getByRole('status').filter({ hasText: '匹配结果' })
-    ).toContainText('已全部匹配');
+      receiverWorkspace.getByRole('status').filter({ hasText: /^图片匹配：/ })
+    ).toContainText('已全部配图');
     await activate(
       receiverWorkspace.getByRole('button', { name: '全屏展示' }),
       useTouch

@@ -24,6 +24,12 @@ import { careErrorMessage } from '../../common/communicationSupport/careErrors';
 import { sameCareFavoriteContent } from '../../common/communicationSupport/careFavoriteChanges';
 import { createCareBuiltinImages } from '../../common/communicationSupport/careBuiltinImages';
 import { createCareBuiltinBoards } from './careBuiltinBoards';
+import { createPictogramOrderingStore } from '../../common/communicationSupport/pictogramOrderingStore';
+import { createScopedCommunicationStorage } from '../../common/communicationSupport/scopedCommunicationStorage';
+import {
+  preserveCareLocalTileMedia,
+  preserveCareLocalFavoriteMedia
+} from '../../common/communicationSupport/careLocalMediaProjection';
 
 async function readImage(source, builtinImages) {
   const builtinImage = builtinImages.reference(source);
@@ -71,6 +77,11 @@ function CareHome({ intl }) {
   const [notice, setNotice] = useState('正在读取患者档案');
   const [output, setOutput] = useState([]);
   const [display, setDisplay] = useState({});
+  const [ordering, setOrdering] = useState({});
+  const [localMediaBoards, setLocalMediaBoards] = useState([]);
+  const [speechSettings, setSpeechSettings] = useState(() =>
+    runtime.speechSettings()
+  );
   const [selectedBoard, setSelectedBoard] = useState(null);
   const engine = useRef(null);
   const settingsOpen = useRef(false);
@@ -113,6 +124,37 @@ function CareHome({ intl }) {
     }:${profile.id}`;
     instance.localRole = profile.relationship?.role;
     instance.accountId = identity.id;
+    instance.scope = {
+      accountId: identity.id,
+      familyId: profile.familyId,
+      profileId: profile.id
+    };
+    instance.orderingStore = createPictogramOrderingStore(
+      createScopedCommunicationStorage(localStorage, () => instance.scope)
+    );
+    setOrdering(instance.orderingStore.load());
+    setSpeechSettings(runtime.speechSettings());
+    try {
+      const saved = JSON.parse(
+        localStorage.getItem(`${instance.localKey}:tile-media`) || '[]'
+      );
+      instance.localMediaBoards = Array.isArray(saved) ? saved : [];
+    } catch (_) {
+      instance.localMediaBoards = [];
+    }
+    setLocalMediaBoards(instance.localMediaBoards);
+    try {
+      const favorites = JSON.parse(
+        localStorage.getItem(`${instance.localKey}:favorite-media`) || '[]'
+      );
+      instance.localFavoriteMedia = Array.isArray(favorites) ? favorites : [];
+    } catch (_) {
+      instance.localFavoriteMedia = [];
+    }
+    const savedIds = new Set(instance.localFavoriteMedia.map(item => item.id));
+    instance.localFavoriteMedia = instance.localFavoriteMedia.concat(
+      loadCommunicationSavedPhrases().filter(item => !savedIds.has(item.id))
+    );
     await instance.init();
     try {
       setDisplay(
@@ -135,8 +177,13 @@ function CareHome({ intl }) {
       const raw = localStorage.getItem(instance.localKey);
       if (raw) {
         const pending = JSON.parse(raw);
-        if (pending.boards)
-          await queueCareBoards(instance, pending.boards, readCareImage);
+        if (pending.boards) {
+          const withLocalMedia = await rememberLocalMedia(
+            instance,
+            pending.boards
+          );
+          await queueCareBoards(instance, withLocalMedia, readCareImage);
+        }
         if (pending.favorites) {
           const kind =
             instance.localRole === 'patient' ? 'favorite' : 'personalFavorite';
@@ -208,13 +255,18 @@ function CareHome({ intl }) {
     const pending = JSON.parse(localStorage.getItem(instance.localKey) || '{}');
     if (!pending.favorites) {
       overwriteCommunicationSavedPhrases(
-        Object.values(data.resources)
-          .filter(r => !r.deleted && r.kind === kind)
-          .map(r => ({
-            ...decodeCareMedia(r.value, data.media, mediaImage),
-            id: r.id,
-            createdAt: r.value.createdAt || r.updatedAt || 1
-          }))
+        preserveCareLocalFavoriteMedia(
+          Object.values(data.resources)
+            .filter(r => !r.deleted && r.kind === kind)
+            .map(r => ({
+              ...decodeCareMedia(r.value, data.media, mediaImage),
+              id: r.id,
+              createdAt: r.value.createdAt || r.updatedAt || 1
+            })),
+          instance.localFavoriteMedia,
+          instance.scope,
+          instance.scope
+        )
       );
       instance.projectedFavorites = loadCommunicationSavedPhrases();
     }
@@ -358,6 +410,20 @@ function CareHome({ intl }) {
   async function favoritesChanged(items) {
     const instance = engine.current;
     if (!instance) return;
+    instance.localFavoriteMedia = items.map(item => ({
+      id: item.id,
+      output: (item.output || []).map(tile => ({
+        id: tile.id,
+        boardId: tile.boardId,
+        sound: tile.sound || '',
+        video: tile.video || '',
+        mediaType: tile.mediaType || 'image'
+      }))
+    }));
+    localStorage.setItem(
+      `${instance.localKey}:favorite-media`,
+      JSON.stringify(instance.localFavoriteMedia)
+    );
     const pending = JSON.parse(localStorage.getItem(instance.localKey) || '{}');
     // Diff against the normalized view the user actually saw, not the raw cloud
     // value. Keep that baseline with the pending edit across process restarts.
@@ -378,8 +444,61 @@ function CareHome({ intl }) {
     );
     await sync();
   }
+  async function rememberLocalMedia(instance, nextBoards) {
+    // Reuse the mini-program's same-scope preservation contract. Cloud images
+    // and local recordings have different storage/permission contracts.
+    const stable = await Promise.all(
+      nextBoards.map(async board => ({
+        ...board,
+        tiles: await Promise.all(
+          board.tiles.map(async tile => {
+            if (!tile.sound?.startsWith('blob:')) return tile;
+            const blob = await (await fetch(tile.sound)).blob();
+            const sound = await new Promise((resolve, reject) => {
+              const reader = new FileReader();
+              reader.onerror = () => reject(new Error('本机录音保存失败'));
+              reader.onload = () => resolve(String(reader.result));
+              reader.readAsDataURL(blob);
+            });
+            return { ...tile, sound };
+          })
+        )
+      }))
+    );
+    const media = stable.map(board => ({
+      id: board.id,
+      tiles: board.tiles.map(tile => ({
+        id: tile.id,
+        sound: tile.sound || '',
+        video: tile.video || '',
+        mediaType: tile.mediaType || 'image'
+      }))
+    }));
+    localStorage.setItem(
+      `${instance.localKey}:tile-media`,
+      JSON.stringify(media)
+    );
+    instance.localMediaBoards = media;
+    if (
+      engine.current === instance &&
+      localCareIdentity()?.id === instance.accountId
+    )
+      setLocalMediaBoards(media);
+    return stable;
+  }
   const patientBoards =
-    snapshot && !snapshot.locked ? projectCareBoards(snapshot, mediaImage) : [];
+    snapshot && !snapshot.locked && engine.current
+      ? preserveCareLocalTileMedia(
+          projectCareBoards(snapshot, mediaImage),
+          localMediaBoards,
+          engine.current.scope,
+          {
+            accountId: who?.id,
+            familyId: active?.familyId,
+            profileId: active?.id
+          }
+        )
+      : [];
   // Display-only catalog: never pass bundled boards to the patient upload queue.
   const patientBoardIds = new Set(patientBoards.map(board => board.id));
   const boards = builtinBoards
@@ -387,7 +506,15 @@ function CareHome({ intl }) {
     .concat(patientBoards);
   async function updateBoard(board) {
     const next = patientBoards.filter(b => b.id !== board.id).concat(board);
-    await savePending({ boards: next });
+    const instance = engine.current;
+    if (!instance) return;
+    const stable = await rememberLocalMedia(instance, next);
+    if (
+      engine.current !== instance ||
+      localCareIdentity()?.id !== instance.accountId
+    )
+      return;
+    await savePending({ boards: stable });
     return board.id;
   }
   if (!valid || !who) return <p>请先登录。</p>;
@@ -465,6 +592,7 @@ function CareHome({ intl }) {
               mediaImage
             )}
             isLogged={!who.offline}
+            accountId={who.id}
             initiallyExpanded
             initialMode={
               active.relationship?.defaultMode === 'receiver'
@@ -484,11 +612,27 @@ function CareHome({ intl }) {
               ])
             ])}
             pictogramOrdering={{
+              ...ordering,
               manualOrderByBoard: Object.fromEntries(
                 boards.map(board => [board.id, board.layout.tileIds])
               )
             }}
-            onPictogramUsed={() => {}}
+            onPictogramUsed={(boardId, tileId) => {
+              const instance = engine.current;
+              if (
+                !instance ||
+                instance.scope.profileId !== active.id ||
+                instance.accountId !== who.id
+              )
+                return;
+              try {
+                setOrdering(
+                  instance.orderingStore.recordUsage(boardId, tileId)
+                );
+              } catch (_) {
+                setNotice('最近使用记录保存失败，当前表达仍可继续。');
+              }
+            }}
             displaySettings={{
               fontSize:
                 {
@@ -503,10 +647,7 @@ function CareHome({ intl }) {
                 ] || 'Large',
               ...display
             }}
-            speechSettings={{
-              rate:
-                snapshot.resources['preference:speechRate']?.value?.value || 1
-            }}
+            speechSettings={speechSettings}
             onChangeDisplaySettings={value => {
               setDisplay(value);
               localStorage.setItem(
@@ -515,10 +656,8 @@ function CareHome({ intl }) {
               );
             }}
             onChangeSpeechRate={value => {
-              void engine.current
-                .edit('preference', 'speechRate', { value })
-                .then(sync)
-                .catch(e => setNotice(e.message));
+              runtime.changeSpeechRate(value);
+              setSpeechSettings(runtime.speechSettings());
             }}
             onJumpBoard={setSelectedBoard}
             onCreateCommunicationBoard={updateBoard}
@@ -529,15 +668,12 @@ function CareHome({ intl }) {
                 setNotice(e.message)
               );
             }}
-            onSpeak={(text, done) =>
+            onSpeak={(text, done, playbackOutput = output) =>
               runtime
-                .speak(
-                  text,
-                  snapshot.resources['preference:speechRate']?.value?.value || 1
-                )
+                .speakExpression(text, playbackOutput, speechSettings.rate)
                 .then(() => done && done())
             }
-            onCancelSpeech={() => window.speechSynthesis?.cancel()}
+            onCancelSpeech={runtime.cancelSpeech}
           />
         ))}
     </main>

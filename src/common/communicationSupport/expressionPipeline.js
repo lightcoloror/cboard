@@ -2,7 +2,7 @@ import { generateCommunicationCandidateSentences } from './phraseSuggestions';
 import { normalizeExpressionCandidates } from './candidateFeedback';
 
 export const EXPRESSION_PIPELINE_CONTRACT_VERSION = 1;
-export const DEFAULT_EXPRESSION_CANDIDATE_COUNT = 4;
+export const DEFAULT_EXPRESSION_CANDIDATE_COUNT = 3;
 
 function normalizeExpressionOutput(output) {
   return (Array.isArray(output) ? output : [])

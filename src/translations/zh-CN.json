@@ -1,4 +1,5 @@
 {
+  "cboard.components.Board.undoDeletion": "撤销删除",
   "cboard.components.WelcomeScreen.login": "登录",
   "cboard.components.WelcomeScreen.signUp": "注册",
   "cboard.components.WelcomeScreen.skipForNow": "下次再说",
@@ -97,6 +98,10 @@
   "cboard.components.App.save": "保存",
   "cboard.components.App.newContentAvailable": "有新内容可用;请刷新。",
   "cboard.components.App.contentIsCached": "内容已被缓存以供离线使用。",
+  "cboard.components.App.offlinePreparing": "正在准备离线页面，请保持联网，等显示“离线页面已就绪”后再断网。",
+  "cboard.components.App.offlineReady": "离线页面已就绪。本机已保存的图片可离线使用；在线搜图和云端功能仍需联网。",
+  "cboard.components.App.offlineError": "离线页面尚未就绪。请联网后刷新重试；已有本机资料不会因此删除。",
+  "cboard.components.App.offlineUnavailable": "当前环境无法准备离线页面，请保持联网使用。",
   "cboard.components.Analytics.analytics": "分析",
   "cboard.components.Analytics.mostUsedBoards": "使用最多的看板",
   "cboard.components.Analytics.topUsedButtons": "上使用的按钮",

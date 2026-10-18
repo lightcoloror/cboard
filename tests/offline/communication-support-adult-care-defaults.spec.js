@@ -109,8 +109,8 @@ test.describe('Production offline - adult-care default boards', () => {
       useTouch
     );
     await expect(
-      receiverWorkspace.getByRole('status').filter({ hasText: '匹配结果' })
-    ).toContainText('已全部匹配');
+      receiverWorkspace.getByRole('status').filter({ hasText: '图片匹配' })
+    ).toContainText('已全部配图');
     await activate(
       receiverWorkspace.getByRole('button', { name: '全屏展示' }),
       useTouch

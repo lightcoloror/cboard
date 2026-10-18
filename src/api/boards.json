@@ -731,6 +731,13 @@
           "image": "/symbols/mulberry/chips.svg",
           "id": "rycvMAcpmqYW",
           "backgroundColor": "rgb(255, 241, 118)"
+        },
+        {
+          "id": "tuyujia-builtin-eat",
+          "labelKey": "symbol.foodFeedingAndEating.toEat",
+          "image": "/symbols/mulberry/eat_1_,_to.svg",
+          "communicationSynonyms": "",
+          "communicationCategory": "actions"
         }
       ]
     },
@@ -941,7 +948,7 @@
         },
         {
           "labelKey": "symbol.drinkType.drink",
-          "image": "/symbols/mulberry/drink.svg",
+          "image": "/symbols/mulberry/drink_,_to.svg",
           "id": "ryctMA9amqtZ",
           "backgroundColor": "rgb(255, 241, 118)"
         },
@@ -1295,6 +1302,13 @@
           "image": "/symbols/mulberry/grapes.svg",
           "id": "Hy16GAqpQqYb",
           "backgroundColor": "rgb(255, 241, 118)"
+        },
+        {
+          "id": "tuyujia-builtin-fruit",
+          "labelKey": "symbol.foodFruit.fruit",
+          "image": "/symbols/mulberry/fruit.svg",
+          "communicationSynonyms": "",
+          "communicationCategory": "food"
         }
       ],
       "caption": "https://cboardgroupdiag483.blob.core.windows.net/cblob/1536763480_9b1b336c1684_fruit.png"
@@ -1360,6 +1374,12 @@
           "image": "/symbols/mulberry/hot_person.svg",
           "id": "SyS0fA96XqtW",
           "backgroundColor": "rgb(255, 241, 118)"
+        },
+        {
+          "id": "tuyujia-builtin-object-heat",
+          "labelKey": "symbol.descriptiveTemperature.objectHot",
+          "image": "/symbols/mulberry/hot.svg",
+          "communicationCategory": "description"
         },
         {
           "labelKey": "cboard.symbol.excited",
@@ -2522,6 +2542,20 @@
           "image": "/symbols/mulberry/playing_cards.svg",
           "id": "B1XtmAqTX9t-",
           "backgroundColor": "rgb(255, 241, 118)"
+        },
+        {
+          "id": "tuyujia-builtin-paint",
+          "labelKey": "symbol.artMaking.toPaint",
+          "image": "/symbols/mulberry/paint_1_,_to.svg",
+          "communicationSynonyms": "",
+          "communicationCategory": "actions"
+        },
+        {
+          "id": "tuyujia-builtin-photographs",
+          "labelKey": "symbol.holidayAndTravel.photographs",
+          "image": "/symbols/mulberry/photographs.svg",
+          "communicationSynonyms": "",
+          "communicationCategory": "objects"
         }
       ],
       "caption": "https://cboardgroupdiag483.blob.core.windows.net/cblob/1536763522_9b1b336c1684_activities.png"
@@ -3079,6 +3113,52 @@
           "image": "/symbols/mulberry/open_,_to.svg",
           "id": "H1u0XR9pQctW",
           "backgroundColor": "rgb(255, 241, 118)"
+        },
+        {
+          "id": "tuyujia-builtin-turn-off",
+          "labelKey": "symbol.peopleActions.toTurnOff",
+          "image": "/symbols/mulberry/turn_off_,_to.svg",
+          "communicationSynonyms": "",
+          "communicationCategory": "actions"
+        },
+        {
+          "id": "tuyujia-builtin-walk",
+          "labelKey": "symbol.peopleActions.toWalk",
+          "image": "/symbols/mulberry/walk_,_to.svg",
+          "communicationSynonyms": "走",
+          "communicationCategory": "actions"
+        },
+        {
+          "id": "tuyujia-builtin-push",
+          "labelKey": "symbol.peopleActions.toPush",
+          "image": "/symbols/mulberry/push_,_to.svg",
+          "communicationSynonyms": "",
+          "communicationCategory": "actions"
+        },
+        {
+          "id": "tuyujia-builtin-roll-over",
+          "labelKey": "symbol.peopleActions.toRollOver",
+          "image": "/symbols/mulberry/roll_over_,_to.svg",
+          "communicationSynonyms": "",
+          "communicationCategory": "actions"
+        },
+        {
+          "id": "tuyujia-builtin-open-door",
+          "labelKey": "symbol.peopleActions.toOpenDoor",
+          "image": "/symbols/mulberry/open_door_2_,_to.svg",
+          "communicationSynonyms": "打开门",
+          "communicationCategory": "actions",
+          "pictogramProvider": "mulberry",
+          "pictogramOriginalId": "open_door_2_,_to.svg"
+        },
+        {
+          "id": "tuyujia-builtin-open-tin",
+          "labelKey": "symbol.peopleActions.toOpenTin",
+          "image": "/symbols/mulberry/open_tin_,_to.svg",
+          "communicationSynonyms": "打开罐头",
+          "communicationCategory": "actions",
+          "pictogramProvider": "mulberry",
+          "pictogramOriginalId": "open_tin_,_to.svg"
         }
       ],
       "caption": "https://cboardgroupdiag483.blob.core.windows.net/cblob/1536763873_9b1b336c1684_actions.png"
@@ -3181,6 +3261,13 @@
           "loadBoard": "BkFxtpD3wpW",
           "id": "HkwkN0cTQ9Yb",
           "backgroundColor": "rgb(187, 222, 251)"
+        },
+        {
+          "id": "tuyujia-builtin-room",
+          "labelKey": "symbol.buildingPublic.room",
+          "image": "/symbols/mulberry/room.svg",
+          "communicationSynonyms": "",
+          "communicationCategory": "places"
         }
       ],
       "caption": "https://cboardgroupdiag483.blob.core.windows.net/cblob/1536763831_9b1b336c1684_places.png"
@@ -3577,6 +3664,13 @@
           "image": "/symbols/mulberry/sticky.svg",
           "id": "SkE7VR5pmqF-",
           "backgroundColor": "rgb(255, 241, 118)"
+        },
+        {
+          "id": "tuyujia-builtin-high",
+          "labelKey": "symbol.descriptiveQuantity.high",
+          "image": "/symbols/mulberry/high.svg",
+          "communicationSynonyms": "",
+          "communicationCategory": "daily"
         }
       ],
       "caption": "https://cboardgroupdiag483.blob.core.windows.net/cblob/1536763662_9b1b336c1684_describe.png"
@@ -3752,7 +3846,7 @@
         },
         {
           "labelKey": "cboard.symbol.iNeed",
-          "image": "/symbols/mulberry/help_,_to.svg",
+          "image": "/symbols/mulberry/want_,_to.svg",
           "id": "B1AEEA5pm5tb",
           "backgroundColor": "rgb(255, 241, 118)"
         },
@@ -3853,7 +3947,7 @@
       "tiles": [
         {
           "labelKey": "cboard.symbol.iNeed",
-          "image": "/symbols/mulberry/help_,_to.svg",
+          "image": "/symbols/mulberry/want_,_to.svg",
           "id": "HJTSECqTXqYZ",
           "backgroundColor": "rgb(255, 241, 118)"
         },
@@ -4562,7 +4656,7 @@
         },
         {
           "labelKey": "cboard.symbol.iNeed",
-          "image": "/symbols/mulberry/help_,_to.svg",
+          "image": "/symbols/mulberry/want_,_to.svg",
           "id": "SJcnE0cTmqF-",
           "backgroundColor": "rgb(255, 241, 118)"
         },
@@ -4673,6 +4767,13 @@
           "image": "/symbols/mulberry/thermometer.svg",
           "id": "Bk3pEC5pXqtW",
           "backgroundColor": "rgb(255, 241, 118)"
+        },
+        {
+          "id": "tuyujia-builtin-hearing-aid",
+          "labelKey": "symbol.healthcareMedicalItems.hearingAid",
+          "image": "/symbols/mulberry/hearing_aid_1.svg",
+          "communicationSynonyms": "",
+          "communicationCategory": "objects"
         }
       ],
       "caption": "https://cboardgroupdiag483.blob.core.windows.net/cblob/1536763557_9b1b336c1684_medical.png"
@@ -5387,6 +5488,15 @@
       "hidden": true,
       "tiles": [
         {
+          "labelKey": "symbol.healthcareGroomingItems.liquidSoap",
+          "image": "/symbols/mulberry/liquid_soap.svg",
+          "id": "tuyujia-builtin-liquid-soap",
+          "communicationCategory": "objects",
+          "communicationSynonyms": "液体皂,液体肥皂",
+          "communicationExcludeTokens": "肥皂块,沐浴露,洗衣液,洗碗液",
+          "backgroundColor": "rgb(255, 241, 118)"
+        },
+        {
           "labelKey": "symbol.healthcareGroomingItems.toothbrush",
           "image": "/symbols/mulberry/toothbrush.svg",
           "id": "HkSEB0cp75F-",
@@ -5493,6 +5603,41 @@
           "image": "/symbols/mulberry/hair_dye.svg",
           "id": "HyUrHCcpmqYW",
           "backgroundColor": "rgb(255, 241, 118)"
+        },
+        {
+          "id": "tuyujia-builtin-nappy",
+          "labelKey": "symbol.healthcareGroomingItems.nappy",
+          "image": "/symbols/mulberry/nappy.svg",
+          "communicationSynonyms": "尿片",
+          "communicationCategory": "objects"
+        },
+        {
+          "id": "tuyujia-builtin-brush-teeth",
+          "labelKey": "symbol.healthcareGroomingActivities.toBrushTeeth",
+          "image": "/symbols/mulberry/brush_teeth_,_to.svg",
+          "communicationSynonyms": "",
+          "communicationCategory": "actions"
+        },
+        {
+          "id": "tuyujia-builtin-change-clothes",
+          "labelKey": "symbol.healthcareGroomingActivities.toChangeClothes",
+          "image": "/symbols/mulberry/change_clothes_,_to.svg",
+          "communicationSynonyms": "换件衣服",
+          "communicationCategory": "actions"
+        },
+        {
+          "id": "tuyujia-builtin-wash-face",
+          "labelKey": "symbol.healthcareGroomingActivities.toWashFace",
+          "image": "/symbols/mulberry/wash_face_,_to.svg",
+          "communicationSynonyms": "",
+          "communicationCategory": "actions"
+        },
+        {
+          "id": "tuyujia-builtin-wash-hands",
+          "labelKey": "symbol.healthcareGroomingActivities.toWashHands",
+          "image": "/symbols/mulberry/wash_hands_,_to.svg",
+          "communicationSynonyms": "",
+          "communicationCategory": "actions"
         }
       ],
       "caption": "https://cboardgroupdiag483.blob.core.windows.net/cblob/1536763906_9b1b336c1684_hygiene.png"
@@ -5739,7 +5884,7 @@
           "image": "/symbols/arasaac/picinterpreter-care/6632.png",
           "id": "pi-core-i",
           "backgroundColor": "rgb(255, 241, 118)",
-          "communicationSynonyms": "自己,本人",
+          "communicationSynonyms": "",
           "communicationCategory": "core",
           "pictogramProvider": "arasaac",
           "pictogramOriginalId": "6632"
@@ -5756,15 +5901,25 @@
           "pictogramOriginalId": "6625"
         },
         {
-          "label": "他/她",
-          "vocalization": "他或她",
+          "label": "他",
+          "vocalization": "他",
           "image": "/symbols/arasaac/picinterpreter-care/6480.png",
           "id": "pi-core-they",
           "backgroundColor": "rgb(255, 241, 118)",
-          "communicationSynonyms": "他,她",
+          "communicationSynonyms": "",
           "communicationCategory": "core",
           "pictogramProvider": "arasaac",
           "pictogramOriginalId": "6480"
+        },
+        {
+          "id": "tuyujia-builtin-she",
+          "label": "她",
+          "vocalization": "她",
+          "image": "/symbols/arasaac/she.png",
+          "communicationCategory": "core",
+          "communicationSynonyms": "",
+          "pictogramProvider": "arasaac",
+          "pictogramOriginalId": "she.png"
         },
         {
           "label": "要",
@@ -5779,13 +5934,13 @@
           "pictogramOriginalId": "37160"
         },
         {
-          "label": "可以",
-          "vocalization": "可以",
+          "label": "罐头",
+          "vocalization": "罐头",
           "image": "/symbols/arasaac/picinterpreter-care/6544.png",
           "id": "pi-core-can",
           "backgroundColor": "rgb(255, 241, 118)",
-          "communicationSynonyms": "能,能够",
-          "communicationCategory": "core",
+          "communicationSynonyms": "罐头盒",
+          "communicationCategory": "food",
           "pictogramProvider": "arasaac",
           "pictogramOriginalId": "6544"
         },

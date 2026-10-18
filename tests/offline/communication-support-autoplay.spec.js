@@ -3,6 +3,7 @@ import {
   activate,
   blockRemoteHttpRequests,
   dismissBoardTour,
+  openPatientExpression,
   installBrowserTtsHarness
 } from './helpers/communicationSupport';
 
@@ -38,7 +39,7 @@ test.describe('Production candidate autoplay', () => {
     await activate(tiles.nth(1), useTouch);
 
     const panel = page.locator('.CommunicationSupportPanel');
-    await activate(panel.getByRole('button', { name: '患者表达' }), useTouch);
+    await openPatientExpression(panel, useTouch);
     await expect(
       page.getByRole('dialog', { name: '双向沟通 · 第一次使用' })
     ).toHaveCount(0);

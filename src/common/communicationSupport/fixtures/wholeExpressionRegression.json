@@ -1,0 +1,119 @@
+{
+  "cases": [
+    {
+      "text": "再说一遍",
+      "tokens": ["再说一遍"],
+      "picture": ["再说一遍", "pi-home-repeat"]
+    },
+    {
+      "text": "请再说一遍",
+      "tokens": ["请再说一遍"],
+      "picture": ["请再说一遍", "pi-home-repeat"]
+    },
+    {
+      "text": "再说一次",
+      "tokens": ["再说一次"],
+      "picture": ["再说一次", "pi-home-repeat"]
+    },
+    {
+      "text": "请再说一次",
+      "tokens": ["请再说一次"],
+      "picture": ["请再说一次", "pi-home-repeat"]
+    },
+    { "text": "不要再说一遍", "tokens": ["不要", "再说一遍"] },
+    {
+      "text": "请等一下",
+      "tokens": ["请等一下"],
+      "picture": ["请等一下", "pi-repair-wait"]
+    },
+    {
+      "text": "稍等一下",
+      "tokens": ["稍等一下"],
+      "picture": ["稍等一下", "pi-repair-wait"]
+    },
+    {
+      "text": "等一等",
+      "tokens": ["等一等"],
+      "picture": ["等一等", "pi-repair-wait"]
+    },
+    { "text": "等一下再吃药", "tokens": ["等一下", "再", "吃药"] },
+    {
+      "text": "帮帮我",
+      "tokens": ["帮帮我"],
+      "picture": ["帮帮我", "pi-home-help"]
+    },
+    {
+      "text": "请帮帮我",
+      "tokens": ["请帮帮我"],
+      "picture": ["请帮帮我", "pi-home-help"]
+    },
+    { "text": "帮帮我找眼镜", "tokens": ["帮帮我", "找", "眼镜"] },
+    { "text": "帮帮我妈妈", "tokens": ["帮", "帮", "我", "妈妈"] },
+    { "text": "请帮我爸爸", "tokens": ["请", "帮", "我", "爸爸"] },
+    {
+      "text": "写下来",
+      "tokens": ["写下来"],
+      "picture": ["写下来", "pi-repair-write"]
+    },
+    {
+      "text": "请写下来",
+      "tokens": ["请写下来"],
+      "picture": ["请写下来", "pi-repair-write"]
+    },
+    {
+      "text": "指给我看",
+      "tokens": ["指给我看"],
+      "picture": ["指给我看", "pi-repair-point"]
+    },
+    {
+      "text": "给我选项",
+      "tokens": ["给我选项"],
+      "picture": ["给我选项", "pi-repair-choices"]
+    },
+    {
+      "text": "不是这个",
+      "tokens": ["不是这个"],
+      "picture": ["不是这个", "pi-repair-not-this"]
+    },
+    { "text": "不是这个，是那个", "tokens": ["不是这个", "，", "是", "那个"] },
+    {
+      "text": "不是这个意思",
+      "tokens": ["不是这个", "意思"],
+      "fallbackTokens": ["不是这个", "意", "思"]
+    },
+    {
+      "text": "我说不出话",
+      "tokens": ["我说不出话"],
+      "picture": ["我说不出话", "BJwSGCc675tb"]
+    },
+    { "text": "说不出来", "tokens": ["说不出来"] },
+    { "text": "我听不懂", "tokens": ["我", "听不懂"] },
+    { "text": "我看不清", "tokens": ["我", "看不清"] },
+    { "text": "我听不清", "tokens": ["我", "听不清"] },
+    { "text": "我看不懂", "tokens": ["我", "看不懂"] },
+    { "text": "表达不了", "tokens": ["表达不了"] },
+    { "text": "对不起", "tokens": ["对不起"] },
+    { "text": "不客气", "tokens": ["不客气"] },
+    { "text": "不用谢", "tokens": ["不用谢"] },
+    { "text": "没问题", "tokens": ["没问题"] },
+    { "text": "不是没问题", "tokens": ["不是", "没问题"] },
+    { "text": "我不知道", "tokens": ["我", "不知道"] },
+    { "text": "我想换衣服", "tokens": ["我", "想", "换衣服"] },
+    { "text": "我不想换衣服", "tokens": ["我", "不", "想", "换衣服"] },
+    { "text": "不用谢，不用谢", "tokens": ["不用谢", "，", "不用谢"] },
+    { "text": "请帮忙找眼镜", "tokens": ["请帮忙", "找", "眼镜"] }
+  ],
+  "unsafePairs": [
+    ["看不清", "看"],
+    ["听不清", "听"],
+    ["听不懂", "懂"],
+    ["说不出来", "我说不出话"],
+    ["表达不了", "我说不出话"],
+    ["重复一遍", "再说一次"],
+    ["再做一遍", "再说一次"],
+    ["换衣服", "穿衣服"],
+    ["换衣服", "衣服"],
+    ["没问题", "问题"],
+    ["不是这个", "这个"]
+  ]
+}

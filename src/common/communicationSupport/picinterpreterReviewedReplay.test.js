@@ -66,6 +66,7 @@ function replayReviewedScenarios() {
       boardsFixture.advanced,
       { intl }
     );
+    expect(result.matches.map(match => match.token).join('')).toBe(finalText);
 
     result.matches.forEach(match => {
       if (match.tile) return;
@@ -102,18 +103,89 @@ describe('PicInterpreter reviewed scenario replay', () => {
     const result = replayReviewedScenarios();
 
     expect(result).toMatchObject({
-      unmatchedOccurrences: 133,
-      unmatchedUnique: 96,
-      reviewedOccurrences: 118,
-      reviewedUnique: 85
+      // 散步 no longer collapses to the generic 走 tile. Its existing reviewed
+      // image suggestion remains available for explicit caregiver selection.
+      // Three 睡觉 occurrences now reuse the built-in sleep action card;
+      // they no longer need an external reviewed-image suggestion.
+      // The bathing action also reuses its existing Mulberry card now.
+      // The verified bundled cards now cover ten occurrences of seven more
+      // concepts: 吃, 水果, 尿布, 刷牙, 照片, 走, 走路.
+      // daily-24/34: 可以 no longer uses a tin-can picture (2 occurrences).
+      // daily-02/32: 吃药 no longer uses the medicine object (3 occurrences).
+      // These are honest text fallbacks, not a regression to repair with aliases.
+      // daily-06: 洗手 now uses the inspected bundled washing-hands action,
+      // so it leaves both the missing set and the online reviewed-candidate set.
+      // daily-33: 包扎伤口 no longer partially matches the wound object.
+      // Preserve the whole action for the existing reviewed-image workflow.
+      // daily-16 already uses the inspected built-in 开门 action (2026-10-16).
+      // Source-copy replay confirms this reduction predates temperature/name fixes.
+      unmatchedOccurrences: 152,
+      unmatchedUnique: 101,
+      // 呼吸困难 is now one protected symptom, not separate 呼吸 / 困难
+      // suggestions. Keep the coverage decrease visible; do not invent an alias.
+      reviewedOccurrences: 99,
+      reviewedUnique: 70
     });
     expect(
       result.reviewedOccurrences / result.unmatchedOccurrences
-    ).toBeCloseTo(0.8872, 4);
+    ).toBeCloseTo(99 / 152, 4);
+  });
+
+  test('daily-33 preserves bandaging as an action rather than a wound picture', () => {
+    const text = REVIEWED_SCENARIOS.find(([id]) => id === 'daily-33')[1];
+    const result = matchTextToCommunicationTiles(text, boardsFixture.advanced, {
+      intl
+    });
+    const action = result.matches.find(item => item.token === '包扎伤口');
+    expect(action.tile).toBeNull();
+    expect(getReviewedArasaacIds('包扎伤口').length).toBeGreaterThan(0);
+    expect(result.matches.map(item => item.token).join('')).toBe(text);
+  });
+
+  test('daily-06 washing hands now uses the bundled action without changing its sequence', () => {
+    const text = REVIEWED_SCENARIOS.find(([id]) => id === 'daily-06')[1];
+    const result = matchTextToCommunicationTiles(text, boardsFixture.advanced, {
+      intl
+    });
+    expect(result.matches.map(item => item.token).join('')).toBe(text);
+    expect(result.matches.find(item => item.token === '洗手').tile.id).toBe(
+      'tuyujia-builtin-wash-hands'
+    );
+  });
+
+  test('the three existing sleep scenarios reuse the bundled action picture', () => {
+    const sleepScenarios = REVIEWED_SCENARIOS.filter(([, text]) =>
+      text.includes('睡觉')
+    );
+    expect(sleepScenarios).toHaveLength(3);
+    sleepScenarios.forEach(([, text]) => {
+      const result = matchTextToCommunicationTiles(
+        text,
+        boardsFixture.advanced,
+        { intl }
+      );
+      expect(result.matches.find(item => item.token === '睡觉').tile.id).toBe(
+        'Syn2Q0cp7cYb'
+      );
+    });
+  });
+
+  test('keeps the walking activity explicit instead of hiding it behind a broad action', () => {
+    const result = matchTextToCommunicationTiles(
+      '我们坐轮椅下楼散步。',
+      boardsFixture.advanced,
+      { intl }
+    );
+    const walking = result.matches.find(item => item.token === '散步');
+    expect(walking).toBeDefined();
+    expect(walking.tile).toBeNull();
+    expect(getReviewedArasaacIds('散步').length).toBeGreaterThan(0);
   });
 
   test('keeps the remaining unreviewed tokens explicit for safe follow-up', () => {
     expect(replayReviewedScenarios().unreviewedCounts).toEqual({
+      呼吸困难: 1,
+      吃药: 3,
       先: 1,
       准确: 1,
       动作: 2,
@@ -123,8 +195,48 @@ describe('PicInterpreter reviewed scenario replay', () => {
       捂: 1,
       无: 3,
       还是: 1,
-      里: 1,
-      闷: 1
+      里: 3,
+      闷: 1,
+      下楼: 1,
+      了: 4,
+      出来: 1,
+      到: 1,
+      前: 1,
+      叫: 1,
+      吗: 5,
+      或者: 1,
+      抬: 1,
+      换: 1,
+      有事: 1,
+      步: 1,
+      用: 4,
+      的: 5,
+      路: 1,
+      还有: 1,
+      遮住: 1,
+      音乐: 1
     });
   });
+
+  test.each([
+    ['daily-02', '吃药', 1, []],
+    ['daily-32', '吃药', 2, []],
+    ['daily-24', '可以', 1, [35949]],
+    ['daily-34', '可以', 1, [35949]]
+  ])(
+    '%s retains %s without substituting a related object',
+    (id, token, count, ids) => {
+      const text = REVIEWED_SCENARIOS.find(row => row[0] === id)[1];
+      const result = matchTextToCommunicationTiles(
+        text,
+        boardsFixture.advanced,
+        { intl }
+      );
+      const matches = result.matches.filter(item => item.token === token);
+      expect(matches).toHaveLength(count);
+      matches.forEach(item => expect(item.tile).toBeNull());
+      expect(result.matches.map(item => item.token).join('')).toBe(text);
+      expect(getReviewedArasaacIds(token)).toEqual(ids);
+    }
+  );
 });

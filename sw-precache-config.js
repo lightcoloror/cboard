@@ -38,6 +38,7 @@ module.exports = {
   staticFileGlobs: [
     `${buildPrefix}*.html`,
     `${buildPrefix}manifest.json`,
+    `${buildPrefix}police-filing.png`,
     `${buildPrefix}static/**/!(*map*)`,
     ...boardImages
   ],

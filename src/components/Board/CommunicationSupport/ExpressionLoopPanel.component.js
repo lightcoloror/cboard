@@ -74,14 +74,15 @@ const DEFAULT_COPY = {
   playbackReplay: '重播',
   playbackDone: '完成',
   noSavedPhrases: '还没有收藏的短句。',
-  aiCandidates: 'AI 优化候选句',
+  aiCandidates: '生成三个候选句',
   aiGenerating: 'AI 生成中...',
   aiLoginRequired: '登录后可使用 AI 增强，当前继续使用本地规则。',
   aiUnavailable: '服务端尚未配置 AI，当前继续使用本地规则。',
   aiFailed: 'AI 服务暂时不可用，当前继续使用本地规则。',
   aiRateLimited: 'AI 增强请求较多，请稍后重试；当前继续使用本地候选句。',
   aiMonthlyQuota: '本月 AI 增强额度已用完，当前继续使用本地候选句。',
-  aiApplied: '已生成 AI 候选句，仍可切换或使用本地候选。',
+  aiApplied: '已生成 AI 候选句；点击一句播报，再确认或收藏。',
+  localApplied: '已生成本地候选句；点击一句播报，再确认或收藏。',
   candidateFeedbackUp: '有帮助',
   candidateFeedbackDown: '不符合',
   candidateFeedbackHint: '评价不会打断朗读；反馈会和这次表达一起保存。',
@@ -139,8 +140,6 @@ function SavedPhraseRow({ item, onApply, onPlay, playLabel, reuseLabel }) {
 }
 
 function getAiFailureMessage(error, copy) {
-  if (error?.response?.data?.code || error?.data?.code)
-    return careErrorMessage(error);
   const limitScope = getCommunicationEnhancementLimitScope(error);
   if (limitScope === COMMUNICATION_ENHANCEMENT_LIMIT_SCOPES.month) {
     return copy.aiMonthlyQuota;
@@ -148,6 +147,13 @@ function getAiFailureMessage(error, copy) {
   if (limitScope === COMMUNICATION_ENHANCEMENT_LIMIT_SCOPES.minute) {
     return copy.aiRateLimited;
   }
+  if (
+    error?.response?.data?.code ||
+    error?.response?.data?.error?.code ||
+    error?.data?.code ||
+    error?.code?.startsWith('AI_REQUEST_')
+  )
+    return careErrorMessage(error);
   const status = error && error.response && Number(error.response.status);
   if (status === 401 || status === 403) return copy.aiLoginRequired;
   if (status === 503) return copy.aiUnavailable;
@@ -185,6 +191,7 @@ export default function ExpressionLoopPanel({
   onShareExpression,
   conversationContext,
   aiAvailable,
+  aiUnavailableReason,
   onGenerateAiSentences,
   candidateAutoplayDelaySeconds,
   candidateFeedbackSyncAvailable,
@@ -242,6 +249,7 @@ export default function ExpressionLoopPanel({
   const [playbackPhrase, setPlaybackPhrase] = useState(null);
   const playRunRef = useRef(0);
   const aiRunRef = useRef(0);
+  const aiPendingRef = useRef(false);
   const speechTimeoutsRef = useRef(new Set());
   const previousOutputSignatureRef = useRef(null);
   const previousAutoplayDelayRef = useRef(null);
@@ -317,6 +325,7 @@ export default function ExpressionLoopPanel({
           else onCancelSpeech();
         }
         aiRunRef.current += 1;
+        aiPendingRef.current = false;
         setLoopState(nextState);
         setCandidatePhase(
           nextState.candidateSentences.length ? 'ready' : 'idle'
@@ -365,7 +374,7 @@ export default function ExpressionLoopPanel({
     [onCancelSpeech]
   );
 
-  function speakSentence(sentence) {
+  function speakSentence(sentence, playbackOutput = output) {
     return new Promise(resolve => {
       let completed = false;
       let timeoutId = null;
@@ -389,7 +398,7 @@ export default function ExpressionLoopPanel({
       speechTimeoutsRef.current.add(timeoutId);
 
       try {
-        const result = onSpeak(sentence, () => finish(true));
+        const result = onSpeak(sentence, () => finish(true), playbackOutput);
         if (result && typeof result.catch === 'function') {
           result.catch(() => finish(false));
         }
@@ -471,23 +480,15 @@ export default function ExpressionLoopPanel({
     handleEditedOutput(removeExpressionOutputItem(output, index));
   }
 
-  function handlePrepareCandidates() {
-    const nextState = buildExpressionLoopState(output);
-
-    if (!nextState.candidateSentences.length) {
-      return;
-    }
-
-    setLoopState(nextState);
-    resetCandidateFeedback(nextState);
-    setIsSaved(false);
-    setIsConfirmed(false);
-    setExpressionConfirmError('');
-    autoplayControllerRef.current.cancel();
-    playCandidates(nextState);
+  function cancelPendingAi() {
+    if (!aiPendingRef.current) return;
+    aiRunRef.current += 1;
+    aiPendingRef.current = false;
+    setIsGeneratingAi(false);
   }
 
   function handleStopPlayback() {
+    cancelPendingAi();
     autoplayControllerRef.current.cancel({
       stopActivePlayback: false
     });
@@ -495,11 +496,14 @@ export default function ExpressionLoopPanel({
   }
 
   function handleReplayAll() {
+    cancelPendingAi();
     autoplayControllerRef.current.cancel();
     setIsSaved(false);
     setIsConfirmed(false);
     setExpressionConfirmError('');
-    playCandidates({ ...loopState, selectedIndex: 0 });
+    // Playback consumes the current set, including AI and restored favorites.
+    // It must never regenerate templates or issue another AI request.
+    playCandidates({ ...loopStateRef.current, selectedIndex: 0 });
   }
 
   async function handlePlayOne(index) {
@@ -507,6 +511,7 @@ export default function ExpressionLoopPanel({
       return;
     }
 
+    cancelPendingAi();
     autoplayControllerRef.current.cancel();
     const runId = playRunRef.current + 1;
     playRunRef.current = runId;
@@ -529,6 +534,8 @@ export default function ExpressionLoopPanel({
   }
 
   function handleSavePhrase() {
+    cancelPendingAi();
+    handlePatientInteraction();
     const entry = buildExpressionSavedPhraseEntry(loopState);
 
     if (!entry || isSaved) {
@@ -540,6 +547,8 @@ export default function ExpressionLoopPanel({
   }
 
   function handleConfirmExpression() {
+    cancelPendingAi();
+    handlePatientInteraction();
     const entry = buildExpressionHistoryEntry(
       loopState,
       candidateFeedbackEntries
@@ -650,6 +659,8 @@ export default function ExpressionLoopPanel({
   }
 
   function handleApplySavedPhrase(item) {
+    cancelPendingAi();
+    handlePatientInteraction();
     const nextState = buildExpressionLoopStateFromSavedPhrase(item);
 
     onCancelSpeech();
@@ -686,7 +697,7 @@ export default function ExpressionLoopPanel({
     setCandidatePhase('playing');
     setSpeechAvailable(true);
 
-    const success = await speakSentence(sentence);
+    const success = await speakSentence(sentence, item.output || []);
     if (playRunRef.current === runId) {
       playbackActiveRef.current = false;
       setSpeechAvailable(success);
@@ -717,17 +728,33 @@ export default function ExpressionLoopPanel({
   }
 
   async function handleGenerateAiCandidates() {
+    if (!output.length || aiPendingRef.current) return;
+    autoplayControllerRef.current.cancel();
+    stopPlaybackQueue();
     if (!aiAvailable || typeof onGenerateAiSentences !== 'function') {
-      setAiNotice(copy.aiLoginRequired);
+      const nextState = buildExpressionLoopState(output);
+      setLoopState(nextState);
+      resetCandidateFeedback(nextState);
+      setCandidatePhase('ready');
+      setIsSaved(false);
+      setIsConfirmed(false);
+      setExpressionConfirmError('');
+      setAiNotice(copy.localApplied);
+      autoplayControllerRef.current.schedule(
+        nextState.candidateSentences,
+        candidateAutoplayDelaySeconds
+      );
       return;
     }
 
     const request = buildCommunicationAiSentenceRequest({
       output,
+      boards,
       context: conversationContext
     });
     const runId = aiRunRef.current + 1;
     aiRunRef.current = runId;
+    aiPendingRef.current = true;
     setIsGeneratingAi(true);
     setAiNotice('');
 
@@ -740,6 +767,10 @@ export default function ExpressionLoopPanel({
       );
       if (!nextState || nextState.isOfflineFallback !== false) {
         setAiNotice(copy.aiFailed);
+        autoplayControllerRef.current.schedule(
+          loopStateRef.current.candidateSentences,
+          candidateAutoplayDelaySeconds
+        );
         return;
       }
       setLoopState(nextState);
@@ -756,9 +787,16 @@ export default function ExpressionLoopPanel({
     } catch (error) {
       if (aiRunRef.current === runId) {
         setAiNotice(getAiFailureMessage(error, copy));
+        autoplayControllerRef.current.schedule(
+          loopStateRef.current.candidateSentences,
+          candidateAutoplayDelaySeconds
+        );
       }
     } finally {
-      if (aiRunRef.current === runId) setIsGeneratingAi(false);
+      if (aiRunRef.current === runId) {
+        aiPendingRef.current = false;
+        setIsGeneratingAi(false);
+      }
     }
   }
 
@@ -880,14 +918,14 @@ export default function ExpressionLoopPanel({
             variant="outlined"
             onClick={handleGenerateAiCandidates}
             disabled={!output.length || isGeneratingAi}
-            label={isGeneratingAi ? '生成中' : '优化'}
+            label={isGeneratingAi ? '生成中' : copy.aiCandidates}
             ariaLabel={isGeneratingAi ? copy.aiGenerating : copy.aiCandidates}
           />
           <PatientActionButton
             action={PATIENT_ACTION_IDS.playAll}
             color="primary"
             variant="contained"
-            onClick={handlePrepareCandidates}
+            onClick={handleReplayAll}
             disabled={!output.length}
             label="全播"
             ariaLabel={copy.generateAndSpeak}
@@ -902,6 +940,9 @@ export default function ExpressionLoopPanel({
             ariaLabel={copy.stopSpeech}
           />
         </div>
+        {!aiAvailable && aiUnavailableReason && (
+          <p role="status">{aiUnavailableReason}</p>
+        )}
         {aiNotice && (
           <div
             className="CommunicationSupportPanel__environmentNotice"
@@ -1123,6 +1164,7 @@ ExpressionLoopPanel.propTypes = {
   onShareExpression: PropTypes.func,
   conversationContext: PropTypes.object,
   aiAvailable: PropTypes.bool,
+  aiUnavailableReason: PropTypes.string,
   onGenerateAiSentences: PropTypes.func,
   candidateAutoplayDelaySeconds: PropTypes.number,
   candidateFeedbackSyncAvailable: PropTypes.bool,
@@ -1134,6 +1176,7 @@ ExpressionLoopPanel.defaultProps = {
   savedPhrases: [],
   conversationContext: null,
   aiAvailable: false,
+  aiUnavailableReason: '',
   onGenerateAiSentences: null,
   onUseSavedPhrase: () => {},
   onShareExpression: null,

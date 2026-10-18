@@ -71,7 +71,10 @@ function buildSequenceItem(item) {
     source,
     matchType: String((item && item.matchType) || 'missing'),
     confidence: Number(item && item.confidence) || 0,
-    originalToken: String((item && item.originalToken) || '').trim(),
+    originalToken: String((item && item.originalToken) || ''),
+    ...(item && item.textOnly === true ? { textOnly: true } : {}),
+    ...(item && item.lookupToken ? { lookupToken: item.lookupToken } : {}),
+    ...(item && item.sourceSpan ? { sourceSpan: item.sourceSpan } : {}),
     ...(attribution ? { attribution } : {})
   };
 }

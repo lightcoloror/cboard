@@ -1,0 +1,29 @@
+{
+  "cards": [
+    {
+      "id": "tuyujia-builtin-liquid-soap",
+      "key": "symbol.healthcareGroomingItems.liquidSoap",
+      "image": "liquid_soap.svg",
+      "board": "H1iZY6DnvT-",
+      "label": "洗手液",
+      "tokens": ["洗手液", "液体皂", "液体肥皂"],
+      "category": "objects"
+    },
+    {
+      "id": "SywVBAcTQ5tW",
+      "key": "symbol.healthcareGroomingItems.soap",
+      "image": "soap.svg",
+      "board": "H1iZY6DnvT-",
+      "label": "肥皂",
+      "tokens": ["肥皂块", "固体皂"],
+      "category": "objects"
+    }
+  ],
+  "unsafePairs": [
+    ["洗手液", "洗手"],
+    ["洗手液", "肥皂"],
+    ["洗手液", "肥皂块"],
+    ["洗手液", "沐浴露"],
+    ["肥皂块", "洗手液"]
+  ]
+}
