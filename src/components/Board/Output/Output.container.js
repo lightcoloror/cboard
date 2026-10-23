@@ -10,10 +10,9 @@ import {
   loadPersonalImageRuntime
 } from '../../../common/communicationSupport/localData';
 import { applyPersonalImagePreferencesToItems } from '../../../common/communicationSupport/personalImagePreferences';
-import {
-  EXPRESSION_PLAYBACK_FRAME_TYPES,
-  createExpressionPlaybackFrames
-} from '../../../common/communicationSupport/expressionPlayback';
+import { playExpressionOutput } from '../../../common/communicationSupport/expressionPlaybackCoordinator';
+import { createBrowserExpressionAudio } from '../../../common/communicationSupport/browserExpressionAudio';
+import { subscribeSpeechInterruption } from '../../../providers/SpeechProvider/speechInterruption';
 import messages from '../Board.messages';
 import { showNotification } from '../../Notifications/Notifications.actions';
 import { isAndroid } from '../../../cordova-util';
@@ -95,9 +94,29 @@ export class OutputContainer extends Component {
   };
 
   componentDidMount() {
+    this.unsubscribeSpeech = subscribeSpeechInterruption(owner => {
+      if (this.playbackActive && owner !== this.playbackOwner) {
+        // The action already owns provider cancellation/start. Do not cancel
+        // again after a newer tile or candidate has started speaking.
+        this.stopPlayback(false);
+      }
+    });
     document.addEventListener('keydown', this.handleRepeatLastSpokenSentence);
   }
+  componentDidUpdate(previousProps) {
+    if (
+      this.playbackActive &&
+      (previousProps.outputScope !== this.props.outputScope ||
+        previousProps.isLiveMode !== this.props.isLiveMode ||
+        previousProps.intl.messages !== this.props.intl.messages ||
+        !equals(this.playbackExpectedOutput, this.props.output))
+    ) {
+      this.stopPlayback();
+    }
+  }
   componentWillUnmount() {
+    if (this.unsubscribeSpeech) this.unsubscribeSpeech();
+    if (this.playbackActive) this.stopPlayback();
     document.removeEventListener(
       'keydown',
       this.handleRepeatLastSpokenSentence
@@ -168,7 +187,7 @@ export class OutputContainer extends Component {
     )
       return;
     const restored = undoHistory[undoHistory.length - 1];
-    this.props.cancelSpeech();
+    this.stopPlayback();
     this.setState(
       {
         undoHistory: undoHistory.slice(0, -1),
@@ -177,78 +196,80 @@ export class OutputContainer extends Component {
       () => this.props.changeOutput(restored)
     );
   };
-  async speakOutput(text) {
-    this.props.clickOutput(text.trim());
-    return new Promise(resolve => {
-      const { cancelSpeech, speak } = this.props;
+  playbackGeneration = 0;
+  playbackOwner = {};
+  playbackActive = false;
+  playbackExpectedOutput = null;
+  finishSpeech = null;
+  audioPort = createBrowserExpressionAudio();
 
-      const onend = () => {
-        resolve();
-      };
+  stopPlayback = (cancelProvider = true) => {
+    this.playbackGeneration += 1;
+    this.playbackActive = false;
+    this.audioPort.stop();
+    if (this.finishSpeech) {
+      this.finishSpeech({ ok: false, reason: 'stopped', message: '朗读已停止。' });
+    }
+    if (cancelProvider) this.props.cancelSpeech();
+  };
 
-      cancelSpeech();
-      speak(text, onend);
-    });
+  speakOutput(text) {
+    return this.play(text);
   }
 
-  playAudio(src) {
-    return new Promise((resolve, reject) => {
-      let audio = new Audio();
-
-      audio.onended = () => {
-        resolve();
+  speakFrame(text, generation) {
+    if (generation !== this.playbackGeneration)
+      return Promise.resolve({ ok: false, reason: 'stopped' });
+    this.props.clickOutput(text.trim());
+    return new Promise(resolve => {
+      let settled = false;
+      const finish = result => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        if (this.finishSpeech === finish) this.finishSpeech = null;
+        resolve(result);
       };
-      audio.onerror = reject;
-
-      audio.src = src;
-      const playback = audio.play();
-      if (playback && typeof playback.catch === 'function') {
-        playback.catch(reject);
+      const timer = setTimeout(() => {
+        finish({ ok: false, reason: 'timeout' });
+        this.props.cancelSpeech();
+      }, 60000);
+      this.finishSpeech = finish;
+      try {
+        const result = this.props.speak(text, event => finish(
+          event?.error ? { ok: false, reason: 'provider' } : { ok: true }
+        ), { playbackOwner: this.playbackOwner });
+        if (result?.catch) result.catch(() => finish({ ok: false, reason: 'provider' }));
+      } catch (_) {
+        finish({ ok: false, reason: 'provider' });
       }
     });
   }
 
-  async asyncForEach(array, callback) {
-    for (let index = 0; index < array.length; index++) {
-      await callback(array[index], index, array);
-    }
-  }
-
   async play(liveText = '') {
-    if (liveText) {
-      await this.speakOutput(liveText);
-    } else {
-      const outputFrames = createExpressionPlaybackFrames(
-        this.state.translatedOutput
-      );
-
-      await this.asyncForEach(outputFrames, async frame => {
-        if (frame.type === EXPRESSION_PLAYBACK_FRAME_TYPES.speech) {
-          await this.speakOutput(frame.text);
-        } else {
-          await this.asyncForEach(frame.clips, async clip => {
-            try {
-              await this.playAudio(clip.source);
-            } catch (error) {
-              if (clip.fallbackText) {
-                await this.speakOutput(clip.fallbackText);
-              }
-            }
-          });
-        }
+    this.stopPlayback();
+    const generation = this.playbackGeneration;
+    this.playbackExpectedOutput = this.props.output;
+    this.playbackActive = true;
+    try {
+      return await playExpressionOutput({
+        output: liveText ? [{ label: liveText }] : this.state.translatedOutput,
+        speechPort: { speak: text => this.speakFrame(text, generation) },
+        audioPort: this.audioPort,
+        isCurrent: () => generation === this.playbackGeneration
       });
+    } finally {
+      if (generation === this.playbackGeneration) this.playbackActive = false;
     }
   }
 
   handleBackspaceClick = () => {
-    const { cancelSpeech } = this.props;
-    cancelSpeech();
+    this.stopPlayback();
     this.popOutput();
   };
 
   handleClearClick = () => {
-    const { cancelSpeech } = this.props;
-    cancelSpeech();
+    this.stopPlayback();
     this.clearOutput();
   };
 
@@ -277,8 +298,7 @@ export class OutputContainer extends Component {
   };
 
   handleRemoveClick = index => event => {
-    const { cancelSpeech } = this.props;
-    cancelSpeech();
+    this.stopPlayback();
     this.spliceOutput(index);
   };
 
@@ -341,7 +361,11 @@ export class OutputContainer extends Component {
 
   addLiveOutputTile() {
     const { changeOutput } = this.props;
-    changeOutput([...this.state.translatedOutput, this.createEmptyLiveTile()]);
+    const next = [...this.state.translatedOutput, this.createEmptyLiveTile()];
+    // Enter appends an empty input after speaking the submitted text. That
+    // expected append must not cancel the utterance; other edits still do.
+    if (this.playbackActive) this.playbackExpectedOutput = next;
+    changeOutput(next);
   }
 
   addLiveOutputTileClearOutput() {

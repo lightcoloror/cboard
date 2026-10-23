@@ -176,7 +176,7 @@ export function buildExpressionSavedPhraseEntry(state) {
   const sentence = getSelectedExpressionSentence(state);
   const output = normalizeExpressionOutput(state.outputSnapshot);
 
-  if (!sentence || !output.length) {
+  if (!sentence) {
     return null;
   }
 

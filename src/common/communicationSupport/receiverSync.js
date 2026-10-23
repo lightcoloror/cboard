@@ -126,11 +126,17 @@ function mergeReceiverPatientFeedback(local, remote) {
     ...(local.patientFeedbackEvents || []),
     ...(remote.patientFeedbackEvents || [])
   ]);
-  if (!patientFeedbackEvents.length) return remote;
+  const localRepair = local.repairOfRecordId && local.patientId === remote.patientId &&
+    local.workspaceId === remote.workspaceId ? {
+      repairOfRecordId: local.repairOfRecordId,
+      repairSourceSessionId: local.repairSourceSessionId || local.sessionId
+    } : {};
+  if (!patientFeedbackEvents.length) return { ...remote, ...localRepair };
 
   const latest = patientFeedbackEvents[patientFeedbackEvents.length - 1];
   return {
     ...remote,
+    ...localRepair,
     patientFeedback: latest.type,
     patientFeedbackAt: latest.createdAt,
     patientFeedbackEvents,

@@ -1,4 +1,6 @@
 import localForage from 'localforage';
+import { invalidateImageOperations } from './imageOperationEpoch';
+import { clearSavedPhraseUndoSession } from './savedPhraseUse';
 
 function resolveStorage(value) {
   try {
@@ -31,6 +33,8 @@ export function createBrowserLocalDeviceDataPort({
 } = {}) {
   return {
     async clearAllLocalData({ reloadAfterClear = true } = {}) {
+      invalidateImageOperations();
+      clearSavedPhraseUndoSession();
       try {
         if (!indexedDbStorage || typeof indexedDbStorage.clear !== 'function') {
           throw new TypeError('IndexedDB storage is unavailable');

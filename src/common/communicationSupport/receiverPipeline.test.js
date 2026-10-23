@@ -35,6 +35,22 @@ const boards = [
   }
 ];
 
+test('restoration keeps ordered snapshots and text identities despite duplicate tile IDs or library changes', () => {
+  const output = [
+    { id: 'same', label: '合成林安', personId: 'synthetic-a', image: 'wxfile://synthetic-a.png' },
+    { id: 'same', label: '合成林安', personId: 'synthetic-b', image: 'wxfile://synthetic-b.png' },
+    { id: 'retained-original', label: '今晚', vocalization: '今晚', image: '', textOnly: true }
+  ];
+  const entry = { direction: 'receive', recordStatus: 'draft', inputText: '合成林安合成林安今晚', output,
+    pictogramSequence: output.map((tile, index) => ({ pictogramId: tile.textOnly ? null : tile.id,
+      label: tile.label, originalToken: tile.label, source: 'manual', matchType: 'manual',
+      preparedOutputIndex: index, ...(tile.textOnly ? { textOnly: true } : {}) })) };
+  const changedLibrary = [{ id: 'changed', name: 'changed', tiles: [{ id: 'same', label: '另一人', image: '/wrong.png' }] }];
+  const restored = restoreReceiverLoopState(entry, changedLibrary);
+  expect(restored.outputPreview).toEqual(output);
+  expect(buildReceiverHistoryEntry(entry.inputText, restored.reviewItems).output).toEqual(output);
+});
+
 describe('receiverPipeline', () => {
   test.each([
     'exact',

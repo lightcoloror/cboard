@@ -111,7 +111,29 @@ export const createMigratingStorage = (oldStorage, newStorage) => ({
   }
 });
 
-const migratingStorage = createMigratingStorage(localStorage, localForage);
+// Serialize the existing backend, including removals, so an older root write
+// cannot finish after a newer one. Each caller still observes its own failure.
+const orderedBackends = new WeakMap();
+export function createOrderedStorage(backend) {
+  if (orderedBackends.has(backend)) return orderedBackends.get(backend);
+  let tail = Promise.resolve();
+  const enqueue = operation => {
+    const result = tail.then(operation);
+    tail = result.catch(() => {});
+    return result;
+  };
+  const storage = {
+    getItem: key => enqueue(() => backend.getItem(key)),
+    setItem: (key, value) => enqueue(async () => {
+      const result = await backend.setItem(key, value);
+      if (result === false) throw new Error('Persistence backend rejected the write');
+      return result;
+    }),
+    removeItem: key => enqueue(() => backend.removeItem(key))
+  };
+  orderedBackends.set(backend, storage);
+  return storage;
+}
 
 export const boardMigrations = {
   0: state => {
@@ -140,11 +162,12 @@ export const boardSyncTransform = createTransform(
   { whitelist: ['board'] }
 );
 
-export default function createReducer({ demoMode = false } = {}) {
+export function createPersistenceContext({ demoMode = false, storage, legacyStorage = localStorage } = {}) {
+  const strictStorage = createOrderedStorage(storage || (demoMode ? createAsyncMemoryStorage() : localForage));
   const persistenceStorage = demoMode
-    ? createAsyncMemoryStorage()
-    : migratingStorage;
-  const config = {
+    ? strictStorage
+    : createMigratingStorage(legacyStorage, strictStorage);
+  const rootConfig = {
     key: 'root',
     storage: persistenceStorage,
     blacklist: ['language'],
@@ -152,13 +175,18 @@ export default function createReducer({ demoMode = false } = {}) {
     migrate: createMigrate(boardMigrations, { debug: false }),
     transforms: [boardSyncTransform]
   };
+  return { rootConfig, strictStorage };
+}
+
+export default function createReducer(options = {}) {
+  const { rootConfig } = options.persistence || createPersistenceContext(options);
   const languagePersistConfig = {
     key: 'language',
-    storage: persistenceStorage,
+    storage: rootConfig.storage,
     blacklist: ['langsFetched']
   };
 
-  return persistCombineReducers(config, {
+  return persistCombineReducers(rootConfig, {
     app: appReducer,
     language: persistReducer(languagePersistConfig, languageProviderReducer),
     speech: speechProviderReducer,

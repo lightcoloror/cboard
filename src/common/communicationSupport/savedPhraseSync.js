@@ -1,6 +1,7 @@
 import {
   normalizeCommunicationSavedPhrase,
-  normalizeCommunicationSavedPhraseList
+  normalizeCommunicationSavedPhraseList,
+  preserveLocalPhraseLifeContext
 } from './savedPhraseManagement';
 import { buildCommunicationSupportCloudSettings } from './storage';
 
@@ -73,8 +74,7 @@ export function normalizeSavedPhraseTombstones(values) {
     });
 
   return [...byId.values()]
-    .sort((left, right) => right.deletedAt - left.deletedAt)
-    .slice(0, MAX_SAVED_PHRASE_SYNC_ITEMS);
+    .sort((left, right) => right.deletedAt - left.deletedAt);
 }
 
 export function buildCommunicationSavedPhraseSyncPayload(entries) {
@@ -154,6 +154,7 @@ export function mergeVersionedCommunicationSavedPhrases(
     });
 
   const items = normalizeCommunicationSavedPhraseList([...byId.values()])
+    .map(item => preserveLocalPhraseLifeContext(item, (localEntries || []).find(local => local.id === item.id)))
     .filter(item => !deletedIds.has(item.id))
     .slice(0, MAX_SAVED_PHRASE_SYNC_ITEMS);
 

@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { buildReceiverReading } from '../../../common/communicationSupport/receiverReading';
 import PropTypes from 'prop-types';
 import FullScreenDialog, {
   FullScreenDialogContent
@@ -21,13 +22,47 @@ export default function ReceiverDisplay({
   attributionLabel,
   shareLabel,
   speechText,
+  sequence = [],
+  startSegmented = false,
+  onStop,
   onClose,
   onFeedback,
   onReplay,
   onShare
 }) {
+  const reading = buildReceiverReading(speechText, sequence, items);
+  const [segmentIndex, setSegmentIndex] = useState(null);
+  const segment = segmentIndex === null ? null : reading.segments[segmentIndex];
+  const visibleItems = segment ? segment.itemIndices.map(index => items[index]) : items;
   const [isSharing, setIsSharing] = useState(false);
   const [shareNotice, setShareNotice] = useState('');
+  const shareGenerationRef = useRef(0);
+  const sharePendingRef = useRef(false);
+  const closedRef = useRef(!open);
+  const displayRef = useRef(null);
+  displayRef.current = { open, items, speechText };
+  const invalidateShare = useCallback(() => {
+    shareGenerationRef.current += 1;
+    sharePendingRef.current = false;
+  }, []);
+
+  useEffect(
+    () => {
+      closedRef.current = !open;
+      invalidateShare();
+      setSegmentIndex(startSegmented && reading.canSegment ? 0 : null);
+      setIsSharing(false);
+      setShareNotice('');
+      return () => {
+        closedRef.current = true;
+        if (open && onStop) onStop();
+        invalidateShare();
+      };
+    },
+    // Reading mode is reset on each payload/open, not on parent callback rerenders.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [open, items, speechText, startSegmented, invalidateShare]
+  );
   const attributedItems = items
     .map((item, index) => ({
       key: `${item.id || item.label}-${index}`,
@@ -36,38 +71,114 @@ export default function ReceiverDisplay({
     }))
     .filter(item => item.details);
 
+  useEffect(() => {
+    const stopWhenHidden = () => {
+      if (document.hidden) {
+        if (onStop) onStop();
+        invalidateShare();
+        setIsSharing(false);
+      }
+    };
+    document.addEventListener('visibilitychange', stopWhenHidden);
+    return () => document.removeEventListener('visibilitychange', stopWhenHidden);
+  }, [onStop, invalidateShare]);
+
+  function changeReading(index) {
+    if (onStop) onStop();
+    invalidateShare();
+    setIsSharing(false);
+    setShareNotice('');
+    setSegmentIndex(index);
+  }
+
   async function handleShare() {
-    if (typeof onShare !== 'function' || isSharing) return;
+    if (
+      typeof onShare !== 'function' ||
+      !open ||
+      closedRef.current ||
+      sharePendingRef.current
+    )
+      return;
+    const generation = ++shareGenerationRef.current;
+    const isCurrent = () =>
+      !closedRef.current &&
+      generation === shareGenerationRef.current &&
+      displayRef.current.open &&
+      displayRef.current.items === items &&
+      displayRef.current.speechText === speechText;
+    sharePendingRef.current = true;
     setIsSharing(true);
     setShareNotice('正在生成可分享图片…');
     try {
-      const result = await onShare(items, { speechText });
+      const result = await onShare(items, { speechText, isCurrent });
+      if (!isCurrent()) return;
       setShareNotice(
         (result && result.message) || '图片分享失败，当前沟通内容仍会保留。'
       );
     } catch (error) {
-      setShareNotice('图片分享失败，当前沟通内容仍会保留。');
+      if (isCurrent()) setShareNotice('图片分享失败，当前沟通内容仍会保留。');
     } finally {
-      setIsSharing(false);
+      if (isCurrent()) {
+        sharePendingRef.current = false;
+        setIsSharing(false);
+      }
+    }
+  }
+
+  function handleClose() {
+    if (closedRef.current) return;
+    closedRef.current = true;
+    invalidateShare();
+    if (onStop) onStop();
+    onClose();
+  }
+
+  function handleFeedback(feedback) {
+    if (closedRef.current) return;
+    if (feedback !== RECEIVER_PATIENT_FEEDBACK.repeatRequested) {
+      closedRef.current = true;
+      invalidateShare();
+      if (onStop) onStop();
+    }
+    onFeedback(feedback);
+    if (feedback === RECEIVER_PATIENT_FEEDBACK.repeatRequested) {
+      if (segment) onReplay(segment.text);
+      else onReplay();
     }
   }
 
   return (
-    <FullScreenDialog open={open} onClose={onClose} title={title} fullWidth>
+    <FullScreenDialog open={open} onClose={handleClose} title={title} fullWidth>
       <FullScreenDialogContent className="CommunicationSupportPanel__displayScreen">
+        <section className="CommunicationSupportPanel__reading" aria-label="原句与分段阅读">
+          <p className="CommunicationSupportPanel__originalText">{speechText}</p>
+          <PatientActionButton action={PATIENT_ACTION_IDS.fullscreen}
+            label={segment ? '看整句' : '一段一段看'}
+            ariaLabel={segment ? '返回完整原句和图片' : '按原文分段阅读'}
+            disabled={!segment && !reading.canSegment}
+            onClick={() => changeReading(segment ? null : 0)} />
+          {!reading.canSegment && <p role="status">{reading.reason}</p>}
+          {segment && <div className="CommunicationSupportPanel__actions">
+            <p aria-live="polite">第 {segmentIndex + 1} / {reading.segments.length} 段：{segment.text}</p>
+            <PatientActionButton action={PATIENT_ACTION_IDS.moveLeft} label="上一段" ariaLabel="上一段"
+              disabled={segmentIndex === 0} onClick={() => changeReading(segmentIndex - 1)} />
+            <PatientActionButton action={PATIENT_ACTION_IDS.moveRight} label="下一段" ariaLabel="下一段"
+              disabled={segmentIndex === reading.segments.length - 1} onClick={() => changeReading(segmentIndex + 1)} />
+          </div>}
+        </section>
         <div
           className="CommunicationSupportPanel__displayOverlay"
           role="list"
           aria-label={sequenceLabel}
           tabIndex={0}
         >
-          {items.map((item, index) => (
+          {visibleItems.map((item, index) => (
             <div
               className="CommunicationSupportPanel__displayItem"
               role="listitem"
               key={(item.id || item.label) + '-' + index}
             >
-              <Symbol
+              <Symbol localOnly
                 className="CommunicationSupportPanel__symbol CommunicationSupportPanel__symbol--display"
                 image={item.image}
                 mediaType={item.mediaType}
@@ -103,8 +214,8 @@ export default function ReceiverDisplay({
               variant="contained"
               onClick={handleShare}
               disabled={isSharing || !items.length}
-              label={isSharing ? '生成中' : '分享'}
-              ariaLabel={isSharing ? '正在生成可分享图片' : shareLabel}
+              label={isSharing ? '生成中' : '分享整句'}
+              ariaLabel={isSharing ? '正在生成可分享图片' : '分享整句'}
             />
             {shareNotice && <p role="status">{shareNotice}</p>}
           </section>
@@ -120,7 +231,9 @@ export default function ReceiverDisplay({
             <PatientActionButton
               action={PATIENT_ACTION_IDS.understood}
               className="CommunicationSupportPanel__feedbackButton CommunicationSupportPanel__feedbackButton--understood"
-              onClick={() => onFeedback(RECEIVER_PATIENT_FEEDBACK.understood)}
+              onClick={() =>
+                handleFeedback(RECEIVER_PATIENT_FEEDBACK.understood)
+              }
               label={understoodLabel}
               ariaLabel={understoodLabel}
             />
@@ -128,7 +241,7 @@ export default function ReceiverDisplay({
               action={PATIENT_ACTION_IDS.notUnderstood}
               className="CommunicationSupportPanel__feedbackButton CommunicationSupportPanel__feedbackButton--notUnderstood"
               onClick={() =>
-                onFeedback(RECEIVER_PATIENT_FEEDBACK.notUnderstood)
+                handleFeedback(RECEIVER_PATIENT_FEEDBACK.notUnderstood)
               }
               label={notUnderstoodLabel}
               ariaLabel={notUnderstoodLabel}
@@ -136,10 +249,9 @@ export default function ReceiverDisplay({
             <PatientActionButton
               action={PATIENT_ACTION_IDS.repeat}
               className="CommunicationSupportPanel__feedbackButton CommunicationSupportPanel__feedbackButton--repeat"
-              onClick={() => {
-                onFeedback(RECEIVER_PATIENT_FEEDBACK.repeatRequested);
-                onReplay();
-              }}
+              onClick={() =>
+                handleFeedback(RECEIVER_PATIENT_FEEDBACK.repeatRequested)
+              }
               label={repeatRequestedLabel}
               ariaLabel={repeatRequestedLabel}
             />
@@ -169,6 +281,9 @@ ReceiverDisplay.propTypes = {
   attributionLabel: PropTypes.string,
   shareLabel: PropTypes.string,
   speechText: PropTypes.string,
+  sequence: PropTypes.array,
+  startSegmented: PropTypes.bool,
+  onStop: PropTypes.func,
   onClose: PropTypes.func.isRequired,
   onFeedback: PropTypes.func.isRequired,
   onReplay: PropTypes.func.isRequired,

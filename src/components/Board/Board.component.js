@@ -66,6 +66,7 @@ export class Board extends Component {
      * Callback fired when board tiles are deleted
      */
     onDeleteClick: PropTypes.func,
+    deleteContextKey: PropTypes.string,
     /**
      * Callback fired when a board tile is focused
      */
@@ -545,6 +546,7 @@ export class Board extends Component {
             onAddClick={onAddClick}
             isFixedBoard={isFixedBoard}
             onDeleteClick={onDeleteClick}
+            deleteContextKey={this.props.deleteContextKey}
             onEditClick={onEditClick}
             onSaveBoardClick={onSaveBoardClick}
             onSelectAllToggle={onSelectAllToggle}

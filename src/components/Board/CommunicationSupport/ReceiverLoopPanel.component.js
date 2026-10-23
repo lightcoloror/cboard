@@ -1,3 +1,4 @@
+import { receiverDraftContentSignature } from '../../../common/communicationSupport/receiverDraftPersistence';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 import { equals } from 'ramda';
@@ -11,6 +12,10 @@ import Checkbox from '@material-ui/core/Checkbox';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import TextField from '@material-ui/core/TextField';
 import Symbol from '../Symbol';
+import ImageRepairControls from './ImageRepairControls.component';
+import { repairCatalogImage } from '../../../common/communicationSupport/imageRepair';
+import { prepareSelectedPackagedImages } from '../../../common/communicationSupport/browserImageVerification';
+import { currentImageOperationEpoch } from '../../../common/communicationSupport/imageOperationEpoch';
 import {
   applyCommunicationAiResegmentation,
   buildCommunicationAiResegmentRequest,
@@ -20,6 +25,9 @@ import {
   COMMUNICATION_ENHANCEMENT_LIMIT_SCOPES,
   getCommunicationEnhancementLimitScope
 } from '../../../common/communicationSupport/communicationEnhancementError';
+import { getReceiverRepairSource, withReceiverRepair, RECEIVER_PARTNER_GUIDANCE } from '../../../common/communicationSupport/receiverRepair';
+import PatientActionButton from './PatientActionButton.component';
+import { PATIENT_ACTION_IDS } from '../../../common/communicationSupport/patientActionLanguage';
 import ReceiverDisplay from './ReceiverDisplay.component';
 import MissingTokenQueue from './MissingTokenQueue.component';
 import { CBOARD_COMMUNICATION_EXAMPLE_PHRASES } from '../../../common/communicationSupport/cboardConceptProfiles';
@@ -337,6 +345,7 @@ function MatchRow({
   onSwap,
   onKeepText,
   onPersonPick,
+  operationKey,
   copy
 }) {
   const hasMatch = Boolean(match.tile);
@@ -347,7 +356,7 @@ function MatchRow({
       <div className="CommunicationSupportPanel__matchMain">
         <div className="CommunicationSupportPanel__matchPreview">
           {hasMatch ? (
-            <Symbol
+            <Symbol localOnly
               className="CommunicationSupportPanel__symbol CommunicationSupportPanel__symbol--preview"
               image={match.tile.tile.image}
               keyPath={match.tile.tile.keyPath}
@@ -384,6 +393,11 @@ function MatchRow({
         </div>
       </div>
       <div className="CommunicationSupportPanel__matchActions">
+        {hasMatch && !match.tile.textOnly && <ImageRepairControls
+          tile={match.tile.tile} operationKey={operationKey}
+          onChoose={() => onSwap(match.id)} onKeepText={() => onKeepText(match.id)}
+          onAdopt={tile => onPersonPick(match.id, repairCatalogImage(match.tile, tile))}
+        />}
         {!hasMatch &&
           match.personCandidates &&
           match.personCandidates.length > 0 && (
@@ -469,11 +483,15 @@ MatchRow.propTypes = {
 };
 
 export default function ReceiverLoopPanel({
+  preparationMode = false,
+  externalSaveError = '',
+  onConfirmPreparedPhrase,
   boards,
   intl,
   onApplyOutput,
   onJumpBoard,
   initialRecord,
+  receiverRecords = [],
   onAppendHistory,
   onCreateDraft,
   onUpdateDraft,
@@ -525,9 +543,26 @@ export default function ReceiverLoopPanel({
   const [swapQuery, setSwapQuery] = useState('');
   const [showDisplay, setShowDisplay] = useState(false);
   const [displayRecordId, setDisplayRecordId] = useState(null);
-  const [activeDraft, setActiveDraft] = useState(() =>
+  const [activeDraft, setActiveDraftState] = useState(() =>
     restoredReceiverState ? initialRecord : null
   );
+  const activeDraftRef = useRef(activeDraft);
+  const [draftSaveError, setDraftSaveError] = useState('');
+  function setActiveDraft(record) {
+    setDraftSaveError('');
+    activeDraftRef.current = record;
+    setActiveDraftState(record);
+  }
+  const [repairSource, setRepairSource] = useState(() =>
+    getReceiverRepairSource(initialRecord, receiverRecords) ||
+    (initialRecord && initialRecord.recordStatus === 'confirmed' &&
+      initialRecord.patientFeedback === RECEIVER_PATIENT_FEEDBACK.notUnderstood ? initialRecord : null));
+  const [repairRequested, setRepairRequested] = useState(() => Boolean(
+    initialRecord && (initialRecord.repairOfRecordId || initialRecord.patientFeedback === RECEIVER_PATIENT_FEEDBACK.notUnderstood)));
+  const [repairEditing, setRepairEditing] = useState(() => Boolean(initialRecord && initialRecord.repairOfRecordId));
+  const [showPartnerGuidance, setShowPartnerGuidance] = useState(true);
+  const [startSegmented, setStartSegmented] = useState(false);
+  const displayOpeningRef = useRef(false);
   const [segmentationDraft, setSegmentationDraft] = useState(() =>
     restoredReceiverState
       ? formatCommunicationSegmentation(
@@ -561,16 +596,27 @@ export default function ReceiverLoopPanel({
   const [inputNotice, setInputNotice] = useState('');
   const pendingMatchTimerRef = useRef(null);
   const matchGenerationRef = useRef(0);
+  const matchBoardsRef = useRef(boards);
+  matchBoardsRef.current = boards;
   const aiGenerationRef = useRef(0);
   const aiContextRef = useRef(null);
   const dialectGenerationRef = useRef(0);
   const dialectAudioGenerationRef = useRef(0);
   const ocrGenerationRef = useRef(0);
   const restoredGapsRecordedRef = useRef(false);
+  const preparationUpdateRef = useRef(onUpdateDraft);
+  preparationUpdateRef.current = onUpdateDraft;
+
+  useEffect(() => {
+    if (!preparationMode || !preparationUpdateRef.current || !activeDraftRef.current) return;
+    try {
+      setActiveDraft(preparationUpdateRef.current(activeDraftRef.current, buildReceiverHistoryEntry(inputText, reviewItems)));
+    } catch (_) { setDraftSaveError('准备草稿保存失败，请保留当前页面并重试。'); }
+  }, [preparationMode, inputText, reviewItems]);
 
   useEffect(
     () => {
-      if (restoredGapsRecordedRef.current || !onRecordMissingTokens) return;
+      if (preparationMode || restoredGapsRecordedRef.current || !onRecordMissingTokens) return;
       restoredGapsRecordedRef.current = true;
       if (
         !restoredReceiverState ||
@@ -605,6 +651,10 @@ export default function ReceiverLoopPanel({
   useEffect(
     () => {
       const previous = aiContextRef.current;
+      if (previous && !equals(previous.boards, boards)) {
+        matchGenerationRef.current += 1;
+        setReceivePhase(phase => phase === 'matching' ? 'idle' : phase);
+      }
       aiContextRef.current = {
         inputText,
         reviewItems,
@@ -631,6 +681,7 @@ export default function ReceiverLoopPanel({
 
   useEffect(() => {
     return () => {
+      if (preparationMode && onCancelSpeech) onCancelSpeech();
       matchGenerationRef.current += 1;
       aiGenerationRef.current += 1;
       dialectGenerationRef.current += 1;
@@ -749,12 +800,21 @@ export default function ReceiverLoopPanel({
     setSwapQuery('');
   }
 
-  function openReviewForText(text) {
+  async function openReviewForText(text) {
+    const generation = matchGenerationRef.current;
+    const epoch = currentImageOperationEpoch();
+    const isCurrent = () => generation === matchGenerationRef.current && epoch === currentImageOperationEpoch() && equals(boards, matchBoardsRef.current);
     const result = buildReceiverLoopState(text, boards, {
       intl,
       missingTokenRecords,
       correctionMemory
     });
+    // Matching is a user action. Cache only its selected bundled public assets,
+    // never private references or a whole library, before the local-only viewer.
+    if (typeof window !== 'undefined' && window.caches) {
+      await prepareSelectedPackagedImages(result.reviewItems, { isCurrent });
+      if (!isCurrent()) return;
+    }
     setReviewItems(result.reviewItems);
     setSegmentationDraft(
       formatCommunicationSegmentation(
@@ -781,11 +841,12 @@ export default function ReceiverLoopPanel({
 
     if (onCreateDraft) {
       try {
-        setActiveDraft(
-          onCreateDraft(buildReceiverHistoryEntry(text, result.reviewItems))
-        );
+        const entry = withReceiverRepair(buildReceiverHistoryEntry(text, result.reviewItems), repairSource);
+        const current = activeDraftRef.current;
+        setActiveDraft(current && current.recordStatus === 'draft' && onUpdateDraft
+          ? onUpdateDraft(current, entry) : onCreateDraft(entry));
       } catch (error) {
-        setActiveDraft(null);
+        setDraftSaveError('本机草稿保存失败，请保留当前页面并重试。');
       }
     }
   }
@@ -811,9 +872,11 @@ export default function ReceiverLoopPanel({
   }
 
   function handleInputTextChange(nextText) {
+    if (onCancelSpeech) onCancelSpeech();
     dialectGenerationRef.current += 1;
     dialectAudioGenerationRef.current += 1;
     invalidatePendingMatch();
+    if (repairRequested) setRepairEditing(true);
     setInputText(nextText);
     setInputNotice('');
     setReviewItems([]);
@@ -823,12 +886,12 @@ export default function ReceiverLoopPanel({
     setDisplayRecordId(null);
     closeSymbolPicker();
     try {
-      if (!nextText.trim()) {
+      if (!nextText.trim() && !preparationMode) {
         if (activeDraft && onDiscardResumableRecord)
-          onDiscardResumableRecord(activeDraft.id);
+          onDiscardResumableRecord(activeDraft.id, { expected: activeDraft });
         setActiveDraft(null);
       } else {
-        const entry = buildReceiverHistoryEntry(nextText, []);
+        const entry = withReceiverRepair(buildReceiverHistoryEntry(nextText, []), repairSource);
         if (
           activeDraft &&
           activeDraft.recordStatus === 'draft' &&
@@ -838,7 +901,7 @@ export default function ReceiverLoopPanel({
         else if (onCreateDraft) setActiveDraft(onCreateDraft(entry));
       }
     } catch (_) {
-      setInputNotice('本机草稿保存失败，请先保留文字，避免刷新后丢失。');
+      setDraftSaveError('本机草稿保存失败，请保留当前页面并重试。');
     }
   }
 
@@ -847,6 +910,7 @@ export default function ReceiverLoopPanel({
   }
 
   function handleApplyReceiveOutput() {
+    if (preparationMode) return;
     if (reviewItems.some(item => !item.tile)) {
       setReviewNotice('请先处理未匹配词，避免输出时遗漏原意。');
       return;
@@ -861,6 +925,8 @@ export default function ReceiverLoopPanel({
   }
 
   function handleOpenDisplay() {
+    if (displayOpeningRef.current) return;
+    setStartSegmented(false);
     if (reviewItems.some(item => !item.tile)) {
       setReviewNotice('请先处理未匹配词，避免输出时遗漏原意。');
       return;
@@ -871,7 +937,13 @@ export default function ReceiverLoopPanel({
       return;
     }
 
-    const historyEntry = buildReceiverHistoryEntry(inputText, reviewItems);
+    displayOpeningRef.current = true;
+    const historyEntry = withReceiverRepair(buildReceiverHistoryEntry(inputText, reviewItems), repairSource);
+    if (preparationMode) {
+      try { if (onConfirmPreparedPhrase) onConfirmPreparedPhrase(historyEntry); }
+      finally { displayOpeningRef.current = false; }
+      return;
+    }
     onApplyOutput(outputItems);
     let confirmedRecord = null;
 
@@ -896,6 +968,7 @@ export default function ReceiverLoopPanel({
   }
 
   function handleCloseDisplay() {
+    displayOpeningRef.current = false;
     if (onCancelSpeech) {
       onCancelSpeech();
     }
@@ -903,8 +976,8 @@ export default function ReceiverLoopPanel({
     setDisplayRecordId(null);
   }
 
-  function handleReplayDisplay() {
-    const text = inputText.trim();
+  function handleReplayDisplay(segmentText) {
+    const text = (typeof segmentText === 'string' ? segmentText : inputText).trim();
     if (!text || !onSpeak) return false;
     if (onCancelSpeech) {
       onCancelSpeech();
@@ -922,6 +995,15 @@ export default function ReceiverLoopPanel({
   }
 
   function handlePatientFeedback(feedback) {
+    if (feedback === RECEIVER_PATIENT_FEEDBACK.notUnderstood) {
+      setRepairSource(activeDraftRef.current && activeDraftRef.current.recordStatus === 'confirmed' ? activeDraftRef.current : null);
+      setRepairRequested(true);
+      setRepairEditing(false);
+    } else if (feedback === RECEIVER_PATIENT_FEEDBACK.understood) {
+      setRepairRequested(false);
+      setRepairEditing(false);
+      setRepairSource(null);
+    }
     if (!displayRecordId || !onRecordPatientFeedback) {
       return handleFeedbackPersistenceFailure(feedback);
     }
@@ -948,11 +1030,73 @@ export default function ReceiverLoopPanel({
     }
   }
 
-  function persistReceiverEdit(action, itemId, nextItems) {
+  function restoreRepairOriginal() {
+    if (!repairSource) return false;
+    const restored = restoreReceiverLoopState(repairSource, boards, { intl });
+    if (!restored) return false;
+    invalidatePendingMatch();
+    dialectGenerationRef.current += 1;
+    dialectAudioGenerationRef.current += 1;
+    ocrGenerationRef.current += 1;
+    setPendingAiSuggestion(null);
+    if (onCancelSpeech) onCancelSpeech();
+    setInputText(restored.inputText);
+    setReviewItems(restored.reviewItems);
+    setSegmentationDraft(formatCommunicationSegmentation(restored.reviewItems.map(item => item.token)));
+    setReceivePhase(restored.reviewItems.length ? 'review' : 'idle');
+    setActiveDraft(repairSource);
+    closeSymbolPicker();
+    return true;
+  }
+
+  function startRepair(kind) {
+    if (!repairSource) return;
+    if (onCancelSpeech) onCancelSpeech();
+    const current = activeDraftRef.current;
+    if (!current || current.recordStatus !== 'draft' || current.repairOfRecordId !== repairSource.id) {
+      try {
+        const draft = onCreateDraft && onCreateDraft(withReceiverRepair(
+          buildReceiverHistoryEntry(inputText, reviewItems), repairSource));
+        if (!draft) throw new Error('draft unavailable');
+        setActiveDraft(draft);
+      } catch (_) {
+        setReviewNotice('修复草稿未保存，原记录仍保留，请检查本机存储后重试。');
+        return;
+      }
+    }
+    invalidatePendingMatch();
+    setPendingAiSuggestion(null);
+    setRepairEditing(true);
+    setReviewNotice(kind === 'text' ? '请在下方手动改说，一次说一个意思；修改后重新确认。' : '请使用下方已有换图、补图和排序功能，修改后重新确认。');
+  }
+
+  function cancelRepair() {
+    const current = activeDraftRef.current;
+    try {
+      if (current && current.recordStatus === 'draft' && onDiscardResumableRecord &&
+          !onDiscardResumableRecord(current.id, { expected: current })) throw new Error('discard failed');
+    } catch (_) { setReviewNotice('取消未保存，请重试；原记录仍保留。'); return; }
+    if (restoreRepairOriginal()) {
+      setRepairEditing(false);
+      setReviewNotice('已取消本次修改，原句和原图片仍保留。');
+    }
+  }
+
+  function reopenRepairOriginal() {
+    if (!repairSource || repairEditing) return;
+    if (!restoreRepairOriginal()) return;
+    setStartSegmented(true);
+    displayOpeningRef.current = true;
+    setDisplayRecordId(repairSource.id);
+    setShowDisplay(true);
+  }
+
+  function persistReceiverEdit(action, itemId, nextItems, holdOnFailure = false) {
+    if (repairRequested) setRepairEditing(true);
     aiGenerationRef.current += 1;
     setIsAiResegmenting(false);
-    setReviewItems(nextItems);
-    setSegmentationDraft(
+    if (!holdOnFailure) setReviewItems(nextItems);
+    if (!holdOnFailure) setSegmentationDraft(
       formatCommunicationSegmentation(nextItems.map(item => item.token))
     );
 
@@ -960,7 +1104,7 @@ export default function ReceiverLoopPanel({
     if ((!draft || draft.recordStatus !== 'draft') && onCreateDraft) {
       try {
         draft = onCreateDraft(
-          buildReceiverHistoryEntry(inputText, reviewItems)
+          withReceiverRepair(buildReceiverHistoryEntry(inputText, reviewItems), repairSource)
         );
         setActiveDraft(draft);
       } catch (error) {
@@ -969,7 +1113,7 @@ export default function ReceiverLoopPanel({
     }
 
     if (!draft) {
-      return;
+      return false;
     }
 
     if (onRecordCorrection) {
@@ -991,11 +1135,17 @@ export default function ReceiverLoopPanel({
 
     if (onUpdateDraft) {
       try {
-        setActiveDraft(
-          onUpdateDraft(draft, buildReceiverHistoryEntry(inputText, nextItems))
-        );
+        const updated = onUpdateDraft(draft, buildReceiverHistoryEntry(inputText, nextItems));
+        if (!updated) throw new Error("draft unavailable");
+        setActiveDraft(updated);
+        if (holdOnFailure) {
+          setReviewItems(nextItems);
+          setSegmentationDraft(formatCommunicationSegmentation(nextItems.map(item => item.token)));
+        }
+        return true;
       } catch (error) {
-        // Keep the in-memory correction usable when storage is unavailable.
+        setDraftSaveError('图片修改尚未保存，请保留当前页面并重试。');
+        return false;
       }
     }
   }
@@ -1257,6 +1407,7 @@ export default function ReceiverLoopPanel({
   }
 
   function handleResetReceive() {
+    if (preparationMode) { handleInputTextChange(''); return; }
     dialectGenerationRef.current += 1;
     closeDialectAudioDialog();
     invalidatePendingMatch();
@@ -1265,11 +1416,14 @@ export default function ReceiverLoopPanel({
     }
     if (activeDraft && onDiscardResumableRecord) {
       try {
-        onDiscardResumableRecord(activeDraft.id);
+        onDiscardResumableRecord(activeDraft.id, { expected: activeDraft });
       } catch (error) {
         // Clearing the visible workspace must remain available offline.
       }
     }
+    setRepairSource(null);
+    setRepairRequested(false);
+    setRepairEditing(false);
     setReceivePhase('idle');
     setReviewItems([]);
     setSegmentationDraft('');
@@ -1284,6 +1438,7 @@ export default function ReceiverLoopPanel({
   }
 
   async function handleAiResegmentation() {
+    if (preparationMode) return;
     if (!aiAvailable || typeof onAiResegment !== 'function') {
       setReviewNotice(aiUnavailableReason || copy.aiLoginRequired);
       return;
@@ -1406,6 +1561,21 @@ export default function ReceiverLoopPanel({
     );
   }
 
+  const currentDraftEntry = withReceiverRepair(buildReceiverHistoryEntry(inputText, reviewItems), repairSource);
+  const draftSaved = Boolean(activeDraft && receiverDraftContentSignature(activeDraft) === receiverDraftContentSignature(currentDraftEntry));
+  const retryDraftSave = () => {
+    try {
+      const current = activeDraftRef.current;
+      if (!inputText.trim() && !preparationMode) {
+        if (current && onDiscardResumableRecord && !onDiscardResumableRecord(current.id, { expected: current })) throw new Error('discard failed');
+        setActiveDraft(null); return;
+      }
+      const saved = current && current.recordStatus === 'draft' && onUpdateDraft
+        ? onUpdateDraft(current, currentDraftEntry) : onCreateDraft && onCreateDraft(currentDraftEntry);
+      if (!saved) throw new Error('draft unavailable');
+      setActiveDraft(saved);
+    } catch (_) { setDraftSaveError('本机草稿保存失败，请保留当前页面并重试。'); }
+  };
   return (
     <div className="CommunicationSupportPanel__content">
       <div className="CommunicationSupportPanel__section">
@@ -1418,7 +1588,7 @@ export default function ReceiverLoopPanel({
         {!aiAvailable && aiUnavailableReason && (
           <p role="status">{aiUnavailableReason}</p>
         )}
-        <FormControlLabel
+        {!preparationMode && <><FormControlLabel
           control={
             <Checkbox
               color="primary"
@@ -1494,7 +1664,33 @@ export default function ReceiverLoopPanel({
             </Button>
           </div>
         )}
+        </>}
+        {preparationMode && <section aria-label="伙伴提示">
+          <Button onClick={() => setShowPartnerGuidance(value => !value)} aria-expanded={showPartnerGuidance}>
+            {showPartnerGuidance ? '收起伙伴提示' : '伙伴提示'}
+          </Button>
+          {showPartnerGuidance && <p>{RECEIVER_PARTNER_GUIDANCE}</p>}
+        </section>}
+        {repairRequested && <section className="CommunicationSupportPanel__repair" aria-label="误解修复">
+          <h4>换一种方式说明</h4>
+          <p>{repairSource ? `原句：${repairSource.inputText}` : '原记录不可用；当前草稿仍可继续编辑和确认。'}</p>
+          <Button onClick={() => setShowPartnerGuidance(value => !value)} aria-expanded={showPartnerGuidance}>
+            {showPartnerGuidance ? '收起伙伴提示' : '伙伴提示'}
+          </Button>
+          {showPartnerGuidance && <p>{RECEIVER_PARTNER_GUIDANCE}</p>}
+          <div className="CommunicationSupportPanel__actions">
+            <PatientActionButton action={PATIENT_ACTION_IDS.replay} label="再听原句" ariaLabel="再听原句"
+              disabled={!repairSource} onClick={() => handleReplayDisplay(repairSource.inputText)} />
+            <PatientActionButton action={PATIENT_ACTION_IDS.fullscreen} label="一段一段看" ariaLabel="重新展示原记录，不新增历史"
+              disabled={!repairSource || repairEditing} onClick={reopenRepairOriginal} />
+            <Button onClick={() => startRepair('text')} disabled={!repairSource}>我换个说法</Button>
+            <Button onClick={() => startRepair('pictures')} disabled={!repairSource}>调整图片</Button>
+            {repairEditing && repairSource && <PatientActionButton action={PATIENT_ACTION_IDS.undo}
+              label="取消修改" ariaLabel="取消修改并返回原记录" onClick={cancelRepair} />}
+          </div>
+        </section>}
         <TextField
+          id="receiver-input"
           fullWidth
           multiline
           minRows={2}
@@ -1569,6 +1765,7 @@ export default function ReceiverLoopPanel({
               ? copy.matching
               : copy.generateSequence}
           </Button>
+          {!preparationMode && <>
           {speechState && speechState.isAvailable && (
             <Button
               color="primary"
@@ -1691,6 +1888,11 @@ export default function ReceiverLoopPanel({
           >
             {copy.resetInput}
           </Button>
+          </>}
+        </div>
+        <div role="status" data-testid="receiver-draft-save-status">
+          {externalSaveError || draftSaveError || (draftSaved ? '已保存到本机' : inputText ? '当前修改尚未保存到本机' : '')}
+          {(externalSaveError || draftSaveError || (inputText && !draftSaved)) && <Button onClick={retryDraftSave}>重试保存</Button>}
         </div>
         {inputNotice && (
           <div
@@ -1713,7 +1915,7 @@ export default function ReceiverLoopPanel({
             {speechError}
           </div>
         )}
-        <div className="CommunicationSupportPanel__examples">
+        {!preparationMode && <div className="CommunicationSupportPanel__examples">
           {CBOARD_COMMUNICATION_EXAMPLE_PHRASES.map(phrase => (
             <button
               key={phrase}
@@ -1723,9 +1925,10 @@ export default function ReceiverLoopPanel({
               {phrase}
             </button>
           ))}
-        </div>
+        </div>}
         {receivePhase === 'review' && (
           <div className="CommunicationSupportPanel__results">
+            {preparationMode && <p aria-label="待收藏完整句子">{inputText}</p>}
             <div
               className={
                 matchQuality.needsReview
@@ -1771,7 +1974,7 @@ export default function ReceiverLoopPanel({
                 >
                   {copy.applySegmentation}
                 </Button>
-                <Button
+                {!preparationMode && <Button
                   color="primary"
                   variant="outlined"
                   onClick={handleAiResegmentation}
@@ -1780,7 +1983,7 @@ export default function ReceiverLoopPanel({
                   }
                 >
                   {isAiResegmenting ? copy.aiResegmenting : copy.aiResegment}
-                </Button>
+                </Button>}
               </div>
               {pendingAiSuggestion && (
                 <section aria-label="AI 分词建议">
@@ -1805,7 +2008,7 @@ export default function ReceiverLoopPanel({
                   </Button>
                 </section>
               )}
-              <div className="CommunicationSupportPanel__learningControl">
+              <div hidden={preparationMode} className="CommunicationSupportPanel__learningControl">
                 <FormControlLabel
                   control={
                     <Checkbox
@@ -1839,11 +2042,12 @@ export default function ReceiverLoopPanel({
                 <MatchRow
                   key={match.id}
                   match={match}
+                  operationKey={JSON.stringify([activeDraft && activeDraft.id, inputText, reviewItems])}
                   onPersonPick={(id, candidate) =>
                     persistReceiverEdit(
                       RECEIVER_CORRECTION_ACTIONS.replace,
                       id,
-                      replaceReceiverReviewItem(reviewItems, id, candidate)
+                      replaceReceiverReviewItem(reviewItems, id, candidate), true
                     )
                   }
                   onJumpBoard={onJumpBoard}
@@ -1877,7 +2081,7 @@ export default function ReceiverLoopPanel({
               </div>
             )}
             <div className="CommunicationSupportPanel__actions">
-              <Button
+              {!preparationMode && <Button
                 color="primary"
                 variant="contained"
                 onClick={handleApplyReceiveOutput}
@@ -1886,8 +2090,10 @@ export default function ReceiverLoopPanel({
                 }
               >
                 {copy.sendToOutput}
-              </Button>
-              <Button
+              </Button>}
+              {preparationMode ? <PatientActionButton action={PATIENT_ACTION_IDS.save}
+                label={(copyOverrides && copyOverrides.fullscreen) || '确认存为常用语'} ariaLabel={(copyOverrides && copyOverrides.fullscreen) || '确认存为常用语'} onClick={handleOpenDisplay}
+                disabled={!receiveOutputPreview.length || missingTokens.length > 0} /> : <Button
                 color="primary"
                 variant="outlined"
                 onClick={handleOpenDisplay}
@@ -1896,13 +2102,13 @@ export default function ReceiverLoopPanel({
                 }
               >
                 {copy.fullscreen}
-              </Button>
+              </Button>}
             </div>
           </div>
         )}
       </div>
 
-      <div className="CommunicationSupportPanel__section">
+      {!preparationMode && <div className="CommunicationSupportPanel__section">
         <div className="CommunicationSupportPanel__sectionHeader">
           <h4>{copy.recentHistoryTitle}</h4>
           <span className="CommunicationSupportPanel__hint">
@@ -1924,7 +2130,7 @@ export default function ReceiverLoopPanel({
             </div>
           )}
         </div>
-      </div>
+      </div>}
 
       {onReviewMissingToken && (
         <MissingTokenQueue
@@ -2114,6 +2320,9 @@ export default function ReceiverLoopPanel({
         attributionLabel={copy.attributionLabel}
         shareLabel={copy.shareReceiverImage}
         speechText={inputText}
+        sequence={buildReceiverHistoryEntry(inputText, reviewItems).pictogramSequence}
+        startSegmented={startSegmented}
+        onStop={onCancelSpeech}
         onClose={handleCloseDisplay}
         onFeedback={handlePatientFeedback}
         onReplay={handleReplayDisplay}
@@ -2124,9 +2333,13 @@ export default function ReceiverLoopPanel({
 }
 
 ReceiverLoopPanel.propTypes = {
+  preparationMode: PropTypes.bool,
+  externalSaveError: PropTypes.string,
+  onConfirmPreparedPhrase: PropTypes.func,
   boards: PropTypes.arrayOf(PropTypes.object).isRequired,
   intl: PropTypes.object,
   initialRecord: PropTypes.object,
+  receiverRecords: PropTypes.array,
   onApplyOutput: PropTypes.func.isRequired,
   onJumpBoard: PropTypes.func.isRequired,
   onAppendHistory: PropTypes.func,

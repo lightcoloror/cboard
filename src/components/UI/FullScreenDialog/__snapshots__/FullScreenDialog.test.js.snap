@@ -12,6 +12,7 @@ exports[`FullScreenDialog tests default renderer 1`] = `
       "title": "FullScreenDialog-title-2",
     }
   }
+  closeOnSubmit={true}
   disableSubmit={false}
   onClose={[MockFunction]}
   onSubmit={[MockFunction]}

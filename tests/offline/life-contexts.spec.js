@@ -1,0 +1,114 @@
+import { expect, test } from '@playwright/test';
+import { blockRemoteHttpRequests, completeCommunicationOnboarding, dismissBoardTour,
+  installBrowserTtsHarness, openCaregiverTools, openPatientExpression, waitForProductionServiceWorker } from './helpers/communicationSupport';
+
+const read = (page, key) => page.evaluate(key => JSON.parse(localStorage.getItem(`cboard_communication_${key}`) || '[]'), key);
+const receiver = page => page.getByRole('dialog', { name: /接收理解/ });
+async function manage(page) {
+  const panel = page.locator('.CommunicationSupportPanel');
+  await openCaregiverTools(panel, false);
+  await panel.getByRole('button', { name: '常用语与历史', exact: true }).click();
+  return page.getByRole('dialog');
+}
+
+test('personal photo → confirmed favorite → life context → exact replay → offline reopen stays private', async ({ page, context }, info) => {
+  test.setTimeout(180000);
+  const requests = [], errors = [];
+  context.on('request', request => {
+    if (!['GET', 'HEAD'].includes(request.method())) requests.push({ url: request.url(), body: request.postData() || '' });
+  });
+  page.on('pageerror', error => errors.push(error.message));
+  await context.route('**/api/**', route => route.abort('internetdisconnected'));
+  await blockRemoteHttpRequests(page);
+  await installBrowserTtsHarness(page);
+  await page.goto('/board/root');
+  await dismissBoardTour(page, false);
+  const panel = page.locator('.CommunicationSupportPanel');
+  await panel.getByRole('button', { name: '接收理解', exact: true }).click();
+  await completeCommunicationOnboarding(page, false);
+  await receiver(page).getByRole('button', { name: '返回图板', exact: true }).click();
+  let management = await manage(page);
+  await management.getByRole('button', { name: /个人图片/ }).click();
+  const gallery = management.locator('.PersonalImageManager');
+  await gallery.getByRole('button', { name: '创建个人板', exact: true }).click();
+  const people = gallery.locator('[aria-label="人物全名与照片"]');
+  const uri = await page.evaluate(() => {
+    const canvas = document.createElement('canvas'); canvas.width = 80; canvas.height = 80;
+    const x = canvas.getContext('2d'); x.fillStyle = '#345899'; x.fillRect(0, 0, 80, 80);
+    x.fillStyle = 'white'; x.fillRect(20, 20, 40, 40); return canvas.toDataURL('image/png');
+  });
+  await people.locator('.MuiTextField-root').filter({ has: page.getByText('全名', { exact: true }) }).locator('input').fill('欧阳明澈');
+  await people.locator('input[type=file]').setInputFiles({ name: 'synthetic-geometric.png', mimeType: 'image/png', buffer: Buffer.from(uri.split(',')[1], 'base64') });
+  await people.getByRole('button', { name: '保存人物', exact: true }).click();
+  await expect(gallery.getByRole('status')).toContainText('人物已保存');
+  await management.getByRole('button', { name: '返回沟通', exact: true }).click();
+  await panel.getByRole('button', { name: '接收理解', exact: true }).click();
+  const raw = '欧阳明澈今晚不回家吃饭';
+  await receiver(page).locator('#receiver-input').fill(raw);
+  await receiver(page).getByRole('button', { name: '生成图片序列', exact: true }).click();
+  await expect(receiver(page).getByRole('textbox', { name: '分词结果（可修改）' })).toBeVisible();
+  const missing = receiver(page).getByRole('button', { name: '保留文字', exact: true });
+  while (await missing.count()) await missing.first().click();
+  await receiver(page).getByRole('button', { name: '全屏展示', exact: true }).click();
+  const display = page.getByRole('dialog').filter({ has: page.locator('.CommunicationSupportPanel__originalText') });
+  await expect(display.locator('.CommunicationSupportPanel__originalText')).toHaveText(raw);
+  const original = (await read(page, 'receiver_records')).find(item => item.recordStatus === 'confirmed');
+  expect(original.output.some(item => item.image?.startsWith('data:image'))).toBe(true);
+  await display.getByRole('button', { name: '明白了', exact: true }).click();
+  await receiver(page).getByRole('button', { name: '返回图板', exact: true }).click();
+  management = await manage(page);
+  await management.getByRole('button', { name: /沟通历史/ }).click();
+  await management.getByRole('button', { name: '收藏', exact: true }).click();
+  const initial = (await read(page, 'saved_phrases'))[0];
+  expect(initial.sentence).toBe(raw);
+  expect(initial.output).toEqual(original.output);
+  await management.getByRole('button', { name: /常用语（/ }).click();
+  await management.getByRole('button', { name: '情境：未分类', exact: true }).click();
+  await management.getByRole('textbox', { name: '生活情境' }).fill('饭后散步');
+  await management.getByRole('button', { name: '取消', exact: true }).click();
+  expect((await read(page, 'saved_phrases'))[0]).toEqual(initial);
+  await management.getByRole('button', { name: '情境：未分类', exact: true }).click();
+  await management.getByRole('textbox', { name: '生活情境' }).fill('饭后散步');
+  await management.getByRole('button', { name: '保存情境', exact: true }).evaluate(button => { button.click(); button.click(); });
+  const classified = (await read(page, 'saved_phrases'))[0];
+  expect(classified).toEqual({ ...initial, lifeContext: '饭后散步' });
+  const filter = management.getByRole('group', { name: '生活情境筛选' });
+  await filter.getByRole('button', { name: '吃饭', exact: true }).click();
+  await expect(management.locator('.CommunicationSupportPanel__managementList')).not.toContainText(raw);
+  await filter.getByRole('button', { name: '饭后散步', exact: true }).click();
+  await expect(management.locator('.CommunicationSupportPanel__managementList')).toContainText(raw);
+  await management.getByRole('button', { name: '返回沟通', exact: true }).click();
+  await openPatientExpression(panel, false);
+  let expression = page.locator('#communication-expression-panel');
+  await expression.getByRole('group', { name: '生活情境筛选' }).getByRole('button', { name: '饭后散步', exact: true }).click();
+  const saved = expression.locator('.CommunicationSupportPanel__savedList');
+  await expect(saved).toContainText(raw);
+  await saved.getByRole('button', { name: '一键播报', exact: true }).click();
+  await expect.poll(() => page.evaluate(() => window.__cboardTtsHarness.calls.at(-1)?.text)).toBe(raw);
+  await page.getByRole('button', { name: '完成', exact: true }).click();
+  await waitForProductionServiceWorker(page);
+  await context.setOffline(true); await page.close();
+  page = await context.newPage(); await installBrowserTtsHarness(page);
+  const response = await page.goto('/board/root');
+  expect(response.fromServiceWorker()).toBe(true);
+  await dismissBoardTour(page, false);
+  await openPatientExpression(page.locator('.CommunicationSupportPanel'), false);
+  expression = page.locator('#communication-expression-panel');
+  await expression.getByRole('group', { name: '生活情境筛选' }).getByRole('button', { name: '饭后散步', exact: true }).click();
+  await expect(expression.locator('.CommunicationSupportPanel__savedList')).toContainText(raw);
+  expect(await page.evaluate(() => window.__cboardTtsHarness.calls)).toEqual([]);
+  const images = expression.locator('.CommunicationSupportPanel__savedList img');
+  expect(await images.count()).toBeGreaterThan(0);
+  await expect.poll(() => images.evaluateAll(nodes => nodes.every(img => img.complete && img.naturalWidth > 0))).toBe(true);
+  const restored = (await read(page, 'saved_phrases'))[0];
+  expect(restored.lifeContext).toBe('饭后散步');
+  expect(restored.sentence).toBe(raw); expect(restored.output).toEqual(original.output);
+  expect((await read(page, 'receiver_records')).find(item => item.id === original.id).output).toEqual(original.output);
+  expect(requests.filter(item => /gpt|generate|billing|charge/i.test(item.url))).toEqual([]);
+  expect(requests.some(item => /data:image|SYNTHETIC/.test(item.body) || item.body.includes(uri.split(',')[1]))).toBe(false);
+  expect(errors).toEqual([]);
+  await page.screenshot({ path: info.outputPath('offline-life-context.png'), fullPage: true });
+  await info.attach('life-context-evidence', { body: JSON.stringify({ raw, favoriteId: initial.id, originalId: original.id,
+    exactReplay: true, classificationLocalOnly: true, offlineNewTabServiceWorker: true, offlineImagesDecoded: true,
+    syntheticPrivatePhotoOnly: true, requests, errors }, null, 2), contentType: 'application/json' });
+});

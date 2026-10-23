@@ -30,6 +30,8 @@ export function careErrorMessage(error) {
     AI_REQUEST_PENDING_RECONCILIATION:
       '这次 AI 请求的结果尚待核对，系统不会重复执行或扣减。',
     AI_REQUEST_ALREADY_COMPLETED: '这次 AI 请求已处理，不会重复执行或扣减。',
+    AI_SENTENCE_MEANING_MISMATCH:
+      'AI 候选未保持所选图卡的原意，已保留本地候选；不会自动再次生成。',
     AI_REQUEST_STORAGE_UNAVAILABLE:
       '无法保存本次 AI 请求标识，已停止发送；请检查本机存储，本地沟通仍可使用。',
     AI_REQUEST_INPUT_CHANGED:

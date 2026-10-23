@@ -8,6 +8,7 @@ function createHarness(playCandidates = jest.fn(() => Promise.resolve())) {
   const timerId = {};
   const clearTimer = jest.fn();
   const stopPlayback = jest.fn();
+  const onPendingChange = jest.fn();
   const controller = createCandidateAutoplayController({
     setTimer: jest.fn((callback, delay) => {
       timerCallback = callback;
@@ -16,13 +17,15 @@ function createHarness(playCandidates = jest.fn(() => Promise.resolve())) {
     }),
     clearTimer,
     playCandidates,
-    stopPlayback
+    stopPlayback,
+    onPendingChange
   });
 
   return {
     controller,
     clearTimer,
     stopPlayback,
+    onPendingChange,
     timerId,
     runTimer: () => timerCallback()
   };
@@ -83,5 +86,42 @@ describe('candidate autoplay controller', () => {
 
     finishPlayback();
     await playback;
+  });
+
+  test('reports only a real pending timer, including cancel, start and disabled plans', async () => {
+    const harness = createHarness();
+    expect(harness.controller.schedule([], 5)).toBe(false);
+    expect(harness.onPendingChange).not.toHaveBeenCalled();
+    harness.controller.schedule(['第一句。'], 5);
+    expect(harness.onPendingChange.mock.calls).toEqual([[5000]]);
+    harness.controller.cancel();
+    harness.controller.cancel();
+    expect(harness.onPendingChange.mock.calls).toEqual([[5000], [0]]);
+    harness.controller.schedule(['第二句。'], 10);
+    await harness.runTimer();
+    expect(harness.onPendingChange.mock.calls).toEqual([[5000], [0], [10000], [0]]);
+    expect(harness.controller.schedule(['关闭。'], 0)).toBe(false);
+    expect(harness.onPendingChange).toHaveBeenCalledTimes(4);
+  });
+
+  test('a canceled callback cannot erase the new timer or countdown state', async () => {
+    const timers = [];
+    const clearTimer = jest.fn();
+    const playCandidates = jest.fn();
+    const onPendingChange = jest.fn();
+    const controller = createCandidateAutoplayController({
+      setTimer: callback => { const timer = { callback }; timers.push(timer); return timer; },
+      clearTimer, playCandidates, onPendingChange, stopPlayback: jest.fn()
+    });
+    controller.schedule(['旧候选。'], 5);
+    controller.schedule(['新候选。'], 10);
+    await timers[0].callback();
+    expect(onPendingChange.mock.calls).toEqual([[5000], [0], [10000]]);
+    expect(playCandidates).not.toHaveBeenCalled();
+    expect(controller.cancel()).toEqual({ hadPending: true, hadActive: false });
+    expect(clearTimer).toHaveBeenLastCalledWith(timers[1]);
+    expect(onPendingChange).toHaveBeenLastCalledWith(0);
+    await timers[1].callback();
+    expect(playCandidates).not.toHaveBeenCalled();
   });
 });

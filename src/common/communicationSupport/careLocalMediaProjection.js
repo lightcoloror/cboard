@@ -1,3 +1,5 @@
+import { preserveLocalPhraseLifeContext } from './savedPhraseManagement';
+
 function sameCareScope(left, right) {
   return (
     left.accountId === right.accountId &&
@@ -63,17 +65,21 @@ export function preserveCareLocalFavoriteMedia(
   localScope,
   projectionScope
 ) {
-  if (!sameCareScope(localScope, projectionScope)) return cloudItems;
+  if (!sameCareScope(localScope, projectionScope)) {
+    return cloudItems.some(item => Object.prototype.hasOwnProperty.call(item, 'lifeContext'))
+      ? cloudItems.map(item => preserveLocalPhraseLifeContext(item)) : cloudItems;
+  }
   const localById = new Map(localItems.map(item => [item.id, item]));
   return cloudItems.map(item => {
     const local = localById.get(item.id);
-    if (!local || !Array.isArray(item.output)) return item;
+    const contextualItem = preserveLocalPhraseLifeContext(item, local);
+    if (!local || !Array.isArray(item.output)) return contextualItem;
     const key = tile => `${tile.boardId || ''}:${tile.id || ''}`;
     const localByTile = new Map(
       (local.output || []).map(tile => [key(tile), tile])
     );
     return {
-      ...item,
+      ...contextualItem,
       output: item.output.map(tile => {
         const previous = localByTile.get(key(tile));
         if (!previous) return tile;

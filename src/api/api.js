@@ -18,6 +18,7 @@ import {
 import { logout } from '../components/Account/Login/Login.actions.js';
 import { cvaFileToBlob, isAndroid } from '../cordova-util';
 import { buildConfirmedReceiverSyncPayload } from '../common/communicationSupport/receiverSync';
+import { getExpressionDraftRequestContext } from '../common/communicationSupport/expressionDraft';
 import { createCareAiRequestJournal } from '../common/communicationSupport/careAiRequestJournal';
 import {
   getPrivatePersonRequestIdentity,
@@ -212,6 +213,12 @@ export const applyCareRequestHeaders = (
   }
   return request;
 };
+
+function assertNativeMediaCurrent(options) {
+  if (options?.guard && !options.guard()) {
+    throw Object.assign(new Error('Board media upload was superseded'), { code: 'BOARD_SAVE_CANCELLED' });
+  }
+}
 
 class API {
   constructor(config = {}) {
@@ -594,6 +601,7 @@ class API {
 
   async requestCareTextAi(path, operation, request, options = {}) {
     const originalRequest = request;
+    const draftContext = getExpressionDraftRequestContext(request);
     const localIdentity = getPrivatePersonRequestIdentity(request);
     // The hash and wire payload must describe the same immutable submission.
     request = JSON.parse(JSON.stringify(request));
@@ -620,6 +628,7 @@ class API {
         body: request,
         localIdentity
       });
+      if (draftContext) draftContext.beforeDispatch({ ...ticket, body: request });
       requestConfig.headers['Idempotency-Key'] = ticket.requestId;
       requestConfig.careAiRequestScope = {
         scope,
@@ -637,6 +646,7 @@ class API {
       if (ticket) {
         try {
           journal.observe(ticket, { status: response.status || 200 });
+          if (draftContext) draftContext.afterResponse(ticket, true);
         } catch (_) {
           /* Identity was durably written before send. */
         }
@@ -666,6 +676,7 @@ class API {
           error?.code;
         try {
           journal.observe(ticket, { status: error?.response?.status, code });
+          if (draftContext) draftContext.afterResponse(ticket, false);
         } catch (_) {
           /* Keep original pending identity. */
         }
@@ -1462,7 +1473,8 @@ class API {
     return data;
   }
 
-  async tryUploadDataURL(dataURL, filename, checkExtension = false) {
+  async tryUploadDataURL(dataURL, filename, checkExtension = false, options) {
+    assertNativeMediaCurrent(options);
     let blob;
     try {
       blob = dataURLtoBlob(dataURL);
@@ -1476,8 +1488,10 @@ class API {
     }
     try {
       const url = await this.uploadFile(blob, name);
+      assertNativeMediaCurrent(options);
       return { url, unrecoverable: false };
     } catch (e) {
+      if (e.code === 'BOARD_SAVE_CANCELLED') throw e;
       return { url: null, unrecoverable: false };
     }
   }
@@ -1491,12 +1505,14 @@ class API {
     return url;
   }
 
-  async uploadTileImageMedia(tile) {
+  async uploadTileImageMedia(tile, options) {
+    assertNativeMediaCurrent(options);
     if (isDataURL(tile.image)) {
       const { url, unrecoverable } = await this.tryUploadDataURL(
         tile.image,
         tile.id,
-        true
+        true,
+        ...(options ? [options] : [])
       );
       return { attempted: true, url, unrecoverable };
     }
@@ -1514,6 +1530,7 @@ class API {
           error => resolve({ error })
         );
       });
+      assertNativeMediaCurrent(options);
       if (!resolved.file) {
         return {
           attempted: true,
@@ -1529,12 +1546,16 @@ class API {
         return { attempted: true, url: null, unrecoverable: true };
       }
 
+      assertNativeMediaCurrent(options);
+
       try {
         const segments = tile.image.split('/');
         const name = segments[segments.length - 1] || tile.id;
         const url = await this.uploadFile(realBlob, name);
+        assertNativeMediaCurrent(options);
         return { attempted: true, url, unrecoverable: false };
       } catch (e) {
+        if (e.code === 'BOARD_SAVE_CANCELLED') throw e;
         return { attempted: true, url: null, unrecoverable: false };
       }
     }
@@ -1542,11 +1563,13 @@ class API {
     return { attempted: false, url: null, unrecoverable: false };
   }
 
-  async uploadTileSoundMedia(tile) {
+  async uploadTileSoundMedia(tile, options) {
+    assertNativeMediaCurrent(options);
     if (isDataURL(tile.sound)) {
       const { url, unrecoverable } = await this.tryUploadDataURL(
         tile.sound,
-        `${tile.id}.mp3`
+        `${tile.id}.mp3`,
+        ...(options ? [false, options] : [])
       );
       return { attempted: true, url, unrecoverable };
     }
@@ -1554,12 +1577,14 @@ class API {
     return { attempted: false, url: null, unrecoverable: false };
   }
 
-  async uploadBoardCaptionMedia(board) {
+  async uploadBoardCaptionMedia(board, options) {
+    assertNativeMediaCurrent(options);
     if (isDataURL(board?.caption)) {
       const { url, unrecoverable } = await this.tryUploadDataURL(
         board.caption,
         board.id,
-        true
+        true,
+        ...(options ? [options] : [])
       );
       return { attempted: true, url, unrecoverable };
     }
@@ -1567,7 +1592,8 @@ class API {
     return { attempted: false, url: null, unrecoverable: false };
   }
 
-  async uploadBoardLocalMedia(board) {
+  async uploadBoardLocalMedia(board, options) {
+    assertNativeMediaCurrent(options);
     const tiles = board?.tiles || [];
     const targets = tiles.filter(
       tile =>
@@ -1593,15 +1619,18 @@ class API {
     };
 
     const captionPromise = captionIsTarget
-      ? this.uploadBoardCaptionMedia(board)
+      ? this.uploadBoardCaptionMedia(board, ...(options ? [options] : []))
+          .then(value => ({ value }), error => ({ error }))
       : null;
 
     const uploadTarget = async tile => {
       try {
+        assertNativeMediaCurrent(options);
         const [image, sound] = await Promise.all([
-          this.uploadTileImageMedia(tile),
-          this.uploadTileSoundMedia(tile)
+          this.uploadTileImageMedia(tile, ...(options ? [options] : [])),
+          this.uploadTileSoundMedia(tile, ...(options ? [options] : []))
         ]);
+        assertNativeMediaCurrent(options);
 
         const update = {};
         applyMedia(image, url => (update.image = url));
@@ -1611,13 +1640,16 @@ class API {
           tileUpdates[tile.id] = update;
         }
       } catch (e) {
+        if (e.code === 'BOARD_SAVE_CANCELLED') throw e;
         hadFailure = true;
       }
     };
 
     const CONCURRENCY = 5;
     for (let i = 0; i < targets.length; i += CONCURRENCY) {
+      assertNativeMediaCurrent(options);
       await Promise.all(targets.slice(i, i + CONCURRENCY).map(uploadTarget));
+      assertNativeMediaCurrent(options);
     }
 
     const sanitizedBoard = {
@@ -1629,9 +1661,12 @@ class API {
     };
 
     if (captionPromise) {
-      applyMedia(await captionPromise, url => (sanitizedBoard.caption = url));
+      const caption = await captionPromise;
+      if (caption.error) throw caption.error;
+      applyMedia(caption.value, url => (sanitizedBoard.caption = url));
     }
 
+    assertNativeMediaCurrent(options);
     return { board: sanitizedBoard, hadFailure };
   }
 

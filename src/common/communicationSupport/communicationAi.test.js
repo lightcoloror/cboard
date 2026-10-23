@@ -201,12 +201,12 @@ describe('communicationAi contract', () => {
     );
     expect(
       applyCommunicationAiSentenceResponse(localState, {
-        candidates: [' 我想喝水。 ', '我想喝水。'],
+        candidates: ['水。', '水。'],
         provider: 'test-ai'
       })
     ).toEqual(
       expect.objectContaining({
-        candidateSentences: ['我想喝水。', '水。', '我水。'],
+        candidateSentences: ['水。', '我的意思是：水。', '我想表达的是：水。'],
         candidateProvider: 'test-ai',
         isOfflineFallback: false,
         selectedIndex: 0
@@ -223,18 +223,38 @@ describe('communicationAi contract', () => {
       buildExpressionLoopState(output),
       {
         candidates: [
-          '我要喝水。',
-          '请给我水。',
-          '我要喝水。',
-          '我想喝水。',
-          '请递给我水。'
+          '喝水。',
+          '我的意思是：喝水。',
+          '喝水。',
+          '我想表达的是：喝水。',
+          '我现在喝水。'
         ]
       }
     );
     expect(state.candidateSentences).toEqual([
-      '我要喝水。',
-      '请给我水。',
-      '我想喝水。'
+      '喝水。',
+      '我的意思是：喝水。',
+      '我想表达的是：喝水。'
+    ]);
+  });
+
+  test('reuses safe local choices after an older API or cached response adds degree/time', () => {
+    const local = buildExpressionLoopState([
+      { id: 'me', label: '我' },
+      { id: 'pain', label: '痛' }
+    ]);
+    expect(
+      applyCommunicationAiSentenceResponse(local, {
+        candidates: ['我好痛。', '我现在很痛。']
+      })
+    ).toBe(local);
+    const mixed = applyCommunicationAiSentenceResponse(local, {
+      candidates: ['我现在很痛。', '我的意思是：我痛。']
+    });
+    expect(mixed.candidateSentences).toEqual([
+      '我的意思是：我痛。',
+      '我痛。',
+      '我想表达的是：我痛。'
     ]);
   });
 

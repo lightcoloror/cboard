@@ -31,6 +31,7 @@ import {
   filterLocalLangs
 } from '../../i18n';
 import tts from './tts';
+import { interruptSpeechQueues } from './speechInterruption';
 import { showNotification } from '../../components/Notifications/Notifications.actions';
 
 export function requestVoices() {
@@ -296,8 +297,17 @@ function endSpeech() {
   };
 }
 
+// Track existing speech callbacks rather than infer completion from a provider's
+// synthesis promise (which may resolve before audio starts playing).
+const pendingSpeech = new Set();
+
 export function cancelSpeech() {
   return dispatch => {
+    interruptSpeechQueues();
+    const canceled = [...pendingSpeech];
+    canceled.forEach(request => {
+      request.canceled = true;
+    });
     dispatch({
       type: CANCEL_SPEECH,
       isSpeaking: false
@@ -306,34 +316,63 @@ export function cancelSpeech() {
       tts.cancel();
     } catch (error) {
       console.error(error);
+    } finally {
+      canceled.forEach(request =>
+        request.finish({ error: true, reason: 'stopped' })
+      );
     }
   };
 }
 
 export function speak(text, onend = () => {}, overrides = {}) {
   return (dispatch, getState) => {
+    const { playbackOwner, ...speechOverrides } = overrides;
+    interruptSpeechQueues(playbackOwner);
     const options = getState().speech.options;
+    let finished = false;
+    let alertTimer;
+    const request = {
+      canceled: false,
+      finish: event => {
+        if (finished) return;
+        finished = true;
+        clearTimeout(alertTimer);
+        pendingSpeech.delete(request);
+        // End before the callback: it may synchronously start the next frame.
+        if (!request.canceled && !pendingSpeech.size) dispatch(endSpeech());
+        if (!request.canceled && event?.error && event.reason !== 'stopped') {
+          dispatch(showNotification('', 'cloudSpeakError'));
+        }
+        try {
+          onend(event);
+        } catch (_) {
+          console.error('Speech completion callback failed');
+        }
+      }
+    };
+    pendingSpeech.add(request);
     const setCloudSpeakAlertTimeout = () => {
       const REASONABLE_TIME_TO_AWAIT = 5000;
-      return setTimeout(() => {
-        dispatch(showNotification('', 'cloudSpeakError'));
+      clearTimeout(alertTimer);
+      alertTimer = setTimeout(() => {
+        if (!finished && !request.canceled)
+          dispatch(showNotification('', 'cloudSpeakError'));
       }, REASONABLE_TIME_TO_AWAIT);
+      return alertTimer;
     };
     dispatch(startSpeech(text));
 
-    tts.speak(
-      text,
-      {
-        ...options,
-        ...overrides,
-        onend: event => {
-          onend(event);
-          dispatch(endSpeech());
-          if (event?.error) dispatch(showNotification('', 'cloudSpeakError'));
-        }
-      },
-      setCloudSpeakAlertTimeout
-    );
+    try {
+      return Promise.resolve(
+        tts.speak(
+          text,
+          { ...options, ...speechOverrides, onend: request.finish },
+          setCloudSpeakAlertTimeout
+        )
+      ).catch(() => request.finish({ error: true, reason: 'synthesis' }));
+    } catch (_) {
+      request.finish({ error: true, reason: 'synthesis' });
+    }
   };
 }
 

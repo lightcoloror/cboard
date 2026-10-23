@@ -205,6 +205,7 @@ describe('Board.container', () => {
         },
         createTile: jest.fn(),
         createBoard: jest.fn(),
+        saveVerifiedBoards: jest.fn().mockResolvedValue(true),
         switchBoard: jest.fn(),
         verifyAndAddBoardCommunicator: jest.fn(),
         history: { replace: jest.fn() },
@@ -216,31 +217,40 @@ describe('Board.container', () => {
     };
 
     it('associates a guest board locally before navigating to it', async () => {
+      jest.useFakeTimers();
       const { instance, props } = buildInstance({});
 
       await instance.handleAddTileEditorSubmit(tile);
 
-      expect(props.createBoard).toHaveBeenCalledWith(
-        expect.objectContaining({ id: 'personal-board' })
+      expect(props.saveVerifiedBoards).toHaveBeenCalledWith(
+        [expect.objectContaining({ board: expect.objectContaining({ id: 'personal-board' }), create: true, expectedBoard: null })],
+        expect.objectContaining({ guard: expect.any(Function) })
       );
-      expect(props.verifyAndAddBoardCommunicator).toHaveBeenCalledWith(
-        props.communicator,
-        'personal-board'
-      );
+      expect(props.createBoard).not.toHaveBeenCalled();
+      expect(props.verifyAndAddBoardCommunicator).not.toHaveBeenCalled();
+      expect(props.switchBoard).not.toHaveBeenCalled();
+      jest.runOnlyPendingTimers();
       expect(props.switchBoard).toHaveBeenCalledWith('personal-board');
+      jest.useRealTimers();
     });
 
-    it('defers a logged-in board association to the API save flow', async () => {
+    it('verifies a logged-in board locally before scheduling the existing API flow', async () => {
       const { instance, props } = buildInstance({
         name: 'Caregiver',
         email: 'caregiver@example.com'
       });
-      instance.handleApiUpdates = jest.fn().mockResolvedValue(undefined);
+      instance.scheduleNativeCloudSync = jest.fn();
 
       await instance.handleAddTileEditorSubmit(tile);
 
       expect(props.verifyAndAddBoardCommunicator).not.toHaveBeenCalled();
-      expect(instance.handleApiUpdates).toHaveBeenCalledWith(tile);
+      expect(props.saveVerifiedBoards).toHaveBeenCalledWith(
+        [expect.objectContaining({ create: true, board: expect.objectContaining({ id: 'personal-board' }) })],
+        expect.any(Object)
+      );
+      expect(instance.scheduleNativeCloudSync).toHaveBeenCalledWith(expect.objectContaining({
+        kind: 'add', payload: tile, logged: true
+      }));
     });
 
     it('associates a logged-in board before starting API persistence', async () => {

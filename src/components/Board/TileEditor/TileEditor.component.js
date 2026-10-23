@@ -122,6 +122,7 @@ export class TileEditor extends Component {
      * Callback fired when submitting a new board tile
      */
     onAddSubmit: PropTypes.func.isRequired,
+    saveContextKey: PropTypes.string,
     boards: PropTypes.array,
     userData: PropTypes.object,
     folders: PropTypes.array,
@@ -145,6 +146,7 @@ export class TileEditor extends Component {
     };
 
     this.defaultTile = {
+      id: shortid.generate(),
       label: '',
       labelKey: '',
       vocalization: '',
@@ -171,6 +173,8 @@ export class TileEditor extends Component {
       videoUploadStatus: '',
       isEditImageBtnActive: false,
       isLoading: false,
+      isSavingTile: false,
+      saveStatus: '',
       metadataSuggestionConsent: false,
       metadataSuggestionStatus: '',
       isMetadataSuggestionLoading: false,
@@ -184,6 +188,13 @@ export class TileEditor extends Component {
     this.backgroundRemovalOriginal = null;
     this.backgroundRemovalPreviewUrl = '';
     this.videoPreviewUrl = '';
+    this.saveEpoch = 0;
+    this.mediaEpoch = 0;
+    this.activeSave = null;
+    this.saveUnmounted = false;
+    this.preparedMedia = new Map();
+    this.mediaIds = new WeakMap();
+    this.nextMediaId = 0;
 
     this.defaultimageUploadedData = {
       isUploaded: false,
@@ -199,8 +210,25 @@ export class TileEditor extends Component {
   }
 
   UNSAFE_componentWillReceiveProps(props) {
-    this.updateTileProperty('id', shortid.generate()); // todo not here
-    this.setState({ editingTiles: props.editingTiles });
+    const identity = items => (items || []).filter(Boolean).map(item => item.id).join('|');
+    const changed = props.saveContextKey !== this.props.saveContextKey ||
+      identity(props.editingTiles) !== identity(this.props.editingTiles);
+    if (changed || (props.open && !this.props.open)) {
+      this.invalidateTileSave();
+      this.invalidateEditorMedia();
+      this.defaultTile = { ...this.defaultTile, id: shortid.generate() };
+      this.setState({
+        editingTiles: (props.editingTiles || []).filter(Boolean).map(tile => ({ ...tile })),
+        tile: { ...this.defaultTile }, activeStep: 0,
+        imageUploadedData: [], videoUploadedData: [],
+        selectedBackgroundColor: '', saveStatus: '', isSavingTile: false,
+        ...this.resetMediaState()
+      });
+    } else if (!props.open && this.props.open) {
+      this.invalidateTileSave();
+      this.invalidateEditorMedia();
+      this.setState({ isSavingTile: false, ...this.resetMediaState() });
+    }
   }
   componentDidUpdate(prevProps) {
     if (this.props.open !== prevProps.open && this.props.open) {
@@ -210,8 +238,9 @@ export class TileEditor extends Component {
   }
 
   componentWillUnmount() {
-    this.invalidateBackgroundRemoval();
-    this.revokeVideoPreview();
+    this.saveUnmounted = true;
+    this.invalidateTileSave();
+    this.invalidateEditorMedia();
   }
 
   editingTile() {
@@ -289,6 +318,7 @@ export class TileEditor extends Component {
   }
 
   updateTileProperty(property, value) {
+    this.setState({ saveStatus: '' });
     if (this.editingTile()) {
       this.setState(
         this.updateEditingTile(this.editingTile().id, property, value)
@@ -298,86 +328,143 @@ export class TileEditor extends Component {
     }
   }
 
-  handleSubmit = async () => {
-    const { onEditSubmit, onAddSubmit } = this.props;
-    if (this.editingTile()) {
-      const { imageUploadedData, videoUploadedData } = this.state;
-      if (imageUploadedData.length || videoUploadedData.length) {
-        let tilesToAdd = JSON.parse(JSON.stringify(this.state.editingTiles));
-        try {
-          await Promise.all(
-            tilesToAdd.map(async (tile, index) => {
-              const imageData = imageUploadedData[index];
-              const videoData = videoUploadedData[index];
-              if (imageData && imageData.isUploaded) {
-                tile.image = await this.updateTileImgURL(
-                  imageData.blob,
-                  imageData.fileName
-                );
-              }
-              if (videoData && videoData.isUploaded) {
-                tile.video = await this.updateTileVideoURL(
-                  videoData.blob,
-                  videoData.fileName
-                );
-              }
-            })
-          );
-        } catch (error) {
-          this.setState({
-            videoUploadStatus: this.props.intl.formatMessage(
-              messages.videoUploadFailed
-            )
-          });
-          return;
-        }
-        onEditSubmit(tilesToAdd);
-      } else {
-        onEditSubmit(this.state.editingTiles);
-      }
-    } else {
-      const tileToAdd = this.state.tile;
-      const imageUploadedData = this.state.imageUploadedData[
-        this.state.activeStep
-      ];
-      if (imageUploadedData && imageUploadedData.isUploaded) {
-        tileToAdd.image = await this.updateTileImgURL(
-          imageUploadedData.blob,
-          imageUploadedData.fileName
-        );
-      }
-      const videoUploadedData = this.state.videoUploadedData[
-        this.state.activeStep
-      ];
-      if (videoUploadedData && videoUploadedData.isUploaded) {
-        try {
-          tileToAdd.video = await this.updateTileVideoURL(
-            videoUploadedData.blob,
-            videoUploadedData.fileName
-          );
-        } catch (error) {
-          this.setState({
-            videoUploadStatus: this.props.intl.formatMessage(
-              messages.videoUploadFailed
-            )
-          });
-          return;
-        }
-      }
+  invalidateTileSave = () => {
+    this.saveEpoch += 1;
+    this.activeSave = null;
+    this.preparedMedia.clear();
+  };
 
-      const selectedBackgroundColor = this.state.selectedBackgroundColor;
-      if (selectedBackgroundColor) {
-        tileToAdd.backgroundColor = selectedBackgroundColor;
-      }
-      onAddSubmit(tileToAdd);
-    }
+  resetMediaState = () => ({
+    isEditImageBtnActive: false, openImageEditor: false, isSymbolSearchOpen: false,
+    isLoading: false, videoUploadStatus: '', metadataSuggestionConsent: false,
+    metadataSuggestionStatus: '', isMetadataSuggestionLoading: false,
+    backgroundRemovalStatus: '', isBackgroundRemovalLoading: false,
+    hasBackgroundRemovalOriginal: false
+  });
 
+  invalidateEditorMedia = () => {
+    this.mediaEpoch += 1;
     this.metadataSuggestionRequestId += 1;
     this.pendingMetadataSuggestionBlob = null;
     this.invalidateBackgroundRemoval();
     this.revokeVideoPreview();
+  };
+
+  editorMediaGuard = () => {
+    const epoch = this.mediaEpoch;
+    const scope = this.props.saveContextKey;
+    const user = this.saveUserKey();
+    const target = this.currentTileProp('id');
+    return () => !this.saveUnmounted && this.props.open !== false &&
+      this.mediaEpoch === epoch && this.props.saveContextKey === scope &&
+      this.saveUserKey() === user && this.currentTileProp('id') === target;
+  };
+
+  beginMediaChange = () => {
+    this.invalidateEditorMedia();
+    this.setState({ isLoading: false, isMetadataSuggestionLoading: false,
+      isBackgroundRemovalLoading: false, hasBackgroundRemovalOriginal: false });
+    return this.editorMediaGuard();
+  };
+
+  mediaIdentity = blob => {
+    if (!blob || typeof blob !== 'object') return '';
+    if (!this.mediaIds.has(blob)) this.mediaIds.set(blob, ++this.nextMediaId);
+    return this.mediaIds.get(blob);
+  };
+
+  saveInputKey = () => JSON.stringify({
+    tiles: this.editingTile() ? this.state.editingTiles : [this.state.tile],
+    color: this.state.selectedBackgroundColor,
+    images: this.state.imageUploadedData.map(item => item && [item.isUploaded, item.fileName, this.mediaIdentity(item.blob)]),
+    videos: this.state.videoUploadedData.map(item => item && [item.isUploaded, item.fileName, this.mediaIdentity(item.blob)])
+  });
+
+  saveUserKey = () => JSON.stringify([
+    this.props.userData && (this.props.userData.id || this.props.userData._id),
+    this.props.userData && this.props.userData.email,
+    this.props.userData && this.props.userData.authToken
+  ]);
+
+  prepareTileMedia = async (data, kind, guard) => {
+    if (!guard()) throw new Error('当前操作已取消。');
+    const key = JSON.stringify([kind, this.mediaIdentity(data.blob), data.fileName]);
+    let pending = this.preparedMedia.get(key);
+    if (!pending) {
+      pending = kind === 'image'
+        ? this.updateTileImgURL(data.blob, data.fileName)
+        : this.updateTileVideoURL(data.blob, data.fileName);
+      this.preparedMedia.set(key, pending);
+    }
+    try {
+      const value = await pending;
+      if (!guard()) throw new Error('当前操作已取消。');
+      if (!value || value.startsWith('blob:')) throw new Error('图片或视频尚未保存，请重试。');
+      return value;
+    } catch (error) {
+      if (this.preparedMedia.get(key) === pending) this.preparedMedia.delete(key);
+      throw error;
+    }
+  };
+
+  handleSubmit = async () => {
+    if (this.activeSave || this.saveUnmounted || this.props.open === false) return false;
+    const token = { epoch: this.saveEpoch, scope: this.props.saveContextKey,
+      user: this.saveUserKey(), input: this.saveInputKey() };
+    this.activeSave = token;
+    const current = () => !this.saveUnmounted &&
+      this.saveEpoch === token.epoch && this.props.open !== false &&
+      this.props.saveContextKey === token.scope &&
+      this.saveUserKey() === token.user && this.saveInputKey() === token.input;
+    const guard = () => this.activeSave === token && current();
+    this.setState({ isSavingTile: true, saveStatus: '正在保存到本机并核对，请稍候…' });
+    try {
+      const editing = Boolean(this.editingTile());
+      const tiles = JSON.parse(JSON.stringify(editing ? this.state.editingTiles : [this.state.tile]));
+      const images = this.state.imageUploadedData.slice();
+      const videos = this.state.videoUploadedData.slice();
+      for (let index = 0; index < tiles.length; index += 1) {
+        if (images[index] && images[index].isUploaded)
+          tiles[index].image = await this.prepareTileMedia(images[index], 'image', guard);
+        if (videos[index] && videos[index].isUploaded)
+          tiles[index].video = await this.prepareTileMedia(videos[index], 'video', guard);
+      }
+      if (!editing && this.state.selectedBackgroundColor)
+        tiles[0].backgroundColor = this.state.selectedBackgroundColor;
+      if (!guard()) return false;
+      const result = editing
+        ? await this.props.onEditSubmit(tiles, { guard })
+        : await this.props.onAddSubmit(tiles[0], { guard });
+      if (!guard()) return false;
+      if (result !== true) throw new Error('本机保存尚未确认，内容已保留，请重试保存。');
+      this.resetSavedEditor();
+      this.props.onClose({ saved: true });
+      return true;
+    } catch (error) {
+      if (guard()) this.setState({ saveStatus: '保存未确认，输入和图片已保留。请重试保存。' }, () => {
+        // The fixed save button remains visible while fields scroll. Reveal the
+        // verified failure without clearing input or moving keyboard focus.
+        if (current() && this.saveStatusNode && this.saveStatusNode.scrollIntoView)
+          this.saveStatusNode.scrollIntoView({ block: 'center', behavior: 'auto' });
+      });
+      return false;
+    } finally {
+      if (this.activeSave === token) {
+        this.activeSave = null;
+        if (!this.saveUnmounted) this.setState({ isSavingTile: false });
+      }
+    }
+  };
+
+  resetSavedEditor = () => {
+    this.invalidateTileSave();
+    this.invalidateEditorMedia();
+    this.defaultTile = { ...this.defaultTile, id: shortid.generate() };
     this.setState({
+      ...this.resetMediaState(),
       activeStep: 0,
+      isSavingTile: false,
+      saveStatus: '',
       selectedBackgroundColor: '',
       tile: this.defaultTile,
       imageUploadedData: [],
@@ -408,23 +495,27 @@ export class TileEditor extends Component {
   };
 
   blobToBase64 = async blob => {
-    return new Promise(resolve => {
+    return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = () => {
         resolve(reader.result);
       };
+      reader.onerror = () => reject(reader.error || new Error('Unable to read image'));
+      reader.onabort = () => reject(new Error('Image read cancelled'));
       reader.readAsDataURL(blob);
     });
   };
 
   handleCancel = () => {
     const { onClose } = this.props;
-    this.metadataSuggestionRequestId += 1;
-    this.pendingMetadataSuggestionBlob = null;
-    this.invalidateBackgroundRemoval();
-    this.revokeVideoPreview();
+    this.invalidateTileSave();
+    this.invalidateEditorMedia();
+    this.defaultTile = { ...this.defaultTile, id: shortid.generate() };
     this.setState({
+      ...this.resetMediaState(),
       activeStep: 0,
+      isSavingTile: false,
+      saveStatus: '',
       selectedBackgroundColor: '',
       tile: this.defaultTile,
       imageUploadedData: [],
@@ -455,6 +546,7 @@ export class TileEditor extends Component {
   }
 
   handleInputImageChange = async (blob, fileName, blobHQ) => {
+    this.metadataSuggestionRequestId += 1;
     const isAnimatedGif = isAnimatedGifFile(blob, fileName);
     this.invalidateBackgroundRemoval();
     this.setState({
@@ -531,6 +623,7 @@ export class TileEditor extends Component {
     }
 
     const requestId = ++this.metadataSuggestionRequestId;
+    const guard = this.editorMediaGuard();
     this.setState({
       isMetadataSuggestionLoading: true,
       metadataSuggestionStatus: intl.formatMessage(
@@ -539,7 +632,7 @@ export class TileEditor extends Component {
     });
     try {
       const response = await API.suggestCommunicationPictogramMetadata(blob);
-      if (requestId !== this.metadataSuggestionRequestId) return;
+      if (requestId !== this.metadataSuggestionRequestId || !guard()) return;
       const suggestion = normalizePictogramMetadataSuggestion(response);
       if (!suggestion) {
         throw new Error('Invalid pictogram metadata suggestion');
@@ -555,7 +648,7 @@ export class TileEditor extends Component {
         )
       }));
     } catch (error) {
-      if (requestId !== this.metadataSuggestionRequestId) return;
+      if (requestId !== this.metadataSuggestionRequestId || !guard()) return;
       const limitScope = getCommunicationEnhancementLimitScope(error);
       const statusMessage =
         limitScope === COMMUNICATION_ENHANCEMENT_LIMIT_SCOPES.month
@@ -614,6 +707,7 @@ export class TileEditor extends Component {
     }
 
     const requestId = ++this.backgroundRemovalRequestId;
+    const guard = this.editorMediaGuard();
     const original = {
       imageUploadedData: { ...imageData },
       image: this.currentTileProp('image')
@@ -629,7 +723,7 @@ export class TileEditor extends Component {
       const result = await API.removeCommunicationImageBackground(
         imageData.blob
       );
-      if (requestId !== this.backgroundRemovalRequestId) return;
+      if (requestId !== this.backgroundRemovalRequestId || !guard()) return;
 
       this.backgroundRemovalOriginal = original;
       this.revokeBackgroundRemovalPreview();
@@ -650,7 +744,7 @@ export class TileEditor extends Component {
         )
       });
     } catch (error) {
-      if (requestId !== this.backgroundRemovalRequestId) return;
+      if (requestId !== this.backgroundRemovalRequestId || !guard()) return;
       const limitScope = getCommunicationEnhancementLimitScope(error);
       const statusMessage =
         limitScope === COMMUNICATION_ENHANCEMENT_LIMIT_SCOPES.month
@@ -735,6 +829,7 @@ export class TileEditor extends Component {
     const file = event.target.files && event.target.files[0];
     event.target.value = '';
     if (!file) return;
+    const guard = this.beginMediaChange();
     if (!(this.props.userData && this.props.userData.email)) {
       this.setState({
         videoUploadStatus: this.props.intl.formatMessage(
@@ -750,6 +845,7 @@ export class TileEditor extends Component {
     } catch (error) {
       duration = 0;
     }
+    if (!guard()) return;
     const validationError = validateTileVideoFile(file, duration);
     if (validationError) {
       const messageByError = {
@@ -813,6 +909,7 @@ export class TileEditor extends Component {
     pictogramAttribution
   }) => {
     return new Promise(resolve => {
+      this.beginMediaChange();
       this.invalidateBackgroundRemoval();
       this.setState({
         backgroundRemovalStatus: '',
@@ -891,6 +988,7 @@ export class TileEditor extends Component {
     this.updateTileProperty('sound', sound);
   };
   handleTypeChange = (event, type) => {
+    this.beginMediaChange();
     let loadBoard = '';
     if (type === 'folder' || type === 'board') {
       loadBoard = shortid.generate();
@@ -917,6 +1015,7 @@ export class TileEditor extends Component {
   };
 
   handleBack = event => {
+    this.beginMediaChange();
     this.setState({ activeStep: this.state.activeStep - 1 }, () => {
       this.setLinkedBoard();
     });
@@ -925,6 +1024,7 @@ export class TileEditor extends Component {
   };
 
   handleNext = async event => {
+    this.beginMediaChange();
     this.setState({ activeStep: this.state.activeStep + 1 }, () => {
       this.setLinkedBoard();
     });
@@ -999,6 +1099,7 @@ export class TileEditor extends Component {
     this.setState({ openImageEditor: false });
   };
   onImageEditorDone = blob => {
+    this.beginMediaChange();
     this.invalidateBackgroundRemoval();
     this.setState({
       backgroundRemovalStatus: '',
@@ -1031,6 +1132,7 @@ export class TileEditor extends Component {
 
   render() {
     const { open, intl, boards, folders } = this.props;
+    const mediaGuard = this.editorMediaGuard();
     const currentLabel = this.currentTileProp('labelKey')
       ? intl.formatMessage({ id: this.currentTileProp('labelKey') })
       : this.currentTileProp('label');
@@ -1100,7 +1202,8 @@ export class TileEditor extends Component {
     return (
       <div className="TileEditor">
         <FullScreenDialog
-          disableSubmit={!currentLabel}
+          disableSubmit={!currentLabel || this.state.isSavingTile || this.state.isLoading}
+          closeOnSubmit={false}
           buttons={buttons}
           open={open}
           title={
@@ -1115,6 +1218,13 @@ export class TileEditor extends Component {
         >
           <Paper>
             <FullScreenDialogContent className="TileEditor__container">
+              {this.state.saveStatus && (
+                <Typography ref={node => { this.saveStatusNode = node; }}
+                  role={this.state.isSavingTile ? 'status' : 'alert'}
+                  className="TileEditor__save-status" color={this.state.isSavingTile ? 'textPrimary' : 'error'}>
+                  {this.state.saveStatus}
+                </Typography>
+              )}
               <div className="TileEditor__row">
                 <div className="TileEditor__main-info">
                   <div className="TileEditor__picto-fields">
@@ -1144,6 +1254,7 @@ export class TileEditor extends Component {
                       </Tile>
                     </div>
                     {this.state.isEditImageBtnActive &&
+                      uploadedImageData && uploadedImageData.blobHQ &&
                       !isAnimatedImage &&
                       !isVideo && (
                         <React.Fragment>
@@ -1151,7 +1262,7 @@ export class TileEditor extends Component {
                             intl={intl}
                             open={this.state.openImageEditor}
                             onImageEditorClose={this.onImageEditorClose}
-                            onImageEditorDone={this.onImageEditorDone}
+                            onImageEditorDone={blob => mediaGuard() && this.onImageEditorDone(blob)}
                             image={URL.createObjectURL(
                               this.state.imageUploadedData[
                                 this.state.activeStep
@@ -1181,6 +1292,7 @@ export class TileEditor extends Component {
                       <InputImage
                         onChange={this.handleInputImageChange}
                         setIsLoadingImage={this.handleLoadingStateChange}
+                        createChangeGuard={this.beginMediaChange}
                       />
                     </div>
                     {this.currentTileProp('type') === 'button' && (
@@ -1517,7 +1629,7 @@ export class TileEditor extends Component {
           <SymbolSearch
             open={this.state.isSymbolSearchOpen}
             autoFill={this.state.autoFill}
-            onChange={this.handleSymbolSearchChange}
+            onChange={value => mediaGuard() ? this.handleSymbolSearchChange(value) : Promise.resolve()}
             onClose={this.handleSymbolSearchClose}
             disableTour={this.props.disableTour}
             intl={intl}

@@ -2,6 +2,9 @@ import React from 'react';
 import { mount } from 'enzyme';
 import { act } from 'react-dom/test-utils';
 import CommunicationManagementDialog from './CommunicationManagementDialog.component';
+import * as localData from '../../../common/communicationSupport/localData';
+import PatientActionButton from './PatientActionButton.component';
+import { invalidateImageOperations } from '../../../common/communicationSupport/imageOperationEpoch';
 
 jest.mock(
   '../Symbol',
@@ -43,63 +46,146 @@ const history = {
 };
 
 describe('CommunicationManagementDialog', () => {
-  test('renames and reuses saved phrases through pure management functions', () => {
-    const onSavedPhrasesChange = jest.fn();
-    const onApplyOutput = jest.fn();
-    const wrapper = mount(
-      <CommunicationManagementDialog
-        open
-        onClose={jest.fn()}
-        savedPhrases={[phrase]}
-        historyItems={[history]}
-        onSavedPhrasesChange={onSavedPhrasesChange}
-        onHistoryChange={jest.fn()}
-        onApplyOutput={onApplyOutput}
-        onSpeak={jest.fn()}
-      />
-    );
-
-    expect(wrapper.find('ForwardRef(Dialog)').prop('aria-labelledby')).toBe(
-      'communication-management-title'
-    );
-    expect(wrapper.find('ForwardRef(DialogTitle)').prop('id')).toBe(
-      'communication-management-title'
-    );
-
-    wrapper
-      .find('ForwardRef(Button)')
-      .filterWhere(node => node.text() === '编辑')
-      .first()
-      .simulate('click');
-    wrapper.update();
-    act(() => {
-      wrapper
-        .find('ForwardRef(TextField)')
-        .first()
-        .prop('onChange')({ target: { value: '请给我水' } });
+  test.each(['retry', 'privacy'])('a committed undo with failed refresh supports %s without another undo', async next => {
+    let count = 1;
+    const undo = jest.fn(() => { count = 0; return { items: [{ id: 'untrusted-result' }] }; });
+    const factory = jest.spyOn(localData, 'createLocalSavedPhraseUndo').mockReturnValue({
+      state: () => ({ count, operationId: count ? 'delete-one' : null }), undo
     });
+    const committed = jest.fn().mockImplementationOnce(() => { throw new Error('canonical read unavailable'); }).mockReturnValue([phrase]);
+    const save = jest.fn();
+    const wrapper = mount(<CommunicationManagementDialog open onClose={jest.fn()} savedPhrases={[]}
+      historyItems={[]} onSavedPhrasesChange={save} onSavedPhrasesCommitted={committed} onHistoryChange={jest.fn()}
+      onApplyOutput={jest.fn()} onSpeak={jest.fn()} />);
+    try {
+      await act(async () => wrapper.find(PatientActionButton).filterWhere(node => node.prop('ariaLabel') === '撤销上次删除的常用语').prop('onClick')()); wrapper.update();
+      expect(wrapper.text()).toContain('操作已保存到本机，但列表读取失败');
+      expect(wrapper.text()).not.toContain('已恢复常用语');
+      expect(save).not.toHaveBeenCalled();
+      if (next === 'privacy') invalidateImageOperations();
+      act(() => wrapper.find('ForwardRef(Button)').filterWhere(node => node.text() === '重新读取常用语').prop('onClick')()); wrapper.update();
+      expect(undo).toHaveBeenCalledTimes(1);
+      expect(committed).toHaveBeenCalledTimes(next === 'retry' ? 2 : 1);
+      if (next === 'retry') expect(wrapper.text()).toContain('已恢复常用语');
+      else expect(wrapper.text()).not.toContain('已恢复常用语');
+    } finally { wrapper.unmount(); factory.mockRestore(); }
+  });
+
+  test('a committed import retains its preview on refresh failure and retries reading without recommitting', async () => {
+    const commit = jest.fn(() => ({ committed: true, items: [{ id: 'not-the-canonical-list' }], addedCount: 1, duplicateCount: 0, invalidCount: 0, missingPictogramCount: 0 }));
+    const factory = jest.spyOn(localData, 'createLocalSavedPhraseImport').mockReturnValue({ cancel: jest.fn(), preview: () => ({ ok: true, wouldAddCount: 1 }), commit });
+    const committed = jest.fn().mockImplementationOnce(() => { throw new Error('read failed'); }).mockReturnValue([phrase]);
+    const save = jest.fn();
+    const wrapper = mount(<CommunicationManagementDialog open onClose={jest.fn()} savedPhrases={[]}
+      historyItems={[]} onSavedPhrasesChange={save} onSavedPhrasesCommitted={committed} onHistoryChange={jest.fn()}
+      onApplyOutput={jest.fn()} onSpeak={jest.fn()} />);
+    const click = text => { act(() => wrapper.find('ForwardRef(Button)').filterWhere(node => node.text() === text).prop('onClick')()); wrapper.update(); };
+    try {
+      await act(async () => wrapper.find('input[type="file"]').first().prop('onChange')({ target: { files: [{ text: async () => '{}' }], value: '' } })); wrapper.update();
+      click('确认整批导入');
+      expect(wrapper.find('[aria-label="常用语导入预览"]')).toHaveLength(1);
+      expect(wrapper.text()).not.toContain('已导入 1 条');
+      expect(committed.mock.calls[0][0]).toEqual({ scopeKey: expect.any(String), guard: expect.any(Function) });
+      click('重新读取常用语');
+      expect(wrapper.find('[aria-label="常用语导入预览"]')).toHaveLength(0);
+      expect(wrapper.text()).toContain('已导入 1 条');
+      expect(commit).toHaveBeenCalledTimes(1);
+      expect(save).not.toHaveBeenCalled();
+    } finally { wrapper.unmount(); factory.mockRestore(); }
+  });
+
+  test('closing the dialog ignores a late file-read failure', async () => {
+    let rejectRead, task;
+    const factory = jest.spyOn(localData, 'createLocalSavedPhraseImport').mockReturnValue({ cancel: jest.fn(), preview: jest.fn() });
+    const wrapper = mount(<CommunicationManagementDialog open onClose={jest.fn()} savedPhrases={[]}
+      historyItems={[]} onSavedPhrasesChange={jest.fn()} onHistoryChange={jest.fn()}
+      onApplyOutput={jest.fn()} onSpeak={jest.fn()} />);
+    try {
+      act(() => { task = wrapper.find('input[type="file"]').first().prop('onChange')({ target: { files: [{ text: () => new Promise((_, reject) => { rejectRead = reject; }) }], value: '' } }); });
+      wrapper.setProps({ open: false });
+      await act(async () => { rejectRead(new Error('late failure')); await task; });
+      wrapper.setProps({ open: true }); wrapper.update();
+      expect(wrapper.text()).not.toContain('late failure');
+      expect(wrapper.find('[aria-label="常用语导入预览"]')).toHaveLength(0);
+    } finally { wrapper.unmount(); factory.mockRestore(); }
+  });
+  test('failed classification retains the editor and permits a verified retry', () => {
+    const save = jest.fn().mockImplementationOnce(() => { throw new Error('synthetic disk failure'); });
+    const wrapper = mount(<CommunicationManagementDialog open onClose={jest.fn()} savedPhrases={[phrase]}
+      historyItems={[]} onSavedPhrasesChange={save} onHistoryChange={jest.fn()}
+      onApplyOutput={jest.fn()} onSpeak={jest.fn()} />);
+    const click = text => wrapper.find('ForwardRef(Button)').filterWhere(node => node.text() === text).first().simulate('click');
+    click('情境：未分类');
+    act(() => wrapper.find('ForwardRef(TextField)').filterWhere(node => node.prop('label') === '生活情境').prop('onChange')({ target: { value: '散步' } }));
+    wrapper.update(); click('保存情境'); wrapper.update();
+    expect(wrapper.text()).toContain('保存失败');
+    expect(wrapper.find('ForwardRef(TextField)').filterWhere(node => node.prop('label') === '生活情境').prop('value')).toBe('散步');
+    click('保存情境'); wrapper.update();
+    expect(wrapper.text()).toContain('生活情境已保存在本机');
+    expect(save).toHaveBeenCalledTimes(2); wrapper.unmount();
+  });
+  test('captures identity before file read so a late file cannot enter a newly selected workspace', async () => {
+    let identity = 'one', resolveRead, operationPromise;
+    const factory = jest.spyOn(localData, 'createLocalSavedPhraseImport').mockImplementation(() => {
+      const captured = identity;
+      return { cancel: jest.fn(), preview: () => { if (identity !== captured) throw new Error('当前档案已切换'); } };
+    });
+    const onSavedPhrasesChange=jest.fn();
+    const wrapper=mount(<CommunicationManagementDialog open onClose={jest.fn()} savedPhrases={[phrase]}
+      historyItems={[]} onSavedPhrasesChange={onSavedPhrasesChange} onHistoryChange={jest.fn()}
+      onApplyOutput={jest.fn()} onSpeak={jest.fn()} />);
+    act(() => { operationPromise=wrapper.find('input[type="file"]').first().prop('onChange')({persist:()=>{},target:{files:[{text:()=>new Promise(resolve=>{resolveRead=resolve;})}],value:''}}); });
+    expect(factory).toHaveBeenCalledTimes(1);
+    identity='two';
+    await act(async()=>{resolveRead('{}');await operationPromise;}); wrapper.update();
+    expect(wrapper.text()).toContain('当前档案已切换');
+    expect(onSavedPhrasesChange).not.toHaveBeenCalled();
+    expect(wrapper.find('[aria-label="常用语导入预览"]')).toHaveLength(0);
+    wrapper.unmount(); factory.mockRestore();
+  });
+  test('classifies locally, cancels without writes and filters existing favorites without speaking', () => {
+    const onSavedPhrasesChange = jest.fn();
+    const onSavedPhraseContextChange = jest.fn();
+    const onSpeak = jest.fn();
+    const wrapper = mount(<CommunicationManagementDialog open onClose={jest.fn()} savedPhrases={[phrase]}
+      historyItems={[]} onSavedPhrasesChange={onSavedPhrasesChange} onSavedPhraseContextChange={onSavedPhraseContextChange}
+      onHistoryChange={jest.fn()} onApplyOutput={jest.fn()} onSpeak={onSpeak} />);
+    const click = text => wrapper.find('ForwardRef(Button)').filterWhere(node => node.text() === text).first().simulate('click');
+    click('情境：未分类');
+    act(() => wrapper.find('ForwardRef(TextField)').filterWhere(node => node.prop('label') === '生活情境').prop('onChange')({ target: { value: '散步' } }));
     wrapper.update();
-    wrapper
-      .find('ForwardRef(Button)')
-      .filterWhere(node => node.text() === '保存修改')
-      .first()
-      .simulate('click');
-
-    expect(onSavedPhrasesChange).toHaveBeenCalledWith(
-      expect.arrayContaining([
-        expect.objectContaining({ sentence: '请给我水' })
-      ])
-    );
-
-    wrapper
-      .find('ForwardRef(Button)')
-      .filterWhere(node => node.text() === '重用')
-      .first()
-      .simulate('click');
-    expect(onApplyOutput).toHaveBeenCalledWith(phrase.output);
+    click('取消');
+    expect(onSavedPhraseContextChange).not.toHaveBeenCalled();
+    click('情境：未分类');
+    act(() => wrapper.find('ForwardRef(TextField)').filterWhere(node => node.prop('label') === '生活情境').prop('onChange')({ target: { value: '散步' } }));
+    wrapper.update();
+    click('保存情境');
+    expect(onSavedPhraseContextChange).toHaveBeenCalledWith([{ ...phrase, lifeContext: '散步' }]);
+    expect(onSavedPhrasesChange).not.toHaveBeenCalled();
+    wrapper.setProps({ savedPhrases: onSavedPhraseContextChange.mock.calls[0][0] });
+    click('吃饭');
+    expect(wrapper.text()).not.toContain('我要喝水');
+    click('散步');
+    expect(wrapper.text()).toContain('我要喝水');
+    expect(onSpeak).not.toHaveBeenCalled();
+    wrapper.unmount();
+  });
+  test('opens reviewed edit/copy instead of directly renaming; reuse remains explicit', () => {
+    const onSavedPhrasesChange = jest.fn(), onApplyOutput = jest.fn(), onPrepareSavedPhrase = jest.fn(), onSavedPhraseAction = jest.fn();
+    const wrapper = mount(<CommunicationManagementDialog open onClose={jest.fn()} savedPhrases={[phrase]}
+      historyItems={[history]} onSavedPhrasesChange={onSavedPhrasesChange} onHistoryChange={jest.fn()}
+      onPrepareSavedPhrase={onPrepareSavedPhrase} onSavedPhraseAction={onSavedPhraseAction} onApplyOutput={onApplyOutput} onSpeak={jest.fn()} />);
+    const click = text => wrapper.find('ForwardRef(Button)').filterWhere(node => node.text() === text).first().simulate('click');
+    click('修改这条'); expect(onPrepareSavedPhrase).toHaveBeenLastCalledWith({ id: phrase.id, mode: 'edit' });
+    click('以此准备新句'); expect(onPrepareSavedPhrase).toHaveBeenLastCalledWith({ id: phrase.id, mode: 'copy' });
+    expect(onSavedPhrasesChange).not.toHaveBeenCalled();
+    click('重用'); expect(onSavedPhraseAction).toHaveBeenCalledWith(phrase, 'reuse');
+    expect(onApplyOutput).not.toHaveBeenCalled();
+    wrapper.unmount();
   });
 
   test('favorites and replays a history item', () => {
+    const onSavedPhraseAction = jest.fn();
     const onHistoryChange = jest.fn();
     const onSavedPhrasesChange = jest.fn();
     const onApplyOutput = jest.fn();
@@ -109,6 +195,7 @@ describe('CommunicationManagementDialog', () => {
         open
         onClose={jest.fn()}
         savedPhrases={[]}
+        onSavedPhraseAction={onSavedPhraseAction}
         historyItems={[history]}
         onSavedPhrasesChange={onSavedPhrasesChange}
         onHistoryChange={onHistoryChange}
@@ -164,7 +251,8 @@ describe('CommunicationManagementDialog', () => {
       .filterWhere(node => node.text() === '重用')
       .first()
       .simulate('click');
-    expect(onApplyOutput).toHaveBeenLastCalledWith(history.output);
+    expect(onSavedPhraseAction).toHaveBeenLastCalledWith(expect.objectContaining({ sentence: history.sentence, output: history.output }), 'reuse');
+    expect(onApplyOutput).not.toHaveBeenCalled();
   });
 
   test('does not mark history when independent favorite saving fails', () => {

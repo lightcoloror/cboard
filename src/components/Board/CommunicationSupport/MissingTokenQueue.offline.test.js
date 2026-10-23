@@ -1,3 +1,7 @@
+// jsdom has no image decoder; real decoding is covered by production-browser acceptance.
+jest.mock('../../../common/communicationSupport/browserImageVerification', () => ({
+  verifyBrowserLocalImage: async () => ({ status: 'available', width: 1, height: 1 })
+}));
 import React from 'react';
 import { mount } from 'enzyme';
 import { act } from 'react-dom/test-utils';

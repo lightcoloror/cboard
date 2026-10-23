@@ -2,8 +2,20 @@ import API from './api';
 import { getStore } from '../store';
 import { logout } from '../components/Account/Login/Login.actions';
 import history from '../history';
-import { buildCommunicationAiSentenceRequest } from '../common/communicationSupport/communicationAi';
+import {
+  buildCommunicationAiSentenceRequest,
+  applyCommunicationAiSentenceResponse
+} from '../common/communicationSupport/communicationAi';
 import { buildPersonalPictogramTileDTO } from '../common/communicationSupport/pictogramMetadataSuggestion';
+import {
+  buildExpressionLoopState,
+  selectExpressionCandidate,
+  buildExpressionHistoryEntry,
+  buildExpressionLoopStateFromSavedPhrase
+} from '../common/communicationSupport/expressionPipeline';
+import { createCommunicationRepository } from '../common/communicationSupport/repository';
+import { createBrowserKeyValueStore } from '../common/communicationSupport/adapters/browserStorage';
+import { createExpressionDraftService, attachExpressionDraftRequest } from '../common/communicationSupport/expressionDraft';
 
 jest.mock('../store');
 jest.mock('../components/Account/Login/Login.actions', () => ({
@@ -63,6 +75,109 @@ describe('AI request through the installed Axios interceptor', () => {
       `funding-${id}`
     );
   }
+  test('draft storage failure prevents dispatch; cold replay retains original anonymous body and funding identity', async () => {
+    select('synthetic-a');
+    const values = new Map();
+    let fail = false;
+    const storage = { getItem: key => values.get(key) ?? null,
+      setItem: (key, value) => { if (fail) throw new Error('synthetic draft write failed'); values.set(key, value); } };
+    const repository = createCommunicationRepository({ storage });
+    const makeDraft = () => createExpressionDraftService({ repository });
+    const output = [buildPersonalPictogramTileDTO({ id: 'private-a', boardId: 'private',
+      category: 'people', label: '合成林安', image: 'synthetic-private://photo' })];
+    const draft = makeDraft();
+    draft.save({ pipeline: buildExpressionLoopState(output) });
+    const makeRequest = (service, scene) => attachExpressionDraftRequest(
+      buildCommunicationAiSentenceRequest({ output, scene }), service);
+    fail = true;
+    await expect(API.generateCommunicationSentences(makeRequest(draft, '吃饭'))).rejects.toThrow();
+    expect(adapter).not.toHaveBeenCalled();
+    fail = false;
+    adapter.mockRejectedValueOnce(Object.assign(new Error('lost response'), { code: 'ECONNABORTED' }));
+    await expect(API.generateCommunicationSentences(makeRequest(draft, '吃饭'))).rejects.toHaveProperty('code', 'AI_REQUEST_RESULT_UNKNOWN');
+    const cold = makeDraft(); cold.load();
+    adapter.mockImplementation(async config => ({ data: { candidates: ['⟦P1⟧'] },
+      status: 200, statusText: 'OK', headers: {}, config }));
+    await expect(API.generateCommunicationSentences(makeRequest(cold, '过期场景'))).resolves.toMatchObject({ candidates: ['合成林安'] });
+    expect(adapter.mock.calls[0][0].headers['Idempotency-Key']).toBe(adapter.mock.calls[1][0].headers['Idempotency-Key']);
+    expect(adapter.mock.calls[0][0].data).toBe(adapter.mock.calls[1][0].data);
+    expect(JSON.stringify(adapter.mock.calls)).not.toMatch(/合成林安|synthetic-private|private-a|personId|beforeDispatch|afterResponse/);
+    localStorage.setItem('care-funding-v1:synthetic-a:profile-synthetic-a', 'other-funding');
+    await expect(API.generateCommunicationSentences(makeRequest(cold, '吃饭'))).rejects.toHaveProperty('code', 'AI_REQUEST_CONTEXT_CHANGED');
+    expect(adapter).toHaveBeenCalledTimes(2);
+  });
+  test('screens recovered person candidates, confirms and restores the same selected card offline', async () => {
+    select('synthetic-a');
+    const makePerson = id =>
+      buildPersonalPictogramTileDTO({
+        id,
+        boardId: 'private',
+        category: 'people',
+        label: '林知岚',
+        image: `synthetic-private://${id}`
+      });
+    const people = [makePerson('person-a'), makePerson('person-b')];
+    const output = [
+      people[1],
+      { id: 'pain', label: '痛', image: '/synthetic-pain.png' }
+    ];
+    const makeRequest = () => buildCommunicationAiSentenceRequest({ output });
+    adapter.mockRejectedValueOnce(
+      Object.assign(new Error('timeout'), { code: 'ECONNABORTED' })
+    );
+    adapter.mockImplementation(async config => ({
+      data: { candidates: ['⟦P1⟧现在很痛。', '⟦P1⟧痛。'] },
+      status: 200,
+      statusText: 'OK',
+      headers: {},
+      config
+    }));
+    await expect(
+      API.generateCommunicationSentences(makeRequest())
+    ).rejects.toHaveProperty('code', 'AI_REQUEST_RESULT_UNKNOWN');
+    const response = await API.generateCommunicationSentences(makeRequest());
+    const state = selectExpressionCandidate(
+      applyCommunicationAiSentenceResponse(
+        buildExpressionLoopState(output),
+        response
+      ),
+      1
+    );
+    expect(state.candidateSentences).toEqual([
+      '林知岚痛。',
+      '我的意思是：林知岚痛。',
+      '我想表达的是：林知岚痛。'
+    ]);
+    expect(adapter.mock.calls[0][0].headers['Idempotency-Key']).toBe(
+      adapter.mock.calls[1][0].headers['Idempotency-Key']
+    );
+    expect(JSON.stringify(adapter.mock.calls)).not.toMatch(
+      /林知岚|synthetic-private|person-b|image/
+    );
+    const values = new Map();
+    const storage = createBrowserKeyValueStore({
+      localStorage: {
+        getItem: key => values.get(key) || null,
+        setItem: (key, value) => values.set(key, value),
+        removeItem: key => values.delete(key)
+      }
+    });
+    const repository = createCommunicationRepository({ storage });
+    repository.appendCommunicationHistory(buildExpressionHistoryEntry(state));
+    // New repository instance, network disabled: preserve the chosen card ID
+    // and confirmed sentence instead of matching the other same-name card.
+    adapter.mockRejectedValue(new Error('offline'));
+    const entry = createCommunicationRepository({
+      storage
+    }).loadCommunicationHistory()[0];
+    const restored = buildExpressionLoopStateFromSavedPhrase(entry);
+    expect(restored.outputSnapshot[0].id).toBe('person-b');
+    expect(restored.outputSnapshot[0].image).toBe(
+      'synthetic-private://person-b'
+    );
+    expect(restored.candidateSentences[0]).toBe('我的意思是：林知岚痛。');
+    expect(adapter).toHaveBeenCalledTimes(2);
+  });
   test('anonymous same-name selections survive timeout recovery without sharing another person request', async () => {
     select('synthetic-a');
     const make = id =>

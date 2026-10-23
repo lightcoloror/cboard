@@ -119,8 +119,8 @@ function createPersistedCatalogItem(sequenceItem, outputItem) {
     getPictogramAttribution(outputItem);
 
   const displayLabel = String(
-    outputItem.label ||
-      sequenceItem.label ||
+    sequenceItem.label ||
+      outputItem.label ||
       sequenceItem.originalToken ||
       pictogramId
   ).trim();
@@ -133,6 +133,7 @@ function createPersistedCatalogItem(sequenceItem, outputItem) {
     ...(outputItem.video ? { video: outputItem.video } : {}),
     ...(pictogramAttribution ? { pictogramAttribution } : {})
   };
+  if (outputItem.personId) tile.semanticDomain = 'people';
   if (outputItem.keyPath) tile.keyPath = outputItem.keyPath;
   if (outputItem.backgroundColor) {
     tile.backgroundColor = outputItem.backgroundColor;
@@ -141,14 +142,15 @@ function createPersistedCatalogItem(sequenceItem, outputItem) {
   return {
     id: pictogramId,
     tile,
+    persistedOutput: { ...outputItem },
     ...(pictogramAttribution ? { pictogramAttribution } : {}),
-    boardId: '',
+    boardId: String(sequenceItem.boardId || ''),
     boardName: '已保存图片',
     displayLabel,
     labels: [displayLabel],
     synonyms: [],
     excludeTokens: [],
-    semanticDomain: null
+    semanticDomain: outputItem.personId ? 'people' : null
   };
 }
 
@@ -176,11 +178,8 @@ export function restoreReceiverLoopState(entry, boards, options = {}) {
       item
     ])
   );
-  const outputById = new Map(
-    (Array.isArray(entry.output) ? entry.output : [])
-      .filter(item => item && item.id)
-      .map(item => [String(item.id), item])
-  );
+  const savedOutput = Array.isArray(entry.output) ? entry.output : [];
+  let outputCursor = 0;
   const createId =
     typeof options.createId === 'function'
       ? options.createId
@@ -188,16 +187,23 @@ export function restoreReceiverLoopState(entry, boards, options = {}) {
   let reviewItems = sequence.map(item => {
     const pictogramId = String(item.pictogramId || '').trim();
     const token = String(item.originalToken || item.label || '');
+    const outputIndex = Number.isInteger(item.preparedOutputIndex) ? item.preparedOutputIndex : outputCursor;
+    const saved = savedOutput[outputIndex];
+    if (pictogramId || item.textOnly) outputCursor += 1;
+    const aligned = saved && (item.textOnly
+      ? saved.textOnly && saved.label === token
+      : String(saved.id) === pictogramId);
     let tile =
       item.textOnly === true
         ? createTextCommunicationCatalogItem(
             token,
-            `text-restored-${createId('text')}`
+            aligned ? saved.id : `text-restored-${createId('text')}`
           )
         : pictogramId
-        ? catalogById.get(pictogramId) ||
-          createPersistedCatalogItem(item, outputById.get(pictogramId))
+        ? (aligned ? createPersistedCatalogItem(item, saved)
+          : savedOutput.length ? null : catalogById.get(pictogramId))
         : null;
+    if (tile && item.textOnly && aligned) tile.persistedOutput = { ...saved };
 
     // Drafts may outlive a dictionary repair. Recheck automatic choices while
     // preserving manual order, explicit choices, text and completed history.
@@ -229,7 +235,8 @@ export function restoreReceiverLoopState(entry, boards, options = {}) {
       matchType: tile ? matchType : 'none',
       ...(item.lookupToken ? { lookupToken: item.lookupToken } : {}),
       ...(item.sourceSpan ? { sourceSpan: item.sourceSpan } : {}),
-      ...(item.source ? { source: String(item.source) } : {})
+      ...(item.source ? { source: String(item.source) } : {}),
+      ...(Number.isInteger(item.preparedOutputIndex) ? { preparedOutputIndex: item.preparedOutputIndex } : {})
     };
   });
   if (entry.recordStatus === 'draft') {
@@ -341,9 +348,9 @@ export function retainReceiverReviewItemAsText(reviewItems, itemId) {
 }
 
 export function buildReceiverOutputPreview(reviewItems) {
-  return createCommunicationOutputFromMatches(reviewItems, {
-    preserveAutomaticSource: true
-  });
+  return reviewItems.flatMap(item => item.tile && item.tile.persistedOutput
+    ? [{ ...item.tile.persistedOutput }]
+    : createCommunicationOutputFromMatches([item], { preserveAutomaticSource: true }));
 }
 
 export function buildReceiverHistoryEntry(inputText, reviewItems) {
@@ -351,9 +358,14 @@ export function buildReceiverHistoryEntry(inputText, reviewItems) {
     ? reviewItems.filter(item => item && typeof item === 'object')
     : [];
   const outputItems = buildReceiverOutputPreview(safeReviewItems);
+  let outputIndex = 0;
   const pictogramSequence = safeReviewItems.map(item => {
     const matchType = normalizeReceiverMatchType(item && item.matchType);
     const tile = item && item.tile;
+    // Unresolved cards are not present in output. Index snapshots by the
+    // emitted occurrence, not by the review row (or by a repeated tile ID).
+    const emitsOutput = tile && !(tile.textOnly && !String(item.token || '').trim());
+    const preparedOutputIndex = emitsOutput ? outputIndex++ : -1;
     const explicitSource = String((item && item.source) || '').trim();
     const attribution = getPictogramAttribution(tile);
     const provider = String((attribution && attribution.provider) || '').trim();
@@ -377,6 +389,7 @@ export function buildReceiverHistoryEntry(inputText, reviewItems) {
       ...(tile && tile.textOnly ? { textOnly: true } : {}),
       ...(item.lookupToken ? { lookupToken: item.lookupToken } : {}),
       ...(item.sourceSpan ? { sourceSpan: item.sourceSpan } : {}),
+      ...(emitsOutput ? { preparedOutputIndex } : {}),
       ...(attribution ? { attribution } : {})
     };
   });

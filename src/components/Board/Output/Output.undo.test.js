@@ -70,9 +70,12 @@ afterEach(() => {
 
 test('clear leaves a visible one-click undo even with an empty sequence', () => {
   wrapper = mount(<Harness />);
+  expect(wrapper.find('button[aria-label="清空"]').text()).toContain('清空');
+  expect(wrapper.find('button[aria-label="退格"]').text()).toContain('退格');
   control(wrapper, 'onClearClick');
   expect(symbols(wrapper)).toEqual([]);
   expect(undoButton(wrapper)).toHaveLength(1);
+  expect(undoButton(wrapper).text()).toContain('撤销删除');
   undo(wrapper);
   expect(symbols(wrapper)).toEqual(initial);
   expect(undoButton(wrapper)).toHaveLength(0);

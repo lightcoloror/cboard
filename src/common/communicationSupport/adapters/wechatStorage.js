@@ -23,6 +23,8 @@ export function createWechatKeyValueStore(wechatApi) {
   }
 
   return {
+    ...(wechatApi.getScopeKey ? { getScopeKey: () => wechatApi.getScopeKey() } : {}),
+    ...(wechatApi.prepareFavoriteCommit ? { prepareFavoriteCommit: (before, after) => wechatApi.prepareFavoriteCommit(before, after) } : {}),
     getItem: key => serializeWechatValue(wechatApi.getStorageSync(key)),
     setItem: (key, value) => wechatApi.setStorageSync(key, value),
     removeItem: key => {

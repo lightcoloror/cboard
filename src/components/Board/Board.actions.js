@@ -83,6 +83,51 @@ import {
   getManifestWatermark
 } from './Board.sync.analytics';
 
+const BOARD_SYNC_GUARD = Symbol('boardSyncGuard');
+
+// Opt-in for a native save's existing cloud chain. Every nested thunk receives
+// the same guarded dispatch, including communicator requests. Only this chain's
+// synchronous actions advance its baseline; unrelated edits invalidate it.
+function guardedBoardSync(options, work) {
+  return (dispatch, getState, extra) => {
+    let boundary = dispatch[BOARD_SYNC_GUARD];
+    if (!boundary && typeof options?.guard === 'function') {
+      const snapshot = () => {
+        const state = getState();
+        return JSON.stringify({
+          user: state.app?.userData,
+          boards: state.board?.boards,
+          syncMeta: state.board?.syncMeta,
+          activeBoardId: state.board?.activeBoardId,
+          communicators: state.communicator?.communicators,
+          activeCommunicatorId: state.communicator?.activeCommunicatorId
+        });
+      };
+      let expected = snapshot();
+      const isCurrent = () => options.guard() && expected === snapshot();
+      const assert = () => {
+        if (!isCurrent()) throw Object.assign(new Error('Board sync was superseded'), { code: 'BOARD_SAVE_CANCELLED' });
+      };
+      const guardedGetState = () => { assert(); return getState(); };
+      const guardedDispatch = action => {
+        assert();
+        if (typeof action === 'function') return action(guardedDispatch, guardedGetState, extra);
+        const result = dispatch(action);
+        expected = snapshot();
+        return result;
+      };
+      boundary = { dispatch: guardedDispatch, getState: guardedGetState, assert, isCurrent };
+      guardedDispatch[BOARD_SYNC_GUARD] = boundary;
+    }
+    if (!boundary) return work(dispatch, getState, extra, () => {});
+    try {
+      boundary.assert();
+      if (options?.onGuard) options.onGuard(boundary.isCurrent);
+    } catch (error) { return Promise.reject(error); }
+    return work(boundary.dispatch, boundary.getState, extra, boundary.assert);
+  };
+}
+
 export function addBoards(boards) {
   return {
     type: ADD_BOARDS,
@@ -234,10 +279,9 @@ export function replaceDefaultHomeBoardIfIsNescesary(prev, current) {
     const activeCommunicator = getActiveCommunicator(getState);
     const defaultBoardsIncluded = activeCommunicator.defaultBoardsIncluded;
 
-    const updatedValue = defaultBoardsIncluded?.map(defaultBoard => {
-      if (defaultBoard.homeBoard === prev) defaultBoard.homeBoard = current;
-      return defaultBoard;
-    });
+    const updatedValue = defaultBoardsIncluded?.map(defaultBoard =>
+      defaultBoard.homeBoard === prev ? { ...defaultBoard, homeBoard: current } : defaultBoard
+    );
 
     if (!!defaultBoardsIncluded)
       dispatch(updateDefaultBoardsIncluded(updatedValue));
@@ -1036,11 +1080,14 @@ export function syncBoards(remoteBoards) {
   };
 }
 
-export function sanitizeBoardMedia(board) {
-  return async dispatch => {
+export function sanitizeBoardMedia(board, options) {
+  return guardedBoardSync(options, async (dispatch, getState, extra, assert) => {
+    assert();
     const { board: sanitized, hadFailure } = await API.uploadBoardLocalMedia(
-      board
+      board,
+      ...(dispatch[BOARD_SYNC_GUARD] ? [{ guard: dispatch[BOARD_SYNC_GUARD].isCurrent }] : [])
     );
+    assert();
     if (sanitized !== board) {
       dispatch(updateBoard(sanitized));
     }
@@ -1048,11 +1095,11 @@ export function sanitizeBoardMedia(board) {
       throw new Error('media upload failed');
     }
     return sanitized;
-  };
+  });
 }
 
-export function createApiBoard(boardData, boardId) {
-  return async dispatch => {
+export function createApiBoard(boardData, boardId, options) {
+  return guardedBoardSync(options, async (dispatch, getState, extra, assert) => {
     dispatch(createApiBoardStarted());
     boardData = {
       ...boardData,
@@ -1064,6 +1111,7 @@ export function createApiBoard(boardData, boardId) {
       dispatch(createApiBoardFailure(err.message));
       throw new Error(err.message);
     }
+    assert();
     return API.createBoard(boardData)
       .then(res => {
         dispatch(createApiBoardSuccess(res, boardId));
@@ -1073,11 +1121,11 @@ export function createApiBoard(boardData, boardId) {
         dispatch(createApiBoardFailure(err.message));
         throw new Error(err.message);
       });
-  };
+  });
 }
 
-export function updateApiBoard(boardData) {
-  return async dispatch => {
+export function updateApiBoard(boardData, options) {
+  return guardedBoardSync(options, async (dispatch, getState, extra, assert) => {
     dispatch(updateApiBoardStarted());
     try {
       boardData = await dispatch(sanitizeBoardMedia(boardData));
@@ -1085,6 +1133,7 @@ export function updateApiBoard(boardData) {
       dispatch(updateApiBoardFailure(err.message));
       throw new Error(err.message);
     }
+    assert();
     return API.updateBoard(boardData)
       .then(res => {
         dispatch(updateApiBoardSuccess(res));
@@ -1094,11 +1143,11 @@ export function updateApiBoard(boardData) {
         dispatch(updateApiBoardFailure(err.message));
         throw err;
       });
-  };
+  });
 }
 
-export function upsertApiBoard(boardData) {
-  return dispatch => {
+export function upsertApiBoard(boardData, options) {
+  return guardedBoardSync(options, dispatch => {
     if (isLocalBoard(boardData)) {
       return dispatch(createApiBoard(boardData, boardData.id))
         .then(res => {
@@ -1110,11 +1159,11 @@ export function upsertApiBoard(boardData) {
     } else {
       return dispatch(updateApiBoard(boardData));
     }
-  };
+  });
 }
 
-export function deleteApiBoard(boardId) {
-  return dispatch => {
+export function deleteApiBoard(boardId, options) {
+  return guardedBoardSync(options, dispatch => {
     dispatch(deleteApiBoardStarted());
 
     return API.deleteBoard(boardId)
@@ -1126,7 +1175,7 @@ export function deleteApiBoard(boardId) {
         dispatch(deleteApiBoardFailure(err.message));
         throw err;
       });
-  };
+  });
 }
 
 /*
@@ -1261,9 +1310,10 @@ function getFileNameFromUrl(url) {
 
 export function updateApiObjectsNoChild(
   parentBoard,
-  createParentBoard = false
+  createParentBoard = false,
+  options
 ) {
-  return async (dispatch, getState) => {
+  return guardedBoardSync(options, async (dispatch, getState) => {
     //create - update parent board
     const action = createParentBoard ? createApiBoard : updateApiBoard;
     return await dispatch(action(parentBoard, parentBoard.id))
@@ -1284,10 +1334,10 @@ export function updateApiObjectsNoChild(
         );
 
         //check if parent board is the root board of the communicator
-        const comm = getState().communicator.communicators.find(
+        const comm = { ...getState().communicator.communicators.find(
           communicator =>
             communicator.id === getState().communicator.activeCommunicatorId
-        );
+        ) };
         if (comm.rootBoard === parentBoard.id) {
           comm.rootBoard = updatedParentBoardId;
           comm.activeBoardId = updatedParentBoardId;
@@ -1305,12 +1355,16 @@ export function updateApiObjectsNoChild(
       .catch(e => {
         throw new Error(e.message);
       });
-  };
+  });
 }
-export function updateApiMarkedBoards() {
-  return async (dispatch, getState) => {
+export function updateApiMarkedBoards(options) {
+  return guardedBoardSync(options, async (dispatch, getState) => {
     const allBoards = [...getState().board.boards];
-    for await (const board of allBoards) {
+    for await (const pendingBoard of allBoards) {
+      const board = dispatch[BOARD_SYNC_GUARD]
+        ? getState().board.boards.find(item => item.id === pendingBoard.id)
+        : pendingBoard;
+      if (!board) continue;
       const boardsIds = getState().board.boards?.map(board => board.id);
       if (!boardsIds.includes(board.id)) continue;
 
@@ -1352,11 +1406,12 @@ export function updateApiMarkedBoards() {
             replaceBoard({ ...boardData }, { ...boardData, id: boardId })
           );
         } catch (err) {
+          if (dispatch[BOARD_SYNC_GUARD]) throw err;
           console.log(err.message);
         }
       }
     }
-  };
+  });
 }
 
 function unmarkShouldCreateBoard(boardId) {
@@ -1369,25 +1424,31 @@ function unmarkShouldCreateBoard(boardId) {
 export function updateApiObjects(
   childBoard,
   parentBoard,
-  createParentBoard = false
+  createParentBoard = false,
+  options
 ) {
-  return (dispatch, getState) => {
+  return guardedBoardSync(options, (dispatch, getState) => {
     //create child board
     return dispatch(createApiBoard(childBoard, childBoard.id))
       .then(res => {
         const updatedChildBoardId = res.id;
+        // Creating the child can rewrite loadBoard references locally. A guarded
+        // chain must carry those accepted changes into the parent request.
+        const currentParent = dispatch[BOARD_SYNC_GUARD]
+          ? getState().board.boards.find(item => item.id === parentBoard.id) || parentBoard
+          : parentBoard;
         //create - update parent board
         const updateTilesParentBoard = () =>
-          parentBoard.tiles.map(tile => {
+          currentParent.tiles.map(tile => {
             if (tile.loadBoard === childBoard.id)
               return { ...tile, loadBoard: updatedChildBoardId };
             return tile;
           });
         const updatedParentBoard = {
-          ...parentBoard,
+          ...currentParent,
           tiles: createParentBoard
             ? updateTilesParentBoard()
-            : parentBoard.tiles
+            : currentParent.tiles
         };
         const action = createParentBoard ? createApiBoard : updateApiBoard;
         return dispatch(action(updatedParentBoard, parentBoard.id))
@@ -1411,18 +1472,19 @@ export function updateApiObjects(
             );
 
             //check if parent board is the root board of the communicator
-            const comm = getState().communicator.communicators.find(
+            const comm = { ...getState().communicator.communicators.find(
               communicator =>
                 communicator.id === getState().communicator.activeCommunicatorId
-            );
+            ) };
             if (comm.rootBoard === parentBoard.id) {
               comm.rootBoard = updatedParentBoardId;
               comm.activeBoardId = updatedParentBoardId;
               dispatch(upsertCommunicator(comm));
             }
             return dispatch(upsertApiCommunicator(comm))
-              .then(() => {
-                dispatch(updateApiMarkedBoards());
+              .then(async () => {
+                if (dispatch[BOARD_SYNC_GUARD]) await dispatch(updateApiMarkedBoards());
+                else dispatch(updateApiMarkedBoards());
                 return updatedParentBoardId;
               })
               .catch(e => {
@@ -1436,5 +1498,5 @@ export function updateApiObjects(
       .catch(e => {
         throw new Error(e.message);
       });
-  };
+  });
 }

@@ -10,6 +10,9 @@ import DialogTitle from '@material-ui/core/DialogTitle';
 import TextField from '@material-ui/core/TextField';
 import InputImage from '../../UI/InputImage';
 import Symbol from '../Symbol';
+import ImageAvailabilityLabel from './ImageAvailabilityLabel.component';
+import { createImageRepairOperation } from '../../../common/communicationSupport/imageRepair';
+import { currentImageOperationEpoch } from '../../../common/communicationSupport/imageOperationEpoch';
 import {
   countCatalogAutoResolvedMissingTokens,
   countPendingMissingTokens,
@@ -18,8 +21,7 @@ import {
 } from '../../../common/communicationSupport/missingTokens';
 import {
   buildAiGeneratedRuntimePictogram,
-  buildDevicePrivateRuntimePictogram,
-  getRuntimePictogramStorageState
+  buildDevicePrivateRuntimePictogram
 } from '../../../common/communicationSupport/runtimePictogram';
 import { readPersonalImageBlob } from './PersonalImageManager.component';
 
@@ -119,6 +121,8 @@ export default function MissingTokenQueue({
   const [query, setQuery] = useState('');
   const [notice, setNotice] = useState('');
   const [privateImageRecordId, setPrivateImageRecordId] = useState(null);
+  const privateSelectionRef = useRef(privateImageRecordId);
+  privateSelectionRef.current = privateImageRecordId;
   const [isLoadingPrivateImage, setIsLoadingPrivateImage] = useState(false);
   const [recentLocalResolvedCount, setRecentLocalResolvedCount] = useState(0);
   const [isSearchingOnline, setIsSearchingOnline] = useState(false);
@@ -126,12 +130,14 @@ export default function MissingTokenQueue({
   const [generatedCandidate, setGeneratedCandidate] = useState(null);
   const [cachingRecordId, setCachingRecordId] = useState(null);
   const cachingRef = useRef(false);
+  const imagePreparationRef = useRef(createImageRepairOperation());
   const mountedRef = useRef(true);
   const recordsRef = useRef(records);
   recordsRef.current = records;
   useEffect(
     () => () => {
       mountedRef.current = false;
+      imagePreparationRef.current.cancel();
     },
     []
   );
@@ -143,8 +149,11 @@ export default function MissingTokenQueue({
     try {
       // Reuse the private-image byte representation and the scoped repository.
       // A remote URL alone is never evidence of offline availability.
-      const blob = await downloadOnlineImage(pictogram);
-      const image = await readPrivateImage(blob);
+      const image = await imagePreparationRef.current.prepare(
+        JSON.stringify([record.id, record.updatedAt, pictogram.id, pictogram.image]),
+        async () => readPrivateImage(await downloadOnlineImage(pictogram))
+      );
+      if (!image) return;
       if (!/^data:image\/(png|jpeg|gif|webp);base64,/.test(image))
         throw new Error('Image bytes unavailable');
       const current = recordsRef.current.find(item => item.id === record.id);
@@ -280,10 +289,15 @@ export default function MissingTokenQueue({
 
   async function resolveWithPrivateImage(blob) {
     if (!privateImageRecord) return;
+    const expected = privateImageRecord;
+    const epoch = currentImageOperationEpoch();
 
     setIsLoadingPrivateImage(true);
     try {
       const image = await readPrivateImage(blob);
+      const current = recordsRef.current.find(item => item.id === expected.id);
+        if (!mountedRef.current || privateSelectionRef.current !== expected.id || epoch !== currentImageOperationEpoch() ||
+        !current || current.updatedAt !== expected.updatedAt || current.status !== expected.status) return;
       const pictogram = buildDevicePrivateRuntimePictogram({
         recordId: privateImageRecord.id,
         label: privateImageRecord.normalizedToken,
@@ -506,10 +520,7 @@ export default function MissingTokenQueue({
                       className="CommunicationSupportPanel__meta"
                       role="status"
                     >
-                      {getRuntimePictogramStorageState(resolvedPictogram) ===
-                      'embedded'
-                        ? '图片已保存到本机，可离线复用'
-                        : '尚未确认离线可用，请联网重新保存图片'}
+                      <ImageAvailabilityLabel source={resolvedPictogram.image} />
                     </span>
                   )}
                   {record.status === 'resolved' &&

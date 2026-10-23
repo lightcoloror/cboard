@@ -19,6 +19,7 @@ import {
   normalizePublicPictogramAttribution
 } from './pictogramAttribution';
 import { normalizeExpressionCandidates } from './candidateFeedback';
+import { normalizeLifeContext, preserveLocalPhraseLifeContext } from './savedPhraseManagement';
 const MAX_COMMUNICATION_ITEMS = 100;
 
 function normalizeTimestamp(value, fallback = Date.now()) {
@@ -140,6 +141,7 @@ function normalizeSavedPhraseEntry(entry) {
       id,
       sentence,
       output,
+      ...(Object.prototype.hasOwnProperty.call(entry, 'lifeContext') ? { lifeContext: normalizeLifeContext(entry.lifeContext) } : {}),
       usageCount: normalizeUsageCount(entry.usageCount),
       createdAt,
       lastUsedAt: normalizeTimestamp(entry.lastUsedAt, createdAt),
@@ -236,6 +238,12 @@ function normalizeHistoryEntry(entry) {
     normalized.recordStatus = entry.recordStatus;
   }
 
+  if (normalized.direction === 'receive' && typeof entry.repairOfRecordId === 'string' &&
+      entry.repairOfRecordId.trim() && entry.repairOfRecordId.trim() !== normalized.id) {
+    normalized.repairOfRecordId = entry.repairOfRecordId.trim();
+    if (typeof entry.repairSourceSessionId === 'string' && entry.repairSourceSessionId.trim())
+      normalized.repairSourceSessionId = entry.repairSourceSessionId.trim();
+  }
   normalized.updatedAt = normalizeTimestamp(entry.updatedAt, createdAt);
 
   const baseVersion = Number(entry.baseVersion);
@@ -383,6 +391,9 @@ function sanitizeCloudReceiverSequence(value) {
 
 function sanitizeCommunicationCloudEntry(entry) {
   const normalized = { ...entry };
+  delete normalized.lifeContext;
+  delete normalized.repairOfRecordId;
+  delete normalized.repairSourceSessionId;
   if (Array.isArray(entry.output)) {
     normalized.output = sanitizeCloudOutputList(entry.output);
   }
@@ -733,7 +744,7 @@ export function mergeCommunicationSupportSettings(localValue, remoteValue) {
       local.savedPhrases,
       remote.savedPhrases,
       item => item.sentence
-    ),
+    ).map(item => preserveLocalPhraseLifeContext(item, local.savedPhrases.find(phrase => phrase.id === item.id))),
     local.history
   );
 }

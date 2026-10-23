@@ -22,6 +22,7 @@ import {
   createPrivatePersonMarkers
 } from './privatePersonAi';
 import { normalizeConversationScene } from './conversationSession';
+import { filterFaithfulExpressionCandidates } from './phraseSuggestions';
 import {
   RESEGMENT_CONTRACT_VERSION,
   normalizeResegmentResponse
@@ -127,11 +128,15 @@ export function applyCommunicationAiSentenceResponse(
   response,
   candidateCount
 ) {
-  const candidates = normalizeStringList(
-    response && response.candidates,
-    normalizeCandidateCount(candidateCount),
-    120
+  const labels = ((localState && localState.outputSnapshot) || []).map(
+    item => item.label
   );
+  const candidates = filterFaithfulExpressionCandidates(
+    labels,
+    response && response.candidates
+  )
+    .filter(candidate => candidate.length <= 120)
+    .slice(0, normalizeCandidateCount(candidateCount));
 
   if (!localState || !candidates.length) return localState;
 
@@ -139,11 +144,10 @@ export function applyCommunicationAiSentenceResponse(
     ...localState,
     // Keep valid AI alternatives first. A short/duplicate response is topped
     // up locally, never by issuing another paid request.
-    candidateSentences: normalizeStringList(
-      [...candidates, ...localState.candidateSentences],
-      normalizeCandidateCount(candidateCount),
-      120
-    ),
+    candidateSentences: filterFaithfulExpressionCandidates(labels, [
+      ...candidates,
+      ...localState.candidateSentences
+    ]).slice(0, normalizeCandidateCount(candidateCount)),
     selectedIndex: 0,
     candidateProvider: String(
       (response && response.provider) || 'cboard-api-ai'

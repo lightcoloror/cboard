@@ -32,7 +32,9 @@ export function createBrowserExpressionAudio(createAudio = () => new Audio()) {
         };
         finishActive = finish;
         try {
-          audio = createAudio();
+          // Let existing callers retain a format-specific decoder (CBoard's
+          // Safari OGV path); ordinary Audio factories may ignore the source.
+          audio = createAudio(source);
           audio.onended = () => finish({ ok: true, message: '录音已播报。' });
           audio.onerror = () =>
             finish({

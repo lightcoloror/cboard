@@ -62,7 +62,7 @@ export class LanguageProvider extends Component {
       })
       .catch(() => {
         if (!platformLangs.includes(DEFAULT_LANG)) {
-          setLangs(platformLangs.push(DEFAULT_LANG));
+          setLangs([...platformLangs, DEFAULT_LANG]);
         }
         changeLang(DEFAULT_LANG);
         showNotification(`A ${lang} translation was not found!.

@@ -113,6 +113,31 @@ async function setInput(wrapper, value) {
 }
 
 describe('ReceiverLoopPanel', () => {
+  test('saved label follows current content; silent failure keeps UI text and retry saves without matching', async () => {
+    const values = new Map(); let fail = false;
+    const repo = createCommunicationRepository({ storage: {
+      getItem: key => values.get(key) || null,
+      setItem: (key, value) => {
+        if (!(fail && key === 'cboard_communication_receiver_records')) values.set(key, value);
+      }
+    } });
+    const wrapper = mount(<ReceiverLoopPanel boards={[]} onApplyOutput={jest.fn()} onJumpBoard={jest.fn()}
+      onCreateDraft={repo.createReceiverDraft} onUpdateDraft={repo.updateReceiverDraft}
+      onDiscardResumableRecord={repo.discardResumableReceiverRecord} />);
+    await setInput(wrapper, '我今晚不回家吃饭');
+    expect(wrapper.find('[data-testid="receiver-draft-save-status"]').text()).toBe('已保存到本机');
+    fail = true;
+    await setInput(wrapper, '明早七点半回家');
+    expect(wrapper.find('[data-testid="receiver-draft-save-status"]').text()).not.toContain('已保存到本机');
+    expect(repo.loadResumableReceiverRecord().inputText).toBe('我今晚不回家吃饭');
+    fail = false;
+    await act(async () => wrapper.find('button').filterWhere(node => node.text() === '重试保存').simulate('click'));
+    wrapper.update();
+    expect(wrapper.find('[data-testid="receiver-draft-save-status"]').text()).toBe('已保存到本机');
+    expect(repo.loadResumableReceiverRecord().inputText).toBe('明早七点半回家');
+    expect(repo.loadCommunicationHistory()).toHaveLength(0);
+    wrapper.unmount();
+  });
   test('persists unfinished input through unmount and idle reopen without matching or uploading', async () => {
     const values = new Map();
     let timestamp = 100;
@@ -1052,7 +1077,7 @@ describe('ReceiverLoopPanel', () => {
       .simulate('click');
     wrapper.update();
 
-    expect(onDiscardResumableRecord).toHaveBeenCalledWith('receiver-restored');
+    expect(onDiscardResumableRecord).toHaveBeenCalledWith('receiver-restored', { expected: initialRecord });
     expect(
       wrapper
         .find('ForwardRef(TextField)')
@@ -1132,7 +1157,7 @@ describe('ReceiverLoopPanel', () => {
         isUsedForLearning: true
       })
     );
-    expect(onUpdateDraft.mock.calls[0][1].pictogramSequence[1]).toEqual(
+    expect(onUpdateDraft.mock.calls[onUpdateDraft.mock.calls.length - 1][1].pictogramSequence[1]).toEqual(
       expect.objectContaining({
         pictogramId: 'drink',
         source: 'manual'

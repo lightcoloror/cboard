@@ -198,10 +198,16 @@ export function updateReceiverDraftEntry(
   { now = Date.now } = {}
 ) {
   const currentDraft = requireDraft(draft);
-  const historyEntry = requireReceiverEntry(entry);
+  const historyEntry = { ...requireReceiverEntry(entry) };
+  delete historyEntry.repairOfRecordId;
+  delete historyEntry.repairSourceSessionId;
 
   return {
     ...historyEntry,
+    ...(currentDraft.repairOfRecordId ? {
+      repairOfRecordId: currentDraft.repairOfRecordId,
+      repairSourceSessionId: currentDraft.repairSourceSessionId || currentDraft.sessionId
+    } : {}),
     id: currentDraft.id,
     sessionId: currentDraft.sessionId,
     patientId: currentDraft.patientId,

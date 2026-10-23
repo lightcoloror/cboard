@@ -1,3 +1,4 @@
+import LocalSnapshotImage from './LocalSnapshotImage.component';
 import React, {
   useCallback,
   useEffect,
@@ -6,7 +7,9 @@ import React, {
   useState
 } from 'react';
 import PropTypes from 'prop-types';
+import ImageRepairControls from './ImageRepairControls.component';
 import { careErrorMessage } from '../../../common/communicationSupport/careErrors';
+import { attachExpressionDraftRequest } from '../../../common/communicationSupport/expressionDraft';
 import Button from '@material-ui/core/Button';
 import { createCandidateAutoplayController } from '../../../common/communicationSupport/candidateAutoplay';
 import {
@@ -41,12 +44,20 @@ import {
 import { PATIENT_ACTION_IDS } from '../../../common/communicationSupport/patientActionLanguage';
 import CommunicationPlaybackDialog from './CommunicationPlaybackDialog.component';
 import PatientActionButton from './PatientActionButton.component';
+import LifeContextFilter from './LifeContextFilter.component';
+import { filterSavedPhrasesByLifeContext } from '../../../common/communicationSupport/savedPhraseManagement';
 
 const DEFAULT_COPY = {
   expressSectionTitle: '候选句播报',
   currentBoard: '当前板',
   noBoard: '未选择',
   currentOutput: '当前输出',
+  rejectCandidates: '都不对',
+  undoRejection: '撤销拒绝',
+  candidatesRejected: '已停止这组候选。图片已保留，请调整图片，或撤销拒绝后手动选择。',
+  rejectionSaveFailed: '本次已停止，但拒绝状态未能保存，重开页面可能丢失；请重试保存。',
+  rejectionUndoFailed: '撤销未能保存，候选仍保持停止，请重试。',
+  rejectionUndone: '已恢复候选，请手动选择；不会自动播报或再次调用 AI。',
   adjustOutput: '调整已选图片顺序',
   moveLeft: '左移',
   moveRight: '右移',
@@ -58,6 +69,7 @@ const DEFAULT_COPY = {
   replayAll: '全部重播',
   autoplayEnabled: '秒无操作后自动播报；触摸或滚动可取消。',
   autoplayDisabled: '自动播报已关闭，可手动选择一句或全部播报。',
+  autoplayPaused: '当前不会自动播报，请手动选择一句或全部播报。',
   savePhrase: '收藏此句',
   phraseSaved: '已收藏',
   confirmExpression: '确认此句',
@@ -97,7 +109,7 @@ const DEFAULT_COPY = {
 
 const SPEECH_COMPLETION_TIMEOUT_MS = 12000;
 
-function SavedPhraseRow({ item, onApply, onPlay, playLabel, reuseLabel }) {
+function SavedPhraseRow({ item, onApply, onPlay, onView, playLabel, reuseLabel }) {
   return (
     <div className="CommunicationSupportPanel__savedRow">
       <div className="CommunicationSupportPanel__savedContent">
@@ -106,7 +118,7 @@ function SavedPhraseRow({ item, onApply, onPlay, playLabel, reuseLabel }) {
             .slice(0, 4)
             .map((outputItem, index) =>
               outputItem.image ? (
-                <img
+                <LocalSnapshotImage
                   className="CommunicationSupportPanel__savedImage"
                   src={outputItem.image}
                   alt=""
@@ -123,6 +135,7 @@ function SavedPhraseRow({ item, onApply, onPlay, playLabel, reuseLabel }) {
         </div>
       </div>
       <div className="CommunicationSupportPanel__savedActions">
+        <Button size="small" onClick={() => onView(item)}>查看整句</Button>
         <Button
           color="primary"
           size="small"
@@ -172,9 +185,12 @@ SavedPhraseRow.propTypes = {
 };
 
 export default function ExpressionLoopPanel({
+  savedPhraseRequest,
+  onSavedPhraseRequestHandled,
   output,
   boards,
   activeBoardId,
+  activeBoardName,
   pictogramOrdering,
   savedPhrases,
   onApplyOutput,
@@ -192,15 +208,47 @@ export default function ExpressionLoopPanel({
   conversationContext,
   aiAvailable,
   aiUnavailableReason,
+  aiContextKey,
+  getAiContextKey,
   onGenerateAiSentences,
   candidateAutoplayDelaySeconds,
   candidateFeedbackSyncAvailable,
+  expressionDraftService,
+  allowLegacyOutput = true,
+  active = true,
+  onDraftConfirmed,
   copyOverrides
 }) {
   const copy = { ...DEFAULT_COPY, ...(copyOverrides || {}) };
+  const initialDraftRef = useRef(undefined);
+  const draftLoadErrorRef = useRef('');
+  if (initialDraftRef.current === undefined) {
+    try { initialDraftRef.current = expressionDraftService ? expressionDraftService.load() : null; }
+    catch (error) { initialDraftRef.current = null; draftLoadErrorRef.current = error.message; }
+  }
+  const initialDraft = initialDraftRef.current;
+  const initialBlocked = Boolean(draftLoadErrorRef.current ||
+    initialDraft?.status === 'draft' ||
+    (expressionDraftService && !initialDraft && !allowLegacyOutput && output.length));
+  const [restoreChoice, setRestoreChoice] = useState(initialBlocked ? 'pending' : 'active');
+  const [confirmingDiscard, setConfirmingDiscard] = useState(false);
+  const [draftNotice, setDraftNotice] = useState(draftLoadErrorRef.current
+    ? `上次表达暂时无法读取：${draftLoadErrorRef.current}。原存储未被改写。`
+    : expressionDraftService && !initialDraft && !allowLegacyOutput && output.length
+    ? '旧输出无法确认所属档案，请开始新表达后重新复核。' : '');
+  const [draftSaveFailed, setDraftSaveFailed] = useState(Boolean(draftLoadErrorRef.current));
+  const [pendingAiRecovery, setPendingAiRecovery] = useState(
+    initialDraft?.status === 'draft' ? initialDraft.snapshot.pendingAi || null : null);
+  const draftReadyRef = useRef(!initialBlocked);
+  const awaitingInitialClearRef = useRef(Boolean(initialDraft));
+  const draftCompletedRef = useRef(initialDraft?.status === 'confirmed');
+  const lastDraftSnapshotRef = useRef(null);
+  const confirmPendingRef = useRef(false);
   const initialLoopStateRef = useRef(null);
   if (!initialLoopStateRef.current) {
-    initialLoopStateRef.current = buildExpressionLoopState(output);
+    initialLoopStateRef.current = initialDraft?.status === 'draft'
+      ? initialDraft.snapshot.pipeline
+      : buildExpressionLoopState(initialDraft || !allowLegacyOutput ? [] : output);
   }
   const initialCandidateFeedbackDraftRef = useRef(undefined);
   if (initialCandidateFeedbackDraftRef.current === undefined) {
@@ -217,6 +265,9 @@ export default function ExpressionLoopPanel({
     () => buildExpressionOutputSignature(output),
     [output]
   );
+  // Legacy feedback signatures contain only ID and label. Lifecycle checks
+  // additionally include the ordered snapshots so same-name people never merge.
+  const outputSnapshotKey = JSON.stringify(output);
   const pictogramSuggestions = useMemo(
     () =>
       buildExpressionPictogramSuggestions(boards, output, pictogramOrdering, {
@@ -230,6 +281,7 @@ export default function ExpressionLoopPanel({
     initialLoopStateRef.current.candidateSentences.length ? 'ready' : 'idle'
   );
   const [speechAvailable, setSpeechAvailable] = useState(true);
+  const [pendingAutoplayDelayMs, setPendingAutoplayDelayMs] = useState(0);
   const [isSaved, setIsSaved] = useState(false);
   const [isConfirmed, setIsConfirmed] = useState(false);
   const [expressionConfirmError, setExpressionConfirmError] = useState('');
@@ -239,19 +291,37 @@ export default function ExpressionLoopPanel({
   const [aiNotice, setAiNotice] = useState('');
   const [candidateFeedbackEntries, setCandidateFeedbackEntries] = useState(() =>
     normalizeExpressionCandidates(
-      initialCandidateFeedbackDraftRef.current
+      initialDraft?.status === 'draft'
+        ? initialDraft.snapshot.candidateFeedbackEntries
+        : initialCandidateFeedbackDraftRef.current
         ? initialCandidateFeedbackDraftRef.current.candidates
         : [],
       initialLoopStateRef.current.candidateSentences
     )
   );
   const [candidateFeedbackNotice, setCandidateFeedbackNotice] = useState('');
+  const [candidatesRejected, setCandidatesRejected] = useState(
+    Boolean(initialDraft?.status === 'draft'
+      ? initialDraft.snapshot.rejected : initialCandidateFeedbackDraftRef.current?.rejected)
+  );
+  const candidatesRejectedRef = useRef(candidatesRejected);
   const [playbackPhrase, setPlaybackPhrase] = useState(null);
+  const [savedPlaybackNotice, setSavedPlaybackNotice] = useState('');
+  const savedPlaybackPending = useRef(false);
+  const savedPlaybackCounted = useRef(false);
+  const savedRequestRef = useRef(null);
+  const appliedSavedRef = useRef(null);
+  const applySavedPending = useRef(false);
+  const [lifeContext, setLifeContext] = useState(null);
+  const contextPhrases = filterSavedPhrasesByLifeContext(savedPhrases, lifeContext);
   const playRunRef = useRef(0);
   const aiRunRef = useRef(0);
   const aiPendingRef = useRef(false);
+  const previousAiContextRef = useRef(aiContextKey);
   const speechTimeoutsRef = useRef(new Set());
   const previousOutputSignatureRef = useRef(null);
+  const previousOutputSnapshotRef = useRef(null);
+  const previousConversationSessionRef = useRef(conversationSessionId);
   const previousAutoplayDelayRef = useRef(null);
   const candidateFeedbackDraftIdRef = useRef(
     initialCandidateFeedbackDraftRef.current
@@ -263,8 +333,47 @@ export default function ExpressionLoopPanel({
   const autoplayPlayRef = useRef(null);
   const autoplayStopRef = useRef(null);
   const autoplayControllerRef = useRef(null);
+  const shareRunRef = useRef(0);
+  const sharePendingRef = useRef(false);
+  const shareMountedRef = useRef(true);
+  const shareContextRef = useRef(null);
+  const restoredAutoplayPausedRef = useRef(Boolean(initialDraft) || initialBlocked);
 
   loopStateRef.current = loopState;
+  shareContextRef.current = {
+    outputSignature,
+    outputSnapshotKey,
+    conversationSessionId,
+    candidateSentences: loopState.candidateSentences,
+    selectedIndex: loopState.selectedIndex
+  };
+
+  const invalidateExpressionShare = useCallback(() => {
+    shareRunRef.current += 1;
+    sharePendingRef.current = false;
+  }, []);
+  const cancelExpressionShare = useCallback(() => {
+    invalidateExpressionShare();
+    setIsSharingExpression(false);
+    setExpressionShareNotice('');
+  }, [invalidateExpressionShare]);
+
+  useEffect(() => {
+    shareMountedRef.current = true;
+    cancelExpressionShare();
+    return () => {
+      shareMountedRef.current = false;
+      invalidateExpressionShare();
+    };
+  }, [
+    outputSignature,
+    outputSnapshotKey,
+    conversationSessionId,
+    loopState.candidateSentences,
+    loopState.selectedIndex,
+    cancelExpressionShare,
+    invalidateExpressionShare
+  ]);
 
   const discardCandidateFeedbackDraft = useCallback(
     () => {
@@ -277,7 +386,11 @@ export default function ExpressionLoopPanel({
 
   const resetCandidateFeedback = useCallback(
     nextState => {
-      discardCandidateFeedbackDraft();
+      // Keep an explicit rejection attached to its old sequence for reopening.
+      if (!candidatesRejectedRef.current) discardCandidateFeedbackDraft();
+      candidateFeedbackDraftIdRef.current = null;
+      candidatesRejectedRef.current = false;
+      setCandidatesRejected(false);
       setCandidateFeedbackEntries(
         normalizeExpressionCandidates([], nextState.candidateSentences)
       );
@@ -292,7 +405,8 @@ export default function ExpressionLoopPanel({
       clearTimer: timeoutId => window.clearTimeout(timeoutId),
       playCandidates: candidateSentences =>
         autoplayPlayRef.current(candidateSentences),
-      stopPlayback: () => autoplayStopRef.current()
+      stopPlayback: () => autoplayStopRef.current(),
+      onPendingChange: setPendingAutoplayDelayMs
     });
   }
 
@@ -304,22 +418,43 @@ export default function ExpressionLoopPanel({
     });
   autoplayStopRef.current = stopPlaybackQueue;
 
+  useEffect(() => {
+    if (!expressionDraftService) return;
+    // Redux's legacy output is not a second restore source. Clear its visible
+    // copy until the person explicitly resumes this scope's ordered snapshot.
+    if (initialDraft || initialBlocked) onApplyOutput([]);
+    // This is a once-per-scope startup operation, not an output-change effect.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   useEffect(
     () => {
+      if (!draftReadyRef.current) return;
+      if (awaitingInitialClearRef.current) {
+        if (output.length) return;
+        awaitingInitialClearRef.current = false;
+      }
       const outputChanged =
-        previousOutputSignatureRef.current !== outputSignature;
+        previousOutputSnapshotRef.current !== outputSnapshotKey;
+      const sessionChanged = previousConversationSessionRef.current !== conversationSessionId;
       const delayChanged =
         previousAutoplayDelayRef.current !== candidateAutoplayDelaySeconds;
-      if (!outputChanged && !delayChanged) return;
+      if (!outputChanged && !delayChanged && !sessionChanged) return;
 
       const isInitial = previousOutputSignatureRef.current === null;
       previousOutputSignatureRef.current = outputSignature;
+      previousOutputSnapshotRef.current = outputSnapshotKey;
+      previousConversationSessionRef.current = conversationSessionId;
       previousAutoplayDelayRef.current = candidateAutoplayDelaySeconds;
       const nextState = outputChanged
         ? buildExpressionLoopState(output)
         : loopStateRef.current;
 
       if (outputChanged) {
+        if (!isInitial) {
+          draftCompletedRef.current = false;
+          restoredAutoplayPausedRef.current = false;
+        }
         if (!isInitial) {
           if (playbackActiveRef.current) autoplayStopRef.current();
           else onCancelSpeech();
@@ -338,9 +473,31 @@ export default function ExpressionLoopPanel({
         setExpressionShareNotice('');
         setIsGeneratingAi(false);
         setAiNotice('');
+        setPendingAiRecovery(null);
         if (!isInitial) resetCandidateFeedback(nextState);
+        const draft = findExpressionCandidateFeedbackDraft(candidateFeedbackDrafts, {
+          sessionId: conversationSessionId,
+          outputSignature,
+          candidateSentences: nextState.candidateSentences
+        });
+        candidateFeedbackDraftIdRef.current = draft?.id || null;
+        candidatesRejectedRef.current = Boolean(draft?.rejected);
+        setCandidatesRejected(candidatesRejectedRef.current);
+        setCandidateFeedbackEntries(normalizeExpressionCandidates(
+          draft?.candidates || [], nextState.candidateSentences
+        ));
       }
 
+      if (sessionChanged) {
+        aiRunRef.current += 1;
+        aiPendingRef.current = false;
+        onCancelSpeech();
+      }
+      if (candidatesRejectedRef.current || !active ||
+          restoredAutoplayPausedRef.current || sessionChanged) {
+        autoplayControllerRef.current.cancel();
+        return;
+      }
       autoplayControllerRef.current.schedule(
         nextState.candidateSentences,
         candidateAutoplayDelaySeconds
@@ -348,12 +505,156 @@ export default function ExpressionLoopPanel({
     },
     [
       candidateAutoplayDelaySeconds,
+      candidateFeedbackDrafts,
+      conversationSessionId,
       onCancelSpeech,
       output,
       outputSignature,
-      resetCandidateFeedback
+      outputSnapshotKey,
+      resetCandidateFeedback,
+      active,
+      restoreChoice
     ]
   );
+
+  useEffect(() => {
+    if (!draftReadyRef.current && savedPhraseRequest?.mode === 'reuse') return;
+    if (!savedPhraseRequest || savedRequestRef.current === savedPhraseRequest.requestId) return;
+    savedRequestRef.current = savedPhraseRequest.requestId;
+    if (savedPhraseRequest.mode === 'reuse') handleApplySavedPhrase(savedPhraseRequest.item);
+    else if (savedPhraseRequest.mode === 'play') handlePlaySavedPhrase(savedPhraseRequest.item);
+    else handleViewSavedPhrase(savedPhraseRequest.item);
+    if (onSavedPhraseRequestHandled) onSavedPhraseRequestHandled(savedPhraseRequest.requestId);
+    // Reconcile this render's output first. An explicit full-sentence command
+    // must not be overwritten by that same render's stale output props.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [savedPhraseRequest, restoreChoice]);
+
+  function currentDraftSnapshot(extra = {}) {
+    return {
+      pipeline: loopStateRef.current,
+      rejected: candidatesRejectedRef.current,
+      candidateFeedbackEntries,
+      ...extra
+    };
+  }
+
+  function persistDraft(extra = {}, options = {}) {
+    if (!expressionDraftService) return true;
+    if (!draftReadyRef.current || draftCompletedRef.current) return false;
+    try {
+      expressionDraftService.save(currentDraftSnapshot(extra), options);
+      lastDraftSnapshotRef.current = JSON.stringify(currentDraftSnapshot());
+      setDraftSaveFailed(false);
+      setDraftNotice('已保存到本机');
+      return true;
+    } catch (error) {
+      setDraftSaveFailed(true);
+      setDraftNotice(`本次修改尚未保存：${error.message}。当前内容已保留，请重试。`);
+      return false;
+    }
+  }
+
+  const draftSnapshotKey = JSON.stringify({ pipeline: loopState, rejected: candidatesRejected, candidateFeedbackEntries });
+  useEffect(() => {
+    if (!expressionDraftService || !draftReadyRef.current || draftCompletedRef.current ||
+        previousOutputSnapshotRef.current !== outputSnapshotKey ||
+        JSON.stringify(loopState.outputSnapshot) !== outputSnapshotKey) return;
+    if (lastDraftSnapshotRef.current === draftSnapshotKey) return;
+    persistDraft();
+    // Snapshot is the complete local payload; no network or playback here.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [draftSnapshotKey, outputSnapshotKey, restoreChoice, expressionDraftService]);
+
+  useEffect(() => {
+    const record = expressionDraftService?.getCurrent();
+    const pending = record?.status === 'draft' ? record.snapshot.pendingAi || null : null;
+    if (active) {
+      if (expressionDraftService) setPendingAiRecovery(pending);
+      return;
+    }
+    autoplayControllerRef.current.cancel();
+    playRunRef.current += 1;
+    aiRunRef.current += 1;
+    aiPendingRef.current = false;
+    playbackActiveRef.current = false;
+    invalidateExpressionShare();
+    setIsSharingExpression(false);
+    setExpressionShareNotice('');
+    setIsGeneratingAi(false);
+    setCandidatePhase(loopStateRef.current.candidateSentences.length ? 'done' : 'idle');
+    savedPlaybackPending.current = false;
+    setPlaybackPhrase(null);
+    if (expressionDraftService) setPendingAiRecovery(pending);
+    onCancelSpeech();
+  }, [active, onCancelSpeech, invalidateExpressionShare, expressionDraftService]);
+
+  useEffect(() => {
+    if (previousAiContextRef.current === aiContextKey) return;
+    previousAiContextRef.current = aiContextKey;
+    aiRunRef.current += 1;
+    aiPendingRef.current = false;
+    setIsGeneratingAi(false);
+    autoplayControllerRef.current.cancel();
+    playRunRef.current += 1;
+    playbackActiveRef.current = false;
+    invalidateExpressionShare();
+    setIsSharingExpression(false);
+    setExpressionShareNotice('');
+    setCandidatePhase(loopStateRef.current.candidateSentences.length ? 'done' : 'idle');
+    savedPlaybackPending.current = false;
+    setPlaybackPhrase(null);
+    onCancelSpeech();
+  }, [aiContextKey, invalidateExpressionShare, onCancelSpeech]);
+
+  function continueDraft() {
+    if (!initialDraft || initialDraft.status !== 'draft') return;
+    const snapshot = initialDraft.snapshot;
+    previousOutputSignatureRef.current = snapshot.pipeline.outputSignature;
+    previousOutputSnapshotRef.current = JSON.stringify(snapshot.pipeline.outputSnapshot);
+    previousConversationSessionRef.current = conversationSessionId;
+    previousAutoplayDelayRef.current = candidateAutoplayDelaySeconds;
+    setLoopState(snapshot.pipeline);
+    loopStateRef.current = snapshot.pipeline;
+    candidatesRejectedRef.current = Boolean(snapshot.rejected);
+    setCandidatesRejected(Boolean(snapshot.rejected));
+    setCandidateFeedbackEntries(snapshot.candidateFeedbackEntries || []);
+    setCandidatePhase(snapshot.pipeline.candidateSentences.length ? 'ready' : 'idle');
+    draftReadyRef.current = true;
+    awaitingInitialClearRef.current = false;
+    restoredAutoplayPausedRef.current = true;
+    setRestoreChoice('active');
+    onApplyOutput(snapshot.pipeline.outputSnapshot);
+    setDraftNotice('已恢复上次表达；请主动选择、播报或确认，不会自动播放。');
+  }
+
+  function discardAndStart() {
+    try {
+      if (expressionDraftService) expressionDraftService.discard();
+      const empty = buildExpressionLoopState([]);
+      draftReadyRef.current = true;
+      draftCompletedRef.current = false;
+      previousOutputSignatureRef.current = empty.outputSignature;
+      previousOutputSnapshotRef.current = '[]';
+      restoredAutoplayPausedRef.current = true;
+      loopStateRef.current = empty;
+      setLoopState(empty);
+      candidatesRejectedRef.current = false;
+      setCandidatesRejected(false);
+      setCandidateFeedbackEntries([]);
+      setPendingAiRecovery(null);
+      setCandidatePhase('idle');
+      setIsConfirmed(false);
+      setDraftSaveFailed(false);
+      setConfirmingDiscard(false);
+      setRestoreChoice('active');
+      onApplyOutput([]);
+      setDraftNotice('已开始新表达；原图库、收藏和历史保持不变。');
+    } catch (error) {
+      setDraftNotice(`无法开始新表达：${error.message}。原草稿已保留。`);
+      setDraftSaveFailed(true);
+    }
+  }
 
   useEffect(
     () => {
@@ -409,10 +710,11 @@ export default function ExpressionLoopPanel({
   }
 
   async function playCandidates(state) {
-    if (!state.candidateSentences.length) {
+    if (candidatesRejectedRef.current || !state.candidateSentences.length) {
       return;
     }
 
+    cancelExpressionShare();
     const runId = playRunRef.current + 1;
     playRunRef.current = runId;
     playbackActiveRef.current = true;
@@ -444,6 +746,7 @@ export default function ExpressionLoopPanel({
   }
 
   function stopPlaybackQueue() {
+    savedPlaybackPending.current = false;
     if (!playbackActiveRef.current) return;
     playbackActiveRef.current = false;
     playRunRef.current += 1;
@@ -464,6 +767,7 @@ export default function ExpressionLoopPanel({
 
   function handleEditedOutput(nextOutput) {
     if (nextOutput === output) return;
+    cancelExpressionShare();
     autoplayControllerRef.current.cancel({
       stopActivePlayback: false
     });
@@ -474,6 +778,24 @@ export default function ExpressionLoopPanel({
 
   function handleMoveOutput(index, offset) {
     handleEditedOutput(moveExpressionOutputItem(output, index, offset));
+  }
+
+  function repairOutputImage(index, tile) {
+    const nextOutput = output.map((item, i) => i === index ? tile : item);
+    const nextState = { ...loopStateRef.current, outputSnapshot: nextOutput,
+      outputSignature: buildExpressionOutputSignature(nextOutput) };
+    try {
+      if (expressionDraftService) expressionDraftService.save(currentDraftSnapshot({ pipeline: nextState, pendingAi: null }),
+        { startNew: expressionDraftService.getCurrent()?.status === 'confirmed' });
+    } catch (_) { setDraftSaveFailed(true); setDraftNotice('图片修改尚未保存，请重试确认。'); return false; }
+    cancelExpressionShare(); cancelPendingAi(); autoplayControllerRef.current.cancel(); onCancelSpeech();
+    restoredAutoplayPausedRef.current = true; draftCompletedRef.current = false;
+    previousOutputSnapshotRef.current = JSON.stringify(nextOutput);
+    previousOutputSignatureRef.current = nextState.outputSignature;
+    loopStateRef.current = nextState; setLoopState(nextState);
+    setIsConfirmed(false); setIsSaved(false);
+    onApplyOutput(nextOutput);
+    return true;
   }
 
   function handleRemoveOutput(index) {
@@ -495,11 +817,64 @@ export default function ExpressionLoopPanel({
     stopPlaybackQueue();
   }
 
+  function handleRejectCandidates() {
+    if (!loopStateRef.current.candidateSentences.length) return;
+    cancelExpressionShare();
+    // Change the guard synchronously, before storage or a provider callback.
+    candidatesRejectedRef.current = true;
+    setCandidatesRejected(true);
+    handleStopPlayback();
+    onCancelSpeech();
+    setIsConfirmed(false);
+    draftCompletedRef.current = false;
+    setIsSaved(false);
+    setAiNotice('');
+    setExpressionConfirmError('');
+    setExpressionShareNotice('');
+    // A confirmed history ID is not a pending-feedback ID. A failed rejection
+    // save must not make undo try to delete the confirmed history record.
+    if (isConfirmed) candidateFeedbackDraftIdRef.current = null;
+    try {
+      const draft = onSaveCandidateFeedbackDraft({
+        ...(!isConfirmed && candidateFeedbackDraftIdRef.current
+          ? { id: candidateFeedbackDraftIdRef.current } : {}),
+        outputSignature: loopStateRef.current.outputSignature,
+        candidates: candidateFeedbackEntries,
+        rejected: true
+      });
+      if (!draft?.id) throw new Error('Rejection not saved');
+      candidateFeedbackDraftIdRef.current = draft.id;
+      setCandidateFeedbackNotice('');
+    } catch (_) {
+      setCandidateFeedbackNotice(copy.rejectionSaveFailed);
+    }
+  }
+
+  function handleUndoRejection() {
+    if (!candidatesRejectedRef.current) return;
+    handleStopPlayback();
+    try {
+      const id = candidateFeedbackDraftIdRef.current;
+      if (id && onDiscardCandidateFeedbackDraft(id) === false)
+        throw new Error('Rejection not removed');
+    } catch (_) {
+      setCandidateFeedbackNotice(copy.rejectionUndoFailed);
+      return;
+    }
+    candidateFeedbackDraftIdRef.current = null;
+    candidatesRejectedRef.current = false;
+    setCandidatesRejected(false);
+    setCandidateFeedbackEntries(normalizeExpressionCandidates([], loopStateRef.current.candidateSentences));
+    setCandidateFeedbackNotice('');
+    setAiNotice(copy.rejectionUndone);
+    // No new request or autoplay schedule: undo only restores the choices.
+  }
+
   function handleReplayAll() {
+    if (candidatesRejectedRef.current) return;
     cancelPendingAi();
     autoplayControllerRef.current.cancel();
     setIsSaved(false);
-    setIsConfirmed(false);
     setExpressionConfirmError('');
     // Playback consumes the current set, including AI and restored favorites.
     // It must never regenerate templates or issue another AI request.
@@ -507,10 +882,11 @@ export default function ExpressionLoopPanel({
   }
 
   async function handlePlayOne(index) {
-    if (!loopState.candidateSentences[index]) {
+    if (candidatesRejectedRef.current || !loopState.candidateSentences[index]) {
       return;
     }
 
+    cancelExpressionShare();
     cancelPendingAi();
     autoplayControllerRef.current.cancel();
     const runId = playRunRef.current + 1;
@@ -521,7 +897,10 @@ export default function ExpressionLoopPanel({
     setCandidatePhase('playing');
     setSpeechAvailable(true);
     setIsSaved(false);
-    setIsConfirmed(false);
+    if (index !== loopState.selectedIndex) {
+      setIsConfirmed(false);
+      draftCompletedRef.current = false;
+    }
     setExpressionConfirmError('');
 
     const success = await speakSentence(loopState.candidateSentences[index]);
@@ -534,6 +913,7 @@ export default function ExpressionLoopPanel({
   }
 
   function handleSavePhrase() {
+    if (candidatesRejectedRef.current) return;
     cancelPendingAi();
     handlePatientInteraction();
     const entry = buildExpressionSavedPhraseEntry(loopState);
@@ -547,6 +927,7 @@ export default function ExpressionLoopPanel({
   }
 
   function handleConfirmExpression() {
+    if (candidatesRejectedRef.current || confirmPendingRef.current || draftCompletedRef.current) return;
     cancelPendingAi();
     handlePatientInteraction();
     const entry = buildExpressionHistoryEntry(
@@ -558,16 +939,25 @@ export default function ExpressionLoopPanel({
       return;
     }
 
-    const persisted = persistExpressionHistoryEntry(
-      {
+    confirmPendingRef.current = true;
+    let persisted;
+    try {
+      if (expressionDraftService && !persistDraft()) return;
+      const finalEntry = {
         ...entry,
-        ...(candidateFeedbackDraftIdRef.current
+        ...(!expressionDraftService && candidateFeedbackDraftIdRef.current
           ? { id: candidateFeedbackDraftIdRef.current }
           : {}),
+        sessionId: conversationSessionId,
         recordStatus: 'confirmed'
-      },
-      onAppendHistory
-    );
+      };
+      persisted = expressionDraftService
+        ? expressionDraftService.confirm(finalEntry)
+        : persistExpressionHistoryEntry(finalEntry, onAppendHistory);
+    } catch (error) {
+      setExpressionConfirmError(`${copy.expressionSaveFailed} ${error.message}`);
+      return;
+    } finally { confirmPendingRef.current = false; }
     if (!persisted) {
       setExpressionConfirmError(copy.expressionSaveFailed);
       return;
@@ -576,29 +966,56 @@ export default function ExpressionLoopPanel({
       candidateFeedbackDraftIdRef.current = persisted.id;
     }
     setExpressionConfirmError('');
+    draftCompletedRef.current = true;
     setIsConfirmed(true);
+    if (onDraftConfirmed) onDraftConfirmed(persisted);
+    if (expressionDraftService) setDraftNotice('已确认，上次未完成草稿已结束。');
   }
 
   async function handleShareExpression() {
+    if (
+      candidatesRejectedRef.current || sharePendingRef.current ||
+      !shareMountedRef.current || loopState.outputSignature !== outputSignature
+    ) return;
     const sentence =
       loopState.candidateSentences[loopState.selectedIndex] || '';
     if (!sentence || typeof onShareExpression !== 'function') return;
 
+    const runId = ++shareRunRef.current;
+    const isCurrent = () =>
+      shareMountedRef.current && !candidatesRejectedRef.current &&
+      shareRunRef.current === runId &&
+      shareContextRef.current.outputSignature === outputSignature &&
+      shareContextRef.current.outputSnapshotKey === outputSnapshotKey &&
+      shareContextRef.current.conversationSessionId === conversationSessionId &&
+      shareContextRef.current.candidateSentences === loopState.candidateSentences &&
+      shareContextRef.current.selectedIndex === loopState.selectedIndex;
+    if (!isCurrent()) return;
+    sharePendingRef.current = true;
+    // Sharing is an explicit choice: freeze the chosen candidate for keyboard
+    // activation too, without regenerating text or starting speech.
+    cancelPendingAi();
+    handlePatientInteraction();
     setIsSharingExpression(true);
     setExpressionShareNotice(copy.sharingExpression);
     try {
-      const result = await onShareExpression(sentence);
+      const result = await onShareExpression(sentence, { isCurrent });
+      if (!isCurrent()) return;
       setExpressionShareNotice(
         (result && result.message) || '当前环境无法完成分享，表达内容仍会保留。'
       );
     } catch (error) {
-      setExpressionShareNotice('当前环境无法完成分享，表达内容仍会保留。');
+      if (isCurrent()) setExpressionShareNotice('当前环境无法完成分享，表达内容仍会保留。');
     } finally {
-      setIsSharingExpression(false);
+      if (isCurrent()) {
+        sharePendingRef.current = false;
+        setIsSharingExpression(false);
+      }
     }
   }
 
   function handleCandidateFeedback(candidateIndex, feedback) {
+    if (candidatesRejectedRef.current) return;
     const next = toggleExpressionCandidateFeedback(
       candidateFeedbackEntries,
       candidateIndex,
@@ -659,6 +1076,16 @@ export default function ExpressionLoopPanel({
   }
 
   function handleApplySavedPhrase(item) {
+    if (applySavedPending.current) return;
+    applySavedPending.current = true;
+    Promise.resolve().then(() => { applySavedPending.current = false; });
+    const key = JSON.stringify([item.id, item.sentence, item.output]);
+    if (appliedSavedRef.current === key && loopStateRef.current.candidateSentences[0] === item.sentence &&
+        outputSignature === buildExpressionOutputSignature(item.output)) return;
+    // Reusing the same rejected sequence first requires an explicit undo.
+    if (candidatesRejectedRef.current &&
+        buildExpressionOutputSignature(item.output) === outputSignature) return;
+    cancelExpressionShare();
     cancelPendingAi();
     handlePatientInteraction();
     const nextState = buildExpressionLoopStateFromSavedPhrase(item);
@@ -666,6 +1093,10 @@ export default function ExpressionLoopPanel({
     onCancelSpeech();
     onApplyOutput(item.output);
     previousOutputSignatureRef.current = nextState.outputSignature;
+    previousOutputSnapshotRef.current = JSON.stringify(item.output);
+    draftCompletedRef.current = false;
+    restoredAutoplayPausedRef.current = false;
+    loopStateRef.current = nextState;
     setLoopState(nextState);
     resetCandidateFeedback(nextState);
     setCandidatePhase('ready');
@@ -673,6 +1104,8 @@ export default function ExpressionLoopPanel({
     setIsSaved(true);
     setIsConfirmed(false);
     setExpressionConfirmError('');
+    appliedSavedRef.current = key;
+    onUseSavedPhrase(item);
     autoplayControllerRef.current.schedule(
       nextState.candidateSentences,
       candidateAutoplayDelaySeconds
@@ -680,6 +1113,7 @@ export default function ExpressionLoopPanel({
   }
 
   async function playSavedPhrase(item, options = {}) {
+    if (savedPlaybackPending.current) return;
     const sentence = String((item && item.sentence) || '').trim();
     if (!sentence) return;
 
@@ -692,15 +1126,22 @@ export default function ExpressionLoopPanel({
     const runId = playRunRef.current + 1;
     playRunRef.current = runId;
     playbackActiveRef.current = true;
-    if (options.showDialog) setPlaybackPhrase(item);
-    if (options.recordUsage) onUseSavedPhrase(item);
+    savedPlaybackPending.current = true;
+    if (options.showDialog) { setPlaybackPhrase(item); savedPlaybackCounted.current = false; }
+    setSavedPlaybackNotice('正在播报整句…');
     setCandidatePhase('playing');
     setSpeechAvailable(true);
 
     const success = await speakSentence(sentence, item.output || []);
     if (playRunRef.current === runId) {
+      savedPlaybackPending.current = false;
       playbackActiveRef.current = false;
       setSpeechAvailable(success);
+      setSavedPlaybackNotice(success ? '播报完成，可重听或返回。' : '播报未完成，原句和图片仍保留。');
+      if (success && !savedPlaybackCounted.current) {
+        savedPlaybackCounted.current = true;
+        onUseSavedPhrase(item);
+      }
       setCandidatePhase(
         loopStateRef.current.candidateSentences.length ? 'done' : 'idle'
       );
@@ -718,7 +1159,21 @@ export default function ExpressionLoopPanel({
     return playSavedPhrase(playbackPhrase);
   }
 
+  function handleViewSavedPhrase(item) {
+    cancelExpressionShare();
+    cancelPendingAi();
+    handlePatientInteraction();
+    autoplayControllerRef.current.cancel();
+    stopPlaybackQueue();
+    savedPlaybackPending.current = false;
+    savedPlaybackCounted.current = false;
+    setPlaybackPhrase(item);
+    setSavedPlaybackNotice('仅查看，点击“播报整句”才会播放。');
+  }
+
   function handleCloseSavedPhrasePlayback() {
+    savedPlaybackPending.current = false;
+    savedPlaybackCounted.current = false;
     autoplayControllerRef.current.cancel({
       stopActivePlayback: false
     });
@@ -728,11 +1183,14 @@ export default function ExpressionLoopPanel({
   }
 
   async function handleGenerateAiCandidates() {
-    if (!output.length || aiPendingRef.current) return;
+    if (candidatesRejectedRef.current || !output.length || aiPendingRef.current) return;
+    const startNewDraft = draftCompletedRef.current;
+    cancelExpressionShare();
     autoplayControllerRef.current.cancel();
     stopPlaybackQueue();
     if (!aiAvailable || typeof onGenerateAiSentences !== 'function') {
       const nextState = buildExpressionLoopState(output);
+      draftCompletedRef.current = false;
       setLoopState(nextState);
       resetCandidateFeedback(nextState);
       setCandidatePhase('ready');
@@ -747,12 +1205,24 @@ export default function ExpressionLoopPanel({
       return;
     }
 
-    const request = buildCommunicationAiSentenceRequest({
+    let request = buildCommunicationAiSentenceRequest({
       output,
       boards,
       context: conversationContext
     });
+    draftCompletedRef.current = false;
+    if (expressionDraftService) {
+      if (!persistDraft({}, { startNew: startNewDraft })) return;
+      try { request = attachExpressionDraftRequest(request, expressionDraftService); }
+      catch (error) {
+        setAiNotice(error.message);
+        return;
+      }
+    }
     const runId = aiRunRef.current + 1;
+    const requestContextKey = getAiContextKey ? getAiContextKey() : aiContextKey;
+    const currentAiRun = () => aiRunRef.current === runId &&
+      (!getAiContextKey || getAiContextKey() === requestContextKey);
     aiRunRef.current = runId;
     aiPendingRef.current = true;
     setIsGeneratingAi(true);
@@ -760,21 +1230,25 @@ export default function ExpressionLoopPanel({
 
     try {
       const response = await onGenerateAiSentences(request);
-      if (aiRunRef.current !== runId) return;
+      if (!currentAiRun()) return;
       const nextState = applyCommunicationAiSentenceResponse(
         buildExpressionLoopState(output),
         response
       );
       if (!nextState || nextState.isOfflineFallback !== false) {
         setAiNotice(copy.aiFailed);
-        autoplayControllerRef.current.schedule(
-          loopStateRef.current.candidateSentences,
-          candidateAutoplayDelaySeconds
-        );
+        setPendingAiRecovery(expressionDraftService?.getCurrent()?.snapshot?.pendingAi || null);
         return;
       }
       setLoopState(nextState);
+      loopStateRef.current = nextState;
       resetCandidateFeedback(nextState);
+      draftCompletedRef.current = false;
+      setPendingAiRecovery(null);
+      if (expressionDraftService) persistDraft({
+        pendingAi: null,
+        candidateFeedbackEntries: normalizeExpressionCandidates([], nextState.candidateSentences)
+      });
       setCandidatePhase('ready');
       setIsSaved(false);
       setIsConfirmed(false);
@@ -785,12 +1259,11 @@ export default function ExpressionLoopPanel({
         candidateAutoplayDelaySeconds
       );
     } catch (error) {
-      if (aiRunRef.current === runId) {
+      if (currentAiRun()) {
         setAiNotice(getAiFailureMessage(error, copy));
-        autoplayControllerRef.current.schedule(
-          loopStateRef.current.candidateSentences,
-          candidateAutoplayDelaySeconds
-        );
+        setPendingAiRecovery(expressionDraftService?.getCurrent()?.snapshot?.pendingAi || null);
+        // An unknown request is not a new candidate result. Never restart the
+        // previous candidates' countdown while telling the user to recover it.
       }
     } finally {
       if (aiRunRef.current === runId) {
@@ -801,8 +1274,38 @@ export default function ExpressionLoopPanel({
   }
 
   function handlePictogramSuggestion(tile) {
+    cancelExpressionShare();
     onPictogramUsed(tile.boardId, tile.id);
     onApplyOutput([...output, tile]);
+  }
+
+  if (restoreChoice !== 'active') {
+    const snapshot = initialDraft?.snapshot;
+    const sentence = snapshot?.pipeline?.candidateSentences?.[snapshot.pipeline.selectedIndex] ||
+      snapshot?.pipeline?.outputSnapshot?.map(item => item.label).join(' / ');
+    return <div className="CommunicationSupportPanel__section" aria-label="恢复未完成表达">
+      <p id="expression-draft-save-status" role={draftSaveFailed ? 'alert' : 'status'}>{draftNotice || '有一份未完成的表达，请选择是否继续。'}</p>
+      {restoreChoice !== 'later' && <>
+        {sentence && <p>上次表达：{sentence}</p>}
+        {initialDraft?.updatedAt && <p>本机保存时间：{new Date(initialDraft.updatedAt).toLocaleString()}</p>}
+        <Button id="expression-draft-continue-button" variant="contained" color="primary"
+          disabled={!snapshot} onClick={continueDraft}>继续上次表达</Button>
+        <Button id="expression-draft-new-button" onClick={() => setConfirmingDiscard(true)}>开始新表达</Button>
+        <Button id="expression-draft-defer-button" onClick={() => setRestoreChoice('later')}>稍后处理</Button>
+      </>}
+      {restoreChoice === 'later' && <Button onClick={() => setRestoreChoice('pending')}>查看待恢复表达</Button>}
+      {confirmingDiscard && <div role="alert">
+        <p>将丢弃这份未完成表达；图库、收藏和历史保持不变。丢弃不代表取消已提交的 AI 执行或退款。</p>
+        <Button id="expression-draft-confirm-new-button" onClick={discardAndStart}>确认开始新表达</Button>
+        <Button onClick={() => setConfirmingDiscard(false)}>取消</Button>
+      </div>}
+      <CommunicationPlaybackDialog
+        open={Boolean(playbackPhrase)} item={playbackPhrase}
+        isSpeaking={candidatePhase === 'playing'} statusLabel={savedPlaybackNotice}
+        replayLabel="播报整句" doneLabel="返回"
+        onReplay={handleReplaySavedPhrase} onClose={handleCloseSavedPhrasePlayback}
+      />
+    </div>;
   }
 
   return (
@@ -813,11 +1316,15 @@ export default function ExpressionLoopPanel({
       onWheelCapture={handlePatientInteraction}
       onScrollCapture={handlePatientInteraction}
     >
+      {expressionDraftService && <div className="CommunicationSupportPanel__draftStatus">
+        <p id="expression-draft-save-status" role={draftSaveFailed ? 'alert' : 'status'}>{draftNotice}</p>
+        {draftSaveFailed && <Button onClick={() => persistDraft()}>重试保存表达</Button>}
+      </div>}
       <div className="CommunicationSupportPanel__section">
         <div className="CommunicationSupportPanel__sectionHeader">
           <h4>{copy.expressSectionTitle}</h4>
           <span className="CommunicationSupportPanel__hint">
-            {copy.currentBoard}：{activeBoardId || copy.noBoard}
+            {copy.currentBoard}：{activeBoardName || copy.noBoard}
           </span>
         </div>
         <div className="CommunicationSupportPanel__resultMeta">
@@ -874,12 +1381,28 @@ export default function ExpressionLoopPanel({
                     className="CommunicationSupportPanel__sequenceImage"
                     src={item.image}
                     alt=""
+                    onLoad={event => {
+                      event.currentTarget.style.display = '';
+                      const notice = event.currentTarget.nextElementSibling;
+                      if (notice) notice.hidden = true;
+                    }}
+                    onError={event => {
+                      event.currentTarget.style.display = 'none';
+                      const notice = event.currentTarget.nextElementSibling;
+                      if (notice) notice.hidden = false;
+                    }}
                   />
                 )}
+                {item.image && <span hidden className="CommunicationSupportPanel__sequenceMissing">图片不可用，保留文字</span>}
                 <span className="CommunicationSupportPanel__sequenceLabel">
                   {item.label}
                 </span>
                 <div className="CommunicationSupportPanel__sequenceActions">
+                  <ImageRepairControls tile={item}
+                    operationKey={JSON.stringify([conversationSessionId, index, output])}
+                    onAdopt={tile => repairOutputImage(index, tile)}
+                    onKeepText={() => repairOutputImage(index, { ...item, image: '' })}
+                  />
                   <PatientActionButton
                     action={PATIENT_ACTION_IDS.moveLeft}
                     size="small"
@@ -917,16 +1440,16 @@ export default function ExpressionLoopPanel({
             color="primary"
             variant="outlined"
             onClick={handleGenerateAiCandidates}
-            disabled={!output.length || isGeneratingAi}
-            label={isGeneratingAi ? '生成中' : copy.aiCandidates}
-            ariaLabel={isGeneratingAi ? copy.aiGenerating : copy.aiCandidates}
+            disabled={candidatesRejected || !output.length || isGeneratingAi}
+            label={isGeneratingAi ? '生成中' : pendingAiRecovery ? '核对上次结果' : copy.aiCandidates}
+            ariaLabel={isGeneratingAi ? copy.aiGenerating : pendingAiRecovery ? '核对上次结果' : copy.aiCandidates}
           />
           <PatientActionButton
             action={PATIENT_ACTION_IDS.playAll}
             color="primary"
             variant="contained"
             onClick={handleReplayAll}
-            disabled={!output.length}
+            disabled={candidatesRejected || !loopState.candidateSentences.length}
             label="全播"
             ariaLabel={copy.generateAndSpeak}
           />
@@ -935,11 +1458,37 @@ export default function ExpressionLoopPanel({
             color="primary"
             variant="outlined"
             onClick={handleStopPlayback}
-            disabled={candidatePhase !== 'playing'}
+            disabled={!output.length && !isGeneratingAi}
             label="停止"
             ariaLabel={copy.stopSpeech}
           />
         </div>
+        {output.length > 0 && (
+          <div className="CommunicationSupportPanel__actions">
+            <PatientActionButton
+              action={PATIENT_ACTION_IDS.notUnderstood}
+              variant="outlined"
+              onClick={handleRejectCandidates}
+              label={copy.rejectCandidates}
+              ariaLabel="这组候选都不对，停止并保留图片"
+            />
+            {candidatesRejected && (
+              <PatientActionButton
+                action={PATIENT_ACTION_IDS.undo}
+                variant="outlined"
+                onClick={handleUndoRejection}
+                label={copy.undoRejection}
+                ariaLabel={copy.undoRejection}
+              />
+            )}
+          </div>
+        )}
+        {candidatesRejected && (
+          <div className="CommunicationSupportPanel__environmentNotice" role="status">
+            {copy.candidatesRejected}
+            {candidateFeedbackNotice && <p role="alert">{candidateFeedbackNotice}</p>}
+          </div>
+        )}
         {!aiAvailable && aiUnavailableReason && (
           <p role="status">{aiUnavailableReason}</p>
         )}
@@ -956,14 +1505,18 @@ export default function ExpressionLoopPanel({
             {copy.speechUnavailable}
           </div>
         )}
-        {candidatePhase !== 'idle' && (
+        {!candidatesRejected && candidatePhase !== 'idle' && (
           <div className="CommunicationSupportPanel__resultMeta" role="status">
-            {candidateAutoplayDelaySeconds
-              ? `${candidateAutoplayDelaySeconds} ${copy.autoplayEnabled}`
+            {pendingAutoplayDelayMs
+              ? `${pendingAutoplayDelayMs / 1000} ${copy.autoplayEnabled}`
+              : candidatePhase === 'playing'
+              ? copy.playbackSpeaking
+              : candidateAutoplayDelaySeconds
+              ? copy.autoplayPaused
               : copy.autoplayDisabled}
           </div>
         )}
-        {candidatePhase !== 'idle' && (
+        {!candidatesRejected && candidatePhase !== 'idle' && (
           <div className="CommunicationSupportPanel__candidates">
             {loopState.candidateSentences.map((sentence, index) => (
               <div
@@ -1027,7 +1580,7 @@ export default function ExpressionLoopPanel({
             </div>
           </div>
         )}
-        {candidatePhase !== 'idle' && (
+        {!candidatesRejected && candidatePhase !== 'idle' && (
           <div className="CommunicationSupportPanel__actions">
             <PatientActionButton
               action={PATIENT_ACTION_IDS.replay}
@@ -1102,15 +1655,17 @@ export default function ExpressionLoopPanel({
             {copy.savedPhrasesHint}
           </span>
         </div>
+        <LifeContextFilter items={savedPhrases} value={lifeContext} onChange={setLifeContext} />
         <div className="CommunicationSupportPanel__savedList">
-          {savedPhrases.length ? (
-            savedPhrases.map(item => (
+          {contextPhrases.length ? (
+            contextPhrases.map(item => (
               <SavedPhraseRow
                 key={`${item.careSharedReadOnly ? 'shared' : 'own'}:${item.id ||
                   item.sentence}`}
                 item={item}
                 onApply={handleApplySavedPhrase}
                 onPlay={handlePlaySavedPhrase}
+                onView={handleViewSavedPhrase}
                 playLabel={copy.quickPlay}
                 reuseLabel={
                   item.careSharedReadOnly ? '重用家庭共享' : copy.reuse
@@ -1119,7 +1674,7 @@ export default function ExpressionLoopPanel({
             ))
           ) : (
             <div className="CommunicationSupportPanel__empty">
-              {copy.noSavedPhrases}
+              {savedPhrases.length ? '这个情境还没有常用语，可在照护工具中整理。' : copy.noSavedPhrases}
             </div>
           )}
         </div>
@@ -1128,15 +1683,9 @@ export default function ExpressionLoopPanel({
         open={Boolean(playbackPhrase)}
         item={playbackPhrase}
         isSpeaking={candidatePhase === 'playing'}
-        statusLabel={
-          candidatePhase === 'playing'
-            ? copy.playbackSpeaking
-            : speechAvailable
-            ? copy.playbackReady
-            : copy.speechUnavailable
-        }
-        replayLabel={copy.playbackReplay}
-        doneLabel={copy.playbackDone}
+        statusLabel={savedPlaybackNotice}
+        replayLabel="播报整句"
+        doneLabel="返回"
         onReplay={handleReplaySavedPhrase}
         onClose={handleCloseSavedPhrasePlayback}
       />
@@ -1145,6 +1694,8 @@ export default function ExpressionLoopPanel({
 }
 
 ExpressionLoopPanel.propTypes = {
+  savedPhraseRequest: PropTypes.object,
+  onSavedPhraseRequestHandled: PropTypes.func,
   output: PropTypes.arrayOf(PropTypes.object).isRequired,
   boards: PropTypes.arrayOf(PropTypes.object).isRequired,
   activeBoardId: PropTypes.string,
@@ -1165,9 +1716,15 @@ ExpressionLoopPanel.propTypes = {
   conversationContext: PropTypes.object,
   aiAvailable: PropTypes.bool,
   aiUnavailableReason: PropTypes.string,
+  aiContextKey: PropTypes.string,
+  getAiContextKey: PropTypes.func,
   onGenerateAiSentences: PropTypes.func,
   candidateAutoplayDelaySeconds: PropTypes.number,
   candidateFeedbackSyncAvailable: PropTypes.bool,
+  expressionDraftService: PropTypes.object,
+  allowLegacyOutput: PropTypes.bool,
+  active: PropTypes.bool,
+  onDraftConfirmed: PropTypes.func,
   copyOverrides: PropTypes.object
 };
 

@@ -14,6 +14,20 @@ function createMemoryStorage() {
 }
 
 describe('candidate feedback repository', () => {
+  test('reopens a rejected draft offline without confirming it or sending it into conversation context', () => {
+    const storage = createMemoryStorage();
+    const first = createCommunicationRepository({ storage });
+    const saved = first.saveExpressionCandidateFeedbackDraft({
+      outputSignature: 'synthetic-person-b|pain', rejected: true,
+      candidates: [{ sentence: '林知岚痛。', feedback: null }]
+    });
+    const reopened = createCommunicationRepository({ storage });
+    expect(reopened.loadExpressionCandidateFeedbackDrafts()).toEqual([saved]);
+    expect(reopened.loadCommunicationHistory()).toEqual([]);
+    expect(reopened.loadConversationContext().turns).toEqual([]);
+    expect(reopened.removeExpressionCandidateFeedbackDraft(saved.id)).toBe(true);
+    expect(createCommunicationRepository({ storage }).loadExpressionCandidateFeedbackDrafts()).toEqual([]);
+  });
   test('persists, updates and removes an expression feedback draft', () => {
     const storage = createMemoryStorage();
     let timestamp = 100;

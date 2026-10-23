@@ -187,6 +187,7 @@ class SymbolOutput extends PureComponent {
                         : 'Output__icon__sm'
                     }
                   />
+                  <span className="SymbolOutput__actionLabel">{intl.formatMessage(messages.undoDeletion)}</span>
                 </IconButton>
               </Tooltip>
             </Scannable>
@@ -209,6 +210,7 @@ class SymbolOutput extends PureComponent {
 
           {!navigationSettings.removeOutputActive && (
             <BackspaceButton
+              label={intl.formatMessage(messages.outputBackspace)}
               color="inherit"
               onClick={onBackspaceClick}
               style={backspaceButtonStyle}
@@ -240,6 +242,7 @@ class SymbolOutput extends PureComponent {
               />
             )}
             <ClearButton
+              label={intl.formatMessage(messages.outputClear)}
               color="inherit"
               onClick={onClearClick}
               style={clearButtonStyle}

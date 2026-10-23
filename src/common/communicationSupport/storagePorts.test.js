@@ -5,6 +5,14 @@ import {
 } from './storagePorts';
 
 describe('communication support storage ports', () => {
+  test('familiar image reads surface failure, including scoped keys', () => {
+    const port = createBrowserStoragePort({ localStorage: {
+      getItem: () => { throw new Error('denied'); }, setItem: jest.fn()
+    } });
+    expect(() => port.getItem('cboard_communication_personal_image_preferences')).toThrow();
+    expect(() => port.getItem('account:family:patient:cboard_communication_personal_image_preferences')).toThrow();
+    expect(() => createUnavailableStoragePort().getItem('cboard_communication_personal_image_preferences')).toThrow();
+  });
   test('adapts browser localStorage to the shared string storage contract', () => {
     const values = new Map();
     const localStorage = {

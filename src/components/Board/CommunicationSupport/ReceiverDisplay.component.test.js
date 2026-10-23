@@ -106,50 +106,41 @@ describe('ReceiverDisplay', () => {
     expect(keys).toEqual(['water-0', 'water-1']);
   });
 
-  test('reports all patient choices and replays only on repeat request', () => {
-    const onFeedback = jest.fn();
-    const onReplay = jest.fn();
-    const wrapper = shallow(
-      <ReceiverDisplay
-        open
-        title="接收端全屏展示"
-        items={[{ id: 'water', label: '水', image: '/water.svg' }]}
-        feedbackQuestion="你明白了吗？"
-        understoodLabel="明白了"
-        notUnderstoodLabel="没明白"
-        repeatRequestedLabel="再说一次"
-        onClose={jest.fn()}
-        onFeedback={onFeedback}
-        onReplay={onReplay}
-      />
-    );
+  test.each([
+    [PATIENT_ACTION_IDS.understood, 'understood'],
+    [PATIENT_ACTION_IDS.notUnderstood, 'not_understood'],
+    [PATIENT_ACTION_IDS.repeat, 'repeat_requested']
+  ])(
+    'reports %s from a fresh display and replays only on repeat',
+    (action, feedback) => {
+      const onFeedback = jest.fn();
+      const onReplay = jest.fn();
+      const wrapper = shallow(
+        <ReceiverDisplay
+          open
+          title="接收端全屏展示"
+          items={[{ id: 'water', label: '水', image: '/water.svg' }]}
+          feedbackQuestion="你明白了吗？"
+          understoodLabel="明白了"
+          notUnderstoodLabel="没明白"
+          repeatRequestedLabel="再说一次"
+          onClose={jest.fn()}
+          onFeedback={onFeedback}
+          onReplay={onReplay}
+        />
+      );
 
-    wrapper
-      .find(PatientActionButton)
-      .filterWhere(
-        button => button.prop('action') === PATIENT_ACTION_IDS.understood
-      )
-      .simulate('click');
-    wrapper
-      .find(PatientActionButton)
-      .filterWhere(
-        button => button.prop('action') === PATIENT_ACTION_IDS.notUnderstood
-      )
-      .simulate('click');
-    wrapper
-      .find(PatientActionButton)
-      .filterWhere(
-        button => button.prop('action') === PATIENT_ACTION_IDS.repeat
-      )
-      .simulate('click');
-
-    expect(onFeedback.mock.calls.map(call => call[0])).toEqual([
-      'understood',
-      'not_understood',
-      'repeat_requested'
-    ]);
-    expect(onReplay).toHaveBeenCalledTimes(1);
-  });
+      wrapper
+        .find(PatientActionButton)
+        .filterWhere(button => button.prop('action') === action)
+        .simulate('click');
+      expect(onFeedback).toHaveBeenCalledTimes(1);
+      expect(onFeedback).toHaveBeenCalledWith(feedback);
+      expect(onReplay).toHaveBeenCalledTimes(
+        action === PATIENT_ACTION_IDS.repeat ? 1 : 0
+      );
+    }
+  );
 
   test('shares the confirmed sequence without closing the display', async () => {
     const onClose = jest.fn();
@@ -192,8 +183,9 @@ describe('ReceiverDisplay', () => {
         expect.objectContaining({ id: 'want' }),
         expect.objectContaining({ id: 'water' })
       ]),
-      { speechText: '我想喝水' }
+      { speechText: '我想喝水', isCurrent: expect.any(Function) }
     );
+    expect(onShare.mock.calls[0][1].isCurrent()).toBe(true);
     expect(
       wrapper.find('.CommunicationSupportPanel__displayShare p').text()
     ).toContain('图片分享面板已打开');

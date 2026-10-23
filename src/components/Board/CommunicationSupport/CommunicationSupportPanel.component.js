@@ -1,6 +1,8 @@
 import { filterPublicPictureTokens } from '../../../common/communicationSupport/personalPeople';
 import { buildCommunicationTileCatalog } from '../../../common/communicationSupport/symbolMatching';
+import { clearSavedPhraseUndoSession } from '../../../common/communicationSupport/savedPhraseUse';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { currentImageOperationEpoch } from '../../../common/communicationSupport/imageOperationEpoch';
 import CareExpressionBoard from '../../Care/CareExpressionBoard';
 import PropTypes from 'prop-types';
 import Button from '@material-ui/core/Button';
@@ -25,6 +27,7 @@ import {
   confirmReceiverDraft,
   clearPrivatePictograms,
   createReceiverDraft,
+  createLocalExpressionDraft,
   discardResumableReceiverRecord,
   getActiveConversationSession,
   getCommunicationStorageScopeKey,
@@ -64,8 +67,7 @@ import {
   disableWorkspaceCorrectionMemoryToken
 } from '../../../common/communicationSupport/correctionMemory';
 import {
-  applyPersonalImagePreferencesToBoards,
-  applyPersonalImagePreferencesToItems
+  applyPersonalImagePreferencesToBoards
 } from '../../../common/communicationSupport/personalImagePreferences';
 import { projectVisibleCommunicationBoards } from '../../../common/communicationSupport/communicationPreferences';
 import {
@@ -92,6 +94,7 @@ import { markCommunicationSavedPhraseUsed } from '../../../common/communicationS
 import { isCareSharedPhrase } from '../../../common/communicationSupport/careSharedPhrases';
 import { PATIENT_ACTION_IDS } from '../../../common/communicationSupport/patientActionLanguage';
 import ExpressionLoopPanel from './ExpressionLoopPanel.component';
+import { resolveBoardName } from '../../../helpers';
 import CommunicationAccessibilityDialog from './CommunicationAccessibilityDialog.component';
 import CommunicationManagementDialog from './CommunicationManagementDialog.component';
 import CommunicationOnboardingDialog from './CommunicationOnboardingDialog.component';
@@ -100,6 +103,7 @@ import EmergencyCommunicationDialog from './EmergencyCommunicationDialog.compone
 import CommunicationNetworkStatusNotice from './CommunicationNetworkStatusNotice.component';
 import PatientActionButton from './PatientActionButton.component';
 import ReceiverLoopPanel from './ReceiverLoopPanel.component';
+import SavedPhrasePreparation from './SavedPhrasePreparation.component';
 import './CommunicationSupportPanel.css';
 import { getCareTextAiAvailability } from '../../../common/communicationSupport/careAiAvailability';
 
@@ -238,7 +242,17 @@ function mergeCboardPreferences(
   };
 }
 
-export default function CommunicationSupportPanel({
+export default function CommunicationSupportPanel(props) {
+  const readError = () => {
+    try { loadReceiverRecords(); loadReceiverCorrections(); return ''; }
+    catch (_) { return '本机接收草稿暂时无法读取，原数据已保留；不会用旧内容覆盖。'; }
+  };
+  const [error, setError] = useState(readError);
+  if (error) return <div role="alert">{error}<Button onClick={() => setError(readError())}>重试读取草稿</Button></div>;
+  return <CommunicationSupportWorkspace {...props} />;
+}
+
+function CommunicationSupportWorkspace({
   boards,
   output,
   activeBoardId,
@@ -269,7 +283,33 @@ export default function CommunicationSupportPanel({
   careDataVersion
 }) {
   const copy = { ...DEFAULT_COPY, ...(copyOverrides || {}) };
+  const scopeKey = getCommunicationStorageScopeKey();
+  const panelMounted = useRef(true);
+  useEffect(() => () => { panelMounted.current = false; }, []);
+  const [expressionDraftEpoch, setExpressionDraftEpoch] = useState(0);
+  const expressionDraftService = useMemo(() => {
+    if (typeof createLocalExpressionDraft !== 'function') return null;
+    try { return createLocalExpressionDraft(); }
+    catch (error) {
+      const unavailable = () => { throw error; };
+      return { load: unavailable, save: unavailable, discard: unavailable,
+        confirm: unavailable, getCurrent: () => null };
+    }
+  },
+    // Scope switches and explicit privacy cleanup must discard in-memory heads.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [scopeKey, expressionDraftEpoch]);
   const textAi = getCareTextAiAvailability({ isLogged, accountId, careMode });
+  const getExpressionAiContextKey = () => {
+    let selection = null, funding = null;
+    try {
+      if (careMode && accountId) {
+        selection = JSON.parse(window.localStorage.getItem(`care-selection-v1:${accountId}`) || 'null');
+        if (selection?.id) funding = window.localStorage.getItem(`care-funding-v1:${accountId}:${selection.id}`);
+      }
+      return JSON.stringify([getCommunicationStorageScopeKey(), accountId, isLogged, selection, funding]);
+    } catch (_) { return 'unavailable'; }
+  };
   const cboardSpeechRate = speechSettings && speechSettings.rate;
   const cboardFontSize = displaySettings && displaySettings.fontSize;
   const cboardUiSize = displaySettings && displaySettings.uiSize;
@@ -289,6 +329,7 @@ export default function CommunicationSupportPanel({
     loadReceiverCorrections
   );
   const [personalImageRuntime] = useState(loadPersonalImageRuntime);
+  const [personalImageError, setPersonalImageError] = useState(personalImageRuntime.error || '');
   const [personalImagePreferences, setPersonalImagePreferences] = useState(
     personalImageRuntime.preferences
   );
@@ -299,6 +340,9 @@ export default function CommunicationSupportPanel({
   );
   const [showEmergency, setShowEmergency] = useState(false);
   const [showManagement, setShowManagement] = useState(false);
+  const [showPreparation, setShowPreparation] = useState(false);
+  const [preparationRequest, setPreparationRequest] = useState(null);
+  const [preparedSelection, setPreparedSelection] = useState(null);
   const [showAccessibility, setShowAccessibility] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [preferences, setPreferences] = useState(() =>
@@ -341,11 +385,6 @@ export default function CommunicationSupportPanel({
           )
         : [],
     [communicationBoards, intl, isExpanded]
-  );
-  const communicationOutput = applyPersonalImagePreferencesToItems(
-    output,
-    personalImagePreferences,
-    personalImageRuntime.identity
   );
   const expressionOutputSignature = buildExpressionOutputSignature(output);
   const lastExpressionOutputRef = useRef(null);
@@ -415,12 +454,13 @@ export default function CommunicationSupportPanel({
     [isExpanded, preferences.onboardingComplete, showReceiver]
   );
   const latestSavedRef = useRef([]);
+  const [savedPhraseRequest, setSavedPhraseRequest] = useState(null);
   const latestHistoryRef = useRef([]);
   const autoSearchAttempts = useRef(new Set());
   const searchEpoch = useRef(0);
-  const scopeKey = getCommunicationStorageScopeKey();
   useEffect(
     () => {
+      clearSavedPhraseUndoSession();
       autoSearchAttempts.current.clear();
       searchEpoch.current += 1;
       setMissingTokenRecords(loadMissingTokens());
@@ -658,10 +698,10 @@ export default function CommunicationSupportPanel({
     return true;
   }
 
-  function handleMissingTokens(entry) {
+  function handleMissingTokens(entry, automatic = true) {
     const next = recordMissingTokens(entry);
     setMissingTokenRecords(next);
-    if (preferences.onlinePictogramSearchEnabled && !demoMode) {
+    if (automatic && preferences.onlinePictogramSearchEnabled && !demoMode) {
       const ids = next
         .filter(
           record =>
@@ -803,13 +843,34 @@ export default function CommunicationSupportPanel({
   }
 
   function handleManagedSavedPhrasesChange(nextSavedPhrases) {
-    overwriteCommunicationSavedPhrases(nextSavedPhrases);
+    overwriteCommunicationSavedPhrases(nextSavedPhrases, { expectedPhrases: savedPhrases });
     const normalizedSavedPhrases = loadCommunicationSavedPhrases();
     setSavedPhrases(normalizedSavedPhrases);
     persistCommunicationSupportSettings(
       normalizedSavedPhrases,
       latestHistoryRef.current
     );
+  }
+
+  function handleCommittedSavedPhrases({ scopeKey: committedScope, guard } = {}) {
+    const epoch = searchEpoch.current;
+    const current = () => panelMounted.current && committedScope === scopeKey &&
+      scopeKey === getCommunicationStorageScopeKey() && epoch === searchEpoch.current && (!guard || guard());
+    if (!current()) throw new Error('当前档案已切换，未刷新旧操作。');
+    // Import/delete/undo already verified their write. Read the canonical store;
+    // a second overwrite would compare against the pre-operation React state.
+    const items = loadCommunicationSavedPhrases();
+    if (!current()) throw new Error('当前档案已切换，未刷新旧操作。');
+    latestSavedRef.current = items;
+    setSavedPhrases(items);
+    persistCommunicationSupportSettings(items, latestHistoryRef.current);
+    return items;
+  }
+
+  function handleSavedPhraseContextChange(items) {
+    // Personal organization is device-local, even with an authenticated account.
+    overwriteCommunicationSavedPhrases(items, { expectedPhrases: savedPhrases });
+    setSavedPhrases(loadCommunicationSavedPhrases());
   }
 
   function handleSavedPhraseUsed(item) {
@@ -820,7 +881,7 @@ export default function CommunicationSupportPanel({
       if (careMode) {
         // Reading a shared favorite must not require permission to edit it.
         // Usage counters remain local; only reviewed content changes sync.
-        overwriteCommunicationSavedPhrases(result.items);
+        overwriteCommunicationSavedPhrases(result.items, { expectedPhrases: savedPhrases });
         setSavedPhrases(loadCommunicationSavedPhrases());
       } else handleManagedSavedPhrasesChange(result.items);
     }
@@ -865,14 +926,17 @@ export default function CommunicationSupportPanel({
   function refreshPersonalImages() {
     const nextPreferences = loadPersonalImagePreferences();
     setPersonalImagePreferences(nextPreferences);
+    setPersonalImageError('');
     onApplyOutput(output);
     return nextPreferences;
   }
 
-  function handlePersonalImageSave(entry) {
+  function handlePersonalImageSave(entry, options = {}) {
+    const guard = createGallerySaveGuard(options);
     try {
+      if (!guard()) return false;
       const saved = savePersonalImagePreference(entry);
-      if (!saved) return false;
+      if (!saved || !guard()) return false;
       refreshPersonalImages();
       if (careMode && onCarePersonalImagesChanged)
         onCarePersonalImagesChanged(loadPersonalImagePreferences());
@@ -882,10 +946,12 @@ export default function CommunicationSupportPanel({
     }
   }
 
-  function handlePersonalImageRemove(tileId, boardId) {
+  function handlePersonalImageRemove(tileId, boardId, options = {}) {
+    const guard = createGallerySaveGuard(options);
     try {
+      if (!guard()) return false;
       const removed = removePersonalImagePreference(tileId, { boardId });
-      if (!removed) return false;
+      if (!removed || !guard()) return false;
       refreshPersonalImages();
       if (careMode && onCarePersonalImagesChanged)
         onCarePersonalImagesChanged(loadPersonalImagePreferences());
@@ -895,28 +961,43 @@ export default function CommunicationSupportPanel({
     }
   }
 
-  function handleCreatePersonalBoard(name) {
+  function createGallerySaveGuard(options) {
+    const scope = getCommunicationStorageScopeKey();
+    const epoch = currentImageOperationEpoch();
+    return () => scope === getCommunicationStorageScopeKey() && epoch === currentImageOperationEpoch() &&
+      (!options.guard || options.guard());
+  }
+
+  async function handleCreatePersonalBoard(name, options = {}) {
+    const guard = createGallerySaveGuard(options);
     try {
+      if (!guard()) return false;
+      const id = options.id || `${PERSONAL_COMMUNICATION_BOARD_ID_PREFIX}${shortid.generate()}`;
       const result = createPersonalCommunicationBoard(
-        boards.map(board => createBoardDTO(board)),
+        boards.filter(board => board.id !== id).map(board => createBoardDTO(board)),
         {
-          id: `${PERSONAL_COMMUNICATION_BOARD_ID_PREFIX}${shortid.generate()}`,
+          id,
           name
         }
       );
       const nativeBoard = boardDTOToCboardBoard(result.board);
-      return onCreateCommunicationBoard(nativeBoard);
+      const saved = await onCreateCommunicationBoard(nativeBoard, { guard });
+      return guard() && saved ? saved : false;
     } catch (error) {
       return false;
     }
   }
 
-  function handleCuratedBoardSave(boardDto) {
+  async function handleCuratedBoardSave(boardDto, options = {}) {
+    const guard = createGallerySaveGuard(options);
     try {
-      const sourceBoard = boards.find(board => board.id === boardDto.id);
+      if (!guard()) return false;
+      const sourceBoard = options.expectedBoard || boards.find(board => board.id === boardDto.id);
       if (!sourceBoard) return false;
-      onUpdateCommunicationBoard(boardDTOToCboardBoard(boardDto, sourceBoard));
-      return true;
+      const saved = await onUpdateCommunicationBoard(boardDTOToCboardBoard(boardDto, sourceBoard), {
+        expectedBoard: sourceBoard, guard
+      });
+      return guard() && saved === true;
     } catch (error) {
       return false;
     }
@@ -937,6 +1018,9 @@ export default function CommunicationSupportPanel({
 
   function handleClearPrivatePictograms() {
     const plan = clearPrivatePictograms();
+    onCancelSpeech();
+    onApplyOutput([]);
+    setExpressionDraftEpoch(current => current + 1);
     refreshPersonalImages();
     setMissingTokenRecords(loadMissingTokens());
     return {
@@ -1100,18 +1184,17 @@ export default function CommunicationSupportPanel({
         )}
       </div>
 
-      {isExpanded && (
-        <div id="communication-expression-panel">
+        <div id="communication-expression-panel" hidden={!isExpanded}>
           <div className="CommunicationSupportPanel__toolbar">
             <strong>{copy.expressTab}</strong>
           </div>
-          {sessionNotice && (
+          {isExpanded && sessionNotice && (
             <p className="CommunicationSupportPanel__sessionNotice">
               {sessionNotice}
             </p>
           )}
 
-          {careMode && (
+          {careMode && isExpanded && (
             <CareExpressionBoard
               preferences={preferences}
               pictogramOrdering={pictogramOrdering}
@@ -1124,10 +1207,16 @@ export default function CommunicationSupportPanel({
             />
           )}
           <ExpressionLoopPanel
-            key={`express-${
-              conversationSession ? conversationSession.id : 'loading'
-            }`}
-            output={communicationOutput}
+            activeBoardName={resolveBoardName(boards.find(board => board.id === activeBoardId) || {}, intl)}
+            savedPhraseRequest={savedPhraseRequest && savedPhraseRequest.scopeKey === scopeKey ? savedPhraseRequest : null}
+            onSavedPhraseRequestHandled={requestId => setSavedPhraseRequest(current =>
+              current && current.requestId === requestId ? null : current)}
+            key={`express-${scopeKey}-${expressionDraftEpoch}`}
+            output={output}
+            expressionDraftService={expressionDraftService}
+            allowLegacyOutput={false}
+            active={isExpanded && !showReceiver && !showManagement && !showPreparation}
+            onDraftConfirmed={refreshHistory}
             boards={expressionBoardDtos}
             activeBoardId={activeBoardId}
             pictogramOrdering={pictogramOrdering}
@@ -1135,6 +1224,8 @@ export default function CommunicationSupportPanel({
             conversationContext={getConversationContext()}
             aiAvailable={textAi.available}
             aiUnavailableReason={textAi.message}
+            aiContextKey={getExpressionAiContextKey()}
+            getAiContextKey={getExpressionAiContextKey}
             onGenerateAiSentences={request =>
               API.generateCommunicationSentences(request)
             }
@@ -1155,8 +1246,8 @@ export default function CommunicationSupportPanel({
               conversationSession ? conversationSession.id : ''
             }
             onUseSavedPhrase={handleSavedPhraseUsed}
-            onShareExpression={sentence =>
-              browserCommunicationSharePort.shareExpressionText(sentence)
+            onShareExpression={(sentence, options) =>
+              browserCommunicationSharePort.shareExpressionText(sentence, options)
             }
             candidateAutoplayDelaySeconds={
               preferences.candidateAutoplayDelaySeconds
@@ -1165,7 +1256,6 @@ export default function CommunicationSupportPanel({
             copyOverrides={copy}
           />
         </div>
-      )}
       <CommunicationReceiverDialog
         open={showReceiver}
         onClose={() => setShowReceiver(false)}
@@ -1260,6 +1350,7 @@ export default function CommunicationSupportPanel({
               onApplyOutput={onApplyOutput}
               onJumpBoard={onJumpBoard}
               initialRecord={loadResumableReceiverRecord()}
+              receiverRecords={loadReceiverRecords()}
               onCreateDraft={handleCreateReceiverDraft}
               onUpdateDraft={handleUpdateReceiverDraft}
               onConfirmDraft={handleConfirmReceiverDraft}
@@ -1313,6 +1404,14 @@ export default function CommunicationSupportPanel({
       />
       {!demoMode && (
         <CommunicationManagementDialog
+          key={`management-${scopeKey}`}
+          onSavedPhraseAction={(item, mode) => {
+            setShowManagement(false);
+            setIsExpanded(true);
+            setSavedPhraseRequest({ item, mode, requestId: shortid.generate(), scopeKey });
+          }}
+          preparedSelection={preparedSelection}
+          onPrepareSavedPhrase={request => { setPreparationRequest(request || null); setShowManagement(false); setShowPreparation(true); }}
           open={showManagement}
           onClose={() => setShowManagement(false)}
           boards={communicationBoards}
@@ -1321,10 +1420,13 @@ export default function CommunicationSupportPanel({
           savedPhrases={savedPhrases}
           historyItems={historyItems}
           personalImagePreferences={personalImagePreferences}
+          personalImageError={personalImageError}
           correctionMemory={correctionMemory}
           receiverCorrections={receiverCorrections}
           candidateFeedbackSyncAvailable={isLogged}
           onSavedPhrasesChange={handleManagedSavedPhrasesChange}
+          onSavedPhrasesCommitted={handleCommittedSavedPhrases}
+        onSavedPhraseContextChange={handleSavedPhraseContextChange}
           onHistoryChange={handleManagedHistoryChange}
           onPersonalImageSave={handlePersonalImageSave}
           onPersonalImageRemove={handlePersonalImageRemove}
@@ -1339,6 +1441,21 @@ export default function CommunicationSupportPanel({
           onSpeak={onSpeak}
         />
       )}
+      {showPreparation && <SavedPhrasePreparation
+        key={`prepare-${scopeKey}`} initialRequest={preparationRequest}
+        boards={communicationBoards} intl={intl} speech={speech}
+        onSpeak={onSpeak} onCancelSpeech={onCancelSpeech} onJumpBoard={onJumpBoard}
+        missingTokenRecords={missingTokenRecords} correctionMemory={correctionMemory}
+        onRecordMissingTokens={entry => handleMissingTokens(entry, false)}
+        onlineSearchAvailable onSearchMissingTokensOnline={handleSearchMissingTokensOnline}
+        onReviewMissingToken={handleReviewMissingToken}
+        onInvalidate={() => { searchEpoch.current += 1; if (onCancelSpeech) onCancelSpeech(); }}
+        onClose={() => { setShowPreparation(false); setShowManagement(true); }}
+        onSaved={(item, cleanupPending) => {
+          setSavedPhrases(loadCommunicationSavedPhrases());
+          setPreparedSelection({ ...item, cleanupPending });
+          setShowPreparation(false); setShowManagement(true);
+        }} />}
       <CommunicationAccessibilityDialog
         open={showAccessibility}
         onClose={() => setShowAccessibility(false)}

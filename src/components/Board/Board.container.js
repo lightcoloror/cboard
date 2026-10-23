@@ -78,7 +78,14 @@ import {
 import LoadingIcon from '../UI/LoadingIcon';
 import PinDialog from '../UI/PinDialog';
 import { resolveTileLabel } from '../../helpers';
-import { loadPersonalImageRuntime } from '../../common/communicationSupport/localData';
+import {
+  getCommunicationStorageScopeKey,
+  loadPersonalImageRuntime
+} from '../../common/communicationSupport/localData';
+import { createBrowserExpressionAudio } from '../../common/communicationSupport/browserExpressionAudio';
+import { subscribeSpeechInterruption } from '../../providers/SpeechProvider/speechInterruption';
+import { saveVerifiedBoards } from '../../common/communicationSupport/verifiedBoardPersistence';
+import { currentImageOperationEpoch } from '../../common/communicationSupport/imageOperationEpoch';
 //import { isAndroid } from '../../cordova-util';
 
 const ogv = require('ogv');
@@ -138,6 +145,7 @@ export class BoardContainer extends Component {
      */
     createBoard: PropTypes.func,
     updateBoard: PropTypes.func,
+    saveVerifiedBoards: PropTypes.func,
     /**
      * Create tile
      */
@@ -250,6 +258,11 @@ export class BoardContainer extends Component {
   }
 
   async componentDidMount() {
+    this.unsubscribeTileSpeech = subscribeSpeechInterruption(() => {
+      // Another speech owner/cancel action already controls TTS. Release only
+      // this recording so cleanup cannot cancel the newly requested speech.
+      if (this.tilePlaybackActive) this.stopTileAudio();
+    });
     const {
       match: {
         params: { id }
@@ -356,12 +369,36 @@ export class BoardContainer extends Component {
 
   componentDidUpdate(prevProps) {
     const { board } = this.props;
+    if (this.nativeSaveContextKey(prevProps) !== this.nativeSaveContextKey()) {
+      this.nativeSelectionRevision += 1;
+      if (this.state.tileEditorOpen) this.nativeEditorRevision += 1;
+      this.nativeEditorBaseline = null;
+      this.nativeEditorSavedRevision = null;
+      this.nativePendingOperation = null;
+      this.setState({ selectedTileIds: [], isSelectAll: false, isSelecting: false, tileEditorOpen: false });
+    }
+    if (
+      this.tilePlaybackActive &&
+      (this.tilePlaybackScope !== this.props.playbackScope ||
+        this.tilePlaybackBoardId !== board?.id ||
+        prevProps.isLiveMode !== this.props.isLiveMode)
+    ) {
+      this.stopTileAudio();
+    }
     if (board && prevProps.board && board.isFixed !== prevProps.board.isFixed) {
       this.setState({ isFixedBoard: board.isFixed });
     }
   }
 
+  componentWillUnmount() {
+    if (this.nativeCloudRequestId && this.state.isSaving && this.props.setIsSaving) this.props.setIsSaving(false);
+    this.nativeSaveDisposed = true;
+    if (this.unsubscribeTileSpeech) this.unsubscribeTileSpeech();
+    this.stopTileAudio();
+  }
+
   toggleSelectMode() {
+    this.nativeSelectionRevision += 1;
     this.setState(prevState => ({
       isSelecting: !prevState.isSelecting,
       isSelectAll: false,
@@ -370,6 +407,7 @@ export class BoardContainer extends Component {
   }
 
   selectAllTiles() {
+    this.nativeSelectionRevision += 1;
     const { board } = this.props;
     const allTileIds = board.tiles.map(tile => tile.id);
 
@@ -379,12 +417,14 @@ export class BoardContainer extends Component {
   }
 
   selectTile(tileId) {
+    this.nativeSelectionRevision += 1;
     this.setState({
       selectedTileIds: [...this.state.selectedTileIds, tileId]
     });
   }
 
   deselectTile(tileId) {
+    this.nativeSelectionRevision += 1;
     const [...selectedTileIds] = this.state.selectedTileIds;
     const tileIndex = selectedTileIds.indexOf(tileId);
     selectedTileIds.splice(tileIndex, 1);
@@ -452,13 +492,48 @@ export class BoardContainer extends Component {
     return dataURL;
   }
 
-  async playAudio(src) {
+  tilePlaybackGeneration = 0;
+  tilePlaybackActive = false;
+  tileAudio = createBrowserExpressionAudio(source => {
     const safariNeedHelp =
       (IS_BROWSING_FROM_SAFARI || IS_BROWSING_FROM_APPLE_TOUCH) &&
-      src.endsWith('.ogg');
-    const audio = safariNeedHelp ? new ogv.OGVPlayer() : new Audio();
-    audio.src = src;
-    await audio.play();
+      /\.ogg(?:[?#]|$)/i.test(source);
+    return safariNeedHelp ? new ogv.OGVPlayer() : new Audio();
+  });
+
+  stopTileAudio = () => {
+    this.tilePlaybackGeneration += 1;
+    this.tilePlaybackActive = false;
+    this.tileAudio.stop();
+  };
+
+  async playAudio(src, fallbackText = '', boardId = this.props.board?.id) {
+    this.stopTileAudio();
+    this.props.cancelSpeech();
+    const generation = this.tilePlaybackGeneration;
+    this.tilePlaybackScope = this.props.playbackScope;
+    this.tilePlaybackBoardId = boardId;
+    this.tilePlaybackActive = true;
+    try {
+      const result = await this.tileAudio.play(src);
+      if (
+        generation === this.tilePlaybackGeneration &&
+        !result.ok && result.reason !== 'stopped' && fallbackText
+      ) {
+        // Reuse CBoard's selected vocalization; never infer another sentence.
+        // A late failed recording must not speak after a newer selection/stop.
+        this.tilePlaybackActive = false;
+        try {
+          const speaking = this.props.speak(fallbackText);
+          if (speaking?.catch) await speaking.catch(() => {});
+        } catch (_) {
+          // The existing voice UI handles device availability. Keep selection.
+        }
+      }
+      return result;
+    } finally {
+      if (generation === this.tilePlaybackGeneration) this.tilePlaybackActive = false;
+    }
   }
 
   handleEditBoardTitle = name => {
@@ -536,6 +611,7 @@ export class BoardContainer extends Component {
   };
 
   handleEditClick = () => {
+    this.captureNativeEditor();
     this.setState({ tileEditorOpen: true });
   };
 
@@ -578,68 +654,182 @@ export class BoardContainer extends Component {
   };
 
   handleTileEditorCancel = () => {
+    if (this.nativeEditorSavedRevision === this.nativeEditorRevision) this.toggleSelectMode();
+    this.nativeEditorSavedRevision = null;
+    this.nativeEditorRevision += 1;
+    this.nativeEditorBaseline = null;
+    this.nativePendingOperation = null;
     this.setState({ tileEditorOpen: false });
   };
 
-  handleEditTileEditorSubmit = tiles => {
-    const { board, editTiles, userData } = this.props;
-    this.updateIfFeaturedBoard(board);
-    editTiles(tiles, board.id);
+  nativeEditorRevision = 0;
+  nativeEditorSavedRevision = null;
+  nativeSelectionRevision = 0;
+  nativeSaveDisposed = false;
+  nativePendingOperation = null;
+  nativeSavePromise = null;
 
-    // Loggedin user?
-    if ('name' in userData && 'email' in userData) {
-      this.handleApiUpdates(null, null, tiles);
-    }
-    this.toggleSelectMode();
+  nativeSaveContextKey = (props = this.props) => JSON.stringify([
+    getCommunicationStorageScopeKey(), currentImageOperationEpoch(),
+    props.playbackScope, props.board?.id, props.communicator?.id,
+    props.userData?.id || props.userData?._id || props.userData?.email
+  ]);
+
+  captureNativeEditor = () => {
+    this.nativeEditorRevision += 1;
+    this.nativeEditorSavedRevision = null;
+    this.nativeEditorBaseline = this.props.board && JSON.parse(JSON.stringify(this.props.board));
+    this.nativeEditorContext = this.nativeSaveContextKey();
+    this.nativePendingOperation = null;
   };
 
-  handleAddTileEditorSubmit = async tile => {
-    const {
-      userData,
-      createTile,
-      board,
-      createBoard,
-      switchBoard,
-      communicator,
-      verifyAndAddBoardCommunicator
-    } = this.props;
-    const isLoggedIn = 'name' in userData && 'email' in userData;
-    const boardData = {
-      id: tile.loadBoard,
-      name: tile.label,
-      nameKey: tile.labelKey,
-      hidden: false,
-      tiles: [],
-      isPublic: false,
-      email: userData.email ? userData.email : board.email,
-      author: userData.name ? userData.name : board.author
+  nativeSaveError = (message, code = 'BOARD_PERSISTENCE_FAILED') =>
+    Object.assign(new Error(message), { code });
+
+  nativeCloudScopeKey = () => JSON.stringify([
+    getCommunicationStorageScopeKey(), currentImageOperationEpoch(),
+    this.props.userData?.id || this.props.userData?._id || this.props.userData?.email,
+    this.props.userData?.authToken
+  ]);
+
+  scheduleNativeCloudSync = operation => {
+    // Finish the local receipt first. The legacy cloud flow can itself switch
+    // the active communicator and must not turn that receipt into a failure.
+    // Closing the editor is expected; changing scope or board contents is not.
+    const withoutTimestamp = board => {
+      const value = { ...board };
+      delete value.lastEdited;
+      return value;
     };
-    if (tile.loadBoard && !tile.linkedBoard) {
-      createBoard(boardData);
-      if (!isLoggedIn) {
-        verifyAndAddBoardCommunicator(communicator, boardData.id);
-      }
-    }
-
-    if (tile.type !== 'board') {
-      this.updateIfFeaturedBoard(board);
-      createTile(tile, board.id);
-    }
-
-    // Loggedin user?
-    if (isLoggedIn) {
-      await this.handleApiUpdates(tile); // this function could mutate tthe tile
-      return;
-    }
-
-    //if not and is adding an emptyBoard
-    if (tile.type === 'board') {
-      switchBoard(boardData.id);
-      this.replaceBoardLocation(`/board/${boardData.id}`, []);
-    }
+    const current = () => !this.nativeSaveDisposed &&
+      this.nativeSaveContextKey() === operation.context &&
+      operation.changes.every(({ board }) => {
+        const stored = (this.props.boards || []).find(item => item.id === board.id);
+        return stored && isEqual(withoutTimestamp(stored), withoutTimestamp(board));
+      });
+    const cloudScope = this.nativeCloudScopeKey();
+    const editorRevision = this.nativeEditorRevision;
+    const scopeGuard = () => !this.nativeSaveDisposed && this.nativeCloudScopeKey() === cloudScope &&
+      this.nativeEditorRevision <= editorRevision + (operation.kind === 'delete' ? 0 : 1);
+    setTimeout(() => {
+      if (!current() || !scopeGuard()) return;
+      const { kind, payload, desired } = operation;
+      this.handleApiUpdates(
+        kind === 'add' ? JSON.parse(JSON.stringify(payload)) : null,
+        kind === 'delete' ? payload : null,
+        kind === 'edit' ? JSON.parse(JSON.stringify(payload)) : null,
+        desired && JSON.parse(JSON.stringify(desired)),
+        { guard: current, scopeGuard, localCommitted: true }
+      ).catch(() => {
+        // This rejection concerns the existing cloud attempt only. The local
+        // receipt was already confirmed and must not prompt a duplicate retry.
+        // handleApiUpdates owns its request's saving indicator and cleanup.
+      });
+    }, 0);
   };
 
-  updateIfFeaturedBoard = board => {
+  // Keep the original native board and exact requested DTOs across an
+  // unconfirmed write. Rebuilding from already-mutated Redux state would append
+  // a duplicate card or silently accept a later edit as our own retry.
+  saveNativeChange = (kind, value, { guard = () => true } = {}) => {
+    let payload;
+    try { payload = JSON.parse(JSON.stringify(value)); }
+    catch (_) { return Promise.reject(this.nativeSaveError('图卡内容不能保存，请保留输入。')); }
+    const context = this.nativeSaveContextKey();
+    const revision = kind === 'delete' ? this.nativeSelectionRevision : this.nativeEditorRevision;
+    const current = () => !this.nativeSaveDisposed && guard() &&
+      this.nativeSaveContextKey() === context &&
+      (kind === 'delete' ? this.nativeSelectionRevision : this.nativeEditorRevision) === revision;
+    const assertCurrent = () => {
+      if (!current()) throw this.nativeSaveError('当前操作已过期，未覆盖当前内容。', 'BOARD_SAVE_CANCELLED');
+    };
+    let operation = this.nativePendingOperation;
+    const sameAttempt = operation && operation.kind === kind && operation.context === context &&
+      operation.revision === revision && isEqual(operation.payload, payload);
+    if (this.nativeSavePromise) {
+      return sameAttempt ? this.nativeSavePromise : Promise.reject(this.nativeSaveError('正在确认保存，请稍后重试。'));
+    }
+    try {
+      assertCurrent();
+      if (kind !== 'delete' && this.nativeEditorBaseline && this.nativeEditorContext !== context)
+        throw this.nativeSaveError('编辑范围已变化，请保留输入后重新打开图卡。', 'BOARD_SAVE_CANCELLED');
+      if (!sameAttempt) {
+        const board = JSON.parse(JSON.stringify(kind !== 'delete' && this.nativeEditorBaseline || this.props.board));
+        if (!board || !Array.isArray(board.tiles)) throw this.nativeSaveError('当前图板不可用。');
+        const userData = this.props.userData || {};
+        const logged = 'name' in userData && 'email' in userData;
+        const changes = [];
+        let desired = null;
+        if (kind === 'add') {
+          if (!payload.id || board.tiles.some(tile => tile.id === payload.id))
+            throw this.nativeSaveError('图卡身份已存在，请重新查看当前图板。', 'BOARD_SAVE_CONFLICT');
+          if (payload.loadBoard && !payload.linkedBoard) {
+            const child = {
+              id: payload.loadBoard, name: payload.label, nameKey: payload.labelKey,
+              hidden: false, tiles: [], isPublic: false,
+              email: userData.email || board.email, author: userData.name || board.author,
+              ...(logged ? { locale: this.props.lang, caption: payload.image } : {})
+            };
+            changes.push({ board: child, expectedBoard: null, create: true });
+          }
+          if (payload.type !== 'board') desired = { ...board, tiles: [...board.tiles, payload] };
+        } else {
+          const ids = kind === 'delete' ? payload : payload.map(tile => tile.id);
+          if (!ids.length || new Set(ids).size !== ids.length || ids.some(id => !board.tiles.some(tile => tile.id === id)))
+            throw this.nativeSaveError('所选图卡已变化，请重新查看当前图板。', 'BOARD_SAVE_CONFLICT');
+          desired = { ...board, tiles: kind === 'delete'
+            ? board.tiles.filter(tile => !ids.includes(tile.id))
+            : board.tiles.map(tile => payload.find(edited => edited.id === tile.id) || tile) };
+        }
+        if (desired) {
+          desired = this.updateIfFeaturedBoard(desired, false);
+          changes.push({ board: desired, expectedBoard: board });
+        }
+        if (!changes.length) throw this.nativeSaveError('没有可保存的图板。');
+        operation = { kind, context, revision, payload, changes, desired, logged };
+        this.nativePendingOperation = operation;
+      }
+      if (!this.props.saveVerifiedBoards) throw this.nativeSaveError('本机保存服务未就绪，请保留输入。');
+    } catch (error) { return Promise.reject(error); }
+
+    let saving;
+    try { saving = this.props.saveVerifiedBoards(operation.changes, { guard: current }); }
+    catch (error) { return Promise.reject(error); }
+    const pending = Promise.resolve(saving).then(result => {
+      assertCurrent();
+      if (result !== true) throw this.nativeSaveError('本机保存未确认，请保留输入后重试。');
+      if (operation.logged) {
+        this.scheduleNativeCloudSync(operation);
+      }
+      if (kind === 'delete') this.toggleSelectMode();
+      if (kind === 'edit') this.nativeEditorSavedRevision = revision;
+      if (kind === 'delete') this.props.showNotification(this.props.intl.formatMessage(messages.tilesDeleted));
+      if (kind === 'add' && payload.type === 'board' && !operation.logged) {
+        // Let the editor consume success before navigation changes its scope.
+        setTimeout(() => {
+          if (this.nativeSaveDisposed || this.nativeSaveContextKey() !== context ||
+              this.nativeEditorRevision > revision + 1) return;
+          this.props.switchBoard(payload.loadBoard);
+          this.replaceBoardLocation(`/board/${payload.loadBoard}`, []);
+        }, 0);
+      }
+      this.nativePendingOperation = null;
+      // The editor closes after consuming this receipt. Preserve its source
+      // props until then so our own success cannot invalidate its submit guard.
+      if (kind === 'delete') this.nativeEditorBaseline = null;
+      return true;
+    });
+    this.nativeSavePromise = pending;
+    const clearPending = () => { if (this.nativeSavePromise === pending) this.nativeSavePromise = null; };
+    pending.then(clearPending, clearPending);
+    return pending;
+  };
+
+  handleEditTileEditorSubmit = (tiles, options) => this.saveNativeChange('edit', tiles, options);
+
+  handleAddTileEditorSubmit = (tile, options) => this.saveNativeChange('add', tile, options);
+
+  updateIfFeaturedBoard = (board, persist = true) => {
     const { userData, updateBoard, intl, lang } = this.props;
     let boardData = {
       ...board
@@ -661,7 +851,7 @@ export class BoardContainer extends Component {
         isPublic: false,
         locale: lang
       };
-      updateBoard(boardData);
+      if (persist) updateBoard(boardData);
     }
     return boardData;
   };
@@ -676,6 +866,7 @@ export class BoardContainer extends Component {
   };
 
   handleAddClick = () => {
+    this.captureNativeEditor();
     this.setState({
       tileEditorOpen: true,
       selectedTileIds: [],
@@ -869,6 +1060,7 @@ export class BoardContainer extends Component {
   };
 
   handleSelectAllToggle = () => {
+    this.nativeSelectionRevision += 1;
     if (this.state.isSelectAll) {
       this.setState({ selectedTileIds: [] });
     } else {
@@ -881,6 +1073,7 @@ export class BoardContainer extends Component {
   };
 
   handleTileClick = clickedTile => {
+    this.stopTileAudio();
     const tile = {
       ...clickedTile,
       label: resolveTileLabel(clickedTile, this.props.intl)
@@ -903,11 +1096,11 @@ export class BoardContainer extends Component {
     } = this.props;
     const hasAction = tile.action && tile.action.startsWith('+');
 
-    const say = () => {
+    const say = (boardId = this.props.board?.id) => {
+      const toSpeak = !hasAction ? tile.vocalization || tile.label : null;
       if (tile.sound) {
-        this.playAudio(tile.sound);
+        this.playAudio(tile.sound, toSpeak, boardId);
       } else {
-        const toSpeak = !hasAction ? tile.vocalization || tile.label : null;
         if (toSpeak) {
           speak(toSpeak);
         }
@@ -924,7 +1117,7 @@ export class BoardContainer extends Component {
         changeBoard(nextBoard.id);
         this.pushBoardLocation(nextBoard.id);
         if (navigationSettings.vocalizeFolders) {
-          say();
+          say(nextBoard.id);
         }
       } else {
         showNotification(intl.formatMessage(messages.boardMissed));
@@ -956,22 +1149,7 @@ export class BoardContainer extends Component {
     showNotification(intl.formatMessage(messages.tilesCreated));
   };
 
-  handleDeleteClick = () => {
-    const { intl, deleteTiles, showNotification, board, userData } = this.props;
-    this.updateIfFeaturedBoard(board);
-    deleteTiles(this.state.selectedTileIds, board.id);
-
-    // Loggedin user?
-    if ('name' in userData && 'email' in userData) {
-      this.handleApiUpdates(null, this.state.selectedTileIds, null);
-    }
-
-    this.setState({
-      selectedTileIds: []
-    });
-    showNotification(intl.formatMessage(messages.tilesDeleted));
-    this.toggleSelectMode();
-  };
+  handleDeleteClick = (options) => this.saveNativeChange('delete', this.state.selectedTileIds, options);
 
   handleLockNotify = countdown => {
     const { intl, showNotification, hideNotification } = this.props;
@@ -1112,7 +1290,8 @@ export class BoardContainer extends Component {
     tile = null,
     deletedTilesiIds = null,
     editedTiles = null,
-    processedBoard = null
+    processedBoard = null,
+    nativeSave = null
   ) => {
     const {
       userData,
@@ -1128,8 +1307,31 @@ export class BoardContainer extends Component {
       switchBoard,
       lang
     } = this.props;
+    const requestId = this.nativeCloudRequestId = (this.nativeCloudRequestId || 0) + 1;
+    const scopeGuard = nativeSave && (nativeSave.scopeGuard || nativeSave.guard);
+    const requestGuard = () => !this.nativeSaveDisposed && this.nativeCloudRequestId === requestId && scopeGuard();
+    const finishSaving = () => {
+      // Releasing this request's indicator is valid even when its scope expired.
+      // The request token prevents an old completion from clearing a newer one.
+      if (nativeSave && (this.nativeSaveDisposed || this.nativeCloudRequestId !== requestId)) return;
+      this.setState({ isSaving: false });
+      this.props.setIsSaving(false);
+    };
+    const canApplyCloudResult = () => !nativeSave ||
+      (requestGuard() && (!nativeSave.currentAfterApi || nativeSave.currentAfterApi()));
+    const cloudOptions = nativeSave ? {
+      guard: requestGuard,
+      onGuard: current => { nativeSave.currentAfterApi = current; }
+    } : undefined;
+    const assertNativePending = () => {
+      if (nativeSave && (!requestGuard() || !nativeSave.guard())) {
+        finishSaving();
+        throw this.nativeSaveError('当前操作已过期，云端同步未继续。', 'BOARD_SAVE_CANCELLED');
+      }
+    };
     // Loggedin user?
     if ('name' in userData && 'email' in userData) {
+      assertNativePending();
       this.setState({
         isSaving: true
       });
@@ -1141,10 +1343,16 @@ export class BoardContainer extends Component {
       if (editedTiles) {
         let _editedTiles = [];
         for (let _tile of editedTiles) {
+          assertNativePending();
           _editedTiles.push(await this.uploadTileSound(_tile));
         }
         editedTiles = _editedTiles;
       }
+
+      // A native local save can wait on sound uploads before the existing API
+      // path starts. Do not reapply its captured board after the editor/scope
+      // has been invalidated during that wait.
+      assertNativePending();
 
       var createParentBoard = false;
       var createChildBoard = false;
@@ -1207,7 +1415,7 @@ export class BoardContainer extends Component {
         };
         childBoardData = { ...boardData };
         createChildBoard = true;
-        updateBoard(childBoardData);
+        if (!nativeSave?.localCommitted) updateBoard(childBoardData);
       }
       //check if we have to create a copy of the parent
       if (parentBoardData.id.length < 14) {
@@ -1218,45 +1426,44 @@ export class BoardContainer extends Component {
         };
       } else {
         //update the parent
-        updateBoard(parentBoardData);
+        if (!nativeSave?.localCommitted) updateBoard(parentBoardData);
       }
       // Untill here all is with shorts ids
       //api updates
       if (tile && tile.type === 'board') {
         //child becomes parent
-        updateApiObjectsNoChild(childBoardData, true)
+        updateApiObjectsNoChild(childBoardData, true, ...(cloudOptions ? [cloudOptions] : []))
           .then(parentBoardId => {
+            if (!canApplyCloudResult()) { finishSaving(); return; }
             switchBoard(parentBoardId);
             this.replaceBoardLocation(`/board/${parentBoardId}`, []);
-            this.setState({ isSaving: false });
-            this.props.setIsSaving(false);
+            finishSaving();
           })
           .catch(e => {
-            this.setState({ isSaving: false });
-            this.props.setIsSaving(false);
+            finishSaving();
           });
       } else {
         if (!createChildBoard) {
-          updateApiObjectsNoChild(parentBoardData, createParentBoard)
+          updateApiObjectsNoChild(parentBoardData, createParentBoard, ...(cloudOptions ? [cloudOptions] : []))
             .then(parentBoardId => {
-              if (createParentBoard) {
+              if (!canApplyCloudResult()) { finishSaving(); return; }
+              if (createParentBoard && !nativeSave?.localCommitted) {
                 replaceBoard(
                   { ...parentBoardData },
                   { ...parentBoardData, id: parentBoardId }
                 );
               }
               this.historyReplaceBoardId(parentBoardId);
-              this.setState({ isSaving: false });
-              this.props.setIsSaving(false);
+              finishSaving();
             })
             .catch(e => {
-              this.setState({ isSaving: false });
-              this.props.setIsSaving(false);
+              finishSaving();
             });
         } else {
-          updateApiObjects(childBoardData, parentBoardData, createParentBoard)
+          updateApiObjects(childBoardData, parentBoardData, createParentBoard, ...(cloudOptions ? [cloudOptions] : []))
             .then(parentBoardId => {
-              if (createParentBoard) {
+              if (!canApplyCloudResult()) { finishSaving(); return; }
+              if (createParentBoard && !nativeSave?.localCommitted) {
                 /* Here the parentBoardData is not updated with the values
                 that updatedApiObjects store on the API. Inside the boards are already updated
                 an the value is not replaced because the oldboard Id was replaced on the updateApiObjects inside createApiBoardSuccess */
@@ -1266,12 +1473,10 @@ export class BoardContainer extends Component {
                 );
               }
               this.historyReplaceBoardId(parentBoardId);
-              this.setState({ isSaving: false });
-              this.props.setIsSaving(false);
+              finishSaving();
             })
             .catch(e => {
-              this.setState({ isSaving: false });
-              this.props.setIsSaving(false);
+              finishSaving();
             });
         }
       }
@@ -1630,17 +1835,9 @@ export class BoardContainer extends Component {
     return;
   }
 
-  selectedTiles = () => {
-    return this.state.selectedTileIds
-      ? this.state.selectedTileIds.map(selectedTileId => {
-          const tiles = this.props.board.tiles.filter(tile => {
-            return tile.id === selectedTileId;
-          })[0];
-
-          return tiles;
-        })
-      : [];
-  };
+  selectedTiles = (board = this.props.board) => (this.state.selectedTileIds || [])
+    .map(id => board?.tiles?.find(tile => tile.id === id))
+    .filter(Boolean);
 
   handleAddApiBoard = async boardId => {
     if (!this.props.boards.find(board => board.id === boardId)) {
@@ -1673,14 +1870,10 @@ export class BoardContainer extends Component {
     }
 
     const disableBackButton = navHistory.length === 1;
+    const editorBoard = this.nativeEditorBaseline && this.nativeEditorContext !== this.nativeSaveContextKey()
+      ? null : this.nativeEditorBaseline?.id === board.id ? this.nativeEditorBaseline : board;
     const editingTiles = this.state.tileEditorOpen
-      ? this.state.selectedTileIds.map(selectedTileId => {
-          const tiles = board.tiles.filter(tile => {
-            return tile.id === selectedTileId;
-          })[0];
-
-          return tiles;
-        })
+      ? this.selectedTiles(editorBoard)
       : [];
 
     return (
@@ -1703,6 +1896,7 @@ export class BoardContainer extends Component {
           //updateBoard={this.handleUpdateBoard}
           onAddClick={this.handleAddClick}
           onDeleteClick={this.handleDeleteClick}
+          deleteContextKey={this.nativeSaveContextKey()}
           onEditClick={this.handleEditClick}
           onSelectAllToggle={this.handleSelectAllToggle}
           onFocusTile={focusTile}
@@ -1840,6 +2034,7 @@ export class BoardContainer extends Component {
           </DialogActions>
         </Dialog>
         <TileEditor
+          saveContextKey={this.nativeSaveContextKey()}
           editingTiles={editingTiles}
           open={this.state.tileEditorOpen}
           onClose={this.handleTileEditorCancel}
@@ -1930,6 +2125,11 @@ export const mapStateToProps = state => {
     board: getVisibleBoards(state).find(board => board.id === activeBoardId),
     boards: getVisibleBoards(state),
     output: board.output,
+    playbackScope: JSON.stringify([
+      getCommunicationStorageScopeKey(),
+      userData && (userData.id || userData._id || userData.email),
+      activeCommunicatorId
+    ]),
     personalImagePreferences: personalImageRuntime.preferences,
     personalImageIdentity: personalImageRuntime.identity,
     isLiveMode: board.isLiveMode,
@@ -1961,6 +2161,7 @@ const mapDispatchToProps = {
   historyRemoveBoard,
   createBoard,
   updateBoard,
+  saveVerifiedBoards,
   switchBoard,
   createTile,
   deleteTiles,

@@ -8,6 +8,8 @@ import * as symbolMatching from '../../../common/communicationSupport/symbolMatc
 import * as localData from '../../../common/communicationSupport/localData';
 import * as communicationSpeech from '../../../common/communicationSupport/communicationSpeech';
 import API from '../../../api';
+import { createBoardDTO } from '../../../common/communicationSupport/dto';
+import { browserCommunicationSharePort, createBrowserCommunicationSharePort } from '../../../common/communicationSupport/browserCommunicationShare';
 
 const mockedOutput = [
   {
@@ -121,6 +123,8 @@ jest.mock('../../../common/communicationSupport/symbolMatching', () => ({
 }));
 
 jest.mock('../../../common/communicationSupport/localData', () => ({
+  createLocalSavedPhraseImport: options => jest.requireActual('../../../common/communicationSupport/localData').createLocalSavedPhraseImport(options),
+  createLocalSavedPhraseUndo: () => jest.requireActual('../../../common/communicationSupport/localData').createLocalSavedPhraseUndo(),
   appendCommunicationHistory: jest.fn(),
   appendReceiverCorrection: jest.fn(),
   buildCommunicationCloudSettingsPayload: jest.fn(),
@@ -250,6 +254,151 @@ describe('CommunicationSupportPanel receiver flow', () => {
     initiallyExpanded: true
   };
 
+  test('committed import, consecutive deletes and undo refresh the canonical list without another CAS write', async () => {
+    const actual = jest.requireActual('../../../common/communicationSupport/localData');
+    const { buildCommunicationSavedPhraseExport } = jest.requireActual('../../../common/communicationSupport/savedPhraseManagement');
+    window.localStorage.clear();
+    actual.overwriteCommunicationSavedPhrases([{ id: 'before-import', sentence: '合成原句', output: [], createdAt: 1 }]);
+    localData.loadCommunicationSavedPhrases.mockImplementation(actual.loadCommunicationSavedPhrases);
+    localData.overwriteCommunicationSavedPhrases.mockImplementation(actual.overwriteCommunicationSavedPhrases);
+    const wrapper = mount(<CommunicationSupportPanel {...props} />);
+    const click = label => {
+      act(() => wrapper.find('ForwardRef(Button)').filterWhere(node => node.text() === label).first().prop('onClick')());
+      wrapper.update();
+    };
+    const shown = () => wrapper.find('CommunicationManagementDialog').prop('savedPhrases');
+    try {
+      click('常用语与历史');
+      const payload = JSON.stringify(buildCommunicationSavedPhraseExport([{ id: 'imported', sentence: '合成导入句', output: [], createdAt: 2 }]));
+      await act(async () => wrapper.find('input[type="file"]').first().prop('onChange')({ target: { files: [{ text: async () => payload }], value: '' } }));
+      wrapper.update();
+      const confirm = wrapper.find('ForwardRef(Button)').filterWhere(node => node.text() === '确认整批导入').prop('onClick');
+      act(() => { confirm(); confirm(); }); wrapper.update();
+      expect(actual.loadCommunicationSavedPhrases()).toHaveLength(2);
+      expect(shown()).toEqual(actual.loadCommunicationSavedPhrases());
+      expect(wrapper.text()).not.toContain('常用语已变化');
+      click('删除'); click('删除');
+      expect(shown()).toEqual([]);
+      for (let i = 0; i < 2; i += 1) {
+        await act(async () => wrapper.find(PatientActionButton).filterWhere(node => node.prop('ariaLabel') === '撤销上次删除的常用语').prop('onClick')());
+        wrapper.update();
+        expect(shown()).toEqual(actual.loadCommunicationSavedPhrases());
+      }
+      expect(shown()).toHaveLength(2);
+      expect(shown().every(item => item.id.startsWith('phrase_restored_'))).toBe(true);
+      expect(localData.overwriteCommunicationSavedPhrases).not.toHaveBeenCalled();
+    } finally {
+      wrapper.unmount(); window.localStorage.clear();
+      localData.loadCommunicationSavedPhrases.mockReturnValue([]);
+      localData.overwriteCommunicationSavedPhrases.mockReset();
+    }
+  });
+
+  test('committed refresh reads canonical data and preserves the current UI on read failure', () => {
+    const initial = [{ id: 'before', sentence: '保存前', output: [] }];
+    const canonical = [{ id: 'verified', sentence: '规范仓储', output: [] }];
+    localData.loadCommunicationSavedPhrases.mockReturnValue(initial);
+    const wrapper = mount(<CommunicationSupportPanel {...props} />);
+    const refresh = wrapper.find('CommunicationManagementDialog').prop('onSavedPhrasesCommitted');
+    try {
+      localData.loadCommunicationSavedPhrases.mockImplementationOnce(() => { throw new Error('read denied'); });
+      expect(() => refresh({ scopeKey: 'local', items: canonical })).toThrow('read denied');
+      expect(wrapper.find('CommunicationManagementDialog').prop('savedPhrases')).toEqual(initial);
+      localData.loadCommunicationSavedPhrases.mockReturnValue(canonical);
+      act(() => expect(refresh({ scopeKey: 'local', items: [{ id: 'forged' }] })).toEqual(canonical)); wrapper.update();
+      expect(wrapper.find('CommunicationManagementDialog').prop('savedPhrases')).toEqual(canonical);
+      expect(localData.overwriteCommunicationSavedPhrases).not.toHaveBeenCalled();
+    } finally { wrapper.unmount(); }
+  });
+
+  test('committed refresh rejects stale scope, changed guards and callbacks after unmount', () => {
+    const wrapper = mount(<CommunicationSupportPanel {...props} />);
+    const refresh = wrapper.find('CommunicationManagementDialog').prop('onSavedPhrasesCommitted');
+    localData.loadCommunicationSavedPhrases.mockClear();
+    expect(() => refresh({ scopeKey: 'another-family' })).toThrow('已切换');
+    expect(() => refresh({ scopeKey: 'local', guard: () => false })).toThrow('已切换');
+    expect(localData.loadCommunicationSavedPhrases).not.toHaveBeenCalled();
+    let valid = true;
+    localData.loadCommunicationSavedPhrases.mockImplementationOnce(() => { valid = false; return [{ id: 'late' }]; });
+    expect(() => refresh({ scopeKey: 'local', guard: () => valid })).toThrow('已切换');
+    expect(wrapper.find('CommunicationManagementDialog').prop('savedPhrases')).toEqual([]);
+    wrapper.unmount();
+    expect(() => refresh({ scopeKey: 'local' })).toThrow('已切换');
+  });
+
+  test('reports a rejected personal-board update as failure and permits retry with the same board', async () => {
+    const board = { id: 'device_private_board_test', name: '合成图板', tiles: [], grid: { rows: 1, columns: 3, order: [] } };
+    const save = jest.fn().mockResolvedValueOnce(false).mockRejectedValueOnce(new Error('synthetic write failure')).mockResolvedValueOnce(true);
+    const wrapper = mount(<CommunicationSupportPanel {...props} boards={[board]} onUpdateCommunicationBoard={save} />);
+    const dto = createBoardDTO(board);
+    const submit = wrapper.find('CommunicationManagementDialog').prop('onCuratedBoardSave');
+    await expect(submit(dto)).resolves.toBe(false);
+    await expect(submit(dto)).resolves.toBe(false);
+    await expect(submit(dto)).resolves.toBe(true);
+    expect(save).toHaveBeenCalledTimes(3);
+    expect(save.mock.calls[0][0]).toEqual(save.mock.calls[1][0]);
+    expect(save.mock.calls[0][1]).toEqual({ expectedBoard: board, guard: expect.any(Function) });
+    wrapper.unmount();
+  });
+
+  test('gallery save keeps the original native baseline and cancels confirmation after a scope switch', async () => {
+    const board = { id: 'device_private_board_scope', name: '合成图板', tiles: [], grid: { rows: 1, columns: 3, order: [] } };
+    let resolve;
+    const save = jest.fn(() => new Promise(done => { resolve = done; }));
+    const wrapper = mount(<CommunicationSupportPanel {...props} boards={[{ ...board, name: '最新内存板名' }]} onUpdateCommunicationBoard={save} />);
+    const guard = jest.fn(() => true);
+    const submit = wrapper.find('CommunicationManagementDialog').prop('onCuratedBoardSave');
+    const pending = submit(createBoardDTO(board), { expectedBoard: board, guard });
+    expect(save.mock.calls[0][1].expectedBoard).toBe(board);
+    expect(save.mock.calls[0][1].guard()).toBe(true);
+    localData.getCommunicationStorageScopeKey.mockReturnValue('another-family');
+    expect(save.mock.calls[0][1].guard()).toBe(false);
+    resolve(true);
+    await expect(pending).resolves.toBe(false);
+    localData.getCommunicationStorageScopeKey.mockReturnValue('local');
+    wrapper.unmount();
+  });
+
+  test('personal board creation reuses the supplied ID when its previous attempt is already in memory', async () => {
+    const board = { id: 'device_private_board_retry', name: '合成重试板', tiles: [], grid: { rows: 1, columns: 3, order: [] } };
+    const create = jest.fn().mockResolvedValueOnce(false).mockRejectedValueOnce(new Error('write failed')).mockResolvedValueOnce(board.id);
+    const wrapper = mount(<CommunicationSupportPanel {...props} boards={[board]} onCreateCommunicationBoard={create} />);
+    const submit = wrapper.find('CommunicationManagementDialog').prop('onCreatePersonalBoard');
+    await expect(submit(board.name, { id: board.id })).resolves.toBe(false);
+    await expect(submit(board.name, { id: board.id })).resolves.toBe(false);
+    await expect(submit(board.name, { id: board.id })).resolves.toBe(board.id);
+    expect(create.mock.calls[1][0]).toEqual(create.mock.calls[0][0]);
+    expect(create.mock.calls[2][0]).toEqual(create.mock.calls[0][0]);
+    wrapper.unmount();
+  });
+
+  test('forwards expression cancellation through the real parent and share adapter when switching to receiver', async () => {
+    let rejectShare;
+    const nativeShare = jest.fn(() => new Promise((resolve, reject) => { rejectShare = reject; }));
+    const downloadBlob = jest.fn();
+    const port = createBrowserCommunicationSharePort({ navigatorRef: { share: nativeShare }, downloadBlob });
+    const shareSpy = jest.spyOn(browserCommunicationSharePort, 'shareExpressionText').mockImplementation(port.shareExpressionText);
+    const wrapper = mount(<CommunicationSupportPanel {...props} output={mockedOutput} />);
+    try {
+      let task;
+      act(() => {
+        task = wrapper.find(PatientActionButton).filterWhere(button => button.prop('action') === PATIENT_ACTION_IDS.share).first().prop('onClick')();
+      });
+      expect(shareSpy).toHaveBeenCalledWith(expect.any(String), { isCurrent: expect.any(Function) });
+      expect(shareSpy.mock.calls[0][1].isCurrent()).toBe(true);
+      act(() => {
+        wrapper.find('ForwardRef(Button)').filterWhere(button => button.text() === '接收理解').first().simulate('click');
+      });
+      expect(shareSpy.mock.calls[0][1].isCurrent()).toBe(false);
+      await act(async () => { rejectShare(new Error('synthetic native failure')); await task; });
+      expect(downloadBlob).not.toHaveBeenCalled();
+      expect(nativeShare).toHaveBeenCalledTimes(1);
+    } finally {
+      wrapper.unmount();
+      shareSpy.mockRestore();
+    }
+  });
+
   it('keeps shared daily phrases outside personal persistence when reused', () => {
     const shared = {
       id: 'family-shared:one',
@@ -336,6 +485,7 @@ describe('CommunicationSupportPanel receiver flow', () => {
 
   beforeEach(() => {
     jest.useFakeTimers();
+    localData.getCommunicationStorageScopeKey.mockReturnValue('local');
     onApplyOutput.mockClear();
     props.onSpeak.mockClear();
     props.onCancelSpeech.mockClear();
@@ -777,7 +927,7 @@ describe('CommunicationSupportPanel receiver flow', () => {
     expect(receiver.exists()).toBe(true);
     expect(receiver.text()).toContain('文字转图片');
     expect(receiver.text()).toContain('生成图片序列');
-    expect(wrapper.find('ExpressionLoopPanel').exists()).toBe(false);
+    expect(wrapper.find('#communication-expression-panel').prop('hidden')).toBe(true);
   });
 
   test('keeps the board compact by default and opens receiver in a focused dialog', () => {
@@ -785,7 +935,7 @@ describe('CommunicationSupportPanel receiver flow', () => {
       <CommunicationSupportPanel {...props} initiallyExpanded={false} />
     );
 
-    expect(wrapper.find('ExpressionLoopPanel').exists()).toBe(false);
+    expect(wrapper.find('#communication-expression-panel').prop('hidden')).toBe(true);
     expect(wrapper.find('ReceiverLoopPanel').exists()).toBe(false);
     expect(wrapper.find('CommunicationReceiverDialog').prop('open')).toBe(
       false
@@ -834,7 +984,7 @@ describe('CommunicationSupportPanel receiver flow', () => {
       .simulate('click');
     wrapper.update();
 
-    expect(wrapper.find('ExpressionLoopPanel').exists()).toBe(true);
+    expect(wrapper.find('#communication-expression-panel').prop('hidden')).toBe(false);
 
     wrapper
       .find('ForwardRef(Button)')
@@ -843,7 +993,7 @@ describe('CommunicationSupportPanel receiver flow', () => {
       .simulate('click');
     wrapper.update();
 
-    expect(wrapper.find('ExpressionLoopPanel').exists()).toBe(false);
+    expect(wrapper.find('#communication-expression-panel').prop('hidden')).toBe(true);
     expect(wrapper.find('ReceiverLoopPanel').exists()).toBe(true);
     expect(wrapper.find('CommunicationReceiverDialog').prop('open')).toBe(true);
 
@@ -868,10 +1018,10 @@ describe('CommunicationSupportPanel receiver flow', () => {
         output={[]}
       />
     );
-    expect(wrapper.find('ExpressionLoopPanel').exists()).toBe(false);
+    expect(wrapper.find('#communication-expression-panel').prop('hidden')).toBe(true);
     wrapper.setProps({ output: mockedOutput });
     wrapper.update();
-    expect(wrapper.find('ExpressionLoopPanel').exists()).toBe(true);
+    expect(wrapper.find('#communication-expression-panel').prop('hidden')).toBe(false);
     expect(
       wrapper.find('button.CommunicationSupportPanel__candidate')
     ).toHaveLength(3);
@@ -883,12 +1033,12 @@ describe('CommunicationSupportPanel receiver flow', () => {
       .first()
       .simulate('click');
     wrapper.setProps({ output: mockedOutput.map(item => ({ ...item })) });
-    expect(wrapper.find('ExpressionLoopPanel').exists()).toBe(false);
+    expect(wrapper.find('#communication-expression-panel').prop('hidden')).toBe(true);
     wrapper.setProps({
       output: [...mockedOutput, { id: 'please', label: '请' }]
     });
     wrapper.update();
-    expect(wrapper.find('ExpressionLoopPanel').exists()).toBe(true);
+    expect(wrapper.find('#communication-expression-panel').prop('hidden')).toBe(false);
     wrapper.unmount();
   });
 
@@ -1354,7 +1504,7 @@ describe('CommunicationSupportPanel receiver flow', () => {
             id: 'phrase-quick',
             usageCount: 1
           })
-        ]
+        ], expect.objectContaining({ expectedPhrases: expect.any(Array) })
       );
       if (careMode) {
         expect(onCareFavoritesChanged).not.toHaveBeenCalled();
@@ -1414,7 +1564,7 @@ describe('CommunicationSupportPanel receiver flow', () => {
 
     expect(localData.overwriteCommunicationSavedPhrases).toHaveBeenCalledWith([
       renamedPhrase
-    ]);
+    ], { expectedPhrases: [managedPhrase] });
     expect(
       localData.buildCommunicationCloudSettingsPayload
     ).toHaveBeenCalledWith([renamedPhrase], []);
