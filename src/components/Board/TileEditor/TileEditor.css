@@ -62,6 +62,61 @@
   padding: 8px 16px;
 }
 
+/* Editor labels must reserve their own space at the user's chosen font size. */
+.TileEditor__form-fields,
+.TileEditor__picto-fields {
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+.TileEditor__form-fields .MuiFormControl-root + .MuiFormControl-root {
+  margin-top: 0.9rem;
+}
+
+.TileEditor__form-fields .MuiInputLabel-root {
+  position: static;
+  transform: none;
+  line-height: 1.35;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.TileEditor__form-fields .MuiInput-root {
+  margin-top: 0.25rem;
+}
+
+.TileEditor__form-fields .MuiFormHelperText-root {
+  overflow-wrap: anywhere;
+}
+
+/* Keep the shared Tile/Symbol, but let an editor preview show its full label. */
+.TileEditor__preview::before {
+  display: none;
+}
+
+.TileEditor__preview .Tile,
+.TileEditor__preview .Symbol {
+  position: relative;
+  height: auto;
+}
+
+.TileEditor__preview .Symbol__image-container {
+  flex: none;
+}
+
+.TileEditor__preview .Symbol__image-container::before {
+  content: '';
+  display: block;
+  padding-top: 100%;
+}
+
+.TileEditor__preview .Symbol__label {
+  display: block;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  text-overflow: clip;
+}
+
 .TileEditor__radiogroup {
   margin-top: 15px;
 }

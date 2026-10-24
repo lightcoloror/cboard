@@ -12,3 +12,22 @@
 .Display__ListItemText {
   max-width: 75%;
 }
+
+/* Reuse the stacked secondary-action layout from the export settings. */
+.Display .Display__Options {
+  position: static;
+  top: auto;
+  right: auto;
+  transform: none;
+  box-sizing: border-box;
+  padding: 0 16px 16px;
+}
+
+.Display .Display__Options .MuiFormControl-root {
+  max-width: 100%;
+}
+
+.Display .Display__Options .MuiSelect-root {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
