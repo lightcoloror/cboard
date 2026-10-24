@@ -354,3 +354,173 @@ test('late response after panel exit stays in the journal and cannot replace res
   expect(f.service().load().snapshot.pendingAi.requestId).toBe('synthetic-late-request');
   wrapper.unmount();
 });
+
+function reuseSaved(wrapper, item, requestId, via = 'management') {
+  if (via === 'quick') {
+    wrapper.find('ForwardRef(Button)').filterWhere(node => node.text() === '重用')
+      .first().simulate('click');
+  } else {
+    wrapper.setProps({ savedPhraseRequest: { requestId, mode: 'reuse', item } });
+  }
+}
+
+test.each([
+  ['management', orderedPeople], ['quick', orderedPeople],
+  ['management', []], ['quick', []]
+])('confirmed %s reuse creates one fresh draft and preserves exact history/identity (output %j)', async (via, output) => {
+  const f = fixture();
+  f.data.clear();
+  const item = { id: 'synthetic-saved', sentence: defaultSentence, output };
+  const service = f.service();
+  const onUseSavedPhrase = jest.fn(), onGenerateAiSentences = jest.fn(), onSpeak = jest.fn();
+  const wrapper = controlled({
+    expressionDraftService: service, savedPhrases: [item],
+    onUseSavedPhrase, onGenerateAiSentences, onSpeak, candidateAutoplayDelaySeconds: 0
+  });
+  await act(async () => { reuseSaved(wrapper, item, 'first', via); });
+  wrapper.update();
+  // Local synthetic journal fixture only: a new expression must not inherit
+  // the ended expression's recovery identity, even when all cards match.
+  service.prepareAi({ requestId: 'synthetic-old-request', fingerprint: 'synthetic-fingerprint',
+    scope: { accountId: 'synthetic-account', profileId: 'synthetic-profile', fundingId: 'synthetic-fund' } });
+  act(() => action(wrapper, PATIENT_ACTION_IDS.confirm).prop('onClick')());
+  wrapper.update();
+  const original = f.service().load(), history = f.repository.loadCommunicationHistory();
+  expect(original.status).toBe('confirmed');
+  expect(original.snapshot.pendingAi.requestId).toBe('synthetic-old-request');
+  expect(history).toHaveLength(1);
+  await act(async () => {
+    reuseSaved(wrapper, item, 'second', via);
+    reuseSaved(wrapper, item, 'second', via);
+  });
+  wrapper.update();
+  const next = f.service().load();
+  expect(next.status).toBe('draft');
+  expect(next.id).not.toBe(original.id);
+  expect(next.snapshot.pipeline.candidateSentences).toEqual(original.snapshot.pipeline.candidateSentences);
+  expect(next.snapshot.pipeline.candidateSentences[0]).toBe(defaultSentence);
+  expect(next.snapshot.pipeline.outputSnapshot).toEqual(output);
+  expect(next.snapshot.rejected).toBe(false);
+  expect(next.snapshot.pendingAi).toBeUndefined();
+  expect(action(wrapper, PATIENT_ACTION_IDS.confirm).prop('disabled')).toBe(false);
+  expect(f.repository.loadCommunicationHistory()).toEqual(history);
+  expect(onUseSavedPhrase).toHaveBeenCalledTimes(2);
+  await act(async () => { reuseSaved(wrapper, item, 'duplicate-after-render', via); });
+  expect(f.service().load()).toEqual(next);
+  expect(onUseSavedPhrase).toHaveBeenCalledTimes(2);
+  act(() => {
+    action(wrapper, PATIENT_ACTION_IDS.confirm).prop('onClick')();
+    action(wrapper, PATIENT_ACTION_IDS.confirm).prop('onClick')();
+  });
+  const finalHistory = f.repository.loadCommunicationHistory();
+  expect(finalHistory).toHaveLength(2);
+  expect(finalHistory.find(entry => entry.id === history[0].id)).toEqual(history[0]);
+  expect(finalHistory.every(entry => entry.sentence === defaultSentence)).toBe(true);
+  expect(finalHistory.every(entry => JSON.stringify(entry.output) === JSON.stringify(history[0].output))).toBe(true);
+  expect(onGenerateAiSentences).not.toHaveBeenCalled();
+  expect(onSpeak).not.toHaveBeenCalled();
+  wrapper.unmount();
+});
+
+test('failed start-new persistence keeps confirmed UI and retries the same saved phrase safely', async () => {
+  const f = fixture();
+  f.data.clear();
+  const item = { id: 'synthetic-saved', sentence: defaultSentence, output: orderedPeople };
+  const onUseSavedPhrase = jest.fn(), onGenerateAiSentences = jest.fn();
+  const wrapper = controlled({ expressionDraftService: f.service(), savedPhrases: [item],
+    onUseSavedPhrase, onGenerateAiSentences, candidateAutoplayDelaySeconds: 0 });
+  await act(async () => { reuseSaved(wrapper, item, 'first'); });
+  wrapper.update();
+  act(() => action(wrapper, PATIENT_ACTION_IDS.confirm).prop('onClick')());
+  const original = f.service().load(), history = f.repository.loadCommunicationHistory();
+  f.setFailure(true);
+  await act(async () => { reuseSaved(wrapper, item, 'failed-new'); });
+  wrapper.update();
+  expect(wrapper.text()).toContain('新表达暂时未能保存到本机');
+  expect(f.service().load()).toEqual(original);
+  expect(action(wrapper, PATIENT_ACTION_IDS.confirm).prop('disabled')).toBe(true);
+  expect(onUseSavedPhrase).toHaveBeenCalledTimes(1);
+  expect(f.repository.loadCommunicationHistory()).toEqual(history);
+  f.setFailure(false);
+  await act(async () => { reuseSaved(wrapper, item, 'retry-new'); });
+  wrapper.update();
+  expect(f.service().load().status).toBe('draft');
+  expect(f.service().load().id).not.toBe(original.id);
+  expect(action(wrapper, PATIENT_ACTION_IDS.confirm).prop('disabled')).toBe(false);
+  expect(onUseSavedPhrase).toHaveBeenCalledTimes(2);
+  expect(onGenerateAiSentences).not.toHaveBeenCalled();
+  wrapper.unmount();
+});
+
+test('reuse during failed confirmation cleanup does not bypass its stable history identity', async () => {
+  const f = fixture();
+  f.data.clear();
+  const item = { id: 'synthetic-saved', sentence: defaultSentence, output: orderedPeople };
+  const onUseSavedPhrase = jest.fn();
+  const wrapper = controlled({ expressionDraftService: f.service(), savedPhrases: [item],
+    onUseSavedPhrase, candidateAutoplayDelaySeconds: 0 });
+  await act(async () => { reuseSaved(wrapper, item, 'first'); });
+  wrapper.update();
+  const original = f.service().load();
+  f.setFailure(true);
+  act(() => action(wrapper, PATIENT_ACTION_IDS.confirm).prop('onClick')());
+  const history = f.repository.loadCommunicationHistory();
+  expect(history).toHaveLength(1);
+  await act(async () => { reuseSaved(wrapper, item, 'before-cleanup-retry'); });
+  expect(f.service().load().id).toBe(original.id);
+  expect(f.repository.loadCommunicationHistory()).toEqual(history);
+  expect(onUseSavedPhrase).toHaveBeenCalledTimes(1);
+  f.setFailure(false);
+  act(() => action(wrapper, PATIENT_ACTION_IDS.confirm).prop('onClick')());
+  expect(f.service().load().status).toBe('confirmed');
+  await act(async () => { reuseSaved(wrapper, item, 'after-cleanup-retry'); });
+  expect(f.service().load().status).toBe('draft');
+  expect(f.service().load().id).not.toBe(original.id);
+  expect(f.repository.loadCommunicationHistory()).toEqual(history);
+  wrapper.unmount();
+});
+
+test('the fresh identical draft survives reopening and resumes without playback or AI', async () => {
+  const f = fixture();
+  f.data.clear();
+  const item = { id: 'synthetic-saved', sentence: defaultSentence, output: orderedPeople };
+  const wrapper = controlled({ expressionDraftService: f.service(), savedPhrases: [item],
+    candidateAutoplayDelaySeconds: 0 });
+  await act(async () => { reuseSaved(wrapper, item, 'first'); });
+  wrapper.update();
+  act(() => action(wrapper, PATIENT_ACTION_IDS.confirm).prop('onClick')());
+  await act(async () => { reuseSaved(wrapper, item, 'second'); });
+  const draft = f.service().load(), history = f.repository.loadCommunicationHistory();
+  expect(draft.status).toBe('draft');
+  wrapper.unmount();
+  jest.useFakeTimers();
+  const onSpeak = jest.fn(), onGenerateAiSentences = jest.fn();
+  const reopened = controlled({ expressionDraftService: f.service(), onSpeak, onGenerateAiSentences });
+  expect(reopened.text()).toContain('继续上次表达');
+  resume(reopened);
+  act(() => jest.advanceTimersByTime(60000));
+  expect(reopened.find('ExpressionLoopPanel').prop('output')).toEqual(orderedPeople);
+  expect(reopened.find('button.CommunicationSupportPanel__candidate').first().text()).toBe(defaultSentence);
+  expect(f.service().load()).toEqual(draft);
+  expect(f.repository.loadCommunicationHistory()).toEqual(history);
+  expect(onSpeak).not.toHaveBeenCalled();
+  expect(onGenerateAiSentences).not.toHaveBeenCalled();
+  reopened.unmount();
+});
+
+test('saved reuse cannot bypass an explicit rejection of the same ordered expression', async () => {
+  const f = fixture({ rejected: true }), onUseSavedPhrase = jest.fn(), onSpeak = jest.fn();
+  const item = { id: 'synthetic-saved', sentence: defaultSentence, output: orderedPeople };
+  const wrapper = controlled({ expressionDraftService: f.service(), savedPhrases: [item],
+    onUseSavedPhrase, onSpeak, candidateAutoplayDelaySeconds: 0 });
+  resume(wrapper);
+  const original = f.service().load();
+  await act(async () => { reuseSaved(wrapper, item, 'same-rejected'); });
+  wrapper.update();
+  expect(f.service().load()).toEqual(original);
+  expect(wrapper.text()).toContain('已停止这组候选');
+  expect(onUseSavedPhrase).not.toHaveBeenCalled();
+  expect(onSpeak).not.toHaveBeenCalled();
+  expect(f.repository.loadCommunicationHistory()).toEqual([]);
+  wrapper.unmount();
+});

@@ -101,6 +101,7 @@ export default function CommunicationManagementDialog({
   onPersonalImageSave,
   onPersonalImageRemove,
   onCuratedBoardSave,
+  galleryUndo,
   onCreatePersonalBoard,
   onForgetCorrectionMemory,
   onReceiverCorrection,
@@ -1081,6 +1082,7 @@ export default function CommunicationManagementDialog({
             onSave={onPersonalImageSave}
             onRemove={onPersonalImageRemove}
             onBoardSave={onCuratedBoardSave}
+            galleryUndo={galleryUndo}
             onCreatePersonalBoard={onCreatePersonalBoard}
           />
         ) : activeTab === 'correction-memory' ? (

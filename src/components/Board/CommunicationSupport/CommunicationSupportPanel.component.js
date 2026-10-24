@@ -270,6 +270,7 @@ function CommunicationSupportWorkspace({
   onPictogramUsed,
   onCreateCommunicationBoard,
   onUpdateCommunicationBoard,
+  getGalleryTileUndo,
   onChangeSpeechRate,
   onChangeDisplaySettings,
   copyOverrides,
@@ -460,7 +461,7 @@ function CommunicationSupportWorkspace({
   const searchEpoch = useRef(0);
   useEffect(
     () => {
-      clearSavedPhraseUndoSession();
+      clearSavedPhraseUndoSession({ preserveGallery: true });
       autoSearchAttempts.current.clear();
       searchEpoch.current += 1;
       setMissingTokenRecords(loadMissingTokens());
@@ -995,7 +996,7 @@ function CommunicationSupportWorkspace({
       const sourceBoard = options.expectedBoard || boards.find(board => board.id === boardDto.id);
       if (!sourceBoard) return false;
       const saved = await onUpdateCommunicationBoard(boardDTOToCboardBoard(boardDto, sourceBoard), {
-        expectedBoard: sourceBoard, guard
+        expectedBoard: sourceBoard, guard, ...(options.galleryDeleteTileId ? { galleryDeleteTileId: options.galleryDeleteTileId } : {})
       });
       return guard() && saved === true;
     } catch (error) {
@@ -1431,6 +1432,7 @@ function CommunicationSupportWorkspace({
           onPersonalImageSave={handlePersonalImageSave}
           onPersonalImageRemove={handlePersonalImageRemove}
           onCuratedBoardSave={handleCuratedBoardSave}
+          galleryUndo={getGalleryTileUndo && getGalleryTileUndo()}
           onCreatePersonalBoard={handleCreatePersonalBoard}
           onForgetCorrectionMemory={handleForgetCorrectionMemory}
           onReceiverCorrection={handleReceiverCorrection}

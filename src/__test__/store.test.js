@@ -7,9 +7,12 @@ const bootstrapped = persistor => new Promise(resolve => {
   });
 });
 describe('store', () => {
-  it('should configure Store', () => {
+  it('should configure Store', async () => {
     const store = configureStore();
     expect(store).toBeDefined();
+    await bootstrapped(store.persistor);
+    await store.persistor.flush();
+    store.persistor.pause();
   });
   it('binds verification to each store and to its own demo memory backend', async () => {
     const board = { id: 'private-board', name: '合成图板', tiles: [] };

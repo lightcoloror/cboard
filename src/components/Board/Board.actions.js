@@ -92,6 +92,10 @@ function guardedBoardSync(options, work) {
   return (dispatch, getState, extra) => {
     let boundary = dispatch[BOARD_SYNC_GUARD];
     if (!boundary && typeof options?.guard === 'function') {
+      const galleryMigration = options.galleryUndoOperationId
+        ? extra?.galleryTileUndo?.createSyncMigration(options.galleryUndoOperationId, options.galleryUndoBoardId) : null;
+      if (options.galleryUndoOperationId && !galleryMigration)
+        return Promise.reject(new Error('Gallery sync identity service unavailable'));
       const snapshot = () => {
         const state = getState();
         return JSON.stringify({
@@ -104,7 +108,7 @@ function guardedBoardSync(options, work) {
         });
       };
       let expected = snapshot();
-      const isCurrent = () => options.guard() && expected === snapshot();
+      const isCurrent = () => options.guard() && (!galleryMigration || galleryMigration.isCurrent()) && expected === snapshot();
       const assert = () => {
         if (!isCurrent()) throw Object.assign(new Error('Board sync was superseded'), { code: 'BOARD_SAVE_CANCELLED' });
       };
@@ -112,7 +116,7 @@ function guardedBoardSync(options, work) {
       const guardedDispatch = action => {
         assert();
         if (typeof action === 'function') return action(guardedDispatch, guardedGetState, extra);
-        const result = dispatch(action);
+        const result = galleryMigration ? galleryMigration.dispatch(action, dispatch) : dispatch(action);
         expected = snapshot();
         return result;
       };
@@ -1313,7 +1317,13 @@ export function updateApiObjectsNoChild(
   createParentBoard = false,
   options
 ) {
-  return guardedBoardSync(options, async (dispatch, getState) => {
+  const syncOptions = options?.galleryUndoOperationId
+    ? { ...options, galleryUndoBoardId: parentBoard.id } : options;
+  return guardedBoardSync(syncOptions, async (dispatch, getState) => {
+    // A single-card deletion's ownership migration belongs to the same guarded
+    // chain as its API ID mapping, so it cannot look like a user scope switch.
+    if (options?.galleryUndoOperationId && options.ownedCommunicator)
+      dispatch(verifyAndUpsertCommunicator(options.ownedCommunicator));
     //create - update parent board
     const action = createParentBoard ? createApiBoard : updateApiBoard;
     return await dispatch(action(parentBoard, parentBoard.id))

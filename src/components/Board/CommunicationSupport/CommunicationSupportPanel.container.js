@@ -5,6 +5,7 @@ import {
   switchBoard
 } from '../Board.actions';
 import { saveVerifiedBoard } from '../../../common/communicationSupport/verifiedBoardPersistence';
+import { getGalleryTileUndo } from '../../../common/communicationSupport/webGalleryTileUndo';
 import { getVisibleBoards } from '../Board.selectors';
 import { updateDisplaySettings } from '../../App/App.actions';
 import {
@@ -44,6 +45,7 @@ export const mapStateToProps = ({ board, app, speech = {} }, ownProps) => ({
 });
 
 export const mapDispatchToProps = dispatch => ({
+  getGalleryTileUndo: () => dispatch(getGalleryTileUndo()),
   onCreateCommunicationBoard: (board, options = {}) =>
     dispatch(saveVerifiedBoard(board, { ...options, expectedBoard: null, create: true })),
   onUpdateCommunicationBoard: (board, options) =>

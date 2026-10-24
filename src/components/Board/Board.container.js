@@ -85,6 +85,8 @@ import {
 import { createBrowserExpressionAudio } from '../../common/communicationSupport/browserExpressionAudio';
 import { subscribeSpeechInterruption } from '../../providers/SpeechProvider/speechInterruption';
 import { saveVerifiedBoards } from '../../common/communicationSupport/verifiedBoardPersistence';
+import { getGalleryTileUndo } from '../../common/communicationSupport/webGalleryTileUndo';
+import GalleryTileUndoControl from './CommunicationSupport/GalleryTileUndoControl.component';
 import { currentImageOperationEpoch } from '../../common/communicationSupport/imageOperationEpoch';
 //import { isAndroid } from '../../cordova-util';
 
@@ -719,7 +721,8 @@ export class BoardContainer extends Component {
         kind === 'delete' ? payload : null,
         kind === 'edit' ? JSON.parse(JSON.stringify(payload)) : null,
         desired && JSON.parse(JSON.stringify(desired)),
-        { guard: current, scopeGuard, localCommitted: true }
+        { guard: current, scopeGuard, localCommitted: true,
+          galleryUndoOperationId: operation.changes[0]?.galleryUndoOperationId }
       ).catch(() => {
         // This rejection concerns the existing cloud attempt only. The local
         // receipt was already confirmed and must not prompt a duplicate retry.
@@ -793,12 +796,17 @@ export class BoardContainer extends Component {
     } catch (error) { return Promise.reject(error); }
 
     let saving;
-    try { saving = this.props.saveVerifiedBoards(operation.changes, { guard: current }); }
+    const removedTile = kind === 'delete' && payload.length === 1 && operation.changes.length === 1
+      && operation.changes[0].expectedBoard.tiles.find(tile => tile.id === payload[0]);
+    const galleryDeleteTileId = removedTile && !removedTile.loadBoard && !removedTile.loadBoardId && removedTile.type !== 'board'
+      ? removedTile.id : undefined;
+    try { saving = this.props.saveVerifiedBoards(operation.changes, { guard: current, galleryDeleteTileId }); }
     catch (error) { return Promise.reject(error); }
     const pending = Promise.resolve(saving).then(result => {
       assertCurrent();
       if (result !== true) throw this.nativeSaveError('本机保存未确认，请保留输入后重试。');
       if (operation.logged) {
+        if (operation.desired) operation.desired = operation.changes.find(change => change.board.id === operation.desired.id)?.board || operation.desired;
         this.scheduleNativeCloudSync(operation);
       }
       if (kind === 'delete') this.toggleSelectMode();
@@ -1321,6 +1329,9 @@ export class BoardContainer extends Component {
       (requestGuard() && (!nativeSave.currentAfterApi || nativeSave.currentAfterApi()));
     const cloudOptions = nativeSave ? {
       guard: requestGuard,
+      galleryUndoOperationId: nativeSave.galleryUndoOperationId,
+      ...(nativeSave.galleryUndoOperationId && communicator.email !== userData.email
+        ? { ownedCommunicator: communicator } : {}),
       onGuard: current => { nativeSave.currentAfterApi = current; }
     } : undefined;
     const assertNativePending = () => {
@@ -1396,7 +1407,7 @@ export class BoardContainer extends Component {
       const createsLinkedBoard = tile && tile.loadBoard && !tile.linkedBoard;
       if (createsLinkedBoard) {
         verifyAndAddBoardCommunicator(communicator, tile.loadBoard);
-      } else if (communicator.email !== userData.email) {
+      } else if (communicator.email !== userData.email && !nativeSave?.galleryUndoOperationId) {
         verifyAndUpsertCommunicator(communicator);
       }
       //check for a new  own board
@@ -1897,6 +1908,7 @@ export class BoardContainer extends Component {
           onAddClick={this.handleAddClick}
           onDeleteClick={this.handleDeleteClick}
           deleteContextKey={this.nativeSaveContextKey()}
+          galleryUndoControl={<GalleryTileUndoControl service={this.props.getGalleryTileUndo && this.props.getGalleryTileUndo()} />}
           onEditClick={this.handleEditClick}
           onSelectAllToggle={this.handleSelectAllToggle}
           onFocusTile={focusTile}
@@ -2162,6 +2174,7 @@ const mapDispatchToProps = {
   createBoard,
   updateBoard,
   saveVerifiedBoards,
+  getGalleryTileUndo,
   switchBoard,
   createTile,
   deleteTiles,

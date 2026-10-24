@@ -1080,15 +1080,36 @@ export default function ExpressionLoopPanel({
     applySavedPending.current = true;
     Promise.resolve().then(() => { applySavedPending.current = false; });
     const key = JSON.stringify([item.id, item.sentence, item.output]);
-    if (appliedSavedRef.current === key && loopStateRef.current.candidateSentences[0] === item.sentence &&
+    const startsNewExpression = draftCompletedRef.current ||
+      expressionDraftService?.getCurrent()?.status === 'confirmed';
+    if (!startsNewExpression && appliedSavedRef.current === key && loopStateRef.current.candidateSentences[0] === item.sentence &&
         outputSignature === buildExpressionOutputSignature(item.output)) return;
     // Reusing the same rejected sequence first requires an explicit undo.
     if (candidatesRejectedRef.current &&
         buildExpressionOutputSignature(item.output) === outputSignature) return;
+    const nextState = buildExpressionLoopStateFromSavedPhrase(item);
+    if (startsNewExpression && expressionDraftService) {
+      try {
+        // An identical reviewed snapshot is a new expression only after the
+        // prior confirmation finished. Persist it before changing the UI;
+        // snapshot equality must not retain the completed draft or AI ticket.
+        expressionDraftService.save({
+          pipeline: nextState,
+          rejected: false,
+          candidateFeedbackEntries: normalizeExpressionCandidates([], nextState.candidateSentences),
+          pendingAi: null
+        }, { startNew: true });
+      } catch (error) {
+        setExpressionConfirmError('新表达暂时未能保存到本机，原内容已保留，请重试载入。');
+        return;
+      }
+      setDraftSaveFailed(false);
+      setDraftNotice('已保存到本机');
+      setPendingAiRecovery(null);
+    }
     cancelExpressionShare();
     cancelPendingAi();
     handlePatientInteraction();
-    const nextState = buildExpressionLoopStateFromSavedPhrase(item);
 
     onCancelSpeech();
     onApplyOutput(item.output);

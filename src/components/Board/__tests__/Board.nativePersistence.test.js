@@ -7,6 +7,7 @@ import { createPersistenceContext } from '../../../reducers';
 import { saveVerifiedBoards } from '../../../common/communicationSupport/verifiedBoardPersistence';
 import { updateBoard } from '../Board.actions';
 import { invalidateImageOperations } from '../../../common/communicationSupport/imageOperationEpoch';
+import { getGalleryTileUndo } from '../../../common/communicationSupport/webGalleryTileUndo';
 
 jest.mock('ogv', () => ({ OGVLoader: { base: '' } }));
 jest.mock('dom-to-image', () => ({}));
@@ -242,6 +243,39 @@ test.each(['add', 'edit', 'delete'])('real persisted native %s fails safely and 
   const tiles = store.getState().board.boards[0].tiles;
   expect(tiles).toHaveLength(kind === 'add' ? 2 : kind === 'delete' ? 0 : 1);
   if (kind === 'edit') expect(tiles[0].label).toBe('更改');
+});
+
+test('native single deletion and undo use verified storage without replacing later cards or private references', async () => {
+  const { instance, store, values } = await persistedInstance();
+  const originalTile = JSON.parse(JSON.stringify(original.tiles[0]));
+  const references = { favorite: [originalTile], history: [originalTile, originalTile], draft: [originalTile] };
+  const snapshot = JSON.stringify(references);
+  await instance.handleDeleteClick();
+  const undo = store.dispatch(getGalleryTileUndo());
+  const operationId = undo.state().operationId;
+  expect(undo.state().count).toBe(1);
+  const current = store.getState().board.boards[0];
+  await store.dispatch(saveVerifiedBoards([{ board: { ...current, tiles: [{ id: 'later', label: '后来新增' }] }, expectedBoard: current }]));
+  await undo.undo(operationId);
+  const stored = JSON.parse(JSON.parse(values.get('persist:root')).board).boards[0];
+  expect(stored.tiles).toEqual([originalTile, { id: 'later', label: '后来新增' }]);
+  expect(JSON.stringify(references)).toBe(snapshot);
+  expect(undo.state().count).toBe(0);
+});
+
+test('native undo does not accept a failed persistence receipt and safely retries the same card', async () => {
+  const { instance, store, backend, values } = await persistedInstance();
+  await instance.handleDeleteClick();
+  const undo = store.dispatch(getGalleryTileUndo());
+  const operationId = undo.state().operationId;
+  const write = backend.setItem.getMockImplementation();
+  backend.setItem.mockResolvedValue(undefined);
+  await expect(undo.undo(operationId)).rejects.toBeDefined();
+  expect(undo.state().count).toBe(1);
+  backend.setItem.mockImplementation(write);
+  await undo.undo(operationId);
+  expect(JSON.parse(JSON.parse(values.get('persist:root')).board).boards[0].tiles).toEqual(original.tiles);
+  expect(undo.state().count).toBe(0);
 });
 
 test('delete cancellation during readback cannot announce success and the same selection retries without duplicate mutation', async () => {

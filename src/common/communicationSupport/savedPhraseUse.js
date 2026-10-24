@@ -1,4 +1,5 @@
 import { normalizeCommunicationSavedPhrase, savedPhraseContentKey } from './savedPhraseManagement';
+import { clearGalleryTileUndoSessions, refreshGalleryTileUndoScopes } from './galleryTileUndo';
 
 // Device memory only. Management screens may unmount without ending this session.
 let activeScope = null;
@@ -14,7 +15,11 @@ export function filterSavedPhrasesByText(items, query = '') {
   );
 }
 
-export function clearSavedPhraseUndoSession() {
+export function clearSavedPhraseUndoSession({ preserveGallery = false } = {}) {
+  // The communication workspace also initializes on an ordinary route return.
+  // Only actual identity/privacy resets should clear gallery undo in that case.
+  if (preserveGallery) refreshGalleryTileUndoScopes();
+  else clearGalleryTileUndoSessions();
   activeScope = null;
   operations = [];
   receipts = new Map();

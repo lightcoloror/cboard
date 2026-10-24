@@ -84,7 +84,11 @@ export function createLocalSavedPhraseImport(options = {}) {
 export function createLocalSavedPhraseUndo() {
   return createSavedPhraseUndoService({
     repository: createDefaultStore(), getScopeKey: getCommunicationStorageScopeKey,
-    canManage: () => {
+    canManage: canManageCommunicationLibrary
+  });
+}
+
+export function canManageCommunicationLibrary() {
       if (process.env.REACT_APP_CARE_COLLABORATION !== 'true' || !resolveCareAccount()) return true;
       const storage = createBrowserStoragePort();
       try {
@@ -92,8 +96,11 @@ export function createLocalSavedPhraseUndo() {
         return Boolean(selection && !selection.locked && Array.isArray(selection.permissions) &&
           selection.permissions.includes('library.edit'));
       } catch (_) { return false; }
-    }
-  });
+}
+
+export function getCommunicationGalleryIdentity() {
+  const identity = createDefaultStore().loadCommunicationIdentity();
+  return [getCommunicationStorageScopeKey(), identity.workspaceId, identity.patientId, canManageCommunicationLibrary()];
 }
 
 function createDefaultPreferencesStore() {

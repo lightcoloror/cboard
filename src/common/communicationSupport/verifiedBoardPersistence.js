@@ -24,12 +24,25 @@ const hasMembership = (state, communicatorId, boardId) => Boolean(
 export const saveVerifiedBoard = (board, options) => (dispatch, getState, services) => {
   if (!services || !services.verifiedBoardPersistence)
     return Promise.reject(failure('当前保存服务未就绪，请保留输入后重试。'));
+  if (options && options.galleryDeleteTileId && services.galleryTileUndo)
+    return services.galleryTileUndo.delete(board.id, options.galleryDeleteTileId,
+      { ...options, desiredBoard: board }).then(() => true);
   return services.verifiedBoardPersistence.save(board, options);
 };
 
 export const saveVerifiedBoards = (changes, options) => (dispatch, getState, services) => {
   if (!services || !services.verifiedBoardPersistence)
     return Promise.reject(failure('当前保存服务未就绪，请保留输入后重试。'));
+  if (options && options.galleryDeleteTileId && services.galleryTileUndo && changes.length === 1) {
+    const change = changes[0];
+    return services.galleryTileUndo.delete(change.board.id, options.galleryDeleteTileId,
+      { ...options, expectedBoard: change.expectedBoard, desiredBoard: change.board }).then(result => {
+        // The native cloud guard must compare the exact locally committed board.
+        change.board = result.board;
+        change.galleryUndoOperationId = result.deleteOperationId;
+        return true;
+      });
+  }
   return services.verifiedBoardPersistence.saveMany(changes, options);
 };
 

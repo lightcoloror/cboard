@@ -557,6 +557,7 @@ export class Board extends Component {
             onPasteTiles={onPasteTiles}
             copiedTiles={this.props.copiedTiles}
           />
+          {this.props.galleryUndoControl}
           <div className="BoardSideButtonsContainer">
             {navigationSettings.caBackButtonActive && (
               <NavigationButtons

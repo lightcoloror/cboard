@@ -37,6 +37,7 @@ import {
   createTileDTO
 } from '../../../common/communicationSupport/dto';
 import './PersonalImageManager.css';
+import GalleryTileUndoControl from './GalleryTileUndoControl.component';
 
 export function readPersonalImageBlob(blob) {
   return new Promise((resolve, reject) => {
@@ -103,6 +104,7 @@ export default function PersonalImageManager({
   onSave,
   onRemove,
   onBoardSave,
+  galleryUndo,
   onCreatePersonalBoard,
   createCuratedId
 }) {
@@ -472,8 +474,8 @@ export default function PersonalImageManager({
       if (!nextBoard) throw new Error('Missing curated tile');
       const expectedBoard = sourceBoards.find(board => board.id === boardId);
       return runOperation(prepareOperation(key,
-        guard => onBoardSave(nextBoard, { expectedBoard, guard }),
-        `已从个人板移除“${label}”。`, '公开图卡移除失败，请重试。'));
+        guard => onBoardSave(nextBoard, { expectedBoard, guard, galleryDeleteTileId: tileId }),
+        `已从个人板移除“${label}”，可以撤销；原图片文件保留。`, '公开图卡移除失败，请重试。'));
     } catch (error) {
       setNotice('只能从个人板移除由公开图库收纳的图卡。');
     }
@@ -481,6 +483,7 @@ export default function PersonalImageManager({
 
   return (
     <div className="PersonalImageManager">
+      <GalleryTileUndoControl service={galleryUndo} />
       <div className="PersonalImageManager__privacy" role="status">
         {notice}
       </div>
