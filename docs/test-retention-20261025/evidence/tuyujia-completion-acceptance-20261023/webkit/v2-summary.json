@@ -1,0 +1,126 @@
+{
+  "generatedAt": "2026-10-23T11:44:39.442Z",
+  "status": "passed-v2-origin-unavailable-recovery-zero-pageerror",
+  "buildPath": "<WORKSPACE>\\fork-cboard\\cboard\\.local-build-20261023-gallery-durable-v2",
+  "declaredBuildArtifactSha256": "a71840f41b8953ad24a06873eedbbe07d8e6bc5fdd4dabcbbf0c6a36192172ec",
+  "runtime": {
+    "playwright": "1.62.1",
+    "webkit": "26.5",
+    "revision": "2336"
+  },
+  "evidenceFile": "local-modern-offline-1792755640635.json",
+  "reportFile": "modern-verified-20261023-194024-report.json",
+  "screenshot": "modern-verified-20261023-194024-photo-origin-stopped-restart.png",
+  "tests": {
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0
+  },
+  "cachePreconditions": {
+    "name": "online-precondition",
+    "controller": true,
+    "caches": [
+      {
+        "name": "sw-precache-v3-sw-precache-http://127.0.0.1:4208/",
+        "count": 1027
+      },
+      {
+        "name": "$$$toolbox-cache$$$http://127.0.0.1:4208/$$$",
+        "count": 0
+      },
+      {
+        "name": "symbols-cboard",
+        "count": 2
+      }
+    ],
+    "indexCached": true
+  },
+  "layers": [
+    {
+      "name": "origin-stopped-same-page",
+      "loaded": true,
+      "fromServiceWorker": true,
+      "imagesDecoded": 43,
+      "imagesTotal": 43
+    },
+    {
+      "name": "origin-stopped-new-page-same-context",
+      "loaded": true,
+      "fromServiceWorker": true,
+      "imagesDecoded": 43,
+      "imagesTotal": 43
+    },
+    {
+      "name": "origin-stopped-new-process",
+      "loaded": true,
+      "fromServiceWorker": true,
+      "imagesDecoded": 1,
+      "imagesTotal": 1
+    }
+  ],
+  "syntheticPhoto": {
+    "savedThroughProduct": true,
+    "awaitedDurableSaveNotice": true,
+    "decodedBefore": true,
+    "decodedAfter": true,
+    "width": 40,
+    "height": 40,
+    "dataExactMatch": true
+  },
+  "pageErrors": [],
+  "privateOrAiAttempts": [],
+  "externalRequestAttempts": [],
+  "recordedProcesses": [
+    {
+      "generation": 1,
+      "pid": 94536,
+      "startedAt": "2026-10-23T11:40:28.015Z",
+      "offline": false,
+      "exited": true,
+      "exitedAt": "2026-10-23T11:40:35.103Z"
+    },
+    {
+      "generation": 2,
+      "pid": 95020,
+      "startedAt": "2026-10-23T11:40:36.992Z",
+      "offline": false,
+      "exited": true,
+      "exitedAt": "2026-10-23T11:40:40.634Z"
+    }
+  ],
+  "serverExited": true,
+  "scope": "Origin server stopped; new browser process and new persistent context; real CacheStorage/SW reads, no storage rehydration.",
+  "limits": [
+    "Not a physical iOS/Safari/WeChat device, OS network-off, system process-kill or native accessibility test.",
+    "setOffline emulation was intentionally not used in this final control; its prior failure remains separately recorded.",
+    "Prior narrow/tablet/200% text measurements are reused as historical evidence on targeted-ui-v2/WebKit18.2, not relabeled as fresh gallery-durable-v2/WebKit26.5 coverage."
+  ],
+  "priorLayoutEvidence": [
+    "decoder-repair-layout-results.json",
+    "large-font-measurements.json",
+    "local-large-font.json",
+    "diagnostic-final-report.json"
+  ],
+  "priorIncompleteV2Runs": [
+    {
+      "report": "modern-verified-20261023-193208-report.json",
+      "reason": "tour mounted after immediate isVisible; helper bounded wait restored"
+    },
+    {
+      "report": "modern-verified-20261023-193448-report.json",
+      "reason": "new saving status made broad status locator ambiguous; success notice and pending completion now awaited"
+    }
+  ],
+  "testedInputFiles": [
+    {
+      "name": "index.html",
+      "bytes": 1516,
+      "sha256": "8f897ab552169e709f538a5955d7843615c8e419b05eb2bd6ddd690e45699781"
+    },
+    {
+      "name": "service-worker.js",
+      "bytes": 99115,
+      "sha256": "2c255790167654045333c423b2635bfdc3e8a1cea05d5c7c50f42e5f158326d7"
+    }
+  ]
+}

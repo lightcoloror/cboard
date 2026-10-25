@@ -1,0 +1,50 @@
+{
+  "testedAt": "2026-10-23T19:29:56+08:00",
+  "scope": "v2 retest of receiver and favorites; namesake not repeated",
+  "candidate": ".local-build-20261023-gallery-durable-v2",
+  "artifactSha256FromParent": "a71840f41b8953ad24a06873eedbbe07d8e6bc5fdd4dabcbbf0c6a36192172ec",
+  "sourceSha256FromParent": "8e12c2e2ced2c0dae5e846e773498d67bfc7087086f18f46b3c5b490a05f4513",
+  "mainScript": "static/js/main.3e77d65e.js",
+  "mainScriptSha256Verified": "592d8ac68fecfd75e0eb68203487b65c113b4c43a100277ff5426dc9419ea28f",
+  "origin": "http://127.0.0.1:4209",
+  "overallPassedWithinRetestedScope": true,
+  "tests": {"passed":2,"failed":0,"retries":0,"durationSeconds":44.8},
+  "workflows": [
+    {
+      "name":"receiver",
+      "passed":true,
+      "evidence":"local-core-receiver-v2.json",
+      "browserPids":[4716,80076],
+      "initialAndOfflineDecodeDimensions":[[298,298],[850,850]],
+      "decodedSourceKind":"blob",
+      "cachedMatchedPublicImages":2,
+      "httpRequestEvents":188,
+      "blockedApiEvents":6,
+      "offlineSymbolRequestEvents":52
+    },
+    {
+      "name":"favorites",
+      "passed":true,
+      "evidence":"local-core-favorites-v2.json",
+      "browserPids":[20108,59932,51592],
+      "importImmediatelyVisible":true,
+      "deletedOldRowsVisible":0,
+      "undoNewIdsVisible":[true,true,true],
+      "httpRequestEvents":231,
+      "blockedApiEvents":5,
+      "offlineSymbolRequestEvents":89
+    }
+  ],
+  "externalRequestEvents":0,
+  "modelAttempts":0,
+  "privateAiChargeViolations":0,
+  "pageErrors":0,
+  "networkBoundary":"Context routes and offline launch. Request events are not proof of transport. Ordinary board symbol requests still occur; snapshot images decoded from local blobs.",
+  "cleanup":{"allFiveBrowserPidsExited":true,"allTwoOwnedProfilesRemoved":true,"profilesRemaining":0,"port4209Listeners":0},
+  "productSourceEdited":false,
+  "deployed":false,
+  "v1FailureEvidencePreserved":true,
+  "report":"README-gallery-durable-v2.md",
+  "run":"core-run-v2-01.log",
+  "playwrightReport":"browser-report-v2.json"
+}

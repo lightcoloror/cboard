@@ -1,0 +1,66 @@
+{
+  "observedAt": "2026-10-23T20:59:55.5863947+08:00",
+  "scope": "Only exact marked profiles referenced by this stage root gallery evidence",
+  "items": [
+    {
+      "evidence": "local-gallery-lost-readback-1792754081436.json",
+      "profile": "<USER_HOME>\\AppData\\Local\\Temp\\tuyujia-expression-draft-Jr3Pnm",
+      "removed": true,
+      "processExitEvidence": true
+    },
+    {
+      "evidence": "local-gallery-lost-readback.json",
+      "profile": "<USER_HOME>\\AppData\\Local\\Temp\\tuyujia-expression-draft-u0EQNQ",
+      "removed": true,
+      "processExitEvidence": true
+    },
+    {
+      "evidence": "local-gallery-silent-write-1792754068788.json",
+      "profile": "<USER_HOME>\\AppData\\Local\\Temp\\tuyujia-expression-draft-jBt4o0",
+      "removed": true,
+      "processExitEvidence": true
+    },
+    {
+      "evidence": "local-gallery-silent-write.json",
+      "profile": "<USER_HOME>\\AppData\\Local\\Temp\\tuyujia-expression-draft-nsOJWb",
+      "removed": true,
+      "processExitEvidence": true
+    },
+    {
+      "evidence": "local-gallery-throw-write-1792754055677.json",
+      "profile": "<USER_HOME>\\AppData\\Local\\Temp\\tuyujia-expression-draft-mF8uaV",
+      "removed": true,
+      "processExitEvidence": true
+    },
+    {
+      "evidence": "local-gallery-throw-write.json",
+      "profile": "<USER_HOME>\\AppData\\Local\\Temp\\tuyujia-expression-draft-w2RFYh",
+      "removed": true,
+      "processExitEvidence": true
+    },
+    {
+      "evidence": "production-gallery-false-success-baseline.json",
+      "profile": "<USER_HOME>\\AppData\\Local\\Temp\\tuyujia-expression-draft-xtEEeN",
+      "removed": true,
+      "processExitEvidence": true
+    },
+    {
+      "evidence": "production-gallery-lost-readback.json",
+      "profile": "<USER_HOME>\\AppData\\Local\\Temp\\tuyujia-expression-draft-8oriiy",
+      "removed": true,
+      "processExitEvidence": true
+    },
+    {
+      "evidence": "production-gallery-silent-write.json",
+      "profile": "<USER_HOME>\\AppData\\Local\\Temp\\tuyujia-expression-draft-v51v0M",
+      "removed": true,
+      "processExitEvidence": true
+    },
+    {
+      "evidence": "production-gallery-throw-write.json",
+      "profile": "<USER_HOME>\\AppData\\Local\\Temp\\tuyujia-expression-draft-eoe2gi",
+      "removed": true,
+      "processExitEvidence": true
+    }
+  ]
+}

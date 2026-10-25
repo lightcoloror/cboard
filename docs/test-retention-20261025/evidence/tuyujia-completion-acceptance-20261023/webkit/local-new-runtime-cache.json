@@ -1,0 +1,77 @@
+{
+  "scope": "isolated-synthetic-production-app",
+  "profile": "<WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\webkit\\synthetic-profile-9OXtds",
+  "fixtureMarker": "tuyujia-expression-draft-f804b434-b2bd-4053-9fc7-cf8596efc41e",
+  "origin": "http://127.0.0.1:4208",
+  "processes": [
+    {
+      "generation": 1,
+      "pid": 71464,
+      "startedAt": "2026-10-23T09:16:11.138Z",
+      "offline": false,
+      "exited": true,
+      "exitedAt": "2026-10-23T09:16:11.592Z"
+    }
+  ],
+  "requests": [
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4208",
+      "path": "/manifest.json",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    }
+  ],
+  "violations": [],
+  "pageErrors": [],
+  "externalModelsCalled": false,
+  "physicalDeviceTested": false,
+  "playwright": "1.62.1",
+  "webkit": "26.5",
+  "revision": "2336",
+  "checks": [
+    {
+      "mode": "persistent-route-enabled",
+      "secureContext": true,
+      "controller": false,
+      "keys": [
+        "http://127.0.0.1:4208/synthetic-persistent-route-enabled.txt"
+      ],
+      "found": true,
+      "body": "synthetic cache probe"
+    },
+    {
+      "mode": "persistent-route-disabled",
+      "secureContext": true,
+      "controller": false,
+      "keys": [
+        "http://127.0.0.1:4208/synthetic-persistent-route-disabled.txt"
+      ],
+      "found": true,
+      "body": "synthetic cache probe"
+    },
+    {
+      "mode": "ephemeral-route-enabled",
+      "secureContext": true,
+      "controller": false,
+      "keys": [
+        "http://127.0.0.1:4208/synthetic-ephemeral-route-enabled.txt"
+      ],
+      "found": true,
+      "body": "synthetic cache probe"
+    },
+    {
+      "mode": "ephemeral-route-disabled",
+      "secureContext": true,
+      "controller": false,
+      "keys": [
+        "http://127.0.0.1:4208/synthetic-ephemeral-route-disabled.txt"
+      ],
+      "found": true,
+      "body": "synthetic cache probe"
+    }
+  ],
+  "evidenceFile": "local-new-runtime-cache.json"
+}

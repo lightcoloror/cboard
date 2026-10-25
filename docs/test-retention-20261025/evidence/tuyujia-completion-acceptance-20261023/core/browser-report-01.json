@@ -1,0 +1,633 @@
+{
+  "config": {
+    "configFile": "<WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\core\\core.config.cjs",
+    "rootDir": "<WORKSPACE>/outputs/tuyujia-completion-acceptance-20261023/core",
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "<WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\core\\browser-report.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 15000
+    },
+    "quiet": false,
+    "projects": [
+      {
+        "outputDir": "<WORKSPACE>/outputs/tuyujia-completion-acceptance-20261023/core/browser-artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {},
+        "id": "",
+        "name": "",
+        "testDir": "<WORKSPACE>/outputs/tuyujia-completion-acceptance-20261023/core",
+        "testIgnore": [],
+        "testMatch": [
+          "core.spec.js"
+        ],
+        "timeout": 240000
+      }
+    ],
+    "shard": null,
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.50.0",
+    "workers": 1,
+    "webServer": {
+      "command": "\"C:/Program Files/nodejs/node.exe\" scripts/serve-offline-build.mjs",
+      "cwd": "<WORKSPACE>\\fork-cboard\\cboard",
+      "env": {
+        "PLAYWRIGHT_OFFLINE_HOST": "127.0.0.1",
+        "PLAYWRIGHT_OFFLINE_PORT": "4209",
+        "PLAYWRIGHT_OFFLINE_BUILD_PATH": "<WORKSPACE>\\fork-cboard\\cboard\\.local-build-20261023-gallery-durable-v1"
+      },
+      "url": "http://127.0.0.1:4209",
+      "reuseExistingServer": false
+    }
+  },
+  "suites": [
+    {
+      "title": "core.spec.js",
+      "file": "core.spec.js",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "receiver manual segment replay, repair/cancel/reconfirm and changed-picture fallback survive real offline browser restart",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 240000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "status": "failed",
+                  "duration": 4870,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeGreaterThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: > \u001b[32m0\u001b[39m\nReceived:   \u001b[31m0\u001b[39m",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeGreaterThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: > \u001b[32m0\u001b[39m\nReceived:   \u001b[31m0\u001b[39m\n    at imagesLoaded (<WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\core\\core.spec.js:40:68)\n    at <WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\core\\core.spec.js:56:3",
+                    "matcherResult": {
+                      "message": "\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeGreaterThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: > \u001b[32m0\u001b[39m\nReceived:   \u001b[31m0\u001b[39m",
+                      "pass": false
+                    },
+                    "location": {
+                      "file": "<WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\core\\core.spec.js",
+                      "column": 68,
+                      "line": 40
+                    },
+                    "snippet": "  38 |  expect(await missing.count()).toBe(0);\n  39 | }\n> 40 | async function imagesLoaded(locator){expect(await locator.count()).toBeGreaterThan(0);await expect.poll(()=>locator.evaluateAll(ns=>ns.every(i=>i.complete&&i.naturalWidth>0))).toBe(true);}\n     |                                                                    ^\n  41 | async function privatePixels(p,src){\n  42 |  expect(src.startsWith('data:image/')).toBe(true);\n  43 |  return p.evaluate(async src=>{const i=new Image();i.src=src;await i.decode();const c=document.createElement('canvas');c.width=i.naturalWidth;c.height=i.naturalHeight;const x=c.getContext('2d');x.drawImage(i,0,0);const pixels=x.getImageData(0,0,c.width,c.height).data;const digest=await crypto.subtle.digest('SHA-256',pixels);return{width:c.width,height:c.height,pixelSha256:Array.from(new Uint8Array(digest)).map(v=>v.toString(16).padStart(2,'0')).join('')};},src);"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "<WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\core\\core.spec.js",
+                        "column": 68,
+                        "line": 40
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeGreaterThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: > \u001b[32m0\u001b[39m\nReceived:   \u001b[31m0\u001b[39m\n\n  38 |  expect(await missing.count()).toBe(0);\n  39 | }\n> 40 | async function imagesLoaded(locator){expect(await locator.count()).toBeGreaterThan(0);await expect.poll(()=>locator.evaluateAll(ns=>ns.every(i=>i.complete&&i.naturalWidth>0))).toBe(true);}\n     |                                                                    ^\n  41 | async function privatePixels(p,src){\n  42 |  expect(src.startsWith('data:image/')).toBe(true);\n  43 |  return p.evaluate(async src=>{const i=new Image();i.src=src;await i.decode();const c=document.createElement('canvas');c.width=i.naturalWidth;c.height=i.naturalHeight;const x=c.getContext('2d');x.drawImage(i,0,0);const pixels=x.getImageData(0,0,c.width,c.height).data;const digest=await crypto.subtle.digest('SHA-256',pixels);return{width:c.width,height:c.height,pixelSha256:Array.from(new Uint8Array(digest)).map(v=>v.toString(16).padStart(2,'0')).join('')};},src);\n    at imagesLoaded (<WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\core\\core.spec.js:40:68)\n    at <WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\core\\core.spec.js:56:3"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-23T10:00:48.099Z",
+                  "attachments": [],
+                  "errorLocation": {
+                    "file": "<WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\core\\core.spec.js",
+                    "column": 68,
+                    "line": 40
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "43b12c68676e60ca47dc-3517b34825f90de6b35a",
+          "file": "core.spec.js",
+          "line": 50,
+          "column": 5
+        },
+        {
+          "title": "favorite preparation edit copy classify import replay load delete undo and independent offline restart",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 240000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "status": "failed",
+                  "duration": 12688,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  - 1\u001b[39m\n\u001b[31m+ Received  + 1\u001b[39m\n\n\u001b[33m@@ -177,9 +177,9 @@\u001b[39m\n\u001b[2m        \"sentence\": \"我想喝水\",\u001b[22m\n\u001b[2m        \"updatedAt\": 1792749659354,\u001b[22m\n\u001b[2m        \"usageCount\": 0,\u001b[22m\n\u001b[2m      },\u001b[22m\n\u001b[2m      \"templateId\": \"\",\u001b[22m\n\u001b[32m-     \"updatedAt\": 1792749659999,\u001b[39m\n\u001b[31m+     \"updatedAt\": 1792749665413,\u001b[39m\n\u001b[2m      \"workspaceId\": \"workspace_mvksuviy_fkocnvka\",\u001b[22m\n\u001b[2m    },\u001b[22m\n\u001b[2m  }\u001b[22m",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  - 1\u001b[39m\n\u001b[31m+ Received  + 1\u001b[39m\n\n\u001b[33m@@ -177,9 +177,9 @@\u001b[39m\n\u001b[2m        \"sentence\": \"我想喝水\",\u001b[22m\n\u001b[2m        \"updatedAt\": 1792749659354,\u001b[22m\n\u001b[2m        \"usageCount\": 0,\u001b[22m\n\u001b[2m      },\u001b[22m\n\u001b[2m      \"templateId\": \"\",\u001b[22m\n\u001b[32m-     \"updatedAt\": 1792749659999,\u001b[39m\n\u001b[31m+     \"updatedAt\": 1792749665413,\u001b[39m\n\u001b[2m      \"workspaceId\": \"workspace_mvksuviy_fkocnvka\",\u001b[22m\n\u001b[2m    },\u001b[22m\n\u001b[2m  }\u001b[22m\n    at <WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\core\\core.spec.js:109:116",
+                    "matcherResult": {
+                      "actual": {
+                        "[\"workspace_mvksuviy_fkocnvka\",\"patient_mvksuviy_jlyt95r9\"]": {
+                          "contractVersion": 2,
+                          "direction": "receive",
+                          "inputText": "我不想喝水",
+                          "labels": [
+                            "我",
+                            "不",
+                            "想",
+                            "喝",
+                            "水"
+                          ],
+                          "output": [
+                            {
+                              "id": "text-review_quvx2ep1",
+                              "label": "我",
+                              "vocalization": "我",
+                              "image": "",
+                              "textOnly": true
+                            },
+                            {
+                              "id": "text-review_8inxtk2d",
+                              "label": "不",
+                              "vocalization": "不",
+                              "image": "",
+                              "textOnly": true
+                            },
+                            {
+                              "id": "text-review_ah92bcbk",
+                              "label": "想",
+                              "vocalization": "想",
+                              "image": "",
+                              "textOnly": true
+                            },
+                            {
+                              "id": "text-review_5gxemmaa",
+                              "label": "喝",
+                              "vocalization": "喝",
+                              "image": "",
+                              "textOnly": true
+                            },
+                            {
+                              "id": "text-review_8fb4144n",
+                              "label": "水",
+                              "vocalization": "水",
+                              "image": "",
+                              "textOnly": true
+                            }
+                          ],
+                          "pictogramSequence": [
+                            {
+                              "pictogramId": null,
+                              "label": "我",
+                              "source": "text",
+                              "boardId": "",
+                              "matchType": "manual",
+                              "confidence": 1,
+                              "originalToken": "我",
+                              "textOnly": true,
+                              "sourceSpan": {
+                                "start": 0,
+                                "end": 1,
+                                "offsetUnit": "unicode-code-point"
+                              },
+                              "preparedOutputIndex": 0
+                            },
+                            {
+                              "pictogramId": null,
+                              "label": "不",
+                              "source": "text",
+                              "boardId": "",
+                              "matchType": "manual",
+                              "confidence": 1,
+                              "originalToken": "不",
+                              "textOnly": true,
+                              "sourceSpan": {
+                                "start": 1,
+                                "end": 2,
+                                "offsetUnit": "unicode-code-point"
+                              },
+                              "preparedOutputIndex": 1
+                            },
+                            {
+                              "pictogramId": null,
+                              "label": "想",
+                              "source": "text",
+                              "boardId": "",
+                              "matchType": "manual",
+                              "confidence": 1,
+                              "originalToken": "想",
+                              "textOnly": true,
+                              "sourceSpan": {
+                                "start": 2,
+                                "end": 3,
+                                "offsetUnit": "unicode-code-point"
+                              },
+                              "preparedOutputIndex": 2
+                            },
+                            {
+                              "pictogramId": null,
+                              "label": "喝",
+                              "source": "text",
+                              "boardId": "",
+                              "matchType": "manual",
+                              "confidence": 1,
+                              "originalToken": "喝",
+                              "textOnly": true,
+                              "sourceSpan": {
+                                "start": 3,
+                                "end": 4,
+                                "offsetUnit": "unicode-code-point"
+                              },
+                              "preparedOutputIndex": 3
+                            },
+                            {
+                              "pictogramId": null,
+                              "label": "水",
+                              "source": "text",
+                              "boardId": "",
+                              "matchType": "manual",
+                              "confidence": 1,
+                              "originalToken": "水",
+                              "textOnly": true,
+                              "sourceSpan": {
+                                "start": 4,
+                                "end": 5,
+                                "offsetUnit": "unicode-code-point"
+                              },
+                              "preparedOutputIndex": 4
+                            }
+                          ],
+                          "id": "receiver_mvksuyen_mjczw81u",
+                          "sessionId": "phrase-preparation",
+                          "patientId": "patient_mvksuviy_jlyt95r9",
+                          "workspaceId": "workspace_mvksuviy_fkocnvka",
+                          "recordStatus": "draft",
+                          "createdAt": 1792749659567,
+                          "updatedAt": 1792749665413,
+                          "templateId": "",
+                          "lifeContext": "出门",
+                          "preparationVersion": 1,
+                          "preparationMode": "edit",
+                          "sourcePhraseId": "prepared_receiver_mvksuxxi_vwqq1ows",
+                          "sourceSnapshot": {
+                            "id": "prepared_receiver_mvksuxxi_vwqq1ows",
+                            "sentence": "我想喝水",
+                            "output": [
+                              {
+                                "id": "text-review_2ynkes1p",
+                                "label": "我",
+                                "vocalization": "我",
+                                "image": "",
+                                "textOnly": true
+                              },
+                              {
+                                "id": "text-review_omw8r0t8",
+                                "label": "想",
+                                "vocalization": "想",
+                                "image": "",
+                                "textOnly": true
+                              },
+                              {
+                                "id": "text-review_6mqttmjn",
+                                "label": "喝",
+                                "vocalization": "喝",
+                                "image": "",
+                                "textOnly": true
+                              },
+                              {
+                                "id": "text-review_qzao09v0",
+                                "label": "水",
+                                "vocalization": "水",
+                                "image": "",
+                                "textOnly": true
+                              }
+                            ],
+                            "lifeContext": "出门",
+                            "usageCount": 0,
+                            "createdAt": 1792749659354,
+                            "lastUsedAt": 1792749659354,
+                            "updatedAt": 1792749659354
+                          },
+                          "alignmentUnavailable": true
+                        }
+                      },
+                      "expected": {
+                        "[\"workspace_mvksuviy_fkocnvka\",\"patient_mvksuviy_jlyt95r9\"]": {
+                          "contractVersion": 2,
+                          "direction": "receive",
+                          "inputText": "我不想喝水",
+                          "labels": [
+                            "我",
+                            "不",
+                            "想",
+                            "喝",
+                            "水"
+                          ],
+                          "output": [
+                            {
+                              "id": "text-review_quvx2ep1",
+                              "label": "我",
+                              "vocalization": "我",
+                              "image": "",
+                              "textOnly": true
+                            },
+                            {
+                              "id": "text-review_8inxtk2d",
+                              "label": "不",
+                              "vocalization": "不",
+                              "image": "",
+                              "textOnly": true
+                            },
+                            {
+                              "id": "text-review_ah92bcbk",
+                              "label": "想",
+                              "vocalization": "想",
+                              "image": "",
+                              "textOnly": true
+                            },
+                            {
+                              "id": "text-review_5gxemmaa",
+                              "label": "喝",
+                              "vocalization": "喝",
+                              "image": "",
+                              "textOnly": true
+                            },
+                            {
+                              "id": "text-review_8fb4144n",
+                              "label": "水",
+                              "vocalization": "水",
+                              "image": "",
+                              "textOnly": true
+                            }
+                          ],
+                          "pictogramSequence": [
+                            {
+                              "pictogramId": null,
+                              "label": "我",
+                              "source": "text",
+                              "boardId": "",
+                              "matchType": "manual",
+                              "confidence": 1,
+                              "originalToken": "我",
+                              "textOnly": true,
+                              "sourceSpan": {
+                                "start": 0,
+                                "end": 1,
+                                "offsetUnit": "unicode-code-point"
+                              },
+                              "preparedOutputIndex": 0
+                            },
+                            {
+                              "pictogramId": null,
+                              "label": "不",
+                              "source": "text",
+                              "boardId": "",
+                              "matchType": "manual",
+                              "confidence": 1,
+                              "originalToken": "不",
+                              "textOnly": true,
+                              "sourceSpan": {
+                                "start": 1,
+                                "end": 2,
+                                "offsetUnit": "unicode-code-point"
+                              },
+                              "preparedOutputIndex": 1
+                            },
+                            {
+                              "pictogramId": null,
+                              "label": "想",
+                              "source": "text",
+                              "boardId": "",
+                              "matchType": "manual",
+                              "confidence": 1,
+                              "originalToken": "想",
+                              "textOnly": true,
+                              "sourceSpan": {
+                                "start": 2,
+                                "end": 3,
+                                "offsetUnit": "unicode-code-point"
+                              },
+                              "preparedOutputIndex": 2
+                            },
+                            {
+                              "pictogramId": null,
+                              "label": "喝",
+                              "source": "text",
+                              "boardId": "",
+                              "matchType": "manual",
+                              "confidence": 1,
+                              "originalToken": "喝",
+                              "textOnly": true,
+                              "sourceSpan": {
+                                "start": 3,
+                                "end": 4,
+                                "offsetUnit": "unicode-code-point"
+                              },
+                              "preparedOutputIndex": 3
+                            },
+                            {
+                              "pictogramId": null,
+                              "label": "水",
+                              "source": "text",
+                              "boardId": "",
+                              "matchType": "manual",
+                              "confidence": 1,
+                              "originalToken": "水",
+                              "textOnly": true,
+                              "sourceSpan": {
+                                "start": 4,
+                                "end": 5,
+                                "offsetUnit": "unicode-code-point"
+                              },
+                              "preparedOutputIndex": 4
+                            }
+                          ],
+                          "id": "receiver_mvksuyen_mjczw81u",
+                          "sessionId": "phrase-preparation",
+                          "patientId": "patient_mvksuviy_jlyt95r9",
+                          "workspaceId": "workspace_mvksuviy_fkocnvka",
+                          "recordStatus": "draft",
+                          "createdAt": 1792749659567,
+                          "updatedAt": 1792749659999,
+                          "templateId": "",
+                          "lifeContext": "出门",
+                          "preparationVersion": 1,
+                          "preparationMode": "edit",
+                          "sourcePhraseId": "prepared_receiver_mvksuxxi_vwqq1ows",
+                          "sourceSnapshot": {
+                            "id": "prepared_receiver_mvksuxxi_vwqq1ows",
+                            "sentence": "我想喝水",
+                            "output": [
+                              {
+                                "id": "text-review_2ynkes1p",
+                                "label": "我",
+                                "vocalization": "我",
+                                "image": "",
+                                "textOnly": true
+                              },
+                              {
+                                "id": "text-review_omw8r0t8",
+                                "label": "想",
+                                "vocalization": "想",
+                                "image": "",
+                                "textOnly": true
+                              },
+                              {
+                                "id": "text-review_6mqttmjn",
+                                "label": "喝",
+                                "vocalization": "喝",
+                                "image": "",
+                                "textOnly": true
+                              },
+                              {
+                                "id": "text-review_qzao09v0",
+                                "label": "水",
+                                "vocalization": "水",
+                                "image": "",
+                                "textOnly": true
+                              }
+                            ],
+                            "lifeContext": "出门",
+                            "usageCount": 0,
+                            "createdAt": 1792749659354,
+                            "lastUsedAt": 1792749659354,
+                            "updatedAt": 1792749659354
+                          },
+                          "alignmentUnavailable": true
+                        }
+                      },
+                      "message": "\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  - 1\u001b[39m\n\u001b[31m+ Received  + 1\u001b[39m\n\n\u001b[33m@@ -177,9 +177,9 @@\u001b[39m\n\u001b[2m        \"sentence\": \"我想喝水\",\u001b[22m\n\u001b[2m        \"updatedAt\": 1792749659354,\u001b[22m\n\u001b[2m        \"usageCount\": 0,\u001b[22m\n\u001b[2m      },\u001b[22m\n\u001b[2m      \"templateId\": \"\",\u001b[22m\n\u001b[32m-     \"updatedAt\": 1792749659999,\u001b[39m\n\u001b[31m+     \"updatedAt\": 1792749665413,\u001b[39m\n\u001b[2m      \"workspaceId\": \"workspace_mvksuviy_fkocnvka\",\u001b[22m\n\u001b[2m    },\u001b[22m\n\u001b[2m  }\u001b[22m",
+                      "name": "toEqual",
+                      "pass": false
+                    },
+                    "location": {
+                      "file": "<WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\core\\core.spec.js",
+                      "column": 116,
+                      "line": 109
+                    },
+                    "snippet": "  107 |   const draft=await read(p,'phrase_preparation');await waitForProductionServiceWorker(p);await h.close();p=await open(h,true);await manage(p);\n  108 |   await manager(p).getByRole('button',{name:'准备常用表达',exact:true}).click();await prep(p).getByRole('button',{name:'继续准备',exact:true}).click();\n> 109 |   await expect(prep(p).locator('#receiver-input')).toHaveValue('我不想喝水');expect(await read(p,'phrase_preparation')).toEqual(draft);expect(await calls(p)).toEqual([]);\n      |                                                                                                                    ^\n  110 |   await save(p,'确认更新这条常用语');list=await phrases(p);expect(list).toHaveLength(1);expect(list[0]).toMatchObject({id:initial.id,sentence:'我不想喝水',createdAt:initial.createdAt});const edited=list[0];\n  111 |   proof.steps.push('create-double-save','edit-cancel','edit-draft-offline-process-restart','update-same-id');\n  112 |   await row(p,initial.id).getByRole('button',{name:'以此准备新句',exact:true}).click();await review(prep(p),'请给我温水');await save(p,'确认另存为新常用语');"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "<WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\core\\core.spec.js",
+                        "column": 116,
+                        "line": 109
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  - 1\u001b[39m\n\u001b[31m+ Received  + 1\u001b[39m\n\n\u001b[33m@@ -177,9 +177,9 @@\u001b[39m\n\u001b[2m        \"sentence\": \"我想喝水\",\u001b[22m\n\u001b[2m        \"updatedAt\": 1792749659354,\u001b[22m\n\u001b[2m        \"usageCount\": 0,\u001b[22m\n\u001b[2m      },\u001b[22m\n\u001b[2m      \"templateId\": \"\",\u001b[22m\n\u001b[32m-     \"updatedAt\": 1792749659999,\u001b[39m\n\u001b[31m+     \"updatedAt\": 1792749665413,\u001b[39m\n\u001b[2m      \"workspaceId\": \"workspace_mvksuviy_fkocnvka\",\u001b[22m\n\u001b[2m    },\u001b[22m\n\u001b[2m  }\u001b[22m\n\n  107 |   const draft=await read(p,'phrase_preparation');await waitForProductionServiceWorker(p);await h.close();p=await open(h,true);await manage(p);\n  108 |   await manager(p).getByRole('button',{name:'准备常用表达',exact:true}).click();await prep(p).getByRole('button',{name:'继续准备',exact:true}).click();\n> 109 |   await expect(prep(p).locator('#receiver-input')).toHaveValue('我不想喝水');expect(await read(p,'phrase_preparation')).toEqual(draft);expect(await calls(p)).toEqual([]);\n      |                                                                                                                    ^\n  110 |   await save(p,'确认更新这条常用语');list=await phrases(p);expect(list).toHaveLength(1);expect(list[0]).toMatchObject({id:initial.id,sentence:'我不想喝水',createdAt:initial.createdAt});const edited=list[0];\n  111 |   proof.steps.push('create-double-save','edit-cancel','edit-draft-offline-process-restart','update-same-id');\n  112 |   await row(p,initial.id).getByRole('button',{name:'以此准备新句',exact:true}).click();await review(prep(p),'请给我温水');await save(p,'确认另存为新常用语');\n    at <WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\core\\core.spec.js:109:116"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-23T10:00:53.452Z",
+                  "attachments": [],
+                  "errorLocation": {
+                    "file": "<WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\core\\core.spec.js",
+                    "column": 116,
+                    "line": 109
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "43b12c68676e60ca47dc-2c34c91d4a21b83e760f",
+          "file": "core.spec.js",
+          "line": 97,
+          "column": 5
+        },
+        {
+          "title": "namesake private images reviewed into preparation and favorite preserve selected identity across offline process restarts",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 240000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "status": "failed",
+                  "duration": 25496,
+                  "error": {
+                    "message": "TimeoutError: locator.click: Timeout 18000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('dialog', { name: /^准备常用表达/ }).getByRole('button', { name: '保留文字', exact: true }).first()\u001b[22m\n",
+                    "stack": "TimeoutError: locator.click: Timeout 18000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('dialog', { name: /^准备常用表达/ }).getByRole('button', { name: '保留文字', exact: true }).first()\u001b[22m\n\n    at <WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\core\\core.spec.js:159:120",
+                    "location": {
+                      "file": "<WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\core\\core.spec.js",
+                      "column": 120,
+                      "line": 159
+                    },
+                    "snippet": "  157 |   const selectedSource=candidateSources[1],selectedPixels=await privatePixels(p,selectedSource);\n  158 |   await choices.getByRole('button').nth(1).click();\n> 159 |   const missing=prep(p).getByRole('button',{name:'保留文字',exact:true});while(await missing.count())await missing.first().click();\n      |                                                                                                                        ^\n  160 |   await prep(p).getByRole('textbox',{name:'生活情境',exact:true}).fill('饭后散步');const before=Object.values(await read(p,'phrase_preparation'))[0];\n  161 |   const selectedPerson=before.output.find(x=>x.label==='欧阳明澈');expect(selectedPerson.personId).toBeTruthy();expect(selectedPerson.image).toBe(selectedSource);\n  162 |   await waitForProductionServiceWorker(p);await h.close();p=await open(h,true);await manage(p);await manager(p).getByRole('button',{name:'准备常用表达',exact:true}).click();await prep(p).getByRole('button',{name:'继续准备',exact:true}).click();"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "<WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\core\\core.spec.js",
+                        "column": 120,
+                        "line": 159
+                      },
+                      "message": "TimeoutError: locator.click: Timeout 18000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('dialog', { name: /^准备常用表达/ }).getByRole('button', { name: '保留文字', exact: true }).first()\u001b[22m\n\n\n  157 |   const selectedSource=candidateSources[1],selectedPixels=await privatePixels(p,selectedSource);\n  158 |   await choices.getByRole('button').nth(1).click();\n> 159 |   const missing=prep(p).getByRole('button',{name:'保留文字',exact:true});while(await missing.count())await missing.first().click();\n      |                                                                                                                        ^\n  160 |   await prep(p).getByRole('textbox',{name:'生活情境',exact:true}).fill('饭后散步');const before=Object.values(await read(p,'phrase_preparation'))[0];\n  161 |   const selectedPerson=before.output.find(x=>x.label==='欧阳明澈');expect(selectedPerson.personId).toBeTruthy();expect(selectedPerson.image).toBe(selectedSource);\n  162 |   await waitForProductionServiceWorker(p);await h.close();p=await open(h,true);await manage(p);await manager(p).getByRole('button',{name:'准备常用表达',exact:true}).click();await prep(p).getByRole('button',{name:'继续准备',exact:true}).click();\n    at <WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\core\\core.spec.js:159:120"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-23T10:01:06.608Z",
+                  "attachments": [],
+                  "errorLocation": {
+                    "file": "<WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\core\\core.spec.js",
+                    "column": 120,
+                    "line": 159
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "43b12c68676e60ca47dc-6231d3d1062c3618e2a0",
+          "file": "core.spec.js",
+          "line": 139,
+          "column": 5
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-23T10:00:47.350Z",
+    "duration": 45629.685,
+    "expected": 0,
+    "skipped": 0,
+    "unexpected": 3,
+    "flaky": 0
+  }
+}

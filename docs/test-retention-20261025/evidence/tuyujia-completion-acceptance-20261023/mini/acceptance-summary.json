@@ -1,0 +1,80 @@
+{
+  "generated_at": "2026-10-23T16:31:00.803055+08:00",
+  "acting_tool": "Codex",
+  "runtime_model": "not independently verified",
+  "status": "passed_bounded_developer_tool_acceptance",
+  "candidate": "dist-local-20261022-onsite-ui-repair-v1",
+  "scope": "synthetic-upload-family/synthetic-upload-profile",
+  "product_entry": [
+    "新建个人板块",
+    "切换为人物卡",
+    "只选图，手工填写",
+    "输入合成顾明",
+    "确认并加入 CBoard",
+    "患者页选择新图卡",
+    "关闭项目",
+    "重开项目",
+    "继续上次表达"
+  ],
+  "native_image_save": true,
+  "native_file_read_and_decode": true,
+  "picker": "chooseMedia mocked to one synthetic 64x64 geometric PNG; saveFile, readFile, getImageInfo unmocked",
+  "native_saved_image": {
+    "path": "http://store/EzZcbwRoyS9Z2427e826801f28ae7b48383baeb3bf8c.jpg",
+    "bytes": 1871,
+    "width": 64,
+    "height": 64,
+    "type": "jpeg",
+    "sha256": "29712a593ac27eb61a457571f766a25df5d2704b0f015bfd66aea8db5b6dd767"
+  },
+  "post_restart_library_identical": true,
+  "post_restart_whole_person_tile_identical": true,
+  "post_restart_image_bytes_hash_identical": true,
+  "native_close_event": {
+    "timestamp": "2026-10-23 16:25:20.841",
+    "event": "native-window-closed",
+    "winId": "s2",
+    "lineSha256": "624a3c723a9bd6a991bebbf5201e97d6d63f7f21c09380fb453a7975fb2852e3"
+  },
+  "runtime_sentinel_cleared": true,
+  "quiet_after_restore": {
+    "passed": true,
+    "secondsSinceRestoreProof": 24.163244009017944,
+    "audioStarts": 0,
+    "requests": []
+  },
+  "network_isolation": "Runtime API fault injection for wx.request/uploadFile/downloadFile; actual local file reads and image decoder. OS/phone network not disabled.",
+  "observation_limit": "Mocks installed after new runtime binding and before patient navigation/restore. Pre-instrumentation app bootstrap is outside the counter window.",
+  "identity_contract": "Exact whole TileDTO equality including id/boardId/people category/device-private attribution. personId is an optional matcher output field, not required for a directly selected TileDTO.",
+  "harness_correction": "Initial strict personId assertion failed after successful resume; source tracing showed the optional matcher-only field. No product mutation or new resume occurred in verify-continued.",
+  "initial_add_autoplay": {
+    "configured_delay_seconds": 15,
+    "audio_play_calls_before_close": 1,
+    "note": "The reused synthetic fixture explicitly enables 15-second candidate autoplay. A newly selected card caused one mocked play before closing. Restore itself and its quiet window had zero plays; no physical speaker validation."
+  },
+  "cleanup": {
+    "original_selection_restored": true,
+    "synthetic_storage_keys_removed": 15,
+    "owned_files_removed": 7,
+    "mocks_restored": true,
+    "project_close_receipt": {
+      "success": true,
+      "winId": "s2"
+    }
+  },
+  "no_product_source_edits": true,
+  "no_rebuild": true,
+  "no_deploy": true,
+  "no_paid_ai": true,
+  "no_real_private_photos": true,
+  "phone_acceptance": false,
+  "evidence": [
+    "07-native-save-proof.json",
+    "11-closed.json",
+    "12-reopened.json",
+    "13-reopen-proof.json",
+    "14-quiet.json",
+    "15-restored-visible.jpg",
+    "16-cleanup.json"
+  ]
+}

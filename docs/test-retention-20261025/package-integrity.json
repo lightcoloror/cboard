@@ -1,0 +1,1327 @@
+[
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/baseline.config.cjs",
+    "sha256": "1946f1a3da3fca808c3e15e34131f8fbe150c02da90b21ca2812369df5c9e46e",
+    "bytes": 865
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/core/acceptance-summary-gallery-durable-v1.json",
+    "sha256": "de3114276316807738b969ca6c38e03916dfe91c79a31428da038b60e410f006",
+    "bytes": 2221
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/core/acceptance-summary-gallery-durable-v2.json",
+    "sha256": "f33ac4c31c67f1d88c603cf96e9bfa76592573da21dbe344f7b29e2dc21c8c77",
+    "bytes": 2097
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/core/acceptance-summary-production-v2.json",
+    "sha256": "d0ad72b1b5d5be47541c1bf0fdcb6db76b9cd73b38074f7b603aa9d5eec3a88e",
+    "bytes": 6150
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/core/acceptance-summary-source-deletion-v2.json",
+    "sha256": "c493a0c0328620f33e4da40b6d6b04edddf8b9e4cf4d251d8d1281c0358b0fe7",
+    "bytes": 1493
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/core/browser-report-01.json",
+    "sha256": "de5f4aaaf129bc3c107ebaf0766c164704177e0f859b01cb3ddf2faa16422a9a",
+    "bytes": 38047
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/core/browser-report-02.json",
+    "sha256": "3fed8e5a43ced4ac7617b9321e32c61304d17a35068265f4c6c2d913aec6c96a",
+    "bytes": 18814
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/core/browser-report-03.json",
+    "sha256": "00fd1d649980c65d057942a665c914a74220a4770b0daccd8fb68091c413cde3",
+    "bytes": 18152
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/core/browser-report-production-source-deletion-v2.json",
+    "sha256": "408000a23a04635ea5fd48b42c861f969e515786eb4ab17776d8d8088d43d0d0",
+    "bytes": 2942
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/core/browser-report-production-v2.json",
+    "sha256": "f760825cf4ffc9c18487896011bbe0bfd56afe34c04285bd8cb35fd02e020287",
+    "bytes": 7016
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/core/browser-report-source-deletion-v2.json",
+    "sha256": "149501e73d799737ad97f62e961af41e4d9e317ef71e06e839ba4f183c4ab8b4",
+    "bytes": 3377
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/core/browser-report-v2.json",
+    "sha256": "352d2e447ee974bbbd30cecc6f3102d7d6188ea707e761462ce67222bb509994",
+    "bytes": 4389
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/core/browser-report.json",
+    "sha256": "7e89b353597934d48f67f521213c5b1f9933a3430e196fb60b31c70ee4a7f790",
+    "bytes": 19004
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/core/core.config.cjs",
+    "sha256": "17dc0e99fe73748e52d5ca4ab7e401bc4c39e78e3f480695dd8667eeb1040def",
+    "bytes": 1161
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/core/core.spec.js",
+    "sha256": "f71b97b4a0f42bbb4c68080acfc99730aee75171932edf96081942590b690820",
+    "bytes": 32294
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/core/coverage-plan.md",
+    "sha256": "f7009c6b24f61f06168732d1abd02eea2d1d50133d487d01cfe04270fbcc4d6d",
+    "bytes": 1859
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/core/favorites-committed-refresh-fix.md",
+    "sha256": "398232aca6553ad55e38a5c20350e8f42c5cbe853a5cc4e19ac2b1029c1b1a4c",
+    "bytes": 3750
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/core/persistent-browser-harness.cjs",
+    "sha256": "d4a965734214c5d169c9aa3941c06b8026ccced5ca753fdc117ed9cf751492f8",
+    "bytes": 10726
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/core/README-gallery-durable-v1.md",
+    "sha256": "64f52d5e2373b3843d4d7e60106270240ad5227d06853c91b1f05dd6a5ea6467",
+    "bytes": 6092
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/core/README-gallery-durable-v2.md",
+    "sha256": "fec7839de6d08c946dccd87862dbb7fa5d5c8144c051ca7122af90a25d111548",
+    "bytes": 5053
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/core/README-production-v2.md",
+    "sha256": "5c0a978479087445f6048b3df47ea392a09dee34d81c7638d31c9a516d916b97",
+    "bytes": 5346
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/core/README-source-deletion-v2.md",
+    "sha256": "fd33e5e66d59fc4cb574f97138a3bbbdb272906845f59b5533e546ee0ee7e224",
+    "bytes": 3088
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/faults.config.cjs",
+    "sha256": "7de30a8936a3c05995ac505ea9a57f5befa3fc0a65105f724830bbe7c97650cb",
+    "bytes": 862
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/gallery-baseline.spec.js",
+    "sha256": "98b27bff0718d3c0dc46092b803f325d109b994bb6ce5b1884d95e1a1f9ea2bc",
+    "bytes": 4448
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/gallery-fault-baseline-report.json",
+    "sha256": "4bc82f766cfad7e9723f81665cc61b94a2c6447d429404b0106e8f233fb2996f",
+    "bytes": 2879
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/gallery-faults-v1-report.json",
+    "sha256": "b8fd2b7ea0ec53de2a6b75eda706b07fc3c67a52b1e25abac8ce1b14bcd9929c",
+    "bytes": 5358
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/gallery-faults-v2-report.json",
+    "sha256": "2dd8b68264cdd0ca4cee12c4a724d5f2c94c29874f96b70d9200103804df86db",
+    "bytes": 5358
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/gallery-faults.spec.js",
+    "sha256": "cd172260d9e5875319a9adbe288e297e5109e105c2204d0ef8f2a265828b681d",
+    "bytes": 5758
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/gallery-preference-persistence-implementation.md",
+    "sha256": "2e2aa76e7a4fcba32001ceae0a9a93bb31ae89eca1fc3765b854b1c8bdc7d91b",
+    "bytes": 6276
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/gallery-storage-audit.md",
+    "sha256": "dcd9b60e5b7635da19c5bf01681500ed3250c71d09d83ec62e5e1482a680049e",
+    "bytes": 14500
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/gallery-storage-implementation.md",
+    "sha256": "4b311c780050c3c69383f98aa1e8660b9c0a79ababe67abb110545ac7d8ec405",
+    "bytes": 4634
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/gallery-ui-persistence-implementation.md",
+    "sha256": "816ab5f5f8f69f5b741a772d3e89f79f8db84b8da34117611ed350d30fc19ecd",
+    "bytes": 5132
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/mini/07-native-save-proof.json",
+    "sha256": "496af7f2c3bd54579f60890b44d514494a9ac1084051b9f331822c781b4bdd09",
+    "bytes": 2818
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/mini/13-reopen-proof.json",
+    "sha256": "70f51cc09281aca150ef9006de423aff269fec9d1269f6d585e98b6e9154b7ab",
+    "bytes": 20061
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/mini/16-cleanup.json",
+    "sha256": "4b161fb00067695c27655784667beb5c10680acb60bbbfcb106c253de25404c2",
+    "bytes": 922
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/mini/acceptance-summary.json",
+    "sha256": "2b72ecacffc0fbe16388fbcc5fef44ec021bcc4b81d75a2673a865d7f27d1481",
+    "bytes": 3353
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/mini/README.md",
+    "sha256": "80d693340a035a7988b6b6c4d9e0ad40da4cccc0106a05b94f34029c13d0ef47",
+    "bytes": 2359
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/mini/setup-cleanup.json",
+    "sha256": "33ababe408968013b3042aae95b7965e60f5e7ac34be5dffe16077cfc9c55ba9",
+    "bytes": 612
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/owned-profile-cleanup.json",
+    "sha256": "37f91f21a2d98cdd092334c2ee731739e9e6dc7684f935d42dda1d8102728014",
+    "bytes": 2399
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/persistent-browser-harness.cjs",
+    "sha256": "2d3668df3fb0b494e48c0138f844f33b4c38d3b38bf6840b510f04cd67161c0b",
+    "bytes": 8841
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/production-gallery-faults-v2-run2-report.json",
+    "sha256": "c1e850422e19372aff2d364ba02e685bd53c172230939b2ab0eee8c3f5ed556b",
+    "bytes": 4976
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/webkit/adapt-modern-assertions.cjs",
+    "sha256": "ae03e491223326797025cbbe725d0b33375e09e0c180262f226a817776f1ddc2",
+    "bytes": 1603
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/webkit/cache-isolation-report.json",
+    "sha256": "7f2bd7c532aefea830e66a753dedf270306108b85764885372873f6edfe65310",
+    "bytes": 3564
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/webkit/cache-isolation.spec.js",
+    "sha256": "6493caccc85362d8c2297966add900c0ec759ef03f5f031fed3fd9103a706b00",
+    "bytes": 1071
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/webkit/cache-roundtrip.spec.js",
+    "sha256": "f653753233c84f1d0ebbe0ee7de958c30ef3b2cc090051624862b04462262c2f",
+    "bytes": 1818
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/webkit/capabilities-report.json",
+    "sha256": "3e8bb367c3940ec8aa9a875dc446b8bab9338b7d9ec147e42937698436e4bc7c",
+    "bytes": 3393
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/webkit/capabilities.spec.js",
+    "sha256": "f66413797bed2b6dbf612bf51105b8fb581ccb60f4d827a1d287901eda1073ff",
+    "bytes": 1426
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/webkit/cleanup-followup.json",
+    "sha256": "f8c06e20593d408cc08a415411d843877d418ce275ca662be8139dfe0e0e4d56",
+    "bytes": 222
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/webkit/cleanup-v2.json",
+    "sha256": "088d545d48f1201cd3ae1855a2c0bc3f65aa522362f3251dba92124a033fc154",
+    "bytes": 222
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/webkit/cleanup-verification.json",
+    "sha256": "96cb40138f1582a96cbfc4c86c8d81d6bcb4213ab2bcc8e24e4fdf5c67b82bf5",
+    "bytes": 222
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/webkit/decoder-repair-layout-results.json",
+    "sha256": "342e8c350342d2114ce6c86f58a521a1445ab4bee7c21a315d4e72a7b2b99c33",
+    "bytes": 6057
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/webkit/diagnostic-final-report.json",
+    "sha256": "a15c41006a9d959a0c99c9f40a9ad7af3545c971e9ed14d00a9bac3773065dbe",
+    "bytes": 7101
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/webkit/followup-summary.json",
+    "sha256": "4815d27715733cabd3de2fd85e977eea8d4f9ed695e348334b5447d73a6b5a49",
+    "bytes": 2758
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/webkit/gallery.spec.js",
+    "sha256": "13a3e19d458549b5c4c0124c4736fe4faf8e2d073be6f469349dae8ad7a73f06",
+    "bytes": 6858
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/webkit/large-font.spec.js",
+    "sha256": "09cf92d046279d4bd0dad370e29c86f389560525c846b460b2c140dae738ec50",
+    "bytes": 3132
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/webkit/layered-report.json",
+    "sha256": "7f44b862441cb5c5c82be53c8b1b09c5b4efceb19cba370edcf3619c39c2ebb7",
+    "bytes": 20623
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/webkit/local-cache-isolation.json",
+    "sha256": "ea4a210edfb04fc60d545b3d4af7d98028832930a2f92cb3a058695ef0c2b86d",
+    "bytes": 1171
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/webkit/local-cache-roundtrip.json",
+    "sha256": "024e5bbf46bc793074be6620e44a8d0884b35291e0393f0de830423179555a9d",
+    "bytes": 26866
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/webkit/local-capabilities-1792743944962.json",
+    "sha256": "4e12176486b3b93c1344f9721e0fc3e9915a3c341e07c7ae2839f49bf99c445c",
+    "bytes": 18847
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/webkit/local-capabilities.json",
+    "sha256": "e747582d4a8a7b2aeeb6faf3b20193a3f5d48eb9f78c9797d691b12cbf6e2674",
+    "bytes": 18833
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/webkit/local-card-folder-delete-1792743985408.json",
+    "sha256": "79f80941a2d99005af03c82f219b8ab3fd00b8f70cff1aaf5d0cbb0f5f276792",
+    "bytes": 62952
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/webkit/local-card-folder-delete.json",
+    "sha256": "ffff5c656f31a406995e6fbeead396919d03c7c919e664b48611964d6096b173",
+    "bytes": 49521
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/webkit/local-large-font.json",
+    "sha256": "7b3c2c78418212dadbdb8c9ae36fee36fb85c1a51a90ba6db38fdf78e952f2d2",
+    "bytes": 27296
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/webkit/local-local-photo-restart-1792743963368.json",
+    "sha256": "6f6dcb6d4eed38797c8e96e1209c04c751c538855e8e9e86c9bc9847f3b5cb8a",
+    "bytes": 55603
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/webkit/local-local-photo-restart.json",
+    "sha256": "5f46ce75f65b3256b186a4d1e8c1ba156018b4ab77437e41280ddf9967816a36",
+    "bytes": 36424
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/webkit/local-modern-offline-1792747151530.json",
+    "sha256": "b7d1478428d409fb9dcdde0fe2b62c5a4c2a59a1a16226086fd7d79060ae9fd8",
+    "bytes": 91831
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/webkit/local-modern-offline-1792747970754.json",
+    "sha256": "e8a114d9b3edda7913ebb509cdc09c659940bd9b5351944fc667839d25c543f0",
+    "bytes": 64686
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/webkit/local-modern-offline-1792755166580.json",
+    "sha256": "dc8a62f6533bd95517e3e40a03697d69fe4f874ad0e30f0dc2db1326a78b8c1e",
+    "bytes": 26632
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/webkit/local-modern-offline-1792755297759.json",
+    "sha256": "c950a7c098c59a04d456d4a06d96e113f097bcd55c4a763be88b31db078f0eff",
+    "bytes": 30975
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/webkit/local-modern-offline-1792755640635.json",
+    "sha256": "dd3048076a7b5ef2312776e54d87e32afecc163638e4c99810dd872e89134e1a",
+    "bytes": 86059
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/webkit/local-modern-offline.json",
+    "sha256": "d3d7e22f28928e5453ff297145976d813fc473d202f1b403bfde52e3da6fca5c",
+    "bytes": 26474
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/webkit/local-new-runtime-cache.json",
+    "sha256": "c37361092a6ddc217ddf2eb4899c349e1eb3c5e8b948550f06f43e5096fc2c12",
+    "bytes": 2115
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/webkit/local-offline-layers-1792744229099.json",
+    "sha256": "e391be9ed0fc9d7a8eaa04825fb0e2aa67a8b456100e96674629407b1a571dbb",
+    "bytes": 43655
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/webkit/local-offline-layers.json",
+    "sha256": "cf5f5606187c7c15f9e5327cd9482a2a67abbb3422908127a7e6ac02628e0aa7",
+    "bytes": 41296
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/webkit/local-onsite-repair-1792744134453.json",
+    "sha256": "3efacc3bc5bd6564b178e50a9c4eac06621386d76f042387f5ae05c07f174635",
+    "bytes": 25780
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/webkit/local-onsite-repair.json",
+    "sha256": "db2579a4e0907a289f313c23803d2c04092cbb61ec390bb5b5dd4ba3dc9e34f4",
+    "bytes": 24816
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/webkit/local-response-injected-repair.json",
+    "sha256": "be8529fb435b0cbe3471d5df7da2502b1304bfda2f84a7f1cfc481509a3a1eb7",
+    "bytes": 25806
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/webkit/modern-offline-adapted-report.json",
+    "sha256": "c7475e59884400c73de251c70985e3a2805dd2e572f700d1b65bbd7309c8b72b",
+    "bytes": 7005
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/webkit/modern-offline-report.json",
+    "sha256": "4e025e90293e0e0fcbe81bdf8fefbc3ed94f8b29fbfad4ce07ec259b1ba3491c",
+    "bytes": 5883
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/webkit/modern-offline.config.cjs",
+    "sha256": "d3868f4773406a2dd53b655280590cf63a65cb2fe9c94320038ff902a193a15a",
+    "bytes": 445
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/webkit/modern-offline.spec.js",
+    "sha256": "5b90a51ef179f00a75196ef3a21f4f1d64e951b7c5745fb2c70fbfa1fd947b61",
+    "bytes": 8006
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/webkit/modern-origin-stopped-only-report.json",
+    "sha256": "0a53b52fda4a7e995ef00e8496b3543f642a4e28cfa9fd5ffd8015e39395b085",
+    "bytes": 7017
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/webkit/modern-verified-20261023-193208-report.json",
+    "sha256": "b9076e33a79c4f0b60e36e7e3ea80317c5195e92b0018867b60a4a1b776cbaed",
+    "bytes": 15751
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/webkit/modern-verified-20261023-193448-report.json",
+    "sha256": "3b20a2f713c068cbaf07d78a3e5dcf9c1c90c9357d047418b10ff113899e5c82",
+    "bytes": 14901
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/webkit/modern-verified-20261023-194024-photo-origin-stopped-restart.png",
+    "sha256": "3d954267cb31ecfc042b42e27eac5210d056102b3280ba5322cecf04d7423b21",
+    "bytes": 101481
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/webkit/modern-verified-20261023-194024-report.json",
+    "sha256": "54025242fdd1e3fe6a36750ef2fda354f3d151776aa5fd13c7d2cb7ed9caebfe",
+    "bytes": 2948
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/webkit/new-runtime-cache-report.json",
+    "sha256": "8dfcb7316d2834ce13de746dfcdc60fdbb617179d93368c9f7b0f0d19c1d2b00",
+    "bytes": 3615
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/webkit/new-runtime-cache.spec.js",
+    "sha256": "f37cc36c43f324a433f311e52073920239468bc23e18c26626c6d4e0135bc502",
+    "bytes": 1867
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/webkit/offline-layers.spec.js",
+    "sha256": "3361f960fac7ff62e7840b60d2a85cfecb3a43a08731202dba4559fb15e9fdc4",
+    "bytes": 2855
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/webkit/persistent-browser-harness.cjs",
+    "sha256": "196f2ede533653e165475ae3ddf02d51dc19a69f1ccdca6d4e94411030e340ed",
+    "bytes": 8380
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/webkit/prepare-decoder.cjs",
+    "sha256": "5e1a48877adbdb32bc186a5b7e45f4bfd1ccec7d0b56a84f6ecab43d7c32b697",
+    "bytes": 1652
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/webkit/prepare-harness.cjs",
+    "sha256": "f4eef6af55e454ca599909ee097e23edfa21f15b2b25cb94800e4347aedf1073",
+    "bytes": 1172
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/webkit/probe.cjs",
+    "sha256": "131890f5879b539dc961072af9e59db1a3fc3b08fe5d9edc9b9f00f8980f0cd8",
+    "bytes": 731
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/webkit/repair-decoder.spec.js",
+    "sha256": "9498d5ef20dd5874c119ebebda39f7e4e5abf2af29cab8111285395f136a3d73",
+    "bytes": 5762
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/webkit/repair-gallery-report.json",
+    "sha256": "16cc010e23f7c8bd9973f663411ad572456cbba80ebba6d58a50a5f8f081858e",
+    "bytes": 24785
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/webkit/repair-layout-results.json",
+    "sha256": "342e8c350342d2114ce6c86f58a521a1445ab4bee7c21a315d4e72a7b2b99c33",
+    "bytes": 6057
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/webkit/repair.spec.js",
+    "sha256": "85973276f6a13fb01e044c8baf1b00a0ef5df0fc153f570d9bd72893a5790801",
+    "bytes": 6428
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/webkit/summarize-v2.cjs",
+    "sha256": "b346327f5320e531a6f960ccf1c71df03f7de52846fe6be2ccb0452284a9c806",
+    "bytes": 3868
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/webkit/summarize.cjs",
+    "sha256": "5fb7b9db2ddb7d3342710217632f08cdca5b81c1c818d45ad57cbeda3541e3b1",
+    "bytes": 4382
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/webkit/summary.json",
+    "sha256": "36d9652204e948487da2142a5c7c0a95566294fbe31adf348060dd2e89b099eb",
+    "bytes": 4803
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/webkit/v2-summary.json",
+    "sha256": "f49755cae67a6479ce001a6cd95c1d3a4e0b3842091a8fb6b79be57c0755ebd9",
+    "bytes": 3933
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/webkit/v2最终复验结论.md",
+    "sha256": "a46f2aacae5ee814a679902bfdd12ebed72b0153d9f9be1c1db782adec47285f",
+    "bytes": 3151
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/webkit/webkit.config.cjs",
+    "sha256": "065bed5d3546e374e5de9280ea97cfcb30ac20bba0cf25a0bbeda671072f1262",
+    "bytes": 1032
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/webkit/续验与语言修复.md",
+    "sha256": "fa6e4fdb967da12b0cba4dbddc6d2a5a555f64b9c6af5ed7cf2d6f6e9d8ce595",
+    "bytes": 3376
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/webkit/验收结论.md",
+    "sha256": "1956f0f3b0672c316f17fa3aa5c9c06a9bd47e745a25be138dd880f563c79c8a",
+    "bytes": 4307
+  },
+  {
+    "path": "evidence/tuyujia-completion-acceptance-20261023/完成状态与剩余验收.md",
+    "sha256": "9c1a9822ddc18fe2f0872b5fd2b8b92c0d6cf64c2a5da321f31571b7515bb581",
+    "bytes": 9331
+  },
+  {
+    "path": "evidence/tuyujia-expression-draft-20261020/acceptance-preparation.md",
+    "sha256": "3867473169a3e84a8f31981cecbc13a07eadf412f92258d198dc1392cca50ac8",
+    "bytes": 5137
+  },
+  {
+    "path": "evidence/tuyujia-expression-draft-20261020/before/cboard/src/api/api.js",
+    "sha256": "a4de2cb6d4284736b5933f4af4f3be79fdaab53c98c5b3c8deaa4cc0bd591e4f",
+    "bytes": 57385
+  },
+  {
+    "path": "evidence/tuyujia-expression-draft-20261020/before/cboard/src/common/communicationSupport/localData.js",
+    "sha256": "e0594067de1ea28c83d58d8193cfee4e8c3c9f043dc726784fe09cee5f8e52d4",
+    "bytes": 11795
+  },
+  {
+    "path": "evidence/tuyujia-expression-draft-20261020/before/cboard/src/common/communicationSupport/repository.js",
+    "sha256": "09e594ddd3a519f4bdb1e38e93cd9a8117464255ce64717b79912d92a3c9ab34",
+    "bytes": 47878
+  },
+  {
+    "path": "evidence/tuyujia-expression-draft-20261020/browser-local-acceptance-v2-summary.json",
+    "sha256": "5e320a68459b1b1c57340e88853f09b759da3e537a99a6bc9081abe7cebd5597",
+    "bytes": 4969
+  },
+  {
+    "path": "evidence/tuyujia-expression-draft-20261020/browser-local-report-attempt1-harness-pid.json",
+    "sha256": "4f65f1fb36fddfbc124fb2142746c06fb885d518f01ebf96439f9552b5fe12c8",
+    "bytes": 12824
+  },
+  {
+    "path": "evidence/tuyujia-expression-draft-20261020/browser-local-report-attempt2-v1-original-sentence-lost.json",
+    "sha256": "deb9aea62bce7cac1874b36212f5b4349eaca48866ddce14c65b1830e88aabff",
+    "bytes": 43683
+  },
+  {
+    "path": "evidence/tuyujia-expression-draft-20261020/browser-local-report-attempt3-v2-selector-two-passed.json",
+    "sha256": "49358d9121b676da62e276416cc8ddc39256813d11c08db0e48937ff78c07f74",
+    "bytes": 247788
+  },
+  {
+    "path": "evidence/tuyujia-expression-draft-20261020/browser-local-report.json",
+    "sha256": "32651e0fe74db83d86dcfc3b19c6bba79ab93b5694bfa48b76e0d85558375c4f",
+    "bytes": 85635
+  },
+  {
+    "path": "evidence/tuyujia-expression-draft-20261020/browser-production-acceptance-v2-summary.json",
+    "sha256": "02a20040cfa067b76e24e991ff3467a12287879e544c6cae2036ca57bee61201",
+    "bytes": 6376
+  },
+  {
+    "path": "evidence/tuyujia-expression-draft-20261020/browser-production-cleanup.json",
+    "sha256": "a99dc66ff1d523dcfdc0c3f41e126172fbdafaf6f20048659897640e488cd2e6",
+    "bytes": 123
+  },
+  {
+    "path": "evidence/tuyujia-expression-draft-20261020/browser-production-report.json",
+    "sha256": "b1429f36930e2f4acffd0f985a8a8dba3b1e178cf5c9b5145a24ad157dc3eeae",
+    "bytes": 272807
+  },
+  {
+    "path": "evidence/tuyujia-expression-draft-20261020/delivery-summary.json",
+    "sha256": "16113a072be930338d06f4ae099688efd68f6d9b57489d69320dd978c6492b2d",
+    "bytes": 1362
+  },
+  {
+    "path": "evidence/tuyujia-expression-draft-20261020/expression-draft-production.spec.js",
+    "sha256": "3a1a4e19144a99d5f2cf0b791ac1d2cd93dcdfebcd72b90ca412c2e0f5fff64f",
+    "bytes": 17288
+  },
+  {
+    "path": "evidence/tuyujia-expression-draft-20261020/expression-draft.config.cjs",
+    "sha256": "b7cab5a5f46f9d9ba80d8dc8b3a80bbee58ca8b5dee755960ae4fe8421138ce2",
+    "bytes": 1518
+  },
+  {
+    "path": "evidence/tuyujia-expression-draft-20261020/independent-review.md",
+    "sha256": "89e7b66914a225e6d4a08483e9ed6d67e1a7cc4ec4396d85e2367ee39ef2c4a2",
+    "bytes": 5366
+  },
+  {
+    "path": "evidence/tuyujia-expression-draft-20261020/local-browser-clear-discard.json",
+    "sha256": "d6f3ccea6a60ca230806375c0da00fcd542c05b116dd099f8faad50e9d132413",
+    "bytes": 73426
+  },
+  {
+    "path": "evidence/tuyujia-expression-draft-20261020/local-browser-cold-identity-1792516812213.json",
+    "sha256": "3ffcade177071f08a13142bfe83f4da832778d3a0f7d5d02275b6349f31721e5",
+    "bytes": 40140
+  },
+  {
+    "path": "evidence/tuyujia-expression-draft-20261020/local-browser-cold-identity-1792516974471.json",
+    "sha256": "0f547f286c5491e8eb07803cd6e004f7309b338a28a7e0cea8ff95465dadc255",
+    "bytes": 62959
+  },
+  {
+    "path": "evidence/tuyujia-expression-draft-20261020/local-browser-cold-identity.json",
+    "sha256": "161e687cf7120f2a5b015ddfd755c81db868ba59460b6d3067f2a7c4b6e74adb",
+    "bytes": 26800
+  },
+  {
+    "path": "evidence/tuyujia-expression-draft-20261020/local-browser-storage-confirmation.json",
+    "sha256": "db68c2084f595714f7b5a9ec4dcb045e51853d60a1b41cce9e115beea104b650",
+    "bytes": 68339
+  },
+  {
+    "path": "evidence/tuyujia-expression-draft-20261020/mini-runtime-acceptance-summary.md",
+    "sha256": "5c054c14abfa0aa84e6ea97f3e0434f20397d126627d3615236a31dc86443cac",
+    "bytes": 5427
+  },
+  {
+    "path": "evidence/tuyujia-expression-draft-20261020/mini-runtime-boundary-readonly-diagnosis.md",
+    "sha256": "99f191332f0c6ff66813ae1f661b1f3d1d0ee4fe11d18716ded398d4fb32989b",
+    "bytes": 4125
+  },
+  {
+    "path": "evidence/tuyujia-expression-draft-20261020/persistent-browser-harness.cjs",
+    "sha256": "7ee9309eacee201b3f6f3ea0f00760925785743e73193ee12e9dc03c7b7108fd",
+    "bytes": 8799
+  },
+  {
+    "path": "evidence/tuyujia-expression-draft-20261020/production-browser-clear-discard.json",
+    "sha256": "b29b4a2de83f940773928543be76c92f782dc8c1aeed2dc51d7382355569764c",
+    "bytes": 73572
+  },
+  {
+    "path": "evidence/tuyujia-expression-draft-20261020/production-browser-cold-identity.json",
+    "sha256": "3c0523c5f8656cfbe7c3c4c2dc1902dc5367b3b11d77fe4798f703df321568ee",
+    "bytes": 63048
+  },
+  {
+    "path": "evidence/tuyujia-expression-draft-20261020/production-browser-storage-confirmation.json",
+    "sha256": "d823a9f08d109da0560976aaee6c0a1bc8332a03367e268190b03523e2149e8d",
+    "bytes": 68951
+  },
+  {
+    "path": "evidence/tuyujia-expression-draft-20261020/README.md",
+    "sha256": "5ac3e7f6c9158c557da34f062bfc2cad1a4bf260b128ad6b2fa5d5969ad2be11",
+    "bytes": 7105
+  },
+  {
+    "path": "evidence/tuyujia-favorite-durable-20261021/browser-local-report.json",
+    "sha256": "0d41fff6d181436ea684f0ac2922579951b8412158970e77f26fbad7d5ab3ce9",
+    "bytes": 4461
+  },
+  {
+    "path": "evidence/tuyujia-favorite-durable-20261021/browser-local-v2-report.json",
+    "sha256": "57633f6bf93bf3e65f0420b1439ec9f051f63d2cc485746bf91d629ab9ba5fd4",
+    "bytes": 4461
+  },
+  {
+    "path": "evidence/tuyujia-favorite-durable-20261021/browser-production-report.json",
+    "sha256": "6f8bbbafe89e68458aaa180931ce8bb6e31aa692d4d8d471531b486b7682ba23",
+    "bytes": 4004
+  },
+  {
+    "path": "evidence/tuyujia-favorite-durable-20261021/browser-production-v2-report.json",
+    "sha256": "99957f8859f24b0661bbc7019b9f0b2c4b624ca94ffa3df2b46655c9c7ef2488",
+    "bytes": 4012
+  },
+  {
+    "path": "evidence/tuyujia-favorite-durable-20261021/favorite-durable-production.spec.js",
+    "sha256": "c072e756f402bd67137ce497732214bffd93a170054e19dc9fb9502b5578e462",
+    "bytes": 11303
+  },
+  {
+    "path": "evidence/tuyujia-favorite-durable-20261021/favorite-durable.config.cjs",
+    "sha256": "10a6b79a1f9b22ed226dfcec9fb43669b7f42b22de13d4ab34cad18b4253cc1a",
+    "bytes": 1518
+  },
+  {
+    "path": "evidence/tuyujia-favorite-durable-20261021/final-proof.json",
+    "sha256": "e9e73596ffbf5acf0c416e685dd26bb2cf141dd3867d2a264febf592554543a3",
+    "bytes": 494
+  },
+  {
+    "path": "evidence/tuyujia-favorite-durable-20261021/local-favorite-person-restart-1792569887394.json",
+    "sha256": "6037a07ecb1248ad46f696dd0dea6266aeadc03a7afc57ab4e33e1232ac8891f",
+    "bytes": 45229
+  },
+  {
+    "path": "evidence/tuyujia-favorite-durable-20261021/local-favorite-person-restart-1792570152018.json",
+    "sha256": "f1c9bf79ff30dfd2732ba51f0a3e2a5e10278ad6a2bc6e22a0d5b43e1a1a1f06",
+    "bytes": 55977
+  },
+  {
+    "path": "evidence/tuyujia-favorite-durable-20261021/local-favorite-person-restart-1792570229876.json",
+    "sha256": "3ec7bba5b51e5150c79f61286f9ca5abf66e7570dad1091e0e042b80b3ffe227",
+    "bytes": 55976
+  },
+  {
+    "path": "evidence/tuyujia-favorite-durable-20261021/local-favorite-person-restart.json",
+    "sha256": "c1f6957fdf44732a62ff76520f71115ff2cde1da513b6ab49d8c7699c8d4d599",
+    "bytes": 43072
+  },
+  {
+    "path": "evidence/tuyujia-favorite-durable-20261021/local-favorite-restart-1792568407153.json",
+    "sha256": "e678fd9dd66d4b9f87d2c21a3aa4fe9e9f780cc56d65c38799d8728abbbc3a40",
+    "bytes": 75236
+  },
+  {
+    "path": "evidence/tuyujia-favorite-durable-20261021/local-favorite-restart-1792569874336.json",
+    "sha256": "287be5a20b25bdbcae4b8029fa9010e4b4ff1c0ab8eee923824ec5ac5de29922",
+    "bytes": 80014
+  },
+  {
+    "path": "evidence/tuyujia-favorite-durable-20261021/local-favorite-restart-1792570139006.json",
+    "sha256": "d2a0a95bd80b1c9f96537f4f80763c9448d26dca45439861693c063ae85d2ea0",
+    "bytes": 15767
+  },
+  {
+    "path": "evidence/tuyujia-favorite-durable-20261021/local-favorite-restart-1792570217940.json",
+    "sha256": "eeb2d6c066f09579aa5a5c08a19b3fc086f8f57527660d85c0deedc525b912c4",
+    "bytes": 70209
+  },
+  {
+    "path": "evidence/tuyujia-favorite-durable-20261021/local-favorite-restart.json",
+    "sha256": "e95956beb5ea7b65bc77f055786d90d13474ddc6d62851adac28745a96aab64c",
+    "bytes": 68767
+  },
+  {
+    "path": "evidence/tuyujia-favorite-durable-20261021/mini-owned-cleanup.json",
+    "sha256": "f56019ad84fc5871cd8a064e1e642bee09b5731f2dbfdce44b7cc2e3c42f83b7",
+    "bytes": 1482
+  },
+  {
+    "path": "evidence/tuyujia-favorite-durable-20261021/mini-v3-owned-cleanup.json",
+    "sha256": "53210a3373ccab3c158648c13ed4b558d2904e347cb5442a5e11ed7c82c9afbc",
+    "bytes": 1483
+  },
+  {
+    "path": "evidence/tuyujia-favorite-durable-20261021/persistent-browser-harness.cjs",
+    "sha256": "7ee9309eacee201b3f6f3ea0f00760925785743e73193ee12e9dc03c7b7108fd",
+    "bytes": 8799
+  },
+  {
+    "path": "evidence/tuyujia-favorite-durable-20261021/production-favorite-person-restart-1792570389031.json",
+    "sha256": "1555e245e33e77b79899ff595719605d4739dd0715915274798ee632a3b69796",
+    "bytes": 53105
+  },
+  {
+    "path": "evidence/tuyujia-favorite-durable-20261021/production-favorite-person-restart.json",
+    "sha256": "760289d4144f961ee406bc42c0bef7083b115cf27c293391d885e9cc2900a317",
+    "bytes": 53091
+  },
+  {
+    "path": "evidence/tuyujia-favorite-durable-20261021/production-favorite-restart-1792570346127.json",
+    "sha256": "d25ecc9f6834115f307f8668002a4edd61b24623535885ca4b0570337c9347f0",
+    "bytes": 79674
+  },
+  {
+    "path": "evidence/tuyujia-favorite-durable-20261021/production-favorite-restart.json",
+    "sha256": "5a99b643a0e4eee90cbec925b25be90683917270850122a57ca81e25da9b533f",
+    "bytes": 68935
+  },
+  {
+    "path": "evidence/tuyujia-favorite-durable-20261021/README.md",
+    "sha256": "33a55f744565a220445be2443d1c18fa98cc01d32066abf711cac5da092327e4",
+    "bytes": 6584
+  },
+  {
+    "path": "evidence/tuyujia-image-reliability-20261021/browser-local-report.json",
+    "sha256": "101a7dc96e60090ca567d5c618cb059a030b1e71b1f9ff73fda6ace452498110",
+    "bytes": 4463
+  },
+  {
+    "path": "evidence/tuyujia-image-reliability-20261021/browser-production-report.json",
+    "sha256": "2fb08c411a53bbdf53bed47a9d205a62e9693d162857e2653a3c5d81523394c1",
+    "bytes": 4006
+  },
+  {
+    "path": "evidence/tuyujia-image-reliability-20261021/image-reliability-production.spec.js",
+    "sha256": "271b94fdbab088ae6418b4cff284367bb4777ec7f5db752d7a4f876c5014b2f0",
+    "bytes": 14625
+  },
+  {
+    "path": "evidence/tuyujia-image-reliability-20261021/image-reliability.config.cjs",
+    "sha256": "8c849a8d6635f43aa31d4babdde7af6bb743c5e07d659694a5694d1cb14ef182",
+    "bytes": 1519
+  },
+  {
+    "path": "evidence/tuyujia-image-reliability-20261021/local-image-reliability-restart-1792579495143.json",
+    "sha256": "1e6cb592f9d4443a6b936140a721a0a207f50cbe9224bedee569cafd52d75d4e",
+    "bytes": 46560
+  },
+  {
+    "path": "evidence/tuyujia-image-reliability-20261021/local-image-reliability-restart-1792579623363.json",
+    "sha256": "9358c8c1916093104bf8e0ac02439d797e7c5ce2cc82b664bdbee487c10650ed",
+    "bytes": 48875
+  },
+  {
+    "path": "evidence/tuyujia-image-reliability-20261021/local-image-reliability-restart-1792579940908.json",
+    "sha256": "f2e7316132d534809b5c22c16b04a26361e4d37dbb609c385b78f50ccde7d770",
+    "bytes": 80267
+  },
+  {
+    "path": "evidence/tuyujia-image-reliability-20261021/local-image-reliability-restart-1792580084276.json",
+    "sha256": "fd9cef0190c75efed216308cbe8d96f3cc81daf527df0ac48f7e2e345a6aeb3b",
+    "bytes": 80285
+  },
+  {
+    "path": "evidence/tuyujia-image-reliability-20261021/local-image-reliability-restart-1792580588728.json",
+    "sha256": "f8c6e9804f6b7d8e141bf8c7c6eb0717e12ae6e16a83b09dbb2c4afdd6626a7e",
+    "bytes": 80251
+  },
+  {
+    "path": "evidence/tuyujia-image-reliability-20261021/local-image-reliability-restart.json",
+    "sha256": "9c49f2aeec893b9e2d318e7b0e5cfa596e3db5b6f848b1b5530abae636dbffc7",
+    "bytes": 21245
+  },
+  {
+    "path": "evidence/tuyujia-image-reliability-20261021/local-public-original-repair-1792580595167.json",
+    "sha256": "3c006eea73ce092045f15d374edcae1adcb3fec68cbf7e17894ae1c42d9403fc",
+    "bytes": 31660
+  },
+  {
+    "path": "evidence/tuyujia-image-reliability-20261021/local-public-original-repair.json",
+    "sha256": "43f4fb85d158d39d77cf7ce2569fe392a21391e8afc122d9332a1815b496dcd8",
+    "bytes": 31646
+  },
+  {
+    "path": "evidence/tuyujia-image-reliability-20261021/mini-final-owned-cleanup.json",
+    "sha256": "42c74d51b5541257f1961cdfa8ff055446aad0df80bbbd1cedca1ea85337ca05",
+    "bytes": 1483
+  },
+  {
+    "path": "evidence/tuyujia-image-reliability-20261021/mini-v1-owned-cleanup.json",
+    "sha256": "ca9f19f898f8451d6f0592ace49e4f838f93440628cb6c541b2427865ff6a808",
+    "bytes": 1483
+  },
+  {
+    "path": "evidence/tuyujia-image-reliability-20261021/mini-v2-owned-cleanup.json",
+    "sha256": "b2c53b9193ebf242cd82888603cb3a0ed11cdd5335790b5e9fcfa40d2442ac7e",
+    "bytes": 1483
+  },
+  {
+    "path": "evidence/tuyujia-image-reliability-20261021/mini-v3-owned-cleanup.json",
+    "sha256": "1ff0108b81c7777c7410e953757e2ced63948fa98971060f05e8964d56b9005d",
+    "bytes": 1483
+  },
+  {
+    "path": "evidence/tuyujia-image-reliability-20261021/persistent-browser-harness.cjs",
+    "sha256": "7ee9309eacee201b3f6f3ea0f00760925785743e73193ee12e9dc03c7b7108fd",
+    "bytes": 8799
+  },
+  {
+    "path": "evidence/tuyujia-image-reliability-20261021/production-image-reliability-restart-1792581288971.json",
+    "sha256": "6da72497fd66b20715f5577ab8aed07d9c571b46fc92679a5491414cb7eeb9fe",
+    "bytes": 77679
+  },
+  {
+    "path": "evidence/tuyujia-image-reliability-20261021/production-image-reliability-restart.json",
+    "sha256": "131642f5fc4e6d8eba8f448f11fc5ee39aa1b808dcbe603ec61935473f03d6ca",
+    "bytes": 67118
+  },
+  {
+    "path": "evidence/tuyujia-image-reliability-20261021/production-public-original-repair-1792581323030.json",
+    "sha256": "7071971197f46bb2c4716a613fa5f55e362406e694eb847d2be978f20efb18e7",
+    "bytes": 40657
+  },
+  {
+    "path": "evidence/tuyujia-image-reliability-20261021/production-public-original-repair.json",
+    "sha256": "95eeb4df354ceee6025d006904998e9428139948cf1601132cc9365c57e51f30",
+    "bytes": 31753
+  },
+  {
+    "path": "evidence/tuyujia-image-reliability-20261021/README.md",
+    "sha256": "b0fce21864c9fee05cc2cff668de0225d2575069b5b513cd55c6c99fde4cf3b5",
+    "bytes": 8262
+  },
+  {
+    "path": "evidence/tuyujia-onsite-audit-20261022/audit.config.cjs",
+    "sha256": "7c0b82e2ed7de943c6457ba0c7ce32107ad1e56c3bee55ca56616d0168e809e3",
+    "bytes": 301
+  },
+  {
+    "path": "evidence/tuyujia-onsite-audit-20261022/audit.spec.js",
+    "sha256": "ccc8dce1b5bef5a697ad84a718d0ef9d32f478178b10d57bc4a2661a6e324d2e",
+    "bytes": 4456
+  },
+  {
+    "path": "evidence/tuyujia-onsite-audit-20261022/local-onsite-repair-1792668572377.json",
+    "sha256": "f4f285a43d2a60557ec55e6ca10106365e89126fdb2817b97efe6cd45d280975",
+    "bytes": 22005
+  },
+  {
+    "path": "evidence/tuyujia-onsite-audit-20261022/local-onsite-repair-1792671947815.json",
+    "sha256": "9eb7d05b458a4380bb39a5e63f6eb804e83500e859e5adc7b4eb801466fa736b",
+    "bytes": 22005
+  },
+  {
+    "path": "evidence/tuyujia-onsite-audit-20261022/local-onsite-repair.json",
+    "sha256": "e6c58e482a0b45496e7f0943f2bcb004ab2fce5c78ea4c126c4ad2acd3f56b86",
+    "bytes": 21991
+  },
+  {
+    "path": "evidence/tuyujia-onsite-audit-20261022/persistent-browser-harness.cjs",
+    "sha256": "2d3668df3fb0b494e48c0138f844f33b4c38d3b38bf6840b510f04cd67161c0b",
+    "bytes": 8841
+  },
+  {
+    "path": "evidence/tuyujia-onsite-audit-20261022/production-navigation-audit-1792661206718.json",
+    "sha256": "22229834d122628c1e6899654b54a2f0fa493e0abfdd0e509d94f142e0975880",
+    "bytes": 13883
+  },
+  {
+    "path": "evidence/tuyujia-onsite-audit-20261022/production-navigation-audit-1792661570918.json",
+    "sha256": "ccf43f75b9d66032b812c5b5745e1d13c5b57feb7ad3069608f76e060657ff10",
+    "bytes": 13884
+  },
+  {
+    "path": "evidence/tuyujia-onsite-audit-20261022/production-navigation-audit-1792661897426.json",
+    "sha256": "0841d22d1e42ad42b3e129dbf12aa9d0f45fac2f6db069bea3b5a61fe5045e50",
+    "bytes": 13885
+  },
+  {
+    "path": "evidence/tuyujia-onsite-audit-20261022/production-navigation-audit-1792662150587.json",
+    "sha256": "c6aa7011fc6317a78bb788c4b8375d4c7f345fac2baa3bb089ad3b2b87945e05",
+    "bytes": 22224
+  },
+  {
+    "path": "evidence/tuyujia-onsite-audit-20261022/production-navigation-audit-1792662813466.json",
+    "sha256": "886516cd18ed626f79831cb11723e8e7be47bd10e8c8518243de26df3aeabab8",
+    "bytes": 22224
+  },
+  {
+    "path": "evidence/tuyujia-onsite-audit-20261022/production-navigation-audit-1792663679312.json",
+    "sha256": "36de9e9ad276254723478125890279d1abef4072a9ffd62d8645d2a86135a3d2",
+    "bytes": 22224
+  },
+  {
+    "path": "evidence/tuyujia-onsite-audit-20261022/production-navigation-audit.json",
+    "sha256": "ad1146facda9377d73ffc324a5212f211bac570d972ead43c975bd1cc0c4daa5",
+    "bytes": 14119
+  },
+  {
+    "path": "evidence/tuyujia-onsite-audit-20261022/repair-browser-report.json",
+    "sha256": "7e680c4bf496e54373045e176725757031605bd89a7fee071876d593a0e79c06",
+    "bytes": 3213
+  },
+  {
+    "path": "evidence/tuyujia-onsite-audit-20261022/repair-layout-results.json",
+    "sha256": "e38e859822cbe186abaec290f29abca2e12265b040671c97306ed9d45248c6f1",
+    "bytes": 6249
+  },
+  {
+    "path": "evidence/tuyujia-onsite-audit-20261022/repair.config.cjs",
+    "sha256": "6d28cddf7da937271dc89495d394cf8a3f0efc524ec4045792c143ffbf95f3b7",
+    "bytes": 757
+  },
+  {
+    "path": "evidence/tuyujia-onsite-audit-20261022/repair.spec.js",
+    "sha256": "84c39b37ca2723afd6876779005f7deeed0a311221b4d5a3a3e0b2f85e7baa2b",
+    "bytes": 5783
+  },
+  {
+    "path": "evidence/tuyujia-onsite-audit-20261022/report.json",
+    "sha256": "80e5aa86d1acd482216fe37fc330ae552e8a6b14907b1c959e23e53f7a747bc6",
+    "bytes": 2740
+  },
+  {
+    "path": "evidence/tuyujia-onsite-audit-20261022/修复交付.md",
+    "sha256": "b6f4e32ef52ba0c1aa97859deb534586277adaddea7a42c7593ee05ea2bd5fbd",
+    "bytes": 5050
+  },
+  {
+    "path": "evidence/tuyujia-onsite-audit-20261022/现场反馈复查.md",
+    "sha256": "e1b27265b5e41b5a8879c66cdeb6f29cae7673cb856576f531c1d911fe301324",
+    "bytes": 6578
+  },
+  {
+    "path": "evidence/tuyujia-receiver-durable-20261021/baseline-cleanup-closed.json",
+    "sha256": "7b249e095d92c4872dc8712f96799979cce303bc44e35bf6882f7910bcb80b55",
+    "bytes": 41
+  },
+  {
+    "path": "evidence/tuyujia-receiver-durable-20261021/baseline-cleanup-open.json",
+    "sha256": "d6e450445ef10fa027cc44a972bbf5b2c760cb8f6ebdf7e292709e37e217905a",
+    "bytes": 63
+  },
+  {
+    "path": "evidence/tuyujia-receiver-durable-20261021/browser-local-report.json",
+    "sha256": "b18c686ba7097d8aca9dca79515102abd7c38a8bbab0f9c639dad663b0700f38",
+    "bytes": 4496
+  },
+  {
+    "path": "evidence/tuyujia-receiver-durable-20261021/browser-production-report.json",
+    "sha256": "515527c405be3b352018b2a50a196f94448b7afe65323d74b9eeffe5612b7792",
+    "bytes": 4030
+  },
+  {
+    "path": "evidence/tuyujia-receiver-durable-20261021/candidate-v2-cleanup-closed.json",
+    "sha256": "a955c520a0d709f681ae59e6a96e41a95295836a722fc7bc5e5f6df903368356",
+    "bytes": 41
+  },
+  {
+    "path": "evidence/tuyujia-receiver-durable-20261021/candidate-v2-cleanup-open.json",
+    "sha256": "37131e679ea22d643bcebbcd85c3d318d7ca08cdc752449656af3f4e766401e2",
+    "bytes": 63
+  },
+  {
+    "path": "evidence/tuyujia-receiver-durable-20261021/final-proof.json",
+    "sha256": "c5c04e37d85212bef5903031b4e0fd920d9efdf52ac9d876100b400b07645262",
+    "bytes": 294
+  },
+  {
+    "path": "evidence/tuyujia-receiver-durable-20261021/local-preparation-restart-1792560281399.json",
+    "sha256": "d80479597aa87203fa97ee1fd940ed9350d94e00b008ac95c53897470054bdb6",
+    "bytes": 55256
+  },
+  {
+    "path": "evidence/tuyujia-receiver-durable-20261021/local-preparation-restart-1792560378475.json",
+    "sha256": "d94382daf4d1348924e5c902e90c5a6be8a46e85e85a11066973d02fdf41dd25",
+    "bytes": 55255
+  },
+  {
+    "path": "evidence/tuyujia-receiver-durable-20261021/local-preparation-restart-1792560622327.json",
+    "sha256": "c0ea99a4f667e932c58556af567db1b48832f2f748c258d283f54e4168b2c5a6",
+    "bytes": 65569
+  },
+  {
+    "path": "evidence/tuyujia-receiver-durable-20261021/local-preparation-restart-1792561046619.json",
+    "sha256": "279de9dced7fe4fa8eb6df190421eab540e2a4341fe7245912408fdfdf5358c5",
+    "bytes": 65565
+  },
+  {
+    "path": "evidence/tuyujia-receiver-durable-20261021/local-preparation-restart-1792561146891.json",
+    "sha256": "56599c479debfe7660aea784a98628d11cfda194f50dcf4b2a882476c00874a6",
+    "bytes": 65569
+  },
+  {
+    "path": "evidence/tuyujia-receiver-durable-20261021/local-preparation-restart-1792561353451.json",
+    "sha256": "2386dffdbc38a9c75d91425f4eda14f0f33d11caf4fd01cc35774f28be104e92",
+    "bytes": 57013
+  },
+  {
+    "path": "evidence/tuyujia-receiver-durable-20261021/local-preparation-restart-1792561594473.json",
+    "sha256": "d76509ba42fbe0571d8881a60ce24e7dc3899bc4dd58b17c4f49eddace1a9b6e",
+    "bytes": 65561
+  },
+  {
+    "path": "evidence/tuyujia-receiver-durable-20261021/local-preparation-restart-1792561829439.json",
+    "sha256": "d7e6108171000f0c00d70d63f1546cbc5471ef274edebb3a960852e8f66f03c1",
+    "bytes": 65564
+  },
+  {
+    "path": "evidence/tuyujia-receiver-durable-20261021/local-preparation-restart.json",
+    "sha256": "00946ebfd362a1fcf6191cbe3ac1ee3dff9bb569c649dc66f3d83c6bca5450e8",
+    "bytes": 46776
+  },
+  {
+    "path": "evidence/tuyujia-receiver-durable-20261021/local-receiver-restart-1792560359386.json",
+    "sha256": "da14970d896d481367fa6a487dfaf83d0a4265cb733f1d9191dae74271b9afc1",
+    "bytes": 39679
+  },
+  {
+    "path": "evidence/tuyujia-receiver-durable-20261021/local-receiver-restart-1792560603045.json",
+    "sha256": "05e10c32ec24890f00640b6bd6feab608f2d6214c83ea50a066b1e86de197191",
+    "bytes": 39680
+  },
+  {
+    "path": "evidence/tuyujia-receiver-durable-20261021/local-receiver-restart-1792561027555.json",
+    "sha256": "c6c4d2c686155714ee76ea6f1e92093ff8b2bdfe9c8b141b5bee88d9ce99b645",
+    "bytes": 39679
+  },
+  {
+    "path": "evidence/tuyujia-receiver-durable-20261021/local-receiver-restart-1792561127691.json",
+    "sha256": "b8c093eb819e113e541724312ab02e4d024e9dabc7f1cd24c4246601560dbc48",
+    "bytes": 14378
+  },
+  {
+    "path": "evidence/tuyujia-receiver-durable-20261021/local-receiver-restart-1792561334580.json",
+    "sha256": "397b28e0b0bfb5095afca430046219813cc64d3c90efc193d412e766d66f6ef3",
+    "bytes": 14379
+  },
+  {
+    "path": "evidence/tuyujia-receiver-durable-20261021/local-receiver-restart-1792561576250.json",
+    "sha256": "2f9b862c0696d06579893ffb126590c9ec3172916d37ccf42894dcc46a032c51",
+    "bytes": 154645
+  },
+  {
+    "path": "evidence/tuyujia-receiver-durable-20261021/local-receiver-restart-1792561809871.json",
+    "sha256": "53372accf8c913fc3f0263b0d0c92bc27fbac10f7c1e81a85c1c51a29f2e0bb5",
+    "bytes": 155153
+  },
+  {
+    "path": "evidence/tuyujia-receiver-durable-20261021/local-receiver-restart.json",
+    "sha256": "11cdadccaba3fb7da0b92e132800338f81f68bd45c5ecf6f40ebd0e7c3138c64",
+    "bytes": 39665
+  },
+  {
+    "path": "evidence/tuyujia-receiver-durable-20261021/mini-v4-cleanup.json",
+    "sha256": "47a4b5d2e5fdaea9a92ac5f5fdff28bc43106f4cb02e37c04b6b5b191e7ee9a1",
+    "bytes": 623
+  },
+  {
+    "path": "evidence/tuyujia-receiver-durable-20261021/mini-v5-cleanup.json",
+    "sha256": "06717bc85c331f835d2792eac69e15000a91c8c7499dce40b17ef2130422be48",
+    "bytes": 623
+  },
+  {
+    "path": "evidence/tuyujia-receiver-durable-20261021/mini-v6-cleanup.json",
+    "sha256": "f3540feafcd1a4a2728762d5faf5ba13935c67c65077acf5ed1977729420ca3e",
+    "bytes": 1259
+  },
+  {
+    "path": "evidence/tuyujia-receiver-durable-20261021/persistent-browser-harness.cjs",
+    "sha256": "7ee9309eacee201b3f6f3ea0f00760925785743e73193ee12e9dc03c7b7108fd",
+    "bytes": 8799
+  },
+  {
+    "path": "evidence/tuyujia-receiver-durable-20261021/production-preparation-restart.json",
+    "sha256": "1110818c69349374a203c4825c11c81708561e688ea8d0788514708b09cb9257",
+    "bytes": 52235
+  },
+  {
+    "path": "evidence/tuyujia-receiver-durable-20261021/production-receiver-restart.json",
+    "sha256": "d2c7e742bf9d9c7df707e2e2c5c6bef1b911aecd5f966688cfd29276ea8d9227",
+    "bytes": 143514
+  },
+  {
+    "path": "evidence/tuyujia-receiver-durable-20261021/receiver-durable-production.spec.js",
+    "sha256": "d9dd48d27663a72b425f595d9883797543de75ebc0e71f8a884cdb4dfc32cfa2",
+    "bytes": 12234
+  },
+  {
+    "path": "evidence/tuyujia-receiver-durable-20261021/receiver-durable.config.cjs",
+    "sha256": "cbfb028fe42f10a72bd81884b9aba1822c8b919a80f341a83fbe20c58690174c",
+    "bytes": 1518
+  },
+  {
+    "path": "evidence/tuyujia-targeted-acceptance-20261023/baseline-report.json",
+    "sha256": "56f71a1b5358d3269f58acda39384a837076ad98995173856c097f588b2e7ffa",
+    "bytes": 3248
+  },
+  {
+    "path": "evidence/tuyujia-targeted-acceptance-20261023/candidate-v1-report.json",
+    "sha256": "902d3cd8b61c4ef7427146606a81e0e632d945eab1bf09366263ae71cf779e5f",
+    "bytes": 4684
+  },
+  {
+    "path": "evidence/tuyujia-targeted-acceptance-20261023/delete-candidate-v2-report.json",
+    "sha256": "18a8e2bf5d1dcf778d0a5b21df26cbac340482a8461fa55a0537fe1dd9431897",
+    "bytes": 6229
+  },
+  {
+    "path": "evidence/tuyujia-targeted-acceptance-20261023/delete-candidate-v3-report.json",
+    "sha256": "ce51cde5a3652498a536ec9f929b58f0e3913e721dd65c8cd19a211b726ed088",
+    "bytes": 6142
+  },
+  {
+    "path": "evidence/tuyujia-targeted-acceptance-20261023/delete-candidate-v4-report.json",
+    "sha256": "b4e249cc3bb81998c126e3f666528c3d8b96f1b2d70e97e87338993dd195d735",
+    "bytes": 3265
+  },
+  {
+    "path": "evidence/tuyujia-targeted-acceptance-20261023/delete-diagnostic-report.json",
+    "sha256": "5390cec10ed07e4a67c2f2a5172387d324541d771158d9030c531d86660ddf28",
+    "bytes": 8196
+  },
+  {
+    "path": "evidence/tuyujia-targeted-acceptance-20261023/final-local-report.json",
+    "sha256": "c2968766ec9c4bdc2d8394100bccaf2c591302704f1907c8989bf8a157818da5",
+    "bytes": 5481
+  },
+  {
+    "path": "evidence/tuyujia-targeted-acceptance-20261023/final-production-report.json",
+    "sha256": "713ead88aea453132b8db20ed97b6511fe3107332bf85d717b5ff6b627b0880f",
+    "bytes": 7942
+  },
+  {
+    "path": "evidence/tuyujia-targeted-acceptance-20261023/gallery.spec.js",
+    "sha256": "a1d3c78633eb966c8d31d98af58b5500a1e599a4edfa8fff7b87935c0e09e131",
+    "bytes": 6787
+  },
+  {
+    "path": "evidence/tuyujia-targeted-acceptance-20261023/local-card-folder-delete-1792734474968.json",
+    "sha256": "1e08344561318b87366a67774bc425903980a551e88b2ba232b3f81437537288",
+    "bytes": 28354
+  },
+  {
+    "path": "evidence/tuyujia-targeted-acceptance-20261023/local-card-folder-delete-1792734860420.json",
+    "sha256": "882e686bde84b81046f4af17df0b1ae49f00e297f87a56482056ba8aa131db45",
+    "bytes": 14983
+  },
+  {
+    "path": "evidence/tuyujia-targeted-acceptance-20261023/local-card-folder-delete-1792735370206.json",
+    "sha256": "2479783f52d886da81243fc01f8f2d640574fc2e1147f39f362c192d18d88fdb",
+    "bytes": 44319
+  },
+  {
+    "path": "evidence/tuyujia-targeted-acceptance-20261023/local-card-folder-delete-1792736031154.json",
+    "sha256": "7226a99b3a1868303e1bbf84d90d86c7b584ebbbf3bac68088ee9df97d6f1781",
+    "bytes": 44319
+  },
+  {
+    "path": "evidence/tuyujia-targeted-acceptance-20261023/local-card-folder-delete.json",
+    "sha256": "f7a9f00f578c2f94fb64dd007dbb88e52421becef3794d43ed5f5eb27d9976c6",
+    "bytes": 15301
+  },
+  {
+    "path": "evidence/tuyujia-targeted-acceptance-20261023/local-local-photo-restart-1792733663531.json",
+    "sha256": "eb905084ae2563c11ef5c959d301ba545b4d381f31dc08b4050587f4bd1e3516",
+    "bytes": 51421
+  },
+  {
+    "path": "evidence/tuyujia-targeted-acceptance-20261023/local-local-photo-restart-1792736017599.json",
+    "sha256": "16759e57c643d6f8d4c2401e6aa84ff1e70aa4571591e07ce90efd6bfda8a70c",
+    "bytes": 51419
+  },
+  {
+    "path": "evidence/tuyujia-targeted-acceptance-20261023/local-local-photo-restart.json",
+    "sha256": "9646ed276fccb69051d9b4b168d3cb6df6f74d5ea9bf7638f62c6ed8dea6c896",
+    "bytes": 41097
+  },
+  {
+    "path": "evidence/tuyujia-targeted-acceptance-20261023/local-onsite-repair.json",
+    "sha256": "321eded6db19e8c6f31fd240bfff6b5b1bc0203c568ed9d6e95a720095984844",
+    "bytes": 21991
+  },
+  {
+    "path": "evidence/tuyujia-targeted-acceptance-20261023/local.config.cjs",
+    "sha256": "adbab9e219d04cdccbde48228d80e0190a5bf700cd8bec454c4a4bf26e3eb14f",
+    "bytes": 873
+  },
+  {
+    "path": "evidence/tuyujia-targeted-acceptance-20261023/persistent-browser-harness.cjs",
+    "sha256": "2d3668df3fb0b494e48c0138f844f33b4c38d3b38bf6840b510f04cd67161c0b",
+    "bytes": 8841
+  },
+  {
+    "path": "evidence/tuyujia-targeted-acceptance-20261023/production-card-folder-delete-1792737382482.json",
+    "sha256": "d3fe41f1df961c20525d9f9497df69b21b88d6627e275afcb517326b1d2de3e6",
+    "bytes": 33531
+  },
+  {
+    "path": "evidence/tuyujia-targeted-acceptance-20261023/production-card-folder-delete.json",
+    "sha256": "6191273418144a3567785efd6a81d8b92c6a60ab245edc29060b988c1216f901",
+    "bytes": 15620
+  },
+  {
+    "path": "evidence/tuyujia-targeted-acceptance-20261023/production-delete-navigation-report.json",
+    "sha256": "56f12137b8ec29ba02364e29b13b05d829cf0bfef8c690e100e4931d5caf9861",
+    "bytes": 2893
+  },
+  {
+    "path": "evidence/tuyujia-targeted-acceptance-20261023/production-local-photo-restart.json",
+    "sha256": "1ac8a9d6c4879811f7e291052739ca6fcaa0b2977a772b36913f5923aaa9ccd6",
+    "bytes": 51679
+  },
+  {
+    "path": "evidence/tuyujia-targeted-acceptance-20261023/production-onsite-repair.json",
+    "sha256": "d1991a19042d499b7d7e0f9eacca167bc6e7a8517801ac65240a9c425593dbd6",
+    "bytes": 22207
+  },
+  {
+    "path": "evidence/tuyujia-targeted-acceptance-20261023/repair-layout-results.json",
+    "sha256": "e38e859822cbe186abaec290f29abca2e12265b040671c97306ed9d45248c6f1",
+    "bytes": 6249
+  },
+  {
+    "path": "evidence/tuyujia-targeted-acceptance-20261023/repair.spec.js",
+    "sha256": "4a2ab9ab3edd42c7a97d8bb60d1064dc9c0e3fb0776f73f316def7d850910434",
+    "bytes": 5754
+  },
+  {
+    "path": "file-manifest.json",
+    "sha256": "70f416bde931c051847cbb639dccdc554a790f836ec7d69168b0f80c55ad7526",
+    "bytes": 77658
+  },
+  {
+    "path": "profile-rebuild-smoke.cjs",
+    "sha256": "2d642e7f28acad83765270b89b79fcfd078c7b293d1153611578546f1a3ab9fa",
+    "bytes": 2072
+  },
+  {
+    "path": "README.md",
+    "sha256": "3e07acc22c86d6c1f21122e7582267b3c3c7a177a1e8f8b5b5fb4de9782c016d",
+    "bytes": 5275
+  },
+  {
+    "path": "rebuild-smoke.json",
+    "sha256": "3e51df38571c380d9eaad6e385f39432a62e0b40972871163d6765f24c17c840",
+    "bytes": 161
+  },
+  {
+    "path": "rehydrate.py",
+    "sha256": "73cb57e36ffe1e3c2d1e8f60691203956daab597f19c0231f90386bbc8bd15cc",
+    "bytes": 1225
+  },
+  {
+    "path": "retention-index.json",
+    "sha256": "503a1e55058eb74682c437074693ae142ef1d540926ba64c5a1fb81ddf89bc14",
+    "bytes": 1302
+  }
+]

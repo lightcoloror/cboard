@@ -1,0 +1,140 @@
+{
+  "config": {
+    "configFile": "<WORKSPACE>\\outputs\\tuyujia-receiver-durable-20261021\\receiver-durable.config.cjs",
+    "rootDir": "<WORKSPACE>/outputs/tuyujia-receiver-durable-20261021",
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "<WORKSPACE>\\outputs\\tuyujia-receiver-durable-20261021\\browser-production-report.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 15000
+    },
+    "quiet": false,
+    "projects": [
+      {
+        "outputDir": "<WORKSPACE>/outputs/tuyujia-receiver-durable-20261021/browser-production-artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {},
+        "id": "",
+        "name": "",
+        "testDir": "<WORKSPACE>/outputs/tuyujia-receiver-durable-20261021",
+        "testIgnore": [],
+        "testMatch": [
+          "receiver-durable-production.spec.js"
+        ],
+        "timeout": 240000
+      }
+    ],
+    "shard": null,
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.50.0",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "receiver-durable-production.spec.js",
+      "file": "receiver-durable-production.spec.js",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "receiver saves current edits, retries faults, and restores repair through a real offline browser restart",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 240000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "status": "passed",
+                  "duration": 49539,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-21T06:01:23.022Z",
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "41359200b4259c9ff888-a075c8288f59d565de39",
+          "file": "receiver-durable-production.spec.js",
+          "line": 65,
+          "column": 5
+        },
+        {
+          "title": "preparation keeps namesake identity and context, invalidates edited pictures, and restores offline without changing receiver",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 240000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "status": "passed",
+                  "duration": 49054,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-21T06:02:12.568Z",
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "41359200b4259c9ff888-9b7ba4718768cb7f4a4e",
+          "file": "receiver-durable-production.spec.js",
+          "line": 113,
+          "column": 5
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-21T06:01:22.481Z",
+    "duration": 99170.545,
+    "expected": 2,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

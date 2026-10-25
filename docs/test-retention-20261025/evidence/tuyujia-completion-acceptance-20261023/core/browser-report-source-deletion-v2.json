@@ -1,0 +1,118 @@
+{
+  "config": {
+    "configFile": "<WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\core\\core.config.cjs",
+    "rootDir": "<WORKSPACE>/outputs/tuyujia-completion-acceptance-20261023/core",
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "<WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\core\\browser-report-source-deletion-v2.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 15000
+    },
+    "quiet": false,
+    "projects": [
+      {
+        "outputDir": "<WORKSPACE>/outputs/tuyujia-completion-acceptance-20261023/core/browser-artifacts-source-deletion-v2",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {},
+        "id": "",
+        "name": "",
+        "testDir": "<WORKSPACE>/outputs/tuyujia-completion-acceptance-20261023/core",
+        "testIgnore": [],
+        "testMatch": [
+          "core.spec.js"
+        ],
+        "timeout": 240000
+      }
+    ],
+    "shard": null,
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.50.0",
+    "workers": 1,
+    "webServer": {
+      "command": "\"C:/Program Files/nodejs/node.exe\" scripts/serve-offline-build.mjs",
+      "cwd": "<WORKSPACE>\\fork-cboard\\cboard",
+      "env": {
+        "PLAYWRIGHT_OFFLINE_HOST": "127.0.0.1",
+        "PLAYWRIGHT_OFFLINE_PORT": "4209",
+        "PLAYWRIGHT_OFFLINE_BUILD_PATH": "<WORKSPACE>\\fork-cboard\\cboard\\.local-build-20261023-gallery-durable-v2"
+      },
+      "url": "http://127.0.0.1:4209",
+      "reuseExistingServer": false
+    }
+  },
+  "suites": [
+    {
+      "title": "core.spec.js",
+      "file": "core.spec.js",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "source gallery card deletion preserves reviewed favorite identity and decoded image after independent offline restart",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 240000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "status": "passed",
+                  "duration": 18197,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-23T11:51:39.763Z",
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "43b12c68676e60ca47dc-3da830a8efd760f81f25",
+          "file": "core.spec.js",
+          "line": 194,
+          "column": 5
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-23T11:51:38.539Z",
+    "duration": 20207.092,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

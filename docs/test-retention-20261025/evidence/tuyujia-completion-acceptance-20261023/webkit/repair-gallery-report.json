@@ -1,0 +1,322 @@
+{
+  "config": {
+    "configFile": "<WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\webkit\\webkit.config.cjs",
+    "rootDir": "<WORKSPACE>/outputs/tuyujia-completion-acceptance-20261023/webkit",
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "<WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\webkit/repair-gallery-report.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 15000
+    },
+    "quiet": false,
+    "projects": [
+      {
+        "outputDir": "<WORKSPACE>/outputs/tuyujia-completion-acceptance-20261023/webkit/repair-gallery-artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {},
+        "id": "",
+        "name": "",
+        "testDir": "<WORKSPACE>/outputs/tuyujia-completion-acceptance-20261023/webkit",
+        "testIgnore": [],
+        "testMatch": [
+          "capabilities.spec.js",
+          "repair.spec.js",
+          "gallery.spec.js",
+          "large-font.spec.js"
+        ],
+        "timeout": 120000
+      }
+    ],
+    "shard": null,
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.50.0",
+    "workers": 1,
+    "webServer": {
+      "command": "\"C:/Program Files/nodejs/node.exe\" scripts/serve-offline-build.mjs",
+      "cwd": "<WORKSPACE>\\fork-cboard\\cboard",
+      "env": {
+        "PLAYWRIGHT_OFFLINE_HOST": "127.0.0.1",
+        "PLAYWRIGHT_OFFLINE_PORT": "4208",
+        "PLAYWRIGHT_OFFLINE_BUILD_PATH": ".local-build-20261023-targeted-ui-v2"
+      },
+      "url": "http://127.0.0.1:4208",
+      "reuseExistingServer": false
+    }
+  },
+  "suites": [
+    {
+      "title": "gallery.spec.js",
+      "file": "gallery.spec.js",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "new local photo saved through product, decoded after independent offline browser restart",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "status": "failed",
+                  "duration": 11894,
+                  "error": {
+                    "message": "Error: page.goto: WebKit encountered an internal error\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:4208/board/root\", waiting until \"domcontentloaded\"\u001b[22m\n",
+                    "stack": "Error: page.goto: WebKit encountered an internal error\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:4208/board/root\", waiting until \"domcontentloaded\"\u001b[22m\n\n    at open (<WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\webkit\\gallery.spec.js:9:185)\n    at <WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\webkit\\gallery.spec.js:25:61",
+                    "location": {
+                      "file": "<WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\webkit\\gallery.spec.js",
+                      "column": 185,
+                      "line": 9
+                    },
+                    "snippet": "   7 | async function manage(p){await dismissBoardTour(p,false);const panel=p.locator('.CommunicationSupportPanel');await openCaregiverTools(panel,false);await panel.getByRole('button',{name:'常用语与历史',exact:true}).click();}\n   8 | async function picture(p){return p.evaluate(()=>{const c=document.createElement('canvas');c.width=40;c.height=40;c.getContext('2d').fillRect(0,0,40,40);return c.toDataURL('image/png');});}\n>  9 | async function open(h,offline=false){const{page:p}=await h.open({offline,installPage:installBrowserTtsHarness});p.setDefaultTimeout(10000);p.setDefaultNavigationTimeout(30000);await p.goto('/board/root',{waitUntil:'domcontentloaded'});await dismissBoardTour(p,false);return p;}\n     |                                                                                                                                                                                         ^\n  10 | test('new local photo saved through product, decoded after independent offline browser restart',async()=>{\n  11 |  const h=createPersistentBrowserHarness();let proof={};\n  12 |  try{"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "<WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\webkit\\gallery.spec.js",
+                        "column": 185,
+                        "line": 9
+                      },
+                      "message": "Error: page.goto: WebKit encountered an internal error\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:4208/board/root\", waiting until \"domcontentloaded\"\u001b[22m\n\n\n   7 | async function manage(p){await dismissBoardTour(p,false);const panel=p.locator('.CommunicationSupportPanel');await openCaregiverTools(panel,false);await panel.getByRole('button',{name:'常用语与历史',exact:true}).click();}\n   8 | async function picture(p){return p.evaluate(()=>{const c=document.createElement('canvas');c.width=40;c.height=40;c.getContext('2d').fillRect(0,0,40,40);return c.toDataURL('image/png');});}\n>  9 | async function open(h,offline=false){const{page:p}=await h.open({offline,installPage:installBrowserTtsHarness});p.setDefaultTimeout(10000);p.setDefaultNavigationTimeout(30000);await p.goto('/board/root',{waitUntil:'domcontentloaded'});await dismissBoardTour(p,false);return p;}\n     |                                                                                                                                                                                         ^\n  10 | test('new local photo saved through product, decoded after independent offline browser restart',async()=>{\n  11 |  const h=createPersistentBrowserHarness();let proof={};\n  12 |  try{\n    at open (<WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\webkit\\gallery.spec.js:9:185)\n    at <WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\webkit\\gallery.spec.js:25:61"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-23T08:22:58.846Z",
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "<WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\webkit\\repair-gallery-artifacts\\gallery-new-local-photo-sa-3b14d-ent-offline-browser-restart\\test-failed-1.png"
+                    },
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "<WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\webkit\\repair-gallery-artifacts\\gallery-new-local-photo-sa-3b14d-ent-offline-browser-restart\\test-failed-2.png"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "<WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\webkit\\repair-gallery-artifacts\\gallery-new-local-photo-sa-3b14d-ent-offline-browser-restart\\trace.zip"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "<WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\webkit\\gallery.spec.js",
+                    "column": 185,
+                    "line": 9
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "c668d4c0fb87f924a774-eaa4342ecb5952d5ef93",
+          "file": "gallery.spec.js",
+          "line": 10,
+          "column": 5
+        },
+        {
+          "title": "CBoard card and folder-link deletion requires confirmation; cancel preserves content",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "status": "failed",
+                  "duration": 19648,
+                  "error": {
+                    "message": "Error: page.goto: WebKit encountered an internal error\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:4208/board/root\", waiting until \"domcontentloaded\"\u001b[22m\n",
+                    "stack": "Error: page.goto: WebKit encountered an internal error\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:4208/board/root\", waiting until \"domcontentloaded\"\u001b[22m\n\n    at open (<WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\webkit\\gallery.spec.js:9:185)\n    at <WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\webkit\\gallery.spec.js:61:17",
+                    "location": {
+                      "file": "<WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\webkit\\gallery.spec.js",
+                      "column": 185,
+                      "line": 9
+                    },
+                    "snippet": "   7 | async function manage(p){await dismissBoardTour(p,false);const panel=p.locator('.CommunicationSupportPanel');await openCaregiverTools(panel,false);await panel.getByRole('button',{name:'常用语与历史',exact:true}).click();}\n   8 | async function picture(p){return p.evaluate(()=>{const c=document.createElement('canvas');c.width=40;c.height=40;c.getContext('2d').fillRect(0,0,40,40);return c.toDataURL('image/png');});}\n>  9 | async function open(h,offline=false){const{page:p}=await h.open({offline,installPage:installBrowserTtsHarness});p.setDefaultTimeout(10000);p.setDefaultNavigationTimeout(30000);await p.goto('/board/root',{waitUntil:'domcontentloaded'});await dismissBoardTour(p,false);return p;}\n     |                                                                                                                                                                                         ^\n  10 | test('new local photo saved through product, decoded after independent offline browser restart',async()=>{\n  11 |  const h=createPersistentBrowserHarness();let proof={};\n  12 |  try{"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "<WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\webkit\\gallery.spec.js",
+                        "column": 185,
+                        "line": 9
+                      },
+                      "message": "Error: page.goto: WebKit encountered an internal error\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:4208/board/root\", waiting until \"domcontentloaded\"\u001b[22m\n\n\n   7 | async function manage(p){await dismissBoardTour(p,false);const panel=p.locator('.CommunicationSupportPanel');await openCaregiverTools(panel,false);await panel.getByRole('button',{name:'常用语与历史',exact:true}).click();}\n   8 | async function picture(p){return p.evaluate(()=>{const c=document.createElement('canvas');c.width=40;c.height=40;c.getContext('2d').fillRect(0,0,40,40);return c.toDataURL('image/png');});}\n>  9 | async function open(h,offline=false){const{page:p}=await h.open({offline,installPage:installBrowserTtsHarness});p.setDefaultTimeout(10000);p.setDefaultNavigationTimeout(30000);await p.goto('/board/root',{waitUntil:'domcontentloaded'});await dismissBoardTour(p,false);return p;}\n     |                                                                                                                                                                                         ^\n  10 | test('new local photo saved through product, decoded after independent offline browser restart',async()=>{\n  11 |  const h=createPersistentBrowserHarness();let proof={};\n  12 |  try{\n    at open (<WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\webkit\\gallery.spec.js:9:185)\n    at <WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\webkit\\gallery.spec.js:61:17"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-23T08:23:11.447Z",
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "<WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\webkit\\repair-gallery-artifacts\\gallery-CBoard-card-and-fo-5ebbf-on-cancel-preserves-content\\test-failed-1.png"
+                    },
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "<WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\webkit\\repair-gallery-artifacts\\gallery-CBoard-card-and-fo-5ebbf-on-cancel-preserves-content\\test-failed-2.png"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "<WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\webkit\\repair-gallery-artifacts\\gallery-CBoard-card-and-fo-5ebbf-on-cancel-preserves-content\\trace.zip"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "<WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\webkit\\gallery.spec.js",
+                    "column": 185,
+                    "line": 9
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "c668d4c0fb87f924a774-df218180d8d5eb883a9b",
+          "file": "gallery.spec.js",
+          "line": 35,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "repair.spec.js",
+      "file": "repair.spec.js",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "production candidate: visible undo, preserved sequence and responsive repair controls",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "status": "failed",
+                  "duration": 16215,
+                  "error": {
+                    "message": "Error: \u001b[31mTimed out 5000ms waiting for \u001b[39m\u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoContainText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nLocator: locator('.CommunicationSupportPanel__imageRepair').first()\nExpected string: \u001b[32m\"图片已核验可离线使用\"\u001b[39m\nReceived string: \u001b[31m\"尚未核验到离线缓存；图片可能仍可在线显示重新检查请在离线页面准备完成后重新检查；此状态不表示原图已删除。重新选择本机图片保留文字\"\u001b[39m\nCall log:\n\u001b[2m  - expect.toContainText with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('.CommunicationSupportPanel__imageRepair').first()\u001b[22m\n\u001b[2m    9 × locator resolved to <div class=\"CommunicationSupportPanel__imageRepair\">…</div>\u001b[22m\n\u001b[2m      - unexpected value \"尚未核验到离线缓存；图片可能仍可在线显示重新检查请在离线页面准备完成后重新检查；此状态不表示原图已删除。重新选择本机图片保留文字\"\u001b[22m\n",
+                    "stack": "Error: \u001b[31mTimed out 5000ms waiting for \u001b[39m\u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoContainText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nLocator: locator('.CommunicationSupportPanel__imageRepair').first()\nExpected string: \u001b[32m\"图片已核验可离线使用\"\u001b[39m\nReceived string: \u001b[31m\"尚未核验到离线缓存；图片可能仍可在线显示重新检查请在离线页面准备完成后重新检查；此状态不表示原图已删除。重新选择本机图片保留文字\"\u001b[39m\nCall log:\n\u001b[2m  - expect.toContainText with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('.CommunicationSupportPanel__imageRepair').first()\u001b[22m\n\u001b[2m    9 × locator resolved to <div class=\"CommunicationSupportPanel__imageRepair\">…</div>\u001b[22m\n\u001b[2m      - unexpected value \"尚未核验到离线缓存；图片可能仍可在线显示重新检查请在离线页面准备完成后重新检查；此状态不表示原图已删除。重新选择本机图片保留文字\"\u001b[22m\n\n    at <WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\webkit\\repair.spec.js:62:81",
+                    "matcherResult": {
+                      "name": "toContainText",
+                      "expected": "图片已核验可离线使用",
+                      "message": "\u001b[31mTimed out 5000ms waiting for \u001b[39m\u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoContainText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nLocator: locator('.CommunicationSupportPanel__imageRepair').first()\nExpected string: \u001b[32m\"图片已核验可离线使用\"\u001b[39m\nReceived string: \u001b[31m\"尚未核验到离线缓存；图片可能仍可在线显示重新检查请在离线页面准备完成后重新检查；此状态不表示原图已删除。重新选择本机图片保留文字\"\u001b[39m\nCall log:\n\u001b[2m  - expect.toContainText with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('.CommunicationSupportPanel__imageRepair').first()\u001b[22m\n\u001b[2m    9 × locator resolved to <div class=\"CommunicationSupportPanel__imageRepair\">…</div>\u001b[22m\n\u001b[2m      - unexpected value \"尚未核验到离线缓存；图片可能仍可在线显示重新检查请在离线页面准备完成后重新检查；此状态不表示原图已删除。重新选择本机图片保留文字\"\u001b[22m\n",
+                      "pass": false,
+                      "actual": "尚未核验到离线缓存；图片可能仍可在线显示重新检查请在离线页面准备完成后重新检查；此状态不表示原图已删除。重新选择本机图片保留文字",
+                      "log": [
+                        "  - expect.toContainText with timeout 5000ms",
+                        "  - waiting for locator('.CommunicationSupportPanel__imageRepair').first()",
+                        "    9 × locator resolved to <div class=\"CommunicationSupportPanel__imageRepair\">…</div>",
+                        "      - unexpected value \"尚未核验到离线缓存；图片可能仍可在线显示重新检查请在离线页面准备完成后重新检查；此状态不表示原图已删除。重新选择本机图片保留文字\""
+                      ],
+                      "timeout": 5000
+                    },
+                    "location": {
+                      "file": "<WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\webkit\\repair.spec.js",
+                      "column": 81,
+                      "line": 62
+                    },
+                    "snippet": "  60 |   });\n  61 |   await page.getByRole('button',{name:'重新检查',exact:true}).first().click();\n> 62 |   await expect(page.locator('.CommunicationSupportPanel__imageRepair').first()).toContainText('图片已核验可离线使用');\n     |                                                                                 ^\n  63 |   await page.evaluate(async()=>{\n  64 |    const cache=await caches.open('tuyujia-onsite-local-check');\n  65 |    await cache.put(window.__onsiteCachedImage,new Response('broken synthetic bytes',{headers:{'Content-Type':'image/svg+xml'}}));"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "<WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\webkit\\repair.spec.js",
+                        "column": 81,
+                        "line": 62
+                      },
+                      "message": "Error: \u001b[31mTimed out 5000ms waiting for \u001b[39m\u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoContainText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nLocator: locator('.CommunicationSupportPanel__imageRepair').first()\nExpected string: \u001b[32m\"图片已核验可离线使用\"\u001b[39m\nReceived string: \u001b[31m\"尚未核验到离线缓存；图片可能仍可在线显示重新检查请在离线页面准备完成后重新检查；此状态不表示原图已删除。重新选择本机图片保留文字\"\u001b[39m\nCall log:\n\u001b[2m  - expect.toContainText with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('.CommunicationSupportPanel__imageRepair').first()\u001b[22m\n\u001b[2m    9 × locator resolved to <div class=\"CommunicationSupportPanel__imageRepair\">…</div>\u001b[22m\n\u001b[2m      - unexpected value \"尚未核验到离线缓存；图片可能仍可在线显示重新检查请在离线页面准备完成后重新检查；此状态不表示原图已删除。重新选择本机图片保留文字\"\u001b[22m\n\n\n  60 |   });\n  61 |   await page.getByRole('button',{name:'重新检查',exact:true}).first().click();\n> 62 |   await expect(page.locator('.CommunicationSupportPanel__imageRepair').first()).toContainText('图片已核验可离线使用');\n     |                                                                                 ^\n  63 |   await page.evaluate(async()=>{\n  64 |    const cache=await caches.open('tuyujia-onsite-local-check');\n  65 |    await cache.put(window.__onsiteCachedImage,new Response('broken synthetic bytes',{headers:{'Content-Type':'image/svg+xml'}}));\n    at <WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\webkit\\repair.spec.js:62:81"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-23T08:23:31.986Z",
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "<WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\webkit\\repair-gallery-artifacts\\repair-production-candidat-318ec--responsive-repair-controls\\test-failed-1.png"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "<WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\webkit\\repair-gallery-artifacts\\repair-production-candidat-318ec--responsive-repair-controls\\trace.zip"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "<WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\webkit\\repair.spec.js",
+                    "column": 81,
+                    "line": 62
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "8e24e0025289d91b6dd5-9bb48d094171457b5693",
+          "file": "repair.spec.js",
+          "line": 6,
+          "column": 5
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-23T08:22:58.161Z",
+    "duration": 51178.766,
+    "expected": 0,
+    "skipped": 0,
+    "unexpected": 3,
+    "flaky": 0
+  }
+}

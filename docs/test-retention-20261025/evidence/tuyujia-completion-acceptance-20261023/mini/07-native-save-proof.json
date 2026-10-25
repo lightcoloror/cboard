@@ -1,0 +1,52 @@
+{
+  "passed": true,
+  "tile": {
+    "dtoType": "TileDTO",
+    "version": 1,
+    "id": "device_private_custom_mvkp9h1l_80tk6u",
+    "boardId": "device_private_board_mvkp90l0_d9m0a1",
+    "label": "合成顾明",
+    "vocalization": "合成顾明",
+    "image": "http://store/EzZcbwRoyS9Z2427e826801f28ae7b48383baeb3bf8c.jpg",
+    "mediaType": "image",
+    "video": "",
+    "sound": "",
+    "backgroundColor": "#fff176",
+    "keyPath": "",
+    "loadBoardId": "",
+    "pictogramAttribution": {
+      "provider": "device-private",
+      "originalId": "device_private_board_mvkp90l0_d9m0a1:device_private_custom_mvkp9h1l_80tk6u",
+      "name": "合成顾明",
+      "license": "用户提供，仅限本机使用",
+      "licenseUrl": null,
+      "author": null,
+      "authorUrl": null,
+      "sourceUrl": "device-private://personal-image/device_private_board_mvkp90l0_d9m0a1/device_private_custom_mvkp9h1l_80tk6u",
+      "repoKey": null
+    },
+    "communication": {
+      "synonyms": [],
+      "relatedTerms": [],
+      "excludeTokens": [],
+      "category": "people"
+    }
+  },
+  "library": {
+    "slot": "b",
+    "path": "http://usr/care-library-525775becc16d243863781db2da1f3131f1f07db699e0b2cb83f6070e8d8a824/boards-b.json",
+    "raw": "[{\"dtoType\":\"BoardDTO\",\"version\":1,\"id\":\"device_private_board_mvkp90l0_d9m0a1\",\"name\":\"合成图片离线验收\",\"nameKey\":\"\",\"category\":\"\",\"layout\":{\"columns\":3,\"rows\":1,\"tileIds\":[\"device_private_custom_mvkp9h1l_80tk6u\"]},\"tiles\":[{\"dtoType\":\"TileDTO\",\"version\":1,\"id\":\"device_private_custom_mvkp9h1l_80tk6u\",\"boardId\":\"device_private_board_mvkp90l0_d9m0a1\",\"label\":\"合成顾明\",\"vocalization\":\"合成顾明\",\"image\":\"http://store/EzZcbwRoyS9Z2427e826801f28ae7b48383baeb3bf8c.jpg\",\"mediaType\":\"image\",\"video\":\"\",\"sound\":\"\",\"backgroundColor\":\"#fff176\",\"keyPath\":\"\",\"loadBoardId\":\"\",\"pictogramAttribution\":{\"provider\":\"device-private\",\"originalId\":\"device_private_board_mvkp90l0_d9m0a1:device_private_custom_mvkp9h1l_80tk6u\",\"name\":\"合成顾明\",\"license\":\"用户提供，仅限本机使用\",\"licenseUrl\":null,\"author\":null,\"authorUrl\":null,\"sourceUrl\":\"device-private://personal-image/device_private_board_mvkp90l0_d9m0a1/device_private_custom_mvkp9h1l_80tk6u\",\"repoKey\":null},\"communication\":{\"synonyms\":[],\"relatedTerms\":[],\"excludeTokens\":[],\"category\":\"people\"}}]}]"
+  },
+  "nativeReadDecode": [
+    {
+      "path": "http://store/EzZcbwRoyS9Z2427e826801f28ae7b48383baeb3bf8c.jpg",
+      "bytes": 1871,
+      "width": 64,
+      "height": 64,
+      "type": "jpeg",
+      "sha256": "29712a593ac27eb61a457571f766a25df5d2704b0f015bfd66aea8db5b6dd767"
+    }
+  ],
+  "requests": [],
+  "audioStarts": 0
+}

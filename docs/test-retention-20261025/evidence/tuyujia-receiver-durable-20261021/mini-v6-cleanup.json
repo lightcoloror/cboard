@@ -1,0 +1,30 @@
+{
+  "syntheticOnly": true,
+  "success": true,
+  "privateBackupRetained": false,
+  "restoration": {
+    "originalKeysRestored": true,
+    "originalKeyCount": 3,
+    "syntheticKeysRemoved": 15,
+    "ownedFilesRemoved": [
+      "picinterpreter-expression-local-486a7b4f6d6e9fc5eba841ff88073adb9610f2755e594ec1b1ae884e07ed75f9.json",
+      "picinterpreter-receiver-local-97bd055b28752c9ab63383c6f74e6d89cab2dd7fcce0e87a6ea0c4e1eb5cad06.json"
+    ],
+    "ownedFilesAbsent": [
+      "picinterpreter-expression-local-486a7b4f6d6e9fc5eba841ff88073adb9610f2755e594ec1b1ae884e07ed75f9.json.tmp",
+      "care-6d48b544c7c56affac4111112282c424181d5812b3bfd65e28f09f8e1295438e.json",
+      "care-6d48b544c7c56affac4111112282c424181d5812b3bfd65e28f09f8e1295438e.json.tmp",
+      "picinterpreter-receiver-local-97bd055b28752c9ab63383c6f74e6d89cab2dd7fcce0e87a6ea0c4e1eb5cad06.json.tmp"
+    ],
+    "expressionPageUnmounted": true
+  },
+  "disk": {
+    "originalKeysMatchDisk": true,
+    "syntheticScopeAbsentFromDisk": true,
+    "fileIdentitySha256": "72e7bbbfec719d42489f1467c7871a601e830a6e1a53af25b5e64a11b463075c"
+  },
+  "filesRemainAbsent": true,
+  "diskStableReads": 2,
+  "elapsedSeconds": 12.240372700151056,
+  "privateBackupRemoved": true
+}

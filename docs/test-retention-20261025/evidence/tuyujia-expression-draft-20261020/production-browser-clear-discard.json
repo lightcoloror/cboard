@@ -1,0 +1,2441 @@
+{
+  "scope": "isolated-synthetic-production-app",
+  "profile": "<USER_HOME>\\AppData\\Local\\Temp\\tuyujia-expression-draft-dxtKhF",
+  "fixtureMarker": "tuyujia-expression-draft-8b779343-f3a8-4ce6-972d-7ed93a8e6477",
+  "origin": "https://app.tuyujia.com.cn",
+  "processes": [
+    {
+      "generation": 1,
+      "pid": 53860,
+      "startedAt": "2026-10-20T17:29:03.097Z",
+      "offline": false,
+      "exited": true,
+      "exitedAt": "2026-10-20T17:29:44.352Z"
+    },
+    {
+      "generation": 2,
+      "pid": 69540,
+      "startedAt": "2026-10-20T17:29:46.045Z",
+      "offline": true,
+      "exited": true,
+      "exitedAt": "2026-10-20T17:29:49.157Z"
+    },
+    {
+      "generation": 3,
+      "pid": 91476,
+      "startedAt": "2026-10-20T17:29:51.019Z",
+      "offline": true,
+      "exited": true,
+      "exitedAt": "2026-10-20T17:29:59.515Z"
+    },
+    {
+      "generation": 4,
+      "pid": 42884,
+      "startedAt": "2026-10-20T17:30:01.284Z",
+      "offline": true,
+      "exited": true,
+      "exitedAt": "2026-10-20T17:30:02.498Z"
+    }
+  ],
+  "requests": [
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/board/root",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/manifest.json",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/static/js/main.e2941c6b.js",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/static/css/main.10e9cd97.css",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/images/pwa/android/android-launchericon-144-144.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/images/touch/chrome-touch-icon-192x192.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/static/js/9832.3ccfe371.chunk.js",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/static/js/4138.07a39a56.chunk.js",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/police-filing.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/cboard/cboardRoot.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/cboard/picseepal.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/api/location",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/mulberry/correct.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/mulberry/no.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/arasaac/picinterpreter-care/37160.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/arasaac/picinterpreter-care/11595.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/arasaac/picinterpreter-care/32648.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/arasaac/picinterpreter-care/7196.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/arasaac/picinterpreter-care/11752.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/arasaac/picinterpreter-care/2367.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/arasaac/picinterpreter-care/32528.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/arasaac/picinterpreter-care/37207.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/arasaac/picinterpreter-care/37331.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/arasaac/picinterpreter-care/32085.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/arasaac/picinterpreter-care/39610.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/arasaac/picinterpreter-care/6632.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/arasaac/picinterpreter-care/22198.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/cboard/speech_bubble.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/mulberry/clock.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/mulberry/food.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/mulberry/drinks.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/mulberry/jelly_beans.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/cboard/activities.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/cboard/emotions.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/mulberry/body_outline.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/mulberry/generic_clothes.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/cboard/people.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/mulberry/shapesorter.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/cboard/kitchen_items.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/mulberry/school.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/cboard/animals.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/mulberry/technology.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/cboard/weather.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/cboard/plants.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/cboard/sports.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/mulberry/travel.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/mulberry/globe.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/cboard/position.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/mulberry/toys.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/cboard/actions.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/mulberry/ask_,_to.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/mulberry/furniture.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/cboard/personal_hygiene.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/mulberry/count_,_to.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/board/root",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/static/css/main.10e9cd97.css",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/manifest.json",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/static/js/main.e2941c6b.js",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/images/pwa/android/android-launchericon-144-144.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/images/touch/chrome-touch-icon-192x192.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/static/js/4138.07a39a56.chunk.js",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/api/location",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/police-filing.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/mulberry/correct.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/mulberry/no.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/arasaac/picinterpreter-care/32648.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/arasaac/picinterpreter-care/7196.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/arasaac/picinterpreter-care/11752.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/arasaac/picinterpreter-care/37160.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/arasaac/picinterpreter-care/11595.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/arasaac/picinterpreter-care/2367.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/arasaac/picinterpreter-care/32528.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/arasaac/picinterpreter-care/37331.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/arasaac/picinterpreter-care/37207.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/arasaac/picinterpreter-care/32085.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/arasaac/picinterpreter-care/39610.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/arasaac/picinterpreter-care/6632.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/arasaac/picinterpreter-care/22198.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/cboard/speech_bubble.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/mulberry/clock.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/mulberry/food.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/mulberry/drinks.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/mulberry/jelly_beans.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/cboard/activities.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/cboard/emotions.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/mulberry/body_outline.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/mulberry/generic_clothes.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/cboard/people.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/mulberry/shapesorter.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/cboard/kitchen_items.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/mulberry/school.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/cboard/animals.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/mulberry/technology.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/cboard/weather.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/cboard/plants.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/cboard/sports.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/mulberry/travel.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/mulberry/globe.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/cboard/position.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/mulberry/toys.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/cboard/actions.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/mulberry/ask_,_to.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/mulberry/furniture.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/cboard/personal_hygiene.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/mulberry/count_,_to.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/board/root",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/static/css/main.10e9cd97.css",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/manifest.json",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/static/js/main.e2941c6b.js",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/images/pwa/android/android-launchericon-144-144.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/static/js/4138.07a39a56.chunk.js",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/police-filing.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/api/location",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/mulberry/correct.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/mulberry/no.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/arasaac/picinterpreter-care/37160.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/arasaac/picinterpreter-care/11595.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/arasaac/picinterpreter-care/32648.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/arasaac/picinterpreter-care/7196.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/arasaac/picinterpreter-care/11752.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/arasaac/picinterpreter-care/2367.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/arasaac/picinterpreter-care/32528.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/arasaac/picinterpreter-care/37207.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/arasaac/picinterpreter-care/37331.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/arasaac/picinterpreter-care/32085.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/arasaac/picinterpreter-care/39610.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/arasaac/picinterpreter-care/6632.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/arasaac/picinterpreter-care/22198.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/cboard/speech_bubble.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/mulberry/clock.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/mulberry/food.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/mulberry/drinks.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/mulberry/jelly_beans.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/cboard/activities.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/cboard/emotions.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/mulberry/body_outline.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/mulberry/generic_clothes.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/cboard/people.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/mulberry/shapesorter.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/cboard/kitchen_items.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/mulberry/school.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/cboard/animals.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/cboard/plants.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/mulberry/technology.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/cboard/weather.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/cboard/sports.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/mulberry/travel.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/mulberry/globe.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/cboard/position.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/cboard/actions.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/mulberry/toys.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/mulberry/furniture.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/cboard/personal_hygiene.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/mulberry/ask_,_to.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/mulberry/count_,_to.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/board/root",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/static/css/main.10e9cd97.css",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/manifest.json",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/static/js/main.e2941c6b.js",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/images/pwa/android/android-launchericon-144-144.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/static/js/4138.07a39a56.chunk.js",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/api/location",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/police-filing.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/arasaac/picinterpreter-care/11595.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/mulberry/correct.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/mulberry/no.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/arasaac/picinterpreter-care/37160.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/arasaac/picinterpreter-care/32648.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/arasaac/picinterpreter-care/7196.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/arasaac/picinterpreter-care/11752.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/arasaac/picinterpreter-care/2367.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/arasaac/picinterpreter-care/32528.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/arasaac/picinterpreter-care/37207.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/arasaac/picinterpreter-care/32085.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/arasaac/picinterpreter-care/37331.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/arasaac/picinterpreter-care/6632.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/arasaac/picinterpreter-care/39610.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/cboard/speech_bubble.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/mulberry/clock.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/mulberry/food.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/arasaac/picinterpreter-care/22198.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/mulberry/drinks.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/mulberry/jelly_beans.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/cboard/activities.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/cboard/people.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/cboard/emotions.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/mulberry/body_outline.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/mulberry/generic_clothes.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/cboard/kitchen_items.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/mulberry/shapesorter.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/cboard/weather.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/mulberry/school.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/cboard/animals.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/mulberry/technology.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/cboard/plants.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/cboard/sports.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/mulberry/travel.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/mulberry/globe.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/cboard/position.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/mulberry/toys.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/cboard/actions.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/mulberry/ask_,_to.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/mulberry/furniture.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/cboard/personal_hygiene.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/mulberry/count_,_to.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 4,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/board/root",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 4,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/static/css/main.10e9cd97.css",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 4,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/manifest.json",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 4,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/static/js/main.e2941c6b.js",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 4,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/images/pwa/android/android-launchericon-144-144.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 4,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/static/js/4138.07a39a56.chunk.js",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 4,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/police-filing.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 4,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/api/location",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 4,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/mulberry/no.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 4,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/mulberry/correct.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 4,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/arasaac/picinterpreter-care/11595.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 4,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/arasaac/picinterpreter-care/37160.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 4,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/arasaac/picinterpreter-care/32648.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 4,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/arasaac/picinterpreter-care/7196.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 4,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/arasaac/picinterpreter-care/11752.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 4,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/arasaac/picinterpreter-care/2367.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 4,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/arasaac/picinterpreter-care/37207.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 4,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/arasaac/picinterpreter-care/32528.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 4,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/arasaac/picinterpreter-care/37331.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 4,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/arasaac/picinterpreter-care/32085.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 4,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/arasaac/picinterpreter-care/39610.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 4,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/arasaac/picinterpreter-care/6632.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 4,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/arasaac/picinterpreter-care/22198.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 4,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/cboard/speech_bubble.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 4,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/mulberry/clock.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 4,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/mulberry/drinks.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 4,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/mulberry/food.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 4,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/mulberry/jelly_beans.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 4,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/cboard/activities.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 4,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/cboard/emotions.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 4,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/mulberry/body_outline.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 4,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/mulberry/generic_clothes.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 4,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/cboard/people.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 4,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/mulberry/shapesorter.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 4,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/cboard/kitchen_items.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 4,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/mulberry/school.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 4,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/cboard/animals.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 4,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/mulberry/technology.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 4,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/cboard/weather.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 4,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/cboard/plants.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 4,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/cboard/sports.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 4,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/mulberry/travel.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 4,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/mulberry/globe.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 4,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/cboard/position.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 4,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/mulberry/toys.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 4,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/cboard/actions.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 4,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/mulberry/ask_,_to.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 4,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/mulberry/furniture.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 4,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/cboard/personal_hygiene.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 4,
+      "method": "GET",
+      "origin": "https://app.tuyujia.com.cn",
+      "path": "/symbols/mulberry/count_,_to.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    }
+  ],
+  "violations": [],
+  "pageErrors": [],
+  "externalModelsCalled": false,
+  "physicalDeviceTested": false,
+  "clearAndDiscardStayedEmpty": true,
+  "lastUrl": "https://app.tuyujia.com.cn/board/root",
+  "lastStorage": {
+    "values": {
+      "cboard_communication_account_identity": "{\"version\":1,\"anonymousUserId\":\"synthetic-other-user-1\",\"accountLinks\":[]}",
+      "cboard_communication_active_session": "{\"contractVersion\":1,\"id\":\"synthetic-other-session-4\",\"startedAt\":1800000000000,\"lastActivityAt\":1800000000000}",
+      "cboard_communication_expression_candidate_feedback_drafts": "[]",
+      "cboard_communication_expression_draft_v1": "{\"[\\\"synthetic-other-workspace-3\\\",\\\"synthetic-other-patient-2\\\"]\":{\"version\":1,\"id\":\"ed_mvgykl2o_izq2g262wr\",\"revision\":5,\"status\":\"cleared\",\"scope\":\"[\\\"\\\",\\\"synthetic-other-workspace-3\\\",\\\"synthetic-other-patient-2\\\"]\",\"createdAt\":1792517388720,\"updatedAt\":1792517393534,\"snapshot\":{\"pipeline\":{\"contractVersion\":1,\"outputSnapshot\":[],\"outputSignature\":\"[]\",\"candidateSentences\":[],\"selectedIndex\":0},\"rejected\":false,\"candidateFeedbackEntries\":[]}}}",
+      "cboard_communication_history": "[]",
+      "cboard_communication_missing_tokens": "[]",
+      "cboard_communication_patient_id": "synthetic-other-patient-2",
+      "cboard_communication_personal_image_preferences": "[]",
+      "cboard_communication_phrase_preparation": "{\"[\\\"synthetic-other-workspace-3\\\",\\\"synthetic-other-patient-2\\\"]\":{\"contractVersion\":2,\"direction\":\"receive\",\"inputText\":\"我想喝水\",\"labels\":[],\"output\":[],\"pictogramSequence\":[],\"id\":\"receiver_mvgyjlvi_ah2dbqgl\",\"sessionId\":\"phrase-preparation\",\"patientId\":\"synthetic-other-patient-2\",\"workspaceId\":\"synthetic-other-workspace-3\",\"recordStatus\":\"draft\",\"createdAt\":1792517343102,\"updatedAt\":1792517343102,\"templateId\":\"meal-water\",\"lifeContext\":\"吃饭\",\"preparationVersion\":1}}",
+      "cboard_communication_preferences": "{\"onboardingComplete\":true,\"candidateAutoplayDelaySeconds\":5}",
+      "cboard_communication_receiver_corrections": "[]",
+      "cboard_communication_receiver_records": "[{\"direction\":\"receive\",\"sentence\":\"\",\"inputText\":\"请再说一遍\",\"labels\":[],\"createdAt\":1800000000000,\"isFavorite\":false,\"id\":\"synthetic-other-receiver-5\",\"sessionId\":\"synthetic-other-session-4\",\"patientId\":\"synthetic-other-patient-2\",\"workspaceId\":\"synthetic-other-workspace-3\",\"recordStatus\":\"draft\",\"updatedAt\":1800000000000,\"contractVersion\":2}]",
+      "cboard_communication_receiver_resume_record": "",
+      "cboard_communication_repository_schema": "{\"schemaVersion\":7,\"migratedAt\":1800000000000,\"repairedKeys\":[\"cboard_communication_saved_phrases\",\"cboard_tuyujia_saved_phrases\"],\"lastRepairAt\":1792517348892}",
+      "cboard_communication_saved_phrase_tombstones": "[]",
+      "cboard_communication_saved_phrases": "[{\"id\":\"synthetic-draft-simple\",\"sentence\":\"我今晚不回家吃饭\",\"output\":[{\"id\":\"self\",\"label\":\"我\",\"image\":\"data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2248%22%20height%3D%2248%22%3E%3Ccircle%20cx%3D%2224%22%20cy%3D%2224%22%20r%3D%2220%22%20fill%3D%22green%22%2F%3E%3C%2Fsvg%3E\"},{\"id\":\"tonight\",\"label\":\"今晚\",\"image\":\"data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2248%22%20height%3D%2248%22%3E%3Crect%20x%3D%224%22%20y%3D%224%22%20width%3D%2240%22%20height%3D%2240%22%20fill%3D%22purple%22%2F%3E%3C%2Fsvg%3E\"},{\"id\":\"not\",\"label\":\"不\",\"image\":\"data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2248%22%20height%3D%2248%22%3E%3Ccircle%20cx%3D%2224%22%20cy%3D%2224%22%20r%3D%2220%22%20fill%3D%22green%22%2F%3E%3C%2Fsvg%3E\"},{\"id\":\"go-home\",\"label\":\"回家\",\"image\":\"data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2248%22%20height%3D%2248%22%3E%3Crect%20x%3D%224%22%20y%3D%224%22%20width%3D%2240%22%20height%3D%2240%22%20fill%3D%22purple%22%2F%3E%3C%2Fsvg%3E\"},{\"id\":\"eat\",\"label\":\"吃饭\",\"image\":\"data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2248%22%20height%3D%2248%22%3E%3Ccircle%20cx%3D%2224%22%20cy%3D%2224%22%20r%3D%2220%22%20fill%3D%22green%22%2F%3E%3C%2Fsvg%3E\"}],\"lifeContext\":\"吃饭\",\"usageCount\":1,\"createdAt\":11,\"lastUsedAt\":1792517383621,\"updatedAt\":1792517383621},{\"id\":\"synthetic-draft-identity\",\"sentence\":\"合成林安告诉合成林安，我今晚七点半不回家吃饭。\",\"output\":[{\"id\":\"same-card\",\"label\":\"合成林安\",\"personId\":\"synthetic-person-a\",\"image\":\"data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2248%22%20height%3D%2248%22%3E%3Ccircle%20cx%3D%2224%22%20cy%3D%2224%22%20r%3D%2220%22%20fill%3D%22green%22%2F%3E%3C%2Fsvg%3E\"},{\"id\":\"same-card\",\"label\":\"合成林安\",\"personId\":\"synthetic-person-b\",\"image\":\"data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2248%22%20height%3D%2248%22%3E%3Crect%20x%3D%224%22%20y%3D%224%22%20width%3D%2240%22%20height%3D%2240%22%20fill%3D%22purple%22%2F%3E%3C%2Fsvg%3E\"},{\"id\":\"time\",\"label\":\"七点半\",\"image\":\"\",\"textOnly\":true},{\"id\":\"missing\",\"label\":\"回家\",\"image\":\"data:image/png;base64,AAAA\"}],\"lifeContext\":\"出门\",\"usageCount\":1,\"createdAt\":10,\"lastUsedAt\":1792517388693,\"updatedAt\":1792517388693}]",
+      "cboard_communication_user_id": "synthetic-other-user-1",
+      "cboard_communication_workspace_id": "synthetic-other-workspace-3"
+    },
+    "hashes": {
+      "cboard_communication_account_identity": {
+        "sha256": "b9753dc71f3a370df7fef0730ae52675cbf3592ee11123512673c3c66514a5f2",
+        "bytes": 74
+      },
+      "cboard_communication_active_session": {
+        "sha256": "7befc1ae07ed1f7000362d91d304a350f95118fb3f36ccbb762bbf07783eb5a8",
+        "bytes": 111
+      },
+      "cboard_communication_expression_candidate_feedback_drafts": {
+        "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "bytes": 2
+      },
+      "cboard_communication_expression_draft_v1": {
+        "sha256": "f2d6b3789ceb223a4870e4a70d354cbede691be0fd4bc7bc9a4b234c05827196",
+        "bytes": 452
+      },
+      "cboard_communication_history": {
+        "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "bytes": 2
+      },
+      "cboard_communication_missing_tokens": {
+        "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "bytes": 2
+      },
+      "cboard_communication_patient_id": {
+        "sha256": "334ef872a1ababd2e3528ae509579e9dc25cb0b20266c65ee8a7cee33235aeff",
+        "bytes": 25
+      },
+      "cboard_communication_personal_image_preferences": {
+        "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "bytes": 2
+      },
+      "cboard_communication_phrase_preparation": {
+        "sha256": "84c80c07c6e33874c786ec07081b91d799146b8db8ee87997f259bce5b5af249",
+        "bytes": 483
+      },
+      "cboard_communication_preferences": {
+        "sha256": "b88415838193a56ea9fc0ab12b5bbb03743fdd8c73f99620db304069906b647e",
+        "bytes": 61
+      },
+      "cboard_communication_receiver_corrections": {
+        "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "bytes": 2
+      },
+      "cboard_communication_receiver_records": {
+        "sha256": "706f5b65537f0c32f13e6bbae7cd6f5b03f22b753a3bac84e9c30970040f48f3",
+        "bytes": 353
+      },
+      "cboard_communication_receiver_resume_record": {
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      },
+      "cboard_communication_repository_schema": {
+        "sha256": "b624f6164b80d6d162500d98407e625be9ccdb06c5694f98e7b021c7336111ad",
+        "bytes": 160
+      },
+      "cboard_communication_saved_phrase_tombstones": {
+        "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "bytes": 2
+      },
+      "cboard_communication_saved_phrases": {
+        "sha256": "b2b3074a336f8f9775179d10d951dbe0007ea582c2e0275b295917c297088f2d",
+        "bytes": 2494
+      },
+      "cboard_communication_user_id": {
+        "sha256": "395a6018538ab1c06eb98ce3ebfab54fe77dace213c05fb455ac8abb67039a05",
+        "bytes": 22
+      },
+      "cboard_communication_workspace_id": {
+        "sha256": "5a86b6d5b16630bb6bcf6f6deaa97ef20fde3229c5ab9d15a07b7747bb6397e9",
+        "bytes": 27
+      }
+    }
+  },
+  "lastBodyText": "",
+  "evidenceFile": "production-browser-clear-discard.json"
+}

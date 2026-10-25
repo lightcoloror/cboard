@@ -1,0 +1,318 @@
+[
+  {
+    "width": 1400,
+    "buttons": [
+      {
+        "label": "重新检查",
+        "left": 38,
+        "right": 102,
+        "width": 64
+      },
+      {
+        "label": "重新选择本机图片",
+        "left": 38,
+        "right": 139,
+        "width": 101
+      },
+      {
+        "label": "保留文字",
+        "left": 145,
+        "right": 209,
+        "width": 64
+      },
+      {
+        "label": "左移",
+        "left": 38,
+        "right": 102,
+        "width": 64
+      },
+      {
+        "label": "右移",
+        "left": 108,
+        "right": 172,
+        "width": 64
+      },
+      {
+        "label": "删除",
+        "left": 178,
+        "right": 242,
+        "width": 64
+      },
+      {
+        "label": "重新检查",
+        "left": 38,
+        "right": 102,
+        "width": 64
+      },
+      {
+        "label": "重新选择本机图片",
+        "left": 38,
+        "right": 139,
+        "width": 101
+      },
+      {
+        "label": "保留文字",
+        "left": 145,
+        "right": 209,
+        "width": 64
+      },
+      {
+        "label": "左移",
+        "left": 38,
+        "right": 102,
+        "width": 64
+      },
+      {
+        "label": "右移",
+        "left": 108,
+        "right": 172,
+        "width": 64
+      },
+      {
+        "label": "删除",
+        "left": 178,
+        "right": 242,
+        "width": 64
+      }
+    ],
+    "noticeWidth": 1368,
+    "gridWidth": 1368
+  },
+  {
+    "width": 1024,
+    "buttons": [
+      {
+        "label": "重新检查",
+        "left": 38,
+        "right": 102,
+        "width": 64
+      },
+      {
+        "label": "重新选择本机图片",
+        "left": 38,
+        "right": 139,
+        "width": 101
+      },
+      {
+        "label": "保留文字",
+        "left": 145,
+        "right": 209,
+        "width": 64
+      },
+      {
+        "label": "左移",
+        "left": 38,
+        "right": 102,
+        "width": 64
+      },
+      {
+        "label": "右移",
+        "left": 108,
+        "right": 172,
+        "width": 64
+      },
+      {
+        "label": "删除",
+        "left": 178,
+        "right": 242,
+        "width": 64
+      },
+      {
+        "label": "重新检查",
+        "left": 38,
+        "right": 102,
+        "width": 64
+      },
+      {
+        "label": "重新选择本机图片",
+        "left": 38,
+        "right": 139,
+        "width": 101
+      },
+      {
+        "label": "保留文字",
+        "left": 145,
+        "right": 209,
+        "width": 64
+      },
+      {
+        "label": "左移",
+        "left": 38,
+        "right": 102,
+        "width": 64
+      },
+      {
+        "label": "右移",
+        "left": 108,
+        "right": 172,
+        "width": 64
+      },
+      {
+        "label": "删除",
+        "left": 178,
+        "right": 242,
+        "width": 64
+      }
+    ],
+    "noticeWidth": 992,
+    "gridWidth": 992
+  },
+  {
+    "width": 768,
+    "buttons": [
+      {
+        "label": "重新检查",
+        "left": 38,
+        "right": 102,
+        "width": 64
+      },
+      {
+        "label": "重新选择本机图片",
+        "left": 38,
+        "right": 139,
+        "width": 101
+      },
+      {
+        "label": "保留文字",
+        "left": 145,
+        "right": 209,
+        "width": 64
+      },
+      {
+        "label": "左移",
+        "left": 38,
+        "right": 102,
+        "width": 64
+      },
+      {
+        "label": "右移",
+        "left": 108,
+        "right": 172,
+        "width": 64
+      },
+      {
+        "label": "删除",
+        "left": 178,
+        "right": 242,
+        "width": 64
+      },
+      {
+        "label": "重新检查",
+        "left": 38,
+        "right": 102,
+        "width": 64
+      },
+      {
+        "label": "重新选择本机图片",
+        "left": 38,
+        "right": 139,
+        "width": 101
+      },
+      {
+        "label": "保留文字",
+        "left": 145,
+        "right": 209,
+        "width": 64
+      },
+      {
+        "label": "左移",
+        "left": 38,
+        "right": 102,
+        "width": 64
+      },
+      {
+        "label": "右移",
+        "left": 108,
+        "right": 172,
+        "width": 64
+      },
+      {
+        "label": "删除",
+        "left": 178,
+        "right": 242,
+        "width": 64
+      }
+    ],
+    "noticeWidth": 736,
+    "gridWidth": 736
+  },
+  {
+    "width": 390,
+    "buttons": [
+      {
+        "label": "重新检查",
+        "left": 28,
+        "right": 92,
+        "width": 64
+      },
+      {
+        "label": "重新选择本机图片",
+        "left": 28,
+        "right": 129,
+        "width": 101
+      },
+      {
+        "label": "保留文字",
+        "left": 135,
+        "right": 199,
+        "width": 64
+      },
+      {
+        "label": "左移",
+        "left": 28,
+        "right": 92,
+        "width": 64
+      },
+      {
+        "label": "右移",
+        "left": 98,
+        "right": 162,
+        "width": 64
+      },
+      {
+        "label": "删除",
+        "left": 168,
+        "right": 232,
+        "width": 64
+      },
+      {
+        "label": "重新检查",
+        "left": 28,
+        "right": 92,
+        "width": 64
+      },
+      {
+        "label": "重新选择本机图片",
+        "left": 28,
+        "right": 129,
+        "width": 101
+      },
+      {
+        "label": "保留文字",
+        "left": 135,
+        "right": 199,
+        "width": 64
+      },
+      {
+        "label": "左移",
+        "left": 28,
+        "right": 92,
+        "width": 64
+      },
+      {
+        "label": "右移",
+        "left": 98,
+        "right": 162,
+        "width": 64
+      },
+      {
+        "label": "删除",
+        "left": 168,
+        "right": 232,
+        "width": 64
+      }
+    ],
+    "noticeWidth": 374,
+    "gridWidth": 374
+  }
+]

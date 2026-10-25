@@ -1,0 +1,1989 @@
+{
+  "scope": "isolated-synthetic-production-app",
+  "profile": "<USER_HOME>\\AppData\\Local\\Temp\\tuyujia-expression-draft-oWTJ9P",
+  "fixtureMarker": "tuyujia-expression-draft-6f10c1c4-d1fa-4109-be37-1a09acc9c502",
+  "origin": "http://127.0.0.1:4198",
+  "processes": [
+    {
+      "generation": 1,
+      "pid": 54924,
+      "startedAt": "2026-10-21T08:10:19.595Z",
+      "offline": false,
+      "exited": true,
+      "exitedAt": "2026-10-21T08:10:25.034Z"
+    },
+    {
+      "generation": 2,
+      "pid": 99468,
+      "startedAt": "2026-10-21T08:10:26.764Z",
+      "offline": true,
+      "exited": true,
+      "exitedAt": "2026-10-21T08:10:29.876Z"
+    }
+  ],
+  "requests": [
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/board/root",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/manifest.json",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/static/js/main.1d5a1829.js",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/static/css/main.10e9cd97.css",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/images/pwa/android/android-launchericon-144-144.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/images/touch/chrome-touch-icon-192x192.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/static/js/9832.3ccfe371.chunk.js",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/static/js/4138.07a39a56.chunk.js",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/service-worker.js",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/police-filing.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/cboard/cboardRoot.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/cboard/picseepal.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/api/location",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/correct.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/no.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/37160.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/11595.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/32648.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/7196.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/11752.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/2367.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/32528.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/37207.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/37331.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/32085.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/39610.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/6632.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/22198.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/cboard/speech_bubble.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/clock.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/food.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/drinks.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/jelly_beans.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/cboard/activities.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/cboard/emotions.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/body_outline.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/generic_clothes.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/cboard/people.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/shapesorter.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/cboard/kitchen_items.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/school.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/cboard/animals.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/technology.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/cboard/weather.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/cboard/plants.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/cboard/sports.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/travel.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/globe.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/cboard/position.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/toys.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/cboard/actions.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/ask_,_to.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/furniture.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/cboard/personal_hygiene.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/count_,_to.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/37160.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/11595.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/32648.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/7196.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/32528.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/11752.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/2367.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/32085.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/39610.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/37207.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/want_,_to.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/drink_,_to.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/hungry.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/37331.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/thirsty.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/water.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/orange_juice.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/apple_juice.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/grape_juice.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/cranberry_juice.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/pineapple_juice.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/milk.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/tea.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/coffee.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/apple.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/banana.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/happy_man.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/sad_man.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/i_am_pain.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/no.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/board/root",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/static/css/main.10e9cd97.css",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/manifest.json",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/static/js/main.1d5a1829.js",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/images/pwa/android/android-launchericon-144-144.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/images/touch/chrome-touch-icon-192x192.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/static/js/4138.07a39a56.chunk.js",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/service-worker.js",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/api/location",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/police-filing.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/no.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/correct.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/11595.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/37160.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/11752.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/32648.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/7196.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/2367.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/37207.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/37331.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/32528.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/32085.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/39610.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/6632.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/22198.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/cboard/speech_bubble.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/clock.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/drinks.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/jelly_beans.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/food.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/cboard/activities.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/cboard/emotions.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/body_outline.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/cboard/people.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/generic_clothes.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/shapesorter.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/school.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/cboard/kitchen_items.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/cboard/animals.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/technology.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/cboard/weather.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/cboard/plants.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/cboard/sports.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/travel.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/globe.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/cboard/position.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/toys.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/cboard/actions.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/ask_,_to.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/furniture.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/cboard/personal_hygiene.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/count_,_to.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/board/root",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/static/css/main.10e9cd97.css",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/manifest.json",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/static/js/main.1d5a1829.js",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/images/pwa/android/android-launchericon-144-144.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/static/js/4138.07a39a56.chunk.js",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/service-worker.js",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/police-filing.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/api/location",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/no.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/11595.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/correct.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/37160.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/32648.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/7196.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/11752.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/2367.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/32528.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/37207.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/37331.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/32085.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/39610.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/6632.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/22198.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/cboard/speech_bubble.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/clock.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/food.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/drinks.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/jelly_beans.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/cboard/activities.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/cboard/emotions.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/body_outline.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/generic_clothes.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/cboard/people.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/shapesorter.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/school.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/cboard/animals.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/cboard/plants.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/cboard/kitchen_items.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/technology.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/cboard/weather.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/cboard/sports.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/travel.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/globe.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/cboard/position.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/toys.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/cboard/actions.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/furniture.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/cboard/personal_hygiene.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/count_,_to.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/ask_,_to.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    }
+  ],
+  "violations": [],
+  "pageErrors": [],
+  "externalModelsCalled": false,
+  "physicalDeviceTested": false,
+  "passed": true,
+  "reviewed": {
+    "contractVersion": 2,
+    "direction": "receive",
+    "inputText": "欧阳明澈今晚不回家吃饭",
+    "labels": [
+      "欧阳明澈",
+      "今晚",
+      "不",
+      "回家",
+      "吃饭"
+    ],
+    "output": [
+      {
+        "id": "device_private_custom_curated_public_TQMN9NEak5",
+        "image": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAAoCAYAAACM/rhtAAAAc0lEQVR4AezSwQkAIRBD0cXethKrsWqtIBD4F8EveJoJyDNjzX/ffMd3+fGB9IMUVJAK0LwdVJAK0LwdVJAK0LwdVJAK0LwdVJAK0PwrHaROOa9gtukmCnZOeUvBbNNNFOyc8paC2aabKNg55S0Fs003OQAAAP//QMlFrwAAAAZJREFUAwAvHlfRXKVzrQAAAABJRU5ErkJggg==",
+        "label": "欧阳明澈",
+        "vocalization": "欧阳明澈",
+        "backgroundColor": "#fff176",
+        "personId": "device_private_custom_curated_public_TQMN9NEak5",
+        "attribution": {
+          "provider": "device-private",
+          "originalId": "device_private_board_GdXlFKH-_:device_private_custom_curated_public_TQMN9NEak5",
+          "name": "欧阳明澈",
+          "license": "设备私有图片（未声明公开许可）",
+          "licenseUrl": null,
+          "author": null,
+          "authorUrl": null,
+          "sourceUrl": "device-private://personal-image/device_private_board_GdXlFKH-_/device_private_custom_curated_public_TQMN9NEak5",
+          "repoKey": null
+        }
+      },
+      {
+        "id": "text-review_2sf3y1vg",
+        "label": "今晚",
+        "vocalization": "今晚",
+        "image": "",
+        "textOnly": true
+      },
+      {
+        "id": "pi-core-no",
+        "image": "/symbols/mulberry/no.svg",
+        "label": "不",
+        "vocalization": "不",
+        "backgroundColor": "rgb(255, 241, 118)",
+        "attribution": {
+          "provider": "mulberry",
+          "originalId": "pi-core-no",
+          "name": "Mulberry Symbols",
+          "license": "CC BY-SA 4.0",
+          "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+          "author": "Mulberry Symbols",
+          "authorUrl": "https://mulberrysymbols.org/",
+          "sourceUrl": "https://mulberrysymbols.org/",
+          "repoKey": "mulberry"
+        }
+      },
+      {
+        "id": "text-review_8f2yqcuf",
+        "label": "回家",
+        "vocalization": "回家",
+        "image": "",
+        "textOnly": true
+      },
+      {
+        "id": "text-review_3416er72",
+        "label": "吃饭",
+        "vocalization": "吃饭",
+        "image": "",
+        "textOnly": true
+      }
+    ],
+    "pictogramSequence": [
+      {
+        "pictogramId": "device_private_custom_curated_public_TQMN9NEak5",
+        "label": "欧阳明澈",
+        "source": "user",
+        "boardId": "device_private_board_GdXlFKH-_",
+        "matchType": "manual",
+        "confidence": 1,
+        "originalToken": "欧阳明澈",
+        "sourceSpan": {
+          "start": 0,
+          "end": 4,
+          "offsetUnit": "unicode-code-point"
+        },
+        "preparedOutputIndex": 0,
+        "attribution": {
+          "provider": "device-private",
+          "originalId": "device_private_board_GdXlFKH-_:device_private_custom_curated_public_TQMN9NEak5",
+          "name": "欧阳明澈",
+          "license": "设备私有图片（未声明公开许可）",
+          "licenseUrl": null,
+          "author": null,
+          "authorUrl": null,
+          "sourceUrl": "device-private://personal-image/device_private_board_GdXlFKH-_/device_private_custom_curated_public_TQMN9NEak5",
+          "repoKey": null
+        }
+      },
+      {
+        "pictogramId": null,
+        "label": "今晚",
+        "source": "text",
+        "boardId": "",
+        "matchType": "manual",
+        "confidence": 1,
+        "originalToken": "今晚",
+        "textOnly": true,
+        "sourceSpan": {
+          "start": 4,
+          "end": 6,
+          "offsetUnit": "unicode-code-point"
+        },
+        "preparedOutputIndex": 1
+      },
+      {
+        "pictogramId": "pi-core-no",
+        "label": "不",
+        "source": "local_dict",
+        "boardId": "pi-core-words-v1",
+        "matchType": "exact",
+        "confidence": 1,
+        "originalToken": "不",
+        "sourceSpan": {
+          "start": 6,
+          "end": 7,
+          "offsetUnit": "unicode-code-point"
+        },
+        "preparedOutputIndex": 2,
+        "attribution": {
+          "provider": "mulberry",
+          "originalId": "pi-core-no",
+          "name": "Mulberry Symbols",
+          "license": "CC BY-SA 4.0",
+          "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+          "author": "Mulberry Symbols",
+          "authorUrl": "https://mulberrysymbols.org/",
+          "sourceUrl": "https://mulberrysymbols.org/",
+          "repoKey": "mulberry"
+        }
+      },
+      {
+        "pictogramId": null,
+        "label": "回家",
+        "source": "text",
+        "boardId": "",
+        "matchType": "manual",
+        "confidence": 1,
+        "originalToken": "回家",
+        "textOnly": true,
+        "sourceSpan": {
+          "start": 7,
+          "end": 9,
+          "offsetUnit": "unicode-code-point"
+        },
+        "preparedOutputIndex": 3
+      },
+      {
+        "pictogramId": null,
+        "label": "吃饭",
+        "source": "text",
+        "boardId": "",
+        "matchType": "manual",
+        "confidence": 1,
+        "originalToken": "吃饭",
+        "textOnly": true,
+        "sourceSpan": {
+          "start": 9,
+          "end": 11,
+          "offsetUnit": "unicode-code-point"
+        },
+        "preparedOutputIndex": 4
+      }
+    ],
+    "id": "receiver_mvhu10zo_osybsoy9",
+    "sessionId": "phrase-preparation",
+    "patientId": "patient_mvhu0y21_24vcy2of",
+    "workspaceId": "workspace_mvhu0y21_onqeb7ar",
+    "recordStatus": "draft",
+    "createdAt": 1792570223940,
+    "updatedAt": 1792570224276,
+    "templateId": "out-home",
+    "lifeContext": "饭后散步",
+    "preparationVersion": 1
+  },
+  "before": {
+    "version": 1,
+    "scope": "",
+    "revision": 1,
+    "generation": "mvhu0y4f-wk4gpkbyaw",
+    "phrases": [
+      {
+        "id": "prepared_receiver_mvhu10zo_osybsoy9",
+        "sentence": "欧阳明澈今晚不回家吃饭",
+        "output": [
+          {
+            "id": "device_private_custom_curated_public_TQMN9NEak5",
+            "image": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAAoCAYAAACM/rhtAAAAc0lEQVR4AezSwQkAIRBD0cXethKrsWqtIBD4F8EveJoJyDNjzX/ffMd3+fGB9IMUVJAK0LwdVJAK0LwdVJAK0LwdVJAK0LwdVJAK0PwrHaROOa9gtukmCnZOeUvBbNNNFOyc8paC2aabKNg55S0Fs003OQAAAP//QMlFrwAAAAZJREFUAwAvHlfRXKVzrQAAAABJRU5ErkJggg==",
+            "label": "欧阳明澈",
+            "vocalization": "欧阳明澈",
+            "backgroundColor": "#fff176",
+            "personId": "device_private_custom_curated_public_TQMN9NEak5",
+            "attribution": {
+              "provider": "device-private",
+              "originalId": "device_private_board_GdXlFKH-_:device_private_custom_curated_public_TQMN9NEak5",
+              "name": "欧阳明澈",
+              "license": "设备私有图片（未声明公开许可）",
+              "licenseUrl": null,
+              "author": null,
+              "authorUrl": null,
+              "sourceUrl": "device-private://personal-image/device_private_board_GdXlFKH-_/device_private_custom_curated_public_TQMN9NEak5",
+              "repoKey": null
+            }
+          },
+          {
+            "id": "text-review_2sf3y1vg",
+            "label": "今晚",
+            "vocalization": "今晚",
+            "image": "",
+            "textOnly": true
+          },
+          {
+            "id": "pi-core-no",
+            "image": "/symbols/mulberry/no.svg",
+            "label": "不",
+            "vocalization": "不",
+            "backgroundColor": "rgb(255, 241, 118)",
+            "attribution": {
+              "provider": "mulberry",
+              "originalId": "pi-core-no",
+              "name": "Mulberry Symbols",
+              "license": "CC BY-SA 4.0",
+              "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+              "author": "Mulberry Symbols",
+              "authorUrl": "https://mulberrysymbols.org/",
+              "sourceUrl": "https://mulberrysymbols.org/",
+              "repoKey": "mulberry"
+            }
+          },
+          {
+            "id": "text-review_8f2yqcuf",
+            "label": "回家",
+            "vocalization": "回家",
+            "image": "",
+            "textOnly": true
+          },
+          {
+            "id": "text-review_3416er72",
+            "label": "吃饭",
+            "vocalization": "吃饭",
+            "image": "",
+            "textOnly": true
+          }
+        ],
+        "lifeContext": "饭后散步",
+        "usageCount": 0,
+        "createdAt": 1792570224340,
+        "lastUsedAt": 1792570224340,
+        "updatedAt": 1792570224340
+      }
+    ],
+    "tombstones": [],
+    "pending": null
+  },
+  "photoSource": "two synthetic geometric squares",
+  "sameIdentity": true,
+  "evidenceFile": "local-favorite-person-restart-1792570229876.json"
+}

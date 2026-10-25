@@ -1,0 +1,10 @@
+const fs=require('fs'),path=require('path');
+let spec=fs.readFileSync(path.resolve(__dirname,'../../tuyujia-targeted-acceptance-20261023/repair.spec.js'),'utf8').replaceAll('../../fork-cboard/','../../../fork-cboard/');
+spec=spec.replace('production candidate: visible undo, preserved sequence and responsive repair controls','WebKit UI and browser decoder with synthetic cache-response injection (no native cache claim)');
+spec=spec.replace("const cache=await caches.open('tuyujia-onsite-local-check');\n   const src", "const src");
+spec=spec.replace('await cache.put(src,new Response(', 'window.__injectedCacheResponse=new Response(').replace("fill=\"blue\"/></svg>',{headers:{'Content-Type':'image/svg+xml'}}));", "fill=\"blue\"/></svg>',{headers:{'Content-Type':'image/svg+xml'}});");
+spec=spec.replace('caches.match=key=>cache.match(key);','caches.match=async key=>new URL(key,location.href).href===src?window.__injectedCacheResponse.clone():undefined;');
+spec=spec.replace("const cache=await caches.open('tuyujia-onsite-local-check');\n   await cache.put(window.__onsiteCachedImage,new Response('broken synthetic bytes',{headers:{'Content-Type':'image/svg+xml'}}));", "window.__injectedCacheResponse=new Response('broken synthetic bytes',{headers:{'Content-Type':'image/svg+xml'}});");
+spec=spec.replace("h.saveEvidence('onsite-repair.json')","h.saveEvidence('response-injected-repair.json',{nativeCacheUsed:false})");
+spec=spec.replace('repair-${width}.png','decoder-repair-${width}.png').replace('repair-layout-results.json','decoder-repair-layout-results.json');
+fs.writeFileSync(path.join(__dirname,'repair-decoder.spec.js'),spec);

@@ -1,0 +1,1047 @@
+{
+  "scope": "isolated-synthetic-production-app",
+  "profile": "<WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\webkit\\synthetic-profile-vJiy8S",
+  "fixtureMarker": "tuyujia-expression-draft-9e26c12a-9af3-4da9-9412-6990afe09b40",
+  "origin": "http://127.0.0.1:4208",
+  "processes": [
+    {
+      "generation": 1,
+      "pid": 92924,
+      "startedAt": "2026-10-23T08:30:12.645Z",
+      "offline": false,
+      "exited": true,
+      "exitedAt": "2026-10-23T08:30:19.120Z"
+    }
+  ],
+  "requests": [
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4208",
+      "path": "/board/root",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4208",
+      "path": "/manifest.json",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4208",
+      "path": "/static/js/main.90f66cea.js",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4208",
+      "path": "/static/css/main.5bee6651.css",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4208",
+      "path": "/static/js/4138.3c4cb38d.chunk.js",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4208",
+      "path": "/police-filing.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4208",
+      "path": "/service-worker.js",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4208",
+      "path": "/symbols/cboard/cboardRoot.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4208",
+      "path": "/symbols/cboard/picseepal.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4208",
+      "path": "/api/location",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4208",
+      "path": "/symbols/mulberry/correct.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4208",
+      "path": "/symbols/mulberry/no.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4208",
+      "path": "/symbols/arasaac/picinterpreter-care/37160.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4208",
+      "path": "/symbols/arasaac/picinterpreter-care/11595.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4208",
+      "path": "/symbols/arasaac/picinterpreter-care/32648.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4208",
+      "path": "/symbols/arasaac/picinterpreter-care/7196.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4208",
+      "path": "/symbols/arasaac/picinterpreter-care/11752.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4208",
+      "path": "/symbols/arasaac/picinterpreter-care/2367.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4208",
+      "path": "/symbols/arasaac/picinterpreter-care/32528.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4208",
+      "path": "/symbols/arasaac/picinterpreter-care/37207.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4208",
+      "path": "/symbols/arasaac/picinterpreter-care/37331.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4208",
+      "path": "/symbols/arasaac/picinterpreter-care/32085.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4208",
+      "path": "/symbols/arasaac/picinterpreter-care/39610.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4208",
+      "path": "/symbols/arasaac/picinterpreter-care/6632.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4208",
+      "path": "/symbols/arasaac/picinterpreter-care/22198.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4208",
+      "path": "/symbols/cboard/speech_bubble.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4208",
+      "path": "/symbols/mulberry/clock.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4208",
+      "path": "/symbols/mulberry/food.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4208",
+      "path": "/symbols/mulberry/drinks.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4208",
+      "path": "/symbols/mulberry/jelly_beans.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4208",
+      "path": "/symbols/cboard/activities.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4208",
+      "path": "/symbols/cboard/emotions.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4208",
+      "path": "/symbols/mulberry/body_outline.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4208",
+      "path": "/symbols/mulberry/generic_clothes.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4208",
+      "path": "/symbols/cboard/people.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4208",
+      "path": "/symbols/mulberry/shapesorter.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4208",
+      "path": "/symbols/cboard/kitchen_items.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4208",
+      "path": "/symbols/mulberry/school.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4208",
+      "path": "/symbols/cboard/animals.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4208",
+      "path": "/symbols/mulberry/technology.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4208",
+      "path": "/symbols/cboard/weather.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4208",
+      "path": "/symbols/cboard/plants.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4208",
+      "path": "/symbols/cboard/sports.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4208",
+      "path": "/symbols/mulberry/travel.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4208",
+      "path": "/symbols/mulberry/globe.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4208",
+      "path": "/symbols/cboard/position.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4208",
+      "path": "/symbols/mulberry/toys.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4208",
+      "path": "/symbols/cboard/actions.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4208",
+      "path": "/symbols/mulberry/ask_,_to.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4208",
+      "path": "/symbols/mulberry/furniture.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4208",
+      "path": "/symbols/cboard/personal_hygiene.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4208",
+      "path": "/symbols/mulberry/count_,_to.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4208",
+      "path": "/service-worker.js",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4208",
+      "path": "/symbols/mulberry/no.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4208",
+      "path": "/symbols/mulberry/no.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4208",
+      "path": "/symbols/mulberry/correct.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4208",
+      "path": "/symbols/mulberry/correct.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4208",
+      "path": "/symbols/mulberry/no.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    }
+  ],
+  "violations": [],
+  "pageErrors": [],
+  "externalModelsCalled": false,
+  "physicalDeviceTested": false,
+  "measurements": [
+    {
+      "width": 390,
+      "documentWidth": 390,
+      "controls": [
+        {
+          "label": null,
+          "left": 92.796875,
+          "right": 119.796875,
+          "width": 27,
+          "height": 27,
+          "font": "15.75px",
+          "scrollWidth": 27,
+          "clientWidth": 27
+        },
+        {
+          "label": null,
+          "left": 192.796875,
+          "right": 219.796875,
+          "width": 27,
+          "height": 27,
+          "font": "15.75px",
+          "scrollWidth": 27,
+          "clientWidth": 27
+        },
+        {
+          "label": "退格",
+          "left": 262,
+          "right": 326,
+          "width": 64,
+          "height": 64,
+          "font": "21px",
+          "scrollWidth": 64,
+          "clientWidth": 64
+        },
+        {
+          "label": "清空",
+          "left": 326,
+          "right": 390,
+          "width": 64,
+          "height": 64,
+          "font": "21px",
+          "scrollWidth": 64,
+          "clientWidth": 64
+        },
+        {
+          "label": "重新检查",
+          "left": 28,
+          "right": 129,
+          "width": 101,
+          "height": 47,
+          "font": "11.375px",
+          "scrollWidth": 101,
+          "clientWidth": 101
+        },
+        {
+          "label": "重新选择本机图片",
+          "left": 28,
+          "right": 220,
+          "width": 192,
+          "height": 47,
+          "font": "11.375px",
+          "scrollWidth": 192,
+          "clientWidth": 192
+        },
+        {
+          "label": "保留文字",
+          "left": 226,
+          "right": 327,
+          "width": 101,
+          "height": 47,
+          "font": "11.375px",
+          "scrollWidth": 101,
+          "clientWidth": 101
+        },
+        {
+          "label": "左移",
+          "left": 28,
+          "right": 101.015625,
+          "width": 73.015625,
+          "height": 62,
+          "font": "11.375px",
+          "scrollWidth": 71,
+          "clientWidth": 71
+        },
+        {
+          "label": "右移",
+          "left": 107.015625,
+          "right": 180.03125,
+          "width": 73.015625,
+          "height": 62,
+          "font": "11.375px",
+          "scrollWidth": 71,
+          "clientWidth": 71
+        },
+        {
+          "label": "删除",
+          "left": 186.03125,
+          "right": 259.046875,
+          "width": 73.015625,
+          "height": 62,
+          "font": "11.375px",
+          "scrollWidth": 71,
+          "clientWidth": 71
+        },
+        {
+          "label": "重新检查",
+          "left": 28,
+          "right": 129,
+          "width": 101,
+          "height": 47,
+          "font": "11.375px",
+          "scrollWidth": 101,
+          "clientWidth": 101
+        },
+        {
+          "label": "重新选择本机图片",
+          "left": 28,
+          "right": 220,
+          "width": 192,
+          "height": 47,
+          "font": "11.375px",
+          "scrollWidth": 192,
+          "clientWidth": 192
+        },
+        {
+          "label": "保留文字",
+          "left": 226,
+          "right": 327,
+          "width": 101,
+          "height": 47,
+          "font": "11.375px",
+          "scrollWidth": 101,
+          "clientWidth": 101
+        },
+        {
+          "label": "左移",
+          "left": 28,
+          "right": 101.015625,
+          "width": 73.015625,
+          "height": 62,
+          "font": "11.375px",
+          "scrollWidth": 71,
+          "clientWidth": 71
+        },
+        {
+          "label": "右移",
+          "left": 107.015625,
+          "right": 180.03125,
+          "width": 73.015625,
+          "height": 62,
+          "font": "11.375px",
+          "scrollWidth": 71,
+          "clientWidth": 71
+        },
+        {
+          "label": "删除",
+          "left": 186.03125,
+          "right": 259.046875,
+          "width": 73.015625,
+          "height": 62,
+          "font": "11.375px",
+          "scrollWidth": 71,
+          "clientWidth": 71
+        }
+      ]
+    },
+    {
+      "width": 768,
+      "documentWidth": 768,
+      "controls": [
+        {
+          "label": null,
+          "left": 92.796875,
+          "right": 119.796875,
+          "width": 27,
+          "height": 27,
+          "font": "15.75px",
+          "scrollWidth": 27,
+          "clientWidth": 27
+        },
+        {
+          "label": null,
+          "left": 192.796875,
+          "right": 219.796875,
+          "width": 27,
+          "height": 27,
+          "font": "15.75px",
+          "scrollWidth": 27,
+          "clientWidth": 27
+        },
+        {
+          "label": "退格",
+          "left": 640,
+          "right": 704,
+          "width": 64,
+          "height": 64,
+          "font": "21px",
+          "scrollWidth": 64,
+          "clientWidth": 64
+        },
+        {
+          "label": "清空",
+          "left": 704,
+          "right": 768,
+          "width": 64,
+          "height": 64,
+          "font": "21px",
+          "scrollWidth": 64,
+          "clientWidth": 64
+        },
+        {
+          "label": "重新检查",
+          "left": 38,
+          "right": 139,
+          "width": 101,
+          "height": 47,
+          "font": "11.375px",
+          "scrollWidth": 101,
+          "clientWidth": 101
+        },
+        {
+          "label": "重新选择本机图片",
+          "left": 38,
+          "right": 230,
+          "width": 192,
+          "height": 47,
+          "font": "11.375px",
+          "scrollWidth": 192,
+          "clientWidth": 192
+        },
+        {
+          "label": "保留文字",
+          "left": 236,
+          "right": 337,
+          "width": 101,
+          "height": 47,
+          "font": "11.375px",
+          "scrollWidth": 101,
+          "clientWidth": 101
+        },
+        {
+          "label": "左移",
+          "left": 38,
+          "right": 111.015625,
+          "width": 73.015625,
+          "height": 62,
+          "font": "11.375px",
+          "scrollWidth": 71,
+          "clientWidth": 71
+        },
+        {
+          "label": "右移",
+          "left": 117.015625,
+          "right": 190.03125,
+          "width": 73.015625,
+          "height": 62,
+          "font": "11.375px",
+          "scrollWidth": 71,
+          "clientWidth": 71
+        },
+        {
+          "label": "删除",
+          "left": 196.03125,
+          "right": 269.046875,
+          "width": 73.015625,
+          "height": 62,
+          "font": "11.375px",
+          "scrollWidth": 71,
+          "clientWidth": 71
+        },
+        {
+          "label": "重新检查",
+          "left": 38,
+          "right": 139,
+          "width": 101,
+          "height": 47,
+          "font": "11.375px",
+          "scrollWidth": 101,
+          "clientWidth": 101
+        },
+        {
+          "label": "重新选择本机图片",
+          "left": 38,
+          "right": 230,
+          "width": 192,
+          "height": 47,
+          "font": "11.375px",
+          "scrollWidth": 192,
+          "clientWidth": 192
+        },
+        {
+          "label": "保留文字",
+          "left": 236,
+          "right": 337,
+          "width": 101,
+          "height": 47,
+          "font": "11.375px",
+          "scrollWidth": 101,
+          "clientWidth": 101
+        },
+        {
+          "label": "左移",
+          "left": 38,
+          "right": 111.015625,
+          "width": 73.015625,
+          "height": 62,
+          "font": "11.375px",
+          "scrollWidth": 71,
+          "clientWidth": 71
+        },
+        {
+          "label": "右移",
+          "left": 117.015625,
+          "right": 190.03125,
+          "width": 73.015625,
+          "height": 62,
+          "font": "11.375px",
+          "scrollWidth": 71,
+          "clientWidth": 71
+        },
+        {
+          "label": "删除",
+          "left": 196.03125,
+          "right": 269.046875,
+          "width": 73.015625,
+          "height": 62,
+          "font": "11.375px",
+          "scrollWidth": 71,
+          "clientWidth": 71
+        }
+      ]
+    },
+    {
+      "width": 1024,
+      "documentWidth": 1024,
+      "controls": [
+        {
+          "label": null,
+          "left": 92.796875,
+          "right": 119.796875,
+          "width": 27,
+          "height": 27,
+          "font": "15.75px",
+          "scrollWidth": 27,
+          "clientWidth": 27
+        },
+        {
+          "label": null,
+          "left": 192.796875,
+          "right": 219.796875,
+          "width": 27,
+          "height": 27,
+          "font": "15.75px",
+          "scrollWidth": 27,
+          "clientWidth": 27
+        },
+        {
+          "label": "退格",
+          "left": 896,
+          "right": 960,
+          "width": 64,
+          "height": 64,
+          "font": "21px",
+          "scrollWidth": 64,
+          "clientWidth": 64
+        },
+        {
+          "label": "清空",
+          "left": 960,
+          "right": 1024,
+          "width": 64,
+          "height": 64,
+          "font": "21px",
+          "scrollWidth": 64,
+          "clientWidth": 64
+        },
+        {
+          "label": "重新检查",
+          "left": 38,
+          "right": 139,
+          "width": 101,
+          "height": 47,
+          "font": "11.375px",
+          "scrollWidth": 101,
+          "clientWidth": 101
+        },
+        {
+          "label": "重新选择本机图片",
+          "left": 38,
+          "right": 230,
+          "width": 192,
+          "height": 47,
+          "font": "11.375px",
+          "scrollWidth": 192,
+          "clientWidth": 192
+        },
+        {
+          "label": "保留文字",
+          "left": 38,
+          "right": 139,
+          "width": 101,
+          "height": 47,
+          "font": "11.375px",
+          "scrollWidth": 101,
+          "clientWidth": 101
+        },
+        {
+          "label": "左移",
+          "left": 38,
+          "right": 111.015625,
+          "width": 73.015625,
+          "height": 62,
+          "font": "11.375px",
+          "scrollWidth": 71,
+          "clientWidth": 71
+        },
+        {
+          "label": "右移",
+          "left": 117.015625,
+          "right": 190.03125,
+          "width": 73.015625,
+          "height": 62,
+          "font": "11.375px",
+          "scrollWidth": 71,
+          "clientWidth": 71
+        },
+        {
+          "label": "删除",
+          "left": 196.03125,
+          "right": 269.046875,
+          "width": 73.015625,
+          "height": 62,
+          "font": "11.375px",
+          "scrollWidth": 71,
+          "clientWidth": 71
+        },
+        {
+          "label": "重新检查",
+          "left": 38,
+          "right": 139,
+          "width": 101,
+          "height": 47,
+          "font": "11.375px",
+          "scrollWidth": 101,
+          "clientWidth": 101
+        },
+        {
+          "label": "重新选择本机图片",
+          "left": 38,
+          "right": 230,
+          "width": 192,
+          "height": 47,
+          "font": "11.375px",
+          "scrollWidth": 192,
+          "clientWidth": 192
+        },
+        {
+          "label": "保留文字",
+          "left": 38,
+          "right": 139,
+          "width": 101,
+          "height": 47,
+          "font": "11.375px",
+          "scrollWidth": 101,
+          "clientWidth": 101
+        },
+        {
+          "label": "左移",
+          "left": 38,
+          "right": 111.015625,
+          "width": 73.015625,
+          "height": 62,
+          "font": "11.375px",
+          "scrollWidth": 71,
+          "clientWidth": 71
+        },
+        {
+          "label": "右移",
+          "left": 117.015625,
+          "right": 190.03125,
+          "width": 73.015625,
+          "height": 62,
+          "font": "11.375px",
+          "scrollWidth": 71,
+          "clientWidth": 71
+        },
+        {
+          "label": "删除",
+          "left": 196.03125,
+          "right": 269.046875,
+          "width": 73.015625,
+          "height": 62,
+          "font": "11.375px",
+          "scrollWidth": 71,
+          "clientWidth": 71
+        }
+      ]
+    }
+  ],
+  "scale": 2,
+  "method": "computed text font-size and line-height doubled; not native iOS accessibility",
+  "evidenceFile": "local-large-font.json"
+}

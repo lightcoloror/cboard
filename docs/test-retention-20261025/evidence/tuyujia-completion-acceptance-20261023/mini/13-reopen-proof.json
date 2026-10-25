@@ -1,0 +1,435 @@
+{
+  "passed": true,
+  "beforeContinue": {
+    "values": {
+      "cboard_communication_saved_phrases": [
+        {
+          "id": "synthetic-draft-namesakes",
+          "sentence": "合成林安今晚七点半不回家吃饭。",
+          "output": [
+            {
+              "id": "synthetic-same-tile",
+              "boardId": "synthetic-board",
+              "label": "合成林安",
+              "vocalization": "合成林安",
+              "personId": "synthetic-person-a",
+              "image": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aKpkAAAAASUVORK5CYII=",
+              "mediaType": "image",
+              "source": "device-private"
+            },
+            {
+              "id": "synthetic-same-tile",
+              "boardId": "synthetic-board",
+              "label": "合成林安",
+              "vocalization": "合成林安",
+              "personId": "synthetic-person-b",
+              "image": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aKpkAAAAASUVORK5CYII=",
+              "mediaType": "image",
+              "source": "device-private"
+            },
+            {
+              "id": "synthetic-same-tile",
+              "boardId": "synthetic-board",
+              "label": "合成林安",
+              "vocalization": "合成林安",
+              "personId": "synthetic-person-a",
+              "image": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aKpkAAAAASUVORK5CYII=",
+              "mediaType": "image",
+              "source": "device-private"
+            }
+          ],
+          "createdAt": 1792512000000,
+          "lifeContext": "chat",
+          "usageCount": 0
+        },
+        {
+          "id": "synthetic-draft-text",
+          "sentence": "我今晚不回家吃饭",
+          "output": [],
+          "createdAt": 1792512001000,
+          "lifeContext": "meal",
+          "usageCount": 0
+        }
+      ],
+      "care-pending-favorites": {
+        "items": [
+          {
+            "id": "synthetic-draft-namesakes",
+            "sentence": "合成林安今晚七点半不回家吃饭。",
+            "output": [
+              {
+                "id": "synthetic-same-tile",
+                "boardId": "synthetic-board",
+                "label": "合成林安",
+                "vocalization": "合成林安",
+                "personId": "synthetic-person-a",
+                "image": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aKpkAAAAASUVORK5CYII=",
+                "mediaType": "image",
+                "source": "device-private"
+              },
+              {
+                "id": "synthetic-same-tile",
+                "boardId": "synthetic-board",
+                "label": "合成林安",
+                "vocalization": "合成林安",
+                "personId": "synthetic-person-b",
+                "image": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aKpkAAAAASUVORK5CYII=",
+                "mediaType": "image",
+                "source": "device-private"
+              },
+              {
+                "id": "synthetic-same-tile",
+                "boardId": "synthetic-board",
+                "label": "合成林安",
+                "vocalization": "合成林安",
+                "personId": "synthetic-person-a",
+                "image": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aKpkAAAAASUVORK5CYII=",
+                "mediaType": "image",
+                "source": "device-private"
+              }
+            ],
+            "createdAt": 1792512000000,
+            "lifeContext": "chat",
+            "usageCount": 0
+          },
+          {
+            "id": "synthetic-draft-text",
+            "sentence": "我今晚不回家吃饭",
+            "output": [],
+            "createdAt": 1792512001000,
+            "lifeContext": "meal",
+            "usageCount": 0
+          }
+        ],
+        "base": []
+      },
+      "cboard_communication_preferences": {
+        "onboardingComplete": true,
+        "candidateAutoplayDelaySeconds": 15
+      },
+      "cboard_communication_missing_tokens": [],
+      "cboard_communication_personal_image_preferences": [],
+      "cboard_communication_expression_candidate_feedback_drafts": [],
+      "cboard_communication_user_id": "user_mvkp7jsf_uifk8jvm",
+      "cboard_communication_account_identity": {
+        "version": 1,
+        "anonymousUserId": "user_mvkp7jsf_uifk8jvm",
+        "accountLinks": []
+      },
+      "cboard_communication_repository_schema": {
+        "schemaVersion": 7,
+        "migratedAt": 1792743529066
+      },
+      "care-locked": false,
+      "care-shared-favorites": [],
+      "care-patient-defaults": {},
+      "cboard_communication_pictogram_ordering_v1": {
+        "schemaVersion": 1,
+        "manualOrderByBoard": {},
+        "usageByTileKey": {
+          "device_private_board_mvkp90l0_d9m0a1:device_private_custom_mvkp9h1l_80tk6u": {
+            "count": 1,
+            "lastUsedAt": 1792743816600
+          }
+        }
+      },
+      "picinterpreter_picture_library_file_slot_v1": "b",
+      "care-pending-boards": [
+        {
+          "dtoType": "BoardDTO",
+          "version": 1,
+          "id": "device_private_board_mvkp90l0_d9m0a1",
+          "name": "合成图片离线验收",
+          "nameKey": "",
+          "category": "",
+          "layout": {
+            "columns": 3,
+            "rows": 1,
+            "tileIds": [
+              "device_private_custom_mvkp9h1l_80tk6u"
+            ]
+          },
+          "tiles": [
+            {
+              "dtoType": "TileDTO",
+              "version": 1,
+              "id": "device_private_custom_mvkp9h1l_80tk6u",
+              "boardId": "device_private_board_mvkp90l0_d9m0a1",
+              "label": "合成顾明",
+              "vocalization": "合成顾明",
+              "image": "http://store/EzZcbwRoyS9Z2427e826801f28ae7b48383baeb3bf8c.jpg",
+              "mediaType": "image",
+              "video": "",
+              "sound": "",
+              "backgroundColor": "#fff176",
+              "keyPath": "",
+              "loadBoardId": "",
+              "pictogramAttribution": {
+                "provider": "device-private",
+                "originalId": "device_private_board_mvkp90l0_d9m0a1:device_private_custom_mvkp9h1l_80tk6u",
+                "name": "合成顾明",
+                "license": "用户提供，仅限本机使用",
+                "licenseUrl": null,
+                "author": null,
+                "authorUrl": null,
+                "sourceUrl": "device-private://personal-image/device_private_board_mvkp90l0_d9m0a1/device_private_custom_mvkp9h1l_80tk6u",
+                "repoKey": null
+              },
+              "communication": {
+                "synonyms": [],
+                "relatedTerms": [],
+                "excludeTokens": [],
+                "category": "people"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "route": "packages/caregiver/pages/patient/index",
+    "text": "…\n患者表达\n?\n接收理解\n!\n紧急求助\n照护工具\n上次表达尚未完成\n合成顾明。\n保存时间：\n2026/10/23 16:23:36\n继续不会自动播报、搜图或调用 AI。\n继续上次表达\n开始新表达\n暂不处理\n最近沟通\n当前设备共保存 \n0\n 条，进入“全部历史”可重播、收藏、删除或导出。\n普通沟通历史仅在本机保留最近 50 条；收藏独立保存，可按权限同步。患者图库和沟通偏好随档案同步。缺图搜索只发送单个缺词；粤语录音识别仅在每次明确同意后临时发送录音。",
+    "requests": [],
+    "audioStarts": 0
+  },
+  "afterContinue": {
+    "values": {
+      "cboard_communication_saved_phrases": [
+        {
+          "id": "synthetic-draft-namesakes",
+          "sentence": "合成林安今晚七点半不回家吃饭。",
+          "output": [
+            {
+              "id": "synthetic-same-tile",
+              "boardId": "synthetic-board",
+              "label": "合成林安",
+              "vocalization": "合成林安",
+              "personId": "synthetic-person-a",
+              "image": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aKpkAAAAASUVORK5CYII=",
+              "mediaType": "image",
+              "source": "device-private"
+            },
+            {
+              "id": "synthetic-same-tile",
+              "boardId": "synthetic-board",
+              "label": "合成林安",
+              "vocalization": "合成林安",
+              "personId": "synthetic-person-b",
+              "image": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aKpkAAAAASUVORK5CYII=",
+              "mediaType": "image",
+              "source": "device-private"
+            },
+            {
+              "id": "synthetic-same-tile",
+              "boardId": "synthetic-board",
+              "label": "合成林安",
+              "vocalization": "合成林安",
+              "personId": "synthetic-person-a",
+              "image": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aKpkAAAAASUVORK5CYII=",
+              "mediaType": "image",
+              "source": "device-private"
+            }
+          ],
+          "createdAt": 1792512000000,
+          "lifeContext": "chat",
+          "usageCount": 0
+        },
+        {
+          "id": "synthetic-draft-text",
+          "sentence": "我今晚不回家吃饭",
+          "output": [],
+          "createdAt": 1792512001000,
+          "lifeContext": "meal",
+          "usageCount": 0
+        }
+      ],
+      "care-pending-favorites": {
+        "items": [
+          {
+            "id": "synthetic-draft-namesakes",
+            "sentence": "合成林安今晚七点半不回家吃饭。",
+            "output": [
+              {
+                "id": "synthetic-same-tile",
+                "boardId": "synthetic-board",
+                "label": "合成林安",
+                "vocalization": "合成林安",
+                "personId": "synthetic-person-a",
+                "image": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aKpkAAAAASUVORK5CYII=",
+                "mediaType": "image",
+                "source": "device-private"
+              },
+              {
+                "id": "synthetic-same-tile",
+                "boardId": "synthetic-board",
+                "label": "合成林安",
+                "vocalization": "合成林安",
+                "personId": "synthetic-person-b",
+                "image": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aKpkAAAAASUVORK5CYII=",
+                "mediaType": "image",
+                "source": "device-private"
+              },
+              {
+                "id": "synthetic-same-tile",
+                "boardId": "synthetic-board",
+                "label": "合成林安",
+                "vocalization": "合成林安",
+                "personId": "synthetic-person-a",
+                "image": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aKpkAAAAASUVORK5CYII=",
+                "mediaType": "image",
+                "source": "device-private"
+              }
+            ],
+            "createdAt": 1792512000000,
+            "lifeContext": "chat",
+            "usageCount": 0
+          },
+          {
+            "id": "synthetic-draft-text",
+            "sentence": "我今晚不回家吃饭",
+            "output": [],
+            "createdAt": 1792512001000,
+            "lifeContext": "meal",
+            "usageCount": 0
+          }
+        ],
+        "base": []
+      },
+      "cboard_communication_preferences": {
+        "onboardingComplete": true,
+        "candidateAutoplayDelaySeconds": 15
+      },
+      "cboard_communication_missing_tokens": [],
+      "cboard_communication_personal_image_preferences": [],
+      "cboard_communication_expression_candidate_feedback_drafts": [],
+      "cboard_communication_user_id": "user_mvkp7jsf_uifk8jvm",
+      "cboard_communication_account_identity": {
+        "version": 1,
+        "anonymousUserId": "user_mvkp7jsf_uifk8jvm",
+        "accountLinks": []
+      },
+      "cboard_communication_repository_schema": {
+        "schemaVersion": 7,
+        "migratedAt": 1792743529066
+      },
+      "care-locked": false,
+      "care-shared-favorites": [],
+      "care-patient-defaults": {},
+      "cboard_communication_pictogram_ordering_v1": {
+        "schemaVersion": 1,
+        "manualOrderByBoard": {},
+        "usageByTileKey": {
+          "device_private_board_mvkp90l0_d9m0a1:device_private_custom_mvkp9h1l_80tk6u": {
+            "count": 1,
+            "lastUsedAt": 1792743816600
+          }
+        }
+      },
+      "picinterpreter_picture_library_file_slot_v1": "b",
+      "care-pending-boards": [
+        {
+          "dtoType": "BoardDTO",
+          "version": 1,
+          "id": "device_private_board_mvkp90l0_d9m0a1",
+          "name": "合成图片离线验收",
+          "nameKey": "",
+          "category": "",
+          "layout": {
+            "columns": 3,
+            "rows": 1,
+            "tileIds": [
+              "device_private_custom_mvkp9h1l_80tk6u"
+            ]
+          },
+          "tiles": [
+            {
+              "dtoType": "TileDTO",
+              "version": 1,
+              "id": "device_private_custom_mvkp9h1l_80tk6u",
+              "boardId": "device_private_board_mvkp90l0_d9m0a1",
+              "label": "合成顾明",
+              "vocalization": "合成顾明",
+              "image": "http://store/EzZcbwRoyS9Z2427e826801f28ae7b48383baeb3bf8c.jpg",
+              "mediaType": "image",
+              "video": "",
+              "sound": "",
+              "backgroundColor": "#fff176",
+              "keyPath": "",
+              "loadBoardId": "",
+              "pictogramAttribution": {
+                "provider": "device-private",
+                "originalId": "device_private_board_mvkp90l0_d9m0a1:device_private_custom_mvkp9h1l_80tk6u",
+                "name": "合成顾明",
+                "license": "用户提供，仅限本机使用",
+                "licenseUrl": null,
+                "author": null,
+                "authorUrl": null,
+                "sourceUrl": "device-private://personal-image/device_private_board_mvkp90l0_d9m0a1/device_private_custom_mvkp9h1l_80tk6u",
+                "repoKey": null
+              },
+              "communication": {
+                "synonyms": [],
+                "relatedTerms": [],
+                "excludeTokens": [],
+                "category": "people"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "route": "packages/caregiver/pages/patient/index",
+    "text": "…\n患者表达\n?\n接收理解\n!\n紧急求助\n照护工具\n已保存到本机\n01\n点图片表达\n已选图片按点选顺序组成表达\n合成顾明\n图片已核验可离线使用\n←\n左移\n→\n右移\n×\n删除\n退格\n撤销删除\n清空\n接下来可能需要\n点一下即可加入当前表达\n请叫家人\n请叫家人\n护士\n语言治疗师\n首页\n点分类进入子板，点图片加入表达，可重复选择\n返回\n首页\n43\n 张\n回到首页\n是\n不\n要\n不要\n帮帮我\n停止\n再说一次\n我痛\n我不舒服\n我要喝水\n我想上厕所\n请叫医生\n请叫家人\n进入\n核心词\n进入\n修正澄清\n进入\n快速交流\n进入\n时间\n进入\n食物\n进入\n饮品\n进入\n零食\n进入\n活动\n进入\n情绪\n进入\n身体\n进入\n衣服\n进入\n人物\n进入\n描述\n进入\n厨房\n进入\n学校\n进入\n动物\n进入\n科技\n进入\n天气\n进入\n植物\n进入\n运动\n进入\n交通\n进入\n地点\n进入\n方位\n进入\n玩具\n进入\n动作\n进入\n提问\n进入\n家具\n进入\n个人卫生\n进入\n数字\n进入\n板\n合成图片离线验收\n常\n常用语\n高频常用语可直接播报，也可载入修改\n全部\n未分类\n吃饭\n洗漱\n出门\n休息\n就医\n聊天\nchat\nmeal\n查看全部（\n2\n）\n我今晚不回家吃饭\n查看整句\n一键播报\n载入修改\n合成林安今晚七点半不回家吃饭。\n查看整句\n一键播报\n载入修改\n02\n选择一句话\n默认使用本地表达规则，登录后可选用 AI 增强\n已选\n合成顾明。\n有帮助\n不符合\n02\n我的意思是：合成顾明。\n有帮助\n不符合\n03\n我想表达的是：合成顾明。\n有帮助\n不符合\n可评价候选句；评价不会触发或中断朗读。\n当前不会自动播报，请手动选择一句或全部播报。\n?\n都不对\n03\n朗读或保存\n确认后可朗读，也可以收藏为常用语\n+\n优化\n请先登录，再使用在线 AI；本地分词和图片匹配可继续使用。\n前往登录\n✓\n确认\n▶\n朗读\n▶▶\n全播\n■\n停止\n☆\n收藏\n↗\n分享\n已恢复上次表达。请主动选择或播报，恢复不会启动旧倒计时。\n最近沟通\n当前设备共保存 \n0\n 条，进入“全部历史”可重播、收藏、删除或导出。\n普通沟通历史仅在本机保留最近 50 条；收藏独立保存，可按权限同步。患者图库和沟通偏好随档案同步。缺图搜索只发送单个缺词；粤语录音识别仅在每次明确同意后临时发送录音。",
+    "requests": [],
+    "audioStarts": 0
+  },
+  "nativeReadDecode": [
+    {
+      "path": "http://store/EzZcbwRoyS9Z2427e826801f28ae7b48383baeb3bf8c.jpg",
+      "bytes": 1871,
+      "width": 64,
+      "height": 64,
+      "type": "jpeg",
+      "sha256": "29712a593ac27eb61a457571f766a25df5d2704b0f015bfd66aea8db5b6dd767"
+    }
+  ],
+  "selected": [
+    {
+      "dtoType": "TileDTO",
+      "version": 1,
+      "id": "device_private_custom_mvkp9h1l_80tk6u",
+      "boardId": "device_private_board_mvkp90l0_d9m0a1",
+      "label": "合成顾明",
+      "vocalization": "合成顾明",
+      "image": "http://store/EzZcbwRoyS9Z2427e826801f28ae7b48383baeb3bf8c.jpg",
+      "mediaType": "image",
+      "video": "",
+      "sound": "",
+      "backgroundColor": "#fff176",
+      "keyPath": "",
+      "loadBoardId": "",
+      "pictogramAttribution": {
+        "provider": "device-private",
+        "originalId": "device_private_board_mvkp90l0_d9m0a1:device_private_custom_mvkp9h1l_80tk6u",
+        "name": "合成顾明",
+        "license": "用户提供，仅限本机使用",
+        "licenseUrl": null,
+        "author": null,
+        "authorUrl": null,
+        "sourceUrl": "device-private://personal-image/device_private_board_mvkp90l0_d9m0a1/device_private_custom_mvkp9h1l_80tk6u",
+        "repoKey": null
+      },
+      "communication": {
+        "synonyms": [],
+        "relatedTerms": [],
+        "excludeTokens": [],
+        "category": "people"
+      }
+    }
+  ],
+  "libraryIdentical": true,
+  "expressionIdenticalBeforeContinue": true,
+  "identityContract": "Exact whole TileDTO equality including id/boardId/people category/device-private attribution. personId is an optional matcher output field, not required for a directly selected TileDTO.",
+  "harnessCorrection": "Initial strict personId assertion failed after successful resume; source tracing showed the optional matcher-only field. No product mutation or new resume occurred in verify-continued.",
+  "realPhone": false,
+  "networkIsolation": "mock request/uploadFile/downloadFile; native file read/getImageInfo are unmocked"
+}

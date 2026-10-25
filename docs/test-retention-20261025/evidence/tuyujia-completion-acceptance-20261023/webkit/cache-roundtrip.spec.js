@@ -1,0 +1,9 @@
+import {test} from '../../../fork-cboard/cboard/node_modules/@playwright/test';
+import {installBrowserTtsHarness,waitForProductionServiceWorker} from '../../../fork-cboard/cboard/tests/offline/helpers/communicationSupport';
+import {createPersistentBrowserHarness} from './persistent-browser-harness.cjs';
+test('measure native cache write/read and real browser image decoder separately',async()=>{
+ const h=createPersistentBrowserHarness();let result;
+ try{const{page}=await h.open({installPage:installBrowserTtsHarness});await page.goto('/board/root');await waitForProductionServiceWorker(page);
+ result=await page.evaluate(async()=>{const cache=await caches.open('tuyujia-cache-roundtrip');const key=new URL('/synthetic-cache-probe.txt',location.origin).href;await cache.put(key,new Response('synthetic cache probe',{headers:{'Content-Type':'text/plain'}}));const same=await cache.match(key);const reopened=await(await caches.open('tuyujia-cache-roundtrip')).match(key);const keys=await cache.keys();const svg='<svg xmlns="http://www.w3.org/2000/svg" width="8" height="8"><rect width="8" height="8" fill="blue"/></svg>';async function decode(text){const url=URL.createObjectURL(new Blob([text],{type:'image/svg+xml'}));try{const i=new Image();i.src=url;await i.decode();return{ok:true,width:i.naturalWidth,height:i.naturalHeight};}catch(e){return{ok:false,error:e.message};}finally{URL.revokeObjectURL(url);}}return{sameMatch:!!same,reopenedMatch:!!reopened,keyCount:keys.length,validSvg:await decode(svg),corruptSvg:await decode('broken synthetic bytes'),existingCaches:await Promise.all((await caches.keys()).map(async name=>({name,count:(await(await caches.open(name)).keys()).length})))};});h.assertNoPrivateOrAiRequests();
+ }finally{await h.close();h.saveEvidence('cache-roundtrip.json',{result});}
+});

@@ -1,0 +1,138 @@
+{
+  "config": {
+    "configFile": "<WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\webkit\\modern-offline.config.cjs",
+    "rootDir": "<WORKSPACE>/outputs/tuyujia-completion-acceptance-20261023/webkit",
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "<WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\webkit/modern-verified-20261023-193448-report.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 15000
+    },
+    "quiet": false,
+    "projects": [
+      {
+        "outputDir": "<WORKSPACE>/outputs/tuyujia-completion-acceptance-20261023/webkit/modern-verified-20261023-193448-artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {},
+        "id": "",
+        "name": "",
+        "testDir": "<WORKSPACE>/outputs/tuyujia-completion-acceptance-20261023/webkit",
+        "testIgnore": [],
+        "testMatch": [
+          "modern-offline.spec.js"
+        ],
+        "timeout": 120000
+      }
+    ],
+    "shard": null,
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.50.0",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "modern-offline.spec.js",
+      "file": "modern-offline.spec.js",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "modern WebKit production cache and photo restoration with owned origin stopped",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "status": "failed",
+                  "duration": 7710,
+                  "error": {
+                    "message": "Error: locator.textContent: Error: strict mode violation: locator('[role=\"dialog\"][aria-labelledby=\"communication-management-title\"]').locator('.PersonalImageManager').getByRole('status') resolved to 2 elements:\n    1) <div role=\"status\" class=\"PersonalImageManager__privacy\">照片只保存在当前设备，不会进入账号同步或公开图板。</div> aka getByText('照片只保存在当前设备，不会进入账号同步或公开图板。')\n    2) <p role=\"status\">正在确认本机保存…</p> aka getByText('正在确认本机保存…')\n\nCall log:\n\u001b[2m  - waiting for locator('[role=\"dialog\"][aria-labelledby=\"communication-management-title\"]').locator('.PersonalImageManager').getByRole('status')\u001b[22m\n",
+                    "stack": "Error: locator.textContent: Error: strict mode violation: locator('[role=\"dialog\"][aria-labelledby=\"communication-management-title\"]').locator('.PersonalImageManager').getByRole('status') resolved to 2 elements:\n    1) <div role=\"status\" class=\"PersonalImageManager__privacy\">照片只保存在当前设备，不会进入账号同步或公开图板。</div> aka getByText('照片只保存在当前设备，不会进入账号同步或公开图板。')\n    2) <p role=\"status\">正在确认本机保存…</p> aka getByText('正在确认本机保存…')\n\nCall log:\n\u001b[2m  - waiting for locator('[role=\"dialog\"][aria-labelledby=\"communication-management-title\"]').locator('.PersonalImageManager').getByRole('status')\u001b[22m\n\n    at Object.generator (<WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\webkit\\modern-offline.spec.js:26:750)",
+                    "location": {
+                      "file": "<WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\webkit\\modern-offline.spec.js",
+                      "column": 750,
+                      "line": 26
+                    },
+                    "snippet": "  24 |   const repo=path.resolve(__dirname,'../../../fork-cboard/cboard');server=spawn(process.execPath,[path.join(repo,'scripts/serve-offline-build.mjs')],{cwd:repo,env:{...process.env,PLAYWRIGHT_OFFLINE_HOST:'127.0.0.1',PLAYWRIGHT_OFFLINE_PORT:'4208',PLAYWRIGHT_OFFLINE_BUILD_PATH:process.env.WEBKIT_BUILD_PATH||'.local-build-20261023-targeted-ui-v2'},windowsHide:true,stdio:['ignore','pipe','pipe']});server.stdout.on('data',d=>serverLog.push(String(d)));server.stderr.on('data',d=>serverLog.push(String(d)));await new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(new Error('owned server startup timeout')),10000);server.stdout.on('data',d=>{if(String(d).includes('listening')){clearTimeout(timer);resolve();}});server.once('error',reject);});\n  25 |   let {context,page}=await h.open({installPage:installBrowserTtsHarness});page.setDefaultNavigationTimeout(15000);await page.goto('/board/root');await waitForProductionServiceWorker(page);await manage(page);\n> 26 |   const gallery=manager(page).locator('.PersonalImageManager');await gallery.getByRole('button',{name:'创建个人板',exact:true}).click();const person=gallery.locator('[aria-label=\"人物全名与照片\"]');const uri=await page.evaluate(()=>{const c=document.createElement('canvas');c.width=40;c.height=40;c.getContext('2d').fillRect(0,0,40,40);return c.toDataURL('image/png');});await person.locator('.MuiTextField-root').filter({has:page.getByText('全名',{exact:true})}).locator('input').fill('合成林安');await person.locator('input[type=file]').setInputFiles({name:'synthetic-local.png',mimeType:'image/png',buffer:Buffer.from(uri.split(',')[1],'base64')});await person.getByRole('button',{name:'保存人物',exact:true}).click();await expect.poll(()=>gallery.getByRole('status').textContent()).toContain('人物已保存');const options=await person.locator('select').first().locator('option').evaluateAll(nodes=>nodes.map(n=>({text:n.textContent,value:n.value})));const id=options.find(o=>o.text.includes('合成林安')).value;await person.locator('select').first().selectOption(id);photo={id,before:await person.locator('img[alt=\"本人照片预览\"]').evaluate(i=>({src:i.src,width:i.naturalWidth,height:i.naturalHeight}))};\n     |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              ^\n  27 |   const preconditions=await page.evaluate(async()=>({controller:!!navigator.serviceWorker.controller,caches:await Promise.all((await caches.keys()).map(async name=>({name,count:(await(await caches.open(name)).keys()).length}))),indexCached:!!await caches.match('/index.html',{ignoreSearch:true})}));layers.push({name:'online-precondition',...preconditions});expect(preconditions.indexCached).toBe(true);\n  28 |   if(process.env.MODERN_USE_OFFLINE_FLAG!=='0'){await context.setOffline(true);await probe('setOffline-same-page',page,()=>page.reload({waitUntil:'domcontentloaded'}));await context.setOffline(false);await page.goto('/board/root',{waitUntil:'domcontentloaded'});}else{layers.push({name:'setOffline-same-page',executed:false,reason:'isolated origin-stopped control; failed setOffline evidence retained in prior run'});await page.goto('/board/root',{waitUntil:'domcontentloaded'});}\n  29 |   await stop();layers.push({name:'origin-stopped',serverPid:server.pid,serverExited,offlineEmulationFlag:false});"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "<WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\webkit\\modern-offline.spec.js",
+                        "column": 750,
+                        "line": 26
+                      },
+                      "message": "Error: locator.textContent: Error: strict mode violation: locator('[role=\"dialog\"][aria-labelledby=\"communication-management-title\"]').locator('.PersonalImageManager').getByRole('status') resolved to 2 elements:\n    1) <div role=\"status\" class=\"PersonalImageManager__privacy\">照片只保存在当前设备，不会进入账号同步或公开图板。</div> aka getByText('照片只保存在当前设备，不会进入账号同步或公开图板。')\n    2) <p role=\"status\">正在确认本机保存…</p> aka getByText('正在确认本机保存…')\n\nCall log:\n\u001b[2m  - waiting for locator('[role=\"dialog\"][aria-labelledby=\"communication-management-title\"]').locator('.PersonalImageManager').getByRole('status')\u001b[22m\n\n\n  24 |   const repo=path.resolve(__dirname,'../../../fork-cboard/cboard');server=spawn(process.execPath,[path.join(repo,'scripts/serve-offline-build.mjs')],{cwd:repo,env:{...process.env,PLAYWRIGHT_OFFLINE_HOST:'127.0.0.1',PLAYWRIGHT_OFFLINE_PORT:'4208',PLAYWRIGHT_OFFLINE_BUILD_PATH:process.env.WEBKIT_BUILD_PATH||'.local-build-20261023-targeted-ui-v2'},windowsHide:true,stdio:['ignore','pipe','pipe']});server.stdout.on('data',d=>serverLog.push(String(d)));server.stderr.on('data',d=>serverLog.push(String(d)));await new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(new Error('owned server startup timeout')),10000);server.stdout.on('data',d=>{if(String(d).includes('listening')){clearTimeout(timer);resolve();}});server.once('error',reject);});\n  25 |   let {context,page}=await h.open({installPage:installBrowserTtsHarness});page.setDefaultNavigationTimeout(15000);await page.goto('/board/root');await waitForProductionServiceWorker(page);await manage(page);\n> 26 |   const gallery=manager(page).locator('.PersonalImageManager');await gallery.getByRole('button',{name:'创建个人板',exact:true}).click();const person=gallery.locator('[aria-label=\"人物全名与照片\"]');const uri=await page.evaluate(()=>{const c=document.createElement('canvas');c.width=40;c.height=40;c.getContext('2d').fillRect(0,0,40,40);return c.toDataURL('image/png');});await person.locator('.MuiTextField-root').filter({has:page.getByText('全名',{exact:true})}).locator('input').fill('合成林安');await person.locator('input[type=file]').setInputFiles({name:'synthetic-local.png',mimeType:'image/png',buffer:Buffer.from(uri.split(',')[1],'base64')});await person.getByRole('button',{name:'保存人物',exact:true}).click();await expect.poll(()=>gallery.getByRole('status').textContent()).toContain('人物已保存');const options=await person.locator('select').first().locator('option').evaluateAll(nodes=>nodes.map(n=>({text:n.textContent,value:n.value})));const id=options.find(o=>o.text.includes('合成林安')).value;await person.locator('select').first().selectOption(id);photo={id,before:await person.locator('img[alt=\"本人照片预览\"]').evaluate(i=>({src:i.src,width:i.naturalWidth,height:i.naturalHeight}))};\n     |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              ^\n  27 |   const preconditions=await page.evaluate(async()=>({controller:!!navigator.serviceWorker.controller,caches:await Promise.all((await caches.keys()).map(async name=>({name,count:(await(await caches.open(name)).keys()).length}))),indexCached:!!await caches.match('/index.html',{ignoreSearch:true})}));layers.push({name:'online-precondition',...preconditions});expect(preconditions.indexCached).toBe(true);\n  28 |   if(process.env.MODERN_USE_OFFLINE_FLAG!=='0'){await context.setOffline(true);await probe('setOffline-same-page',page,()=>page.reload({waitUntil:'domcontentloaded'}));await context.setOffline(false);await page.goto('/board/root',{waitUntil:'domcontentloaded'});}else{layers.push({name:'setOffline-same-page',executed:false,reason:'isolated origin-stopped control; failed setOffline evidence retained in prior run'});await page.goto('/board/root',{waitUntil:'domcontentloaded'});}\n  29 |   await stop();layers.push({name:'origin-stopped',serverPid:server.pid,serverExited,offlineEmulationFlag:false});\n    at Object.generator (<WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\webkit\\modern-offline.spec.js:26:750)"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-23T11:34:50.045Z",
+                  "attachments": [
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "<WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\webkit\\modern-verified-20261023-193448-artifacts\\modern-offline-modern-WebK-38733-n-with-owned-origin-stopped\\trace.zip"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "<WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\webkit\\modern-offline.spec.js",
+                    "column": 750,
+                    "line": 26
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "0345485ab346a373bfc2-44118c7d9cf76c3a33c8",
+          "file": "modern-offline.spec.js",
+          "line": 9,
+          "column": 5
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-23T11:34:48.778Z",
+    "duration": 9015.064,
+    "expected": 0,
+    "skipped": 0,
+    "unexpected": 1,
+    "flaky": 0
+  }
+}

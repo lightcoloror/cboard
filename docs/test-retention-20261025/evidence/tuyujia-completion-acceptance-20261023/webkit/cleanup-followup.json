@@ -1,0 +1,7 @@
+{
+  "checkedAt": "2026-10-23T17:39:40.8813470+08:00",
+  "method": "successful read-only listener and Win32_Process query",
+  "loopbackPort": 4208,
+  "remainingListeners": [],
+  "remainingOwnedWebkitProcesses": []
+}

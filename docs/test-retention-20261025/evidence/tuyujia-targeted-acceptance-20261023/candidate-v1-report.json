@@ -1,0 +1,158 @@
+{
+  "config": {
+    "configFile": "<WORKSPACE>\\outputs\\tuyujia-targeted-acceptance-20261023\\local.config.cjs",
+    "rootDir": "<WORKSPACE>/outputs/tuyujia-targeted-acceptance-20261023",
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "<WORKSPACE>\\outputs\\tuyujia-targeted-acceptance-20261023/candidate-v1-report.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 15000
+    },
+    "quiet": false,
+    "projects": [
+      {
+        "outputDir": "<WORKSPACE>/outputs/tuyujia-targeted-acceptance-20261023/candidate-v1-artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {},
+        "id": "",
+        "name": "",
+        "testDir": "<WORKSPACE>/outputs/tuyujia-targeted-acceptance-20261023",
+        "testIgnore": [],
+        "testMatch": [
+          "gallery.spec.js"
+        ],
+        "timeout": 120000
+      }
+    ],
+    "shard": null,
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.50.0",
+    "workers": 1,
+    "webServer": {
+      "command": "\"C:/Program Files/nodejs/node.exe\" scripts/serve-offline-build.mjs",
+      "cwd": "<WORKSPACE>\\fork-cboard\\cboard",
+      "env": {
+        "PLAYWRIGHT_OFFLINE_HOST": "127.0.0.1",
+        "PLAYWRIGHT_OFFLINE_PORT": "4198",
+        "PLAYWRIGHT_OFFLINE_BUILD_PATH": ".local-build-20261023-targeted-ui-v1"
+      },
+      "url": "http://127.0.0.1:4198",
+      "reuseExistingServer": false
+    }
+  },
+  "suites": [
+    {
+      "title": "gallery.spec.js",
+      "file": "gallery.spec.js",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "new local photo saved through product, decoded after independent offline browser restart",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "status": "passed",
+                  "duration": 12681,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-23T05:34:10.847Z",
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c668d4c0fb87f924a774-eaa4342ecb5952d5ef93",
+          "file": "gallery.spec.js",
+          "line": 10,
+          "column": 5
+        },
+        {
+          "title": "CBoard card and folder-link deletion requires confirmation; cancel preserves content",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "status": "timedOut",
+                  "duration": 120010,
+                  "error": {
+                    "message": "\u001b[31mTest timeout of 120000ms exceeded.\u001b[39m",
+                    "stack": "\u001b[31mTest timeout of 120000ms exceeded.\u001b[39m"
+                  },
+                  "errors": [
+                    {
+                      "message": "\u001b[31mTest timeout of 120000ms exceeded.\u001b[39m"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-23T05:34:23.533Z",
+                  "attachments": []
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "c668d4c0fb87f924a774-df218180d8d5eb883a9b",
+          "file": "gallery.spec.js",
+          "line": 35,
+          "column": 5
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-23T05:34:10.006Z",
+    "duration": 134944.35100000002,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 1,
+    "flaky": 0
+  }
+}

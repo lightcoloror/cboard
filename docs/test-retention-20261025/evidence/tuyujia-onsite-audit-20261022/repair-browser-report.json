@@ -1,0 +1,118 @@
+{
+  "config": {
+    "configFile": "<WORKSPACE>\\outputs\\tuyujia-onsite-audit-20261022\\repair.config.cjs",
+    "rootDir": "<WORKSPACE>/outputs/tuyujia-onsite-audit-20261022",
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "<WORKSPACE>\\outputs\\tuyujia-onsite-audit-20261022/repair-browser-report.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 15000
+    },
+    "quiet": false,
+    "projects": [
+      {
+        "outputDir": "<WORKSPACE>/outputs/tuyujia-onsite-audit-20261022/repair-artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {},
+        "id": "",
+        "name": "",
+        "testDir": "<WORKSPACE>/outputs/tuyujia-onsite-audit-20261022",
+        "testIgnore": [],
+        "testMatch": [
+          "repair.spec.js"
+        ],
+        "timeout": 120000
+      }
+    ],
+    "shard": null,
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.50.0",
+    "workers": 1,
+    "webServer": {
+      "command": "\"C:/Program Files/nodejs/node.exe\" scripts/serve-offline-build.mjs",
+      "cwd": "<WORKSPACE>\\fork-cboard\\cboard",
+      "env": {
+        "PLAYWRIGHT_OFFLINE_HOST": "127.0.0.1",
+        "PLAYWRIGHT_OFFLINE_PORT": "4198",
+        "PLAYWRIGHT_OFFLINE_BUILD_PATH": ".local-build-20261022-onsite-ui-repair-v2"
+      },
+      "url": "http://127.0.0.1:4198",
+      "reuseExistingServer": false
+    }
+  },
+  "suites": [
+    {
+      "title": "repair.spec.js",
+      "file": "repair.spec.js",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "production candidate: visible undo, preserved sequence and responsive repair controls",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "status": "passed",
+                  "duration": 5439,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-22T12:25:42.372Z",
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "8e24e0025289d91b6dd5-9bb48d094171457b5693",
+          "file": "repair.spec.js",
+          "line": 6,
+          "column": 5
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-22T12:25:41.648Z",
+    "duration": 6743.755,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

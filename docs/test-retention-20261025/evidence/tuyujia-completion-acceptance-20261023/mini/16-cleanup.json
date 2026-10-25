@@ -1,0 +1,20 @@
+{
+  "passed": true,
+  "ownedFiles": {
+    "removed": [
+      "http://usr/care-library-525775becc16d243863781db2da1f3131f1f07db699e0b2cb83f6070e8d8a824/boards-a.json",
+      "http://usr/care-library-525775becc16d243863781db2da1f3131f1f07db699e0b2cb83f6070e8d8a824/boards-b.json",
+      "http://usr/picinterpreter-expression-local-8be04a9d71142b1112822d832ba7f2af9db55e99ff3c752cdfaadab8481a53c1.json",
+      "http://usr/picinterpreter-receiver-local-6562f96936159199a6426964a37c628b9da32760ca59dd3d2dd26bd3bf0ad7ac.json",
+      "http://usr/picinterpreter-favorite-local-979e0d12c4f6f4a7257f4daf64d76ade3b7b3d342fe2f2337f09d070a60aba7c.json",
+      "http://usr/synthetic-upload-source-circle.png",
+      "http://store/EzZcbwRoyS9Z2427e826801f28ae7b48383baeb3bf8c.jpg"
+    ]
+  },
+  "originalSelectionRestored": true,
+  "chooseMediaRestored": true,
+  "closed": {
+    "success": true,
+    "winId": "s2"
+  }
+}

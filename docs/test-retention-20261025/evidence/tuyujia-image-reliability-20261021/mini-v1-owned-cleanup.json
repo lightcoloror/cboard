@@ -1,0 +1,32 @@
+{
+  "syntheticOnly": true,
+  "success": true,
+  "privateBackupRetained": false,
+  "restoration": {
+    "originalKeysRestored": true,
+    "originalKeyCount": 3,
+    "syntheticKeysRemoved": 13,
+    "ownedFilesRemoved": [
+      "picinterpreter-expression-local-b35d0b56de17c3d81c5016350be62150a5b556cc81d85d4972f37f88e444d1d8.json",
+      "picinterpreter-receiver-local-8ed00c9df445861dfd9d0c1f8821e3ca2d3a3ae64e8d2bc23fff413d48ff5d0c.json",
+      "picinterpreter-favorite-local-690151a595008a0f50a2e185a4b8067dc21dc4faae6de27b10c4c3b795fe610f.json"
+    ],
+    "ownedFilesAbsent": [
+      "picinterpreter-expression-local-b35d0b56de17c3d81c5016350be62150a5b556cc81d85d4972f37f88e444d1d8.json.tmp",
+      "care-68993ff3c78dc4be7da55618b9cd6cc709157f179852d853783896cbdaea2301.json",
+      "care-68993ff3c78dc4be7da55618b9cd6cc709157f179852d853783896cbdaea2301.json.tmp",
+      "picinterpreter-receiver-local-8ed00c9df445861dfd9d0c1f8821e3ca2d3a3ae64e8d2bc23fff413d48ff5d0c.json.tmp",
+      "picinterpreter-favorite-local-690151a595008a0f50a2e185a4b8067dc21dc4faae6de27b10c4c3b795fe610f.json.tmp"
+    ],
+    "expressionPageUnmounted": true
+  },
+  "disk": {
+    "originalKeysMatchDisk": true,
+    "syntheticScopeAbsentFromDisk": true,
+    "fileIdentitySha256": "f87daab5a3c64bd2401a8198c2dbcdd5fce64b43b07b83c53f71b6574bb310f0"
+  },
+  "filesRemainAbsent": true,
+  "diskStableReads": 2,
+  "elapsedSeconds": 12.172223000088707,
+  "privateBackupRemoved": true
+}

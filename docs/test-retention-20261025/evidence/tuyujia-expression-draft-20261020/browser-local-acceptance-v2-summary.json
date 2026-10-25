@@ -1,0 +1,141 @@
+{
+  "generatedAt": "2026-10-20T17:25:33.383329+00:00",
+  "status": "passed",
+  "candidateBuild": "<WORKSPACE>/fork-cboard/cboard/.server-private-build-20261021-expression-draft-v2",
+  "inventory": "web-build-inventory-expression-draft.json",
+  "inventorySha256": "127c65c38613775382cd9a3036f575f82d878e39629d1f13a6f45338d8b6d7f0",
+  "uniqueScenariosPassed": 3,
+  "passedScenarios": [
+    {
+      "title": "silent storage failure preserves prior draft; cleanup failure and double confirmation write one history record",
+      "report": "browser-local-report-attempt3-v2-selector-two-passed.json"
+    },
+    {
+      "title": "clear and confirmed Start new do not resurrect expression after another offline browser process restart",
+      "report": "browser-local-report-attempt3-v2-selector-two-passed.json"
+    },
+    {
+      "title": "cold offline process restart preserves exact identity, rejected candidates and Later/Cancel choices",
+      "report": "browser-local-report.json"
+    }
+  ],
+  "preservedFailedAttempts": [
+    {
+      "title": "cold offline process restart preserves exact identity, rejected candidates and Later/Cancel choices",
+      "report": "browser-local-report-attempt3-v2-selector-two-passed.json",
+      "reason": "Test locator matched hidden and visible missing-image hints; fixed to :visible and rerun passed."
+    }
+  ],
+  "earlierProductRegression": {
+    "report": "browser-local-report-attempt2-v1-original-sentence-lost.json",
+    "status": "Fixed by Web owner and verified in v2; original expected full sentence retained."
+  },
+  "processes": [
+    {
+      "generation": 1,
+      "pid": 39024,
+      "startedAt": "2026-10-20T17:22:32.511Z",
+      "offline": false,
+      "exited": true,
+      "exitedAt": "2026-10-20T17:22:41.602Z",
+      "evidence": "local-browser-cold-identity-1792516974471.json"
+    },
+    {
+      "generation": 2,
+      "pid": 17500,
+      "startedAt": "2026-10-20T17:22:43.400Z",
+      "offline": true,
+      "exited": true,
+      "exitedAt": "2026-10-20T17:22:54.471Z",
+      "evidence": "local-browser-cold-identity-1792516974471.json"
+    },
+    {
+      "generation": 1,
+      "pid": 47384,
+      "startedAt": "2026-10-20T17:20:14.619Z",
+      "offline": false,
+      "exited": true,
+      "exitedAt": "2026-10-20T17:20:23.738Z",
+      "evidence": "local-browser-storage-confirmation.json"
+    },
+    {
+      "generation": 2,
+      "pid": 48760,
+      "startedAt": "2026-10-20T17:20:25.609Z",
+      "offline": true,
+      "exited": true,
+      "exitedAt": "2026-10-20T17:20:34.233Z",
+      "evidence": "local-browser-storage-confirmation.json"
+    },
+    {
+      "generation": 3,
+      "pid": 32332,
+      "startedAt": "2026-10-20T17:20:35.908Z",
+      "offline": true,
+      "exited": true,
+      "exitedAt": "2026-10-20T17:20:37.181Z",
+      "evidence": "local-browser-storage-confirmation.json"
+    },
+    {
+      "generation": 1,
+      "pid": 48004,
+      "startedAt": "2026-10-20T17:20:38.942Z",
+      "offline": false,
+      "exited": true,
+      "exitedAt": "2026-10-20T17:20:47.935Z",
+      "evidence": "local-browser-clear-discard.json"
+    },
+    {
+      "generation": 2,
+      "pid": 16512,
+      "startedAt": "2026-10-20T17:20:49.697Z",
+      "offline": true,
+      "exited": true,
+      "exitedAt": "2026-10-20T17:20:52.887Z",
+      "evidence": "local-browser-clear-discard.json"
+    },
+    {
+      "generation": 3,
+      "pid": 7496,
+      "startedAt": "2026-10-20T17:20:54.737Z",
+      "offline": true,
+      "exited": true,
+      "exitedAt": "2026-10-20T17:21:03.308Z",
+      "evidence": "local-browser-clear-discard.json"
+    },
+    {
+      "generation": 4,
+      "pid": 85272,
+      "startedAt": "2026-10-20T17:21:04.978Z",
+      "offline": true,
+      "exited": true,
+      "exitedAt": "2026-10-20T17:21:06.297Z",
+      "evidence": "local-browser-clear-discard.json"
+    }
+  ],
+  "freshBrowserProcessCount": 9,
+  "offlineFreshProcessCount": 6,
+  "requestCount": 627,
+  "privateOrAiRequestAttempts": 0,
+  "pageErrors": [],
+  "cleanupObserved": {
+    "loopback4198Listeners": 0,
+    "ownedSyntheticChromeProcesses": 0,
+    "method": "Read-only Get-NetTCPConnection and Win32_Process command-line filter after all attempts."
+  },
+  "evidenceFiles": [
+    "local-browser-cold-identity-1792516974471.json",
+    "local-browser-storage-confirmation.json",
+    "local-browser-clear-discard.json"
+  ],
+  "screenshotDirectories": [
+    "browser-local-artifacts-attempt3",
+    "browser-local-artifacts"
+  ],
+  "limits": [
+    "Synthetic isolated local storage and geometric pictures only.",
+    "Real production Web build in Chrome; TTS uses existing stub, not a physical speaker test.",
+    "No actual model calls, public data, mobile devices, or clinical conclusions.",
+    "Server deployment and mini runtime acceptance are tracked separately by root."
+  ]
+}

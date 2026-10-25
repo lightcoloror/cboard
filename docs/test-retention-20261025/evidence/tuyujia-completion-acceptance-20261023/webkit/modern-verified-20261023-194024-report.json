@@ -1,0 +1,108 @@
+{
+  "config": {
+    "configFile": "<WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\webkit\\modern-offline.config.cjs",
+    "rootDir": "<WORKSPACE>/outputs/tuyujia-completion-acceptance-20261023/webkit",
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "<WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\webkit/modern-verified-20261023-194024-report.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 15000
+    },
+    "quiet": false,
+    "projects": [
+      {
+        "outputDir": "<WORKSPACE>/outputs/tuyujia-completion-acceptance-20261023/webkit/modern-verified-20261023-194024-artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {},
+        "id": "",
+        "name": "",
+        "testDir": "<WORKSPACE>/outputs/tuyujia-completion-acceptance-20261023/webkit",
+        "testIgnore": [],
+        "testMatch": [
+          "modern-offline.spec.js"
+        ],
+        "timeout": 120000
+      }
+    ],
+    "shard": null,
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.50.0",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "modern-offline.spec.js",
+      "file": "modern-offline.spec.js",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "modern WebKit production cache and photo restoration with owned origin stopped",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "status": "passed",
+                  "duration": 14764,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-23T11:40:25.868Z",
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0345485ab346a373bfc2-44118c7d9cf76c3a33c8",
+          "file": "modern-offline.spec.js",
+          "line": 9,
+          "column": 5
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-23T11:40:24.797Z",
+    "duration": 15878.293,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

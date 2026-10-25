@@ -1,0 +1,32 @@
+{
+  "recordedAt": "2026-10-21T01:51:00.083395+08:00",
+  "webDeployed": true,
+  "webArtifact": "6671b84a7ce8a58eca35094f3e7413c205073823d487b3f1548a7651197b9205",
+  "webProductionScenarios": 3,
+  "miniPreviewUpdated": true,
+  "miniArtifact": "ac04561d42af3c133679c1b29ac222e9d2ff7a65240eb0eac2c09e72c1b76320",
+  "miniRuntimeRefreshRestoreVerified": true,
+  "miniProjectCloseOpenVerified": false,
+  "miniProjectCloseOpenIssue": "First probe read an older revision and lost the marker; cause undetermined. Retained separately from passed runtime refresh.",
+  "miniFinalAssertionsPassed": true,
+  "isolatedMongoScenarios": 14,
+  "newPaidModelCalls": 0,
+  "phoneTest": false,
+  "obsidianNotesVerified": 3,
+  "bidirectionalLinksVerified": true,
+  "limits": [
+    "Project close/open failure remains unresolved; actual JS-runtime refresh restoration passed.",
+    "No phone process-kill, physical-speaker or clinical validation.",
+    "Paid AI upstream was not called; controllable provider and existing Mongo fixtures were used."
+  ],
+  "evidence": [
+    "README.md",
+    "browser-production-acceptance-v2-summary.json",
+    "mini-draft-final-recheck-evidence.json",
+    "mini-preview-receipt.json",
+    "mini-runtime-boundary-readonly-diagnosis.md",
+    "mongo/latest.json",
+    "postcheck.json",
+    "obsidian-write-receipt.json"
+  ]
+}

@@ -1,0 +1,2639 @@
+{
+  "scope": "isolated-synthetic-production-app",
+  "profile": "<USER_HOME>\\AppData\\Local\\Temp\\tuyujia-expression-draft-iEoOqg",
+  "fixtureMarker": "tuyujia-expression-draft-0d7fb3e0-b346-42c1-89bc-cab184727b8d",
+  "origin": "http://127.0.0.1:4198",
+  "processes": [
+    {
+      "generation": 1,
+      "pid": 89892,
+      "startedAt": "2026-10-21T05:46:00.794Z",
+      "offline": false,
+      "exited": true,
+      "exitedAt": "2026-10-21T05:46:05.320Z"
+    },
+    {
+      "generation": 2,
+      "pid": 68952,
+      "startedAt": "2026-10-21T05:46:07.382Z",
+      "offline": true,
+      "exited": true,
+      "exitedAt": "2026-10-21T05:46:11.141Z"
+    },
+    {
+      "generation": 3,
+      "pid": 48348,
+      "startedAt": "2026-10-21T05:46:13.116Z",
+      "offline": true,
+      "exited": true,
+      "exitedAt": "2026-10-21T05:46:16.249Z"
+    }
+  ],
+  "requests": [
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/board/root",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/manifest.json",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/static/js/main.1fc8c59b.js",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/static/css/main.10e9cd97.css",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/images/pwa/android/android-launchericon-144-144.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/images/touch/chrome-touch-icon-192x192.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/static/js/9832.3ccfe371.chunk.js",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/static/js/4138.07a39a56.chunk.js",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/service-worker.js",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/police-filing.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/cboard/cboardRoot.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/cboard/picseepal.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/api/location",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/correct.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/no.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/37160.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/11595.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/32648.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/7196.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/11752.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/2367.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/32528.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/37207.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/37331.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/32085.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/39610.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/6632.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/22198.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/cboard/speech_bubble.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/clock.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/food.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/drinks.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/jelly_beans.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/cboard/activities.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/cboard/emotions.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/body_outline.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/generic_clothes.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/cboard/people.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/shapesorter.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/cboard/kitchen_items.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/school.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/cboard/animals.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/technology.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/cboard/weather.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/cboard/plants.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/cboard/sports.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/travel.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/globe.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/cboard/position.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/toys.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/cboard/actions.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/ask_,_to.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/furniture.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/cboard/personal_hygiene.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/count_,_to.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "POST",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/api/pictograms/search",
+      "bodySha256": "ad4632718a64dca51ae2babb8dbdb52c48a5d0d8adcd9968e4d4460aa67d43c7",
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/board/root",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/static/css/main.10e9cd97.css",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/manifest.json",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/static/js/main.1fc8c59b.js",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/images/pwa/android/android-launchericon-144-144.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/static/js/4138.07a39a56.chunk.js",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/service-worker.js",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/police-filing.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/api/location",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/images/touch/chrome-touch-icon-192x192.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/correct.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/no.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/37160.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/11595.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/32648.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/11752.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/32528.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/7196.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/2367.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/37207.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/37331.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/32085.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/39610.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/6632.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/22198.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/cboard/speech_bubble.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/clock.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/food.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/drinks.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/jelly_beans.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/cboard/activities.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/cboard/emotions.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/body_outline.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/generic_clothes.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/cboard/people.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/shapesorter.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/cboard/kitchen_items.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/technology.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/school.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/cboard/weather.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/cboard/plants.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/cboard/animals.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/cboard/sports.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/travel.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/globe.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/toys.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/cboard/position.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/cboard/actions.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/ask_,_to.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/furniture.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/cboard/personal_hygiene.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/count_,_to.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/board/root",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/static/css/main.10e9cd97.css",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/manifest.json",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/static/js/main.1fc8c59b.js",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/images/pwa/android/android-launchericon-144-144.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/static/js/4138.07a39a56.chunk.js",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/service-worker.js",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/api/location",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/police-filing.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/correct.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/no.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/11595.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/37160.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/32648.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/7196.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/11752.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/2367.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/32528.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/37207.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/37331.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/32085.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/39610.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/6632.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/22198.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/cboard/speech_bubble.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/clock.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/food.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/drinks.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/jelly_beans.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/cboard/activities.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/cboard/emotions.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/body_outline.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/generic_clothes.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/cboard/people.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/shapesorter.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/cboard/kitchen_items.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/cboard/weather.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/school.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/technology.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/cboard/plants.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/cboard/animals.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/travel.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/cboard/sports.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/globe.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/cboard/position.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/toys.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/cboard/actions.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/ask_,_to.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/furniture.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/cboard/personal_hygiene.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 2,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/count_,_to.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/board/root",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/static/css/main.10e9cd97.css",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/manifest.json",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/static/js/main.1fc8c59b.js",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/images/pwa/android/android-launchericon-144-144.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/static/js/4138.07a39a56.chunk.js",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/service-worker.js",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/api/location",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/6632.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/no.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/police-filing.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/correct.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/11595.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/37160.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/32648.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/7196.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/11752.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/2367.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/37331.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/39610.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/22198.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/32528.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/37207.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/arasaac/picinterpreter-care/32085.png",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/cboard/speech_bubble.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/drinks.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/jelly_beans.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/cboard/activities.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/clock.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/food.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/cboard/emotions.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/body_outline.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/generic_clothes.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/cboard/people.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/shapesorter.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/cboard/kitchen_items.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/cboard/animals.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/school.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/technology.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/cboard/weather.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/cboard/plants.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/cboard/sports.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/travel.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/globe.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/cboard/position.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/toys.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/cboard/actions.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/furniture.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/cboard/personal_hygiene.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/ask_,_to.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    },
+    {
+      "generation": 3,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4198",
+      "path": "/symbols/mulberry/count_,_to.svg",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    }
+  ],
+  "violations": [],
+  "pageErrors": [],
+  "externalModelsCalled": false,
+  "physicalDeviceTested": false,
+  "savedDraft": [
+    {
+      "direction": "receive",
+      "sentence": "",
+      "inputText": "我今晚不回家吃饭，明早七点半回家。",
+      "labels": [
+        "我",
+        "今晚",
+        "不",
+        "回家",
+        "吃饭",
+        "，",
+        "明早",
+        "七点半",
+        "回家",
+        "。"
+      ],
+      "createdAt": 1792561562563,
+      "isFavorite": false,
+      "id": "receiver_mvhovdtv_eqmqkdg5",
+      "output": [
+        {
+          "id": "pi-core-i",
+          "image": "/symbols/arasaac/picinterpreter-care/6632.png",
+          "label": "我",
+          "vocalization": "我",
+          "backgroundColor": "rgb(255, 241, 118)",
+          "attribution": {
+            "provider": "arasaac",
+            "originalId": "6632",
+            "name": "ARASAAC",
+            "license": "CC BY-NC-SA 4.0",
+            "licenseUrl": "https://creativecommons.org/licenses/by-nc-sa/4.0/",
+            "author": "Sergio Palao",
+            "authorUrl": "https://arasaac.org/",
+            "sourceUrl": "https://arasaac.org/pictograms/zh/6632",
+            "repoKey": "arasaac"
+          }
+        },
+        {
+          "id": "text-review_dq8i4zb3",
+          "label": "今晚",
+          "vocalization": "今晚",
+          "image": "",
+          "textOnly": true
+        },
+        {
+          "id": "pi-core-no",
+          "image": "/symbols/mulberry/no.svg",
+          "label": "不",
+          "vocalization": "不",
+          "backgroundColor": "rgb(255, 241, 118)",
+          "attribution": {
+            "provider": "mulberry",
+            "originalId": "pi-core-no",
+            "name": "Mulberry Symbols",
+            "license": "CC BY-SA 4.0",
+            "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+            "author": "Mulberry Symbols",
+            "authorUrl": "https://mulberrysymbols.org/",
+            "sourceUrl": "https://mulberrysymbols.org/",
+            "repoKey": "mulberry"
+          }
+        },
+        {
+          "id": "text-review_xlwy5axo",
+          "label": "回家",
+          "vocalization": "回家",
+          "image": "",
+          "textOnly": true
+        },
+        {
+          "id": "text-review_1b4wajml",
+          "label": "吃饭",
+          "vocalization": "吃饭",
+          "image": "",
+          "textOnly": true
+        },
+        {
+          "id": "text-separator-5",
+          "label": "，",
+          "vocalization": "，",
+          "image": "",
+          "textOnly": true
+        },
+        {
+          "id": "text-review_025m5v6n",
+          "label": "明早",
+          "vocalization": "明早",
+          "image": "",
+          "textOnly": true
+        },
+        {
+          "id": "text-review_g9d2ywm2",
+          "label": "七点半",
+          "vocalization": "七点半",
+          "image": "",
+          "textOnly": true
+        },
+        {
+          "id": "text-review_e4vts98k",
+          "label": "回家",
+          "vocalization": "回家",
+          "image": "",
+          "textOnly": true
+        },
+        {
+          "id": "text-separator-9",
+          "label": "。",
+          "vocalization": "。",
+          "image": "",
+          "textOnly": true
+        }
+      ],
+      "pictogramSequence": [
+        {
+          "pictogramId": "pi-core-i",
+          "label": "我",
+          "source": "local_dict",
+          "boardId": "pi-core-words-v1",
+          "matchType": "exact",
+          "confidence": 1,
+          "originalToken": "我",
+          "sourceSpan": {
+            "start": 0,
+            "end": 1,
+            "offsetUnit": "unicode-code-point"
+          },
+          "attribution": {
+            "provider": "arasaac",
+            "originalId": "6632",
+            "name": "ARASAAC",
+            "license": "CC BY-NC-SA 4.0",
+            "licenseUrl": "https://creativecommons.org/licenses/by-nc-sa/4.0/",
+            "author": "Sergio Palao",
+            "authorUrl": "https://arasaac.org/",
+            "sourceUrl": "https://arasaac.org/pictograms/zh/6632",
+            "repoKey": "arasaac"
+          }
+        },
+        {
+          "pictogramId": null,
+          "label": "今晚",
+          "source": "text",
+          "boardId": "",
+          "matchType": "manual",
+          "confidence": 1,
+          "originalToken": "今晚",
+          "textOnly": true,
+          "sourceSpan": {
+            "start": 1,
+            "end": 3,
+            "offsetUnit": "unicode-code-point"
+          }
+        },
+        {
+          "pictogramId": "pi-core-no",
+          "label": "不",
+          "source": "local_dict",
+          "boardId": "pi-core-words-v1",
+          "matchType": "exact",
+          "confidence": 1,
+          "originalToken": "不",
+          "sourceSpan": {
+            "start": 3,
+            "end": 4,
+            "offsetUnit": "unicode-code-point"
+          },
+          "attribution": {
+            "provider": "mulberry",
+            "originalId": "pi-core-no",
+            "name": "Mulberry Symbols",
+            "license": "CC BY-SA 4.0",
+            "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+            "author": "Mulberry Symbols",
+            "authorUrl": "https://mulberrysymbols.org/",
+            "sourceUrl": "https://mulberrysymbols.org/",
+            "repoKey": "mulberry"
+          }
+        },
+        {
+          "pictogramId": null,
+          "label": "回家",
+          "source": "text",
+          "boardId": "",
+          "matchType": "manual",
+          "confidence": 1,
+          "originalToken": "回家",
+          "textOnly": true,
+          "sourceSpan": {
+            "start": 4,
+            "end": 6,
+            "offsetUnit": "unicode-code-point"
+          }
+        },
+        {
+          "pictogramId": null,
+          "label": "吃饭",
+          "source": "text",
+          "boardId": "",
+          "matchType": "manual",
+          "confidence": 1,
+          "originalToken": "吃饭",
+          "textOnly": true,
+          "sourceSpan": {
+            "start": 6,
+            "end": 8,
+            "offsetUnit": "unicode-code-point"
+          }
+        },
+        {
+          "pictogramId": null,
+          "label": "，",
+          "source": "text",
+          "boardId": "",
+          "matchType": "manual",
+          "confidence": 1,
+          "originalToken": "，",
+          "textOnly": true,
+          "sourceSpan": {
+            "start": 8,
+            "end": 9,
+            "offsetUnit": "unicode-code-point"
+          }
+        },
+        {
+          "pictogramId": null,
+          "label": "明早",
+          "source": "text",
+          "boardId": "",
+          "matchType": "manual",
+          "confidence": 1,
+          "originalToken": "明早",
+          "textOnly": true,
+          "sourceSpan": {
+            "start": 9,
+            "end": 11,
+            "offsetUnit": "unicode-code-point"
+          }
+        },
+        {
+          "pictogramId": null,
+          "label": "七点半",
+          "source": "text",
+          "boardId": "",
+          "matchType": "manual",
+          "confidence": 1,
+          "originalToken": "七点半",
+          "textOnly": true,
+          "sourceSpan": {
+            "start": 11,
+            "end": 14,
+            "offsetUnit": "unicode-code-point"
+          }
+        },
+        {
+          "pictogramId": null,
+          "label": "回家",
+          "source": "text",
+          "boardId": "",
+          "matchType": "manual",
+          "confidence": 1,
+          "originalToken": "回家",
+          "textOnly": true,
+          "sourceSpan": {
+            "start": 14,
+            "end": 16,
+            "offsetUnit": "unicode-code-point"
+          }
+        },
+        {
+          "pictogramId": null,
+          "label": "。",
+          "source": "text",
+          "boardId": "",
+          "matchType": "manual",
+          "confidence": 1,
+          "originalToken": "。",
+          "textOnly": true,
+          "sourceSpan": {
+            "start": 16,
+            "end": 17,
+            "offsetUnit": "unicode-code-point"
+          }
+        }
+      ],
+      "sessionId": "session_mvhovcxf_p66psqg0",
+      "patientId": "patient_mvhovcxf_ntz7cofy",
+      "workspaceId": "workspace_mvhovcxf_a4u7x0kx",
+      "recordStatus": "draft",
+      "updatedAt": 1792561563281,
+      "contractVersion": 2
+    }
+  ],
+  "repair": [
+    {
+      "direction": "receive",
+      "sentence": "",
+      "inputText": "我今晚在外面吃饭",
+      "labels": [],
+      "createdAt": 1792561570654,
+      "isFavorite": false,
+      "id": "receiver_mvhovk2m_8lestd1v",
+      "sessionId": "session_mvhovcxf_p66psqg0",
+      "patientId": "patient_mvhovcxf_ntz7cofy",
+      "workspaceId": "workspace_mvhovcxf_a4u7x0kx",
+      "recordStatus": "draft",
+      "repairOfRecordId": "receiver_mvhovdtv_eqmqkdg5",
+      "repairSourceSessionId": "session_mvhovcxf_p66psqg0",
+      "updatedAt": 1792561570694,
+      "contractVersion": 2
+    },
+    {
+      "direction": "receive",
+      "sentence": "",
+      "inputText": "我今晚不回家吃饭，明早七点半回家。",
+      "labels": [
+        "我",
+        "今晚",
+        "不",
+        "回家",
+        "吃饭",
+        "，",
+        "明早",
+        "七点半",
+        "回家",
+        "。"
+      ],
+      "createdAt": 1792561562563,
+      "isFavorite": false,
+      "id": "receiver_mvhovdtv_eqmqkdg5",
+      "output": [
+        {
+          "id": "pi-core-i",
+          "image": "/symbols/arasaac/picinterpreter-care/6632.png",
+          "label": "我",
+          "vocalization": "我",
+          "backgroundColor": "rgb(255, 241, 118)",
+          "attribution": {
+            "provider": "arasaac",
+            "originalId": "6632",
+            "name": "ARASAAC",
+            "license": "CC BY-NC-SA 4.0",
+            "licenseUrl": "https://creativecommons.org/licenses/by-nc-sa/4.0/",
+            "author": "Sergio Palao",
+            "authorUrl": "https://arasaac.org/",
+            "sourceUrl": "https://arasaac.org/pictograms/zh/6632",
+            "repoKey": "arasaac"
+          }
+        },
+        {
+          "id": "text-review_dq8i4zb3",
+          "label": "今晚",
+          "vocalization": "今晚",
+          "image": "",
+          "textOnly": true
+        },
+        {
+          "id": "pi-core-no",
+          "image": "/symbols/mulberry/no.svg",
+          "label": "不",
+          "vocalization": "不",
+          "backgroundColor": "rgb(255, 241, 118)",
+          "attribution": {
+            "provider": "mulberry",
+            "originalId": "pi-core-no",
+            "name": "Mulberry Symbols",
+            "license": "CC BY-SA 4.0",
+            "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+            "author": "Mulberry Symbols",
+            "authorUrl": "https://mulberrysymbols.org/",
+            "sourceUrl": "https://mulberrysymbols.org/",
+            "repoKey": "mulberry"
+          }
+        },
+        {
+          "id": "text-review_xlwy5axo",
+          "label": "回家",
+          "vocalization": "回家",
+          "image": "",
+          "textOnly": true
+        },
+        {
+          "id": "text-review_1b4wajml",
+          "label": "吃饭",
+          "vocalization": "吃饭",
+          "image": "",
+          "textOnly": true
+        },
+        {
+          "id": "text-separator-5",
+          "label": "，",
+          "vocalization": "，",
+          "image": "",
+          "textOnly": true
+        },
+        {
+          "id": "text-review_025m5v6n",
+          "label": "明早",
+          "vocalization": "明早",
+          "image": "",
+          "textOnly": true
+        },
+        {
+          "id": "text-review_g9d2ywm2",
+          "label": "七点半",
+          "vocalization": "七点半",
+          "image": "",
+          "textOnly": true
+        },
+        {
+          "id": "text-review_e4vts98k",
+          "label": "回家",
+          "vocalization": "回家",
+          "image": "",
+          "textOnly": true
+        },
+        {
+          "id": "text-separator-9",
+          "label": "。",
+          "vocalization": "。",
+          "image": "",
+          "textOnly": true
+        }
+      ],
+      "pictogramSequence": [
+        {
+          "pictogramId": "pi-core-i",
+          "label": "我",
+          "source": "local_dict",
+          "boardId": "pi-core-words-v1",
+          "matchType": "exact",
+          "confidence": 1,
+          "originalToken": "我",
+          "sourceSpan": {
+            "start": 0,
+            "end": 1,
+            "offsetUnit": "unicode-code-point"
+          },
+          "attribution": {
+            "provider": "arasaac",
+            "originalId": "6632",
+            "name": "ARASAAC",
+            "license": "CC BY-NC-SA 4.0",
+            "licenseUrl": "https://creativecommons.org/licenses/by-nc-sa/4.0/",
+            "author": "Sergio Palao",
+            "authorUrl": "https://arasaac.org/",
+            "sourceUrl": "https://arasaac.org/pictograms/zh/6632",
+            "repoKey": "arasaac"
+          }
+        },
+        {
+          "pictogramId": null,
+          "label": "今晚",
+          "source": "text",
+          "boardId": "",
+          "matchType": "manual",
+          "confidence": 1,
+          "originalToken": "今晚",
+          "textOnly": true,
+          "sourceSpan": {
+            "start": 1,
+            "end": 3,
+            "offsetUnit": "unicode-code-point"
+          }
+        },
+        {
+          "pictogramId": "pi-core-no",
+          "label": "不",
+          "source": "local_dict",
+          "boardId": "pi-core-words-v1",
+          "matchType": "exact",
+          "confidence": 1,
+          "originalToken": "不",
+          "sourceSpan": {
+            "start": 3,
+            "end": 4,
+            "offsetUnit": "unicode-code-point"
+          },
+          "attribution": {
+            "provider": "mulberry",
+            "originalId": "pi-core-no",
+            "name": "Mulberry Symbols",
+            "license": "CC BY-SA 4.0",
+            "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+            "author": "Mulberry Symbols",
+            "authorUrl": "https://mulberrysymbols.org/",
+            "sourceUrl": "https://mulberrysymbols.org/",
+            "repoKey": "mulberry"
+          }
+        },
+        {
+          "pictogramId": null,
+          "label": "回家",
+          "source": "text",
+          "boardId": "",
+          "matchType": "manual",
+          "confidence": 1,
+          "originalToken": "回家",
+          "textOnly": true,
+          "sourceSpan": {
+            "start": 4,
+            "end": 6,
+            "offsetUnit": "unicode-code-point"
+          }
+        },
+        {
+          "pictogramId": null,
+          "label": "吃饭",
+          "source": "text",
+          "boardId": "",
+          "matchType": "manual",
+          "confidence": 1,
+          "originalToken": "吃饭",
+          "textOnly": true,
+          "sourceSpan": {
+            "start": 6,
+            "end": 8,
+            "offsetUnit": "unicode-code-point"
+          }
+        },
+        {
+          "pictogramId": null,
+          "label": "，",
+          "source": "text",
+          "boardId": "",
+          "matchType": "manual",
+          "confidence": 1,
+          "originalToken": "，",
+          "textOnly": true,
+          "sourceSpan": {
+            "start": 8,
+            "end": 9,
+            "offsetUnit": "unicode-code-point"
+          }
+        },
+        {
+          "pictogramId": null,
+          "label": "明早",
+          "source": "text",
+          "boardId": "",
+          "matchType": "manual",
+          "confidence": 1,
+          "originalToken": "明早",
+          "textOnly": true,
+          "sourceSpan": {
+            "start": 9,
+            "end": 11,
+            "offsetUnit": "unicode-code-point"
+          }
+        },
+        {
+          "pictogramId": null,
+          "label": "七点半",
+          "source": "text",
+          "boardId": "",
+          "matchType": "manual",
+          "confidence": 1,
+          "originalToken": "七点半",
+          "textOnly": true,
+          "sourceSpan": {
+            "start": 11,
+            "end": 14,
+            "offsetUnit": "unicode-code-point"
+          }
+        },
+        {
+          "pictogramId": null,
+          "label": "回家",
+          "source": "text",
+          "boardId": "",
+          "matchType": "manual",
+          "confidence": 1,
+          "originalToken": "回家",
+          "textOnly": true,
+          "sourceSpan": {
+            "start": 14,
+            "end": 16,
+            "offsetUnit": "unicode-code-point"
+          }
+        },
+        {
+          "pictogramId": null,
+          "label": "。",
+          "source": "text",
+          "boardId": "",
+          "matchType": "manual",
+          "confidence": 1,
+          "originalToken": "。",
+          "textOnly": true,
+          "sourceSpan": {
+            "start": 16,
+            "end": 17,
+            "offsetUnit": "unicode-code-point"
+          }
+        }
+      ],
+      "sessionId": "session_mvhovcxf_p66psqg0",
+      "patientId": "patient_mvhovcxf_ntz7cofy",
+      "workspaceId": "workspace_mvhovcxf_a4u7x0kx",
+      "recordStatus": "confirmed",
+      "updatedAt": 1792561570353,
+      "confirmedAt": 1792561570005,
+      "patientFeedback": "not_understood",
+      "patientFeedbackAt": 1792561570353,
+      "patientFeedbackEvents": [
+        {
+          "type": "not_understood",
+          "createdAt": 1792561570353
+        }
+      ],
+      "contractVersion": 2
+    }
+  ],
+  "originalUnchanged": true,
+  "faults": [
+    "silent",
+    "committed-receipt"
+  ],
+  "snapshot": {
+    "values": {
+      "cboard_communication_account_identity": "{\"version\":1,\"anonymousUserId\":\"user_mvhovcxf_n6kix99x\",\"accountLinks\":[]}",
+      "cboard_communication_active_session": "{\"contractVersion\":1,\"id\":\"session_mvhovcxf_p66psqg0\",\"startedAt\":1792561561395,\"lastActivityAt\":1792561570694}",
+      "cboard_communication_expression_candidate_feedback_drafts": "[]",
+      "cboard_communication_expression_draft_v1": "{\"[\\\"workspace_mvhovcxf_a4u7x0kx\\\",\\\"patient_mvhovcxf_ntz7cofy\\\"]\":{\"version\":1,\"id\":\"ed_mvhovjmi_8xvxbntjmh\",\"revision\":2,\"status\":\"draft\",\"scope\":\"[\\\"\\\",\\\"workspace_mvhovcxf_a4u7x0kx\\\",\\\"patient_mvhovcxf_ntz7cofy\\\"]\",\"createdAt\":1792561570074,\"updatedAt\":1792561570074,\"snapshot\":{\"pipeline\":{\"contractVersion\":1,\"outputSnapshot\":[{\"id\":\"pi-core-i\",\"image\":\"/symbols/arasaac/picinterpreter-care/6632.png\",\"label\":\"我\",\"vocalization\":\"我\",\"backgroundColor\":\"rgb(255, 241, 118)\",\"attribution\":{\"provider\":\"arasaac\",\"originalId\":\"6632\",\"name\":\"ARASAAC\",\"license\":\"CC BY-NC-SA 4.0\",\"licenseUrl\":\"https://creativecommons.org/licenses/by-nc-sa/4.0/\",\"author\":\"Sergio Palao\",\"authorUrl\":\"https://arasaac.org/\",\"sourceUrl\":\"https://arasaac.org/pictograms/zh/6632\",\"repoKey\":\"arasaac\"}},{\"id\":\"text-review_dq8i4zb3\",\"label\":\"今晚\",\"vocalization\":\"今晚\",\"image\":\"\",\"textOnly\":true},{\"id\":\"pi-core-no\",\"image\":\"/symbols/mulberry/no.svg\",\"label\":\"不\",\"vocalization\":\"不\",\"backgroundColor\":\"rgb(255, 241, 118)\",\"attribution\":{\"provider\":\"mulberry\",\"originalId\":\"pi-core-no\",\"name\":\"Mulberry Symbols\",\"license\":\"CC BY-SA 4.0\",\"licenseUrl\":\"https://creativecommons.org/licenses/by-sa/4.0/\",\"author\":\"Mulberry Symbols\",\"authorUrl\":\"https://mulberrysymbols.org/\",\"sourceUrl\":\"https://mulberrysymbols.org/\",\"repoKey\":\"mulberry\"}},{\"id\":\"text-review_xlwy5axo\",\"label\":\"回家\",\"vocalization\":\"回家\",\"image\":\"\",\"textOnly\":true},{\"id\":\"text-review_1b4wajml\",\"label\":\"吃饭\",\"vocalization\":\"吃饭\",\"image\":\"\",\"textOnly\":true},{\"id\":\"text-separator-5\",\"label\":\"，\",\"vocalization\":\"，\",\"image\":\"\",\"textOnly\":true},{\"id\":\"text-review_025m5v6n\",\"label\":\"明早\",\"vocalization\":\"明早\",\"image\":\"\",\"textOnly\":true},{\"id\":\"text-review_g9d2ywm2\",\"label\":\"七点半\",\"vocalization\":\"七点半\",\"image\":\"\",\"textOnly\":true},{\"id\":\"text-review_e4vts98k\",\"label\":\"回家\",\"vocalization\":\"回家\",\"image\":\"\",\"textOnly\":true},{\"id\":\"text-separator-9\",\"label\":\"。\",\"vocalization\":\"。\",\"image\":\"\",\"textOnly\":true}],\"outputSignature\":\"[[\\\"pi-core-i\\\",\\\"我\\\"],[\\\"text-review_dq8i4zb3\\\",\\\"今晚\\\"],[\\\"pi-core-no\\\",\\\"不\\\"],[\\\"text-review_xlwy5axo\\\",\\\"回家\\\"],[\\\"text-review_1b4wajml\\\",\\\"吃饭\\\"],[\\\"text-separator-5\\\",\\\"，\\\"],[\\\"text-review_025m5v6n\\\",\\\"明早\\\"],[\\\"text-review_g9d2ywm2\\\",\\\"七点半\\\"],[\\\"text-review_e4vts98k\\\",\\\"回家\\\"],[\\\"text-separator-9\\\",\\\"。\\\"]]\",\"candidateSentences\":[\"我今晚不回家吃饭，明早七点半回家。\",\"我的意思是：我今晚不回家吃饭，明早七点半回家。\",\"我想表达的是：我今晚不回家吃饭，明早七点半回家。\"],\"selectedIndex\":0},\"rejected\":false,\"candidateFeedbackEntries\":[{\"sentence\":\"我今晚不回家吃饭，明早七点半回家。\",\"feedback\":null},{\"sentence\":\"我的意思是：我今晚不回家吃饭，明早七点半回家。\",\"feedback\":null},{\"sentence\":\"我想表达的是：我今晚不回家吃饭，明早七点半回家。\",\"feedback\":null}]}}}",
+      "cboard_communication_history": "[{\"direction\":\"receive\",\"sentence\":\"\",\"inputText\":\"我今晚不回家吃饭，明早七点半回家。\",\"labels\":[\"我\",\"今晚\",\"不\",\"回家\",\"吃饭\",\"，\",\"明早\",\"七点半\",\"回家\",\"。\"],\"createdAt\":1792561562563,\"isFavorite\":false,\"id\":\"receiver_mvhovdtv_eqmqkdg5\",\"output\":[{\"id\":\"pi-core-i\",\"image\":\"/symbols/arasaac/picinterpreter-care/6632.png\",\"label\":\"我\",\"vocalization\":\"我\",\"backgroundColor\":\"rgb(255, 241, 118)\",\"attribution\":{\"provider\":\"arasaac\",\"originalId\":\"6632\",\"name\":\"ARASAAC\",\"license\":\"CC BY-NC-SA 4.0\",\"licenseUrl\":\"https://creativecommons.org/licenses/by-nc-sa/4.0/\",\"author\":\"Sergio Palao\",\"authorUrl\":\"https://arasaac.org/\",\"sourceUrl\":\"https://arasaac.org/pictograms/zh/6632\",\"repoKey\":\"arasaac\"}},{\"id\":\"text-review_dq8i4zb3\",\"label\":\"今晚\",\"vocalization\":\"今晚\",\"image\":\"\",\"textOnly\":true},{\"id\":\"pi-core-no\",\"image\":\"/symbols/mulberry/no.svg\",\"label\":\"不\",\"vocalization\":\"不\",\"backgroundColor\":\"rgb(255, 241, 118)\",\"attribution\":{\"provider\":\"mulberry\",\"originalId\":\"pi-core-no\",\"name\":\"Mulberry Symbols\",\"license\":\"CC BY-SA 4.0\",\"licenseUrl\":\"https://creativecommons.org/licenses/by-sa/4.0/\",\"author\":\"Mulberry Symbols\",\"authorUrl\":\"https://mulberrysymbols.org/\",\"sourceUrl\":\"https://mulberrysymbols.org/\",\"repoKey\":\"mulberry\"}},{\"id\":\"text-review_xlwy5axo\",\"label\":\"回家\",\"vocalization\":\"回家\",\"image\":\"\",\"textOnly\":true},{\"id\":\"text-review_1b4wajml\",\"label\":\"吃饭\",\"vocalization\":\"吃饭\",\"image\":\"\",\"textOnly\":true},{\"id\":\"text-separator-5\",\"label\":\"，\",\"vocalization\":\"，\",\"image\":\"\",\"textOnly\":true},{\"id\":\"text-review_025m5v6n\",\"label\":\"明早\",\"vocalization\":\"明早\",\"image\":\"\",\"textOnly\":true},{\"id\":\"text-review_g9d2ywm2\",\"label\":\"七点半\",\"vocalization\":\"七点半\",\"image\":\"\",\"textOnly\":true},{\"id\":\"text-review_e4vts98k\",\"label\":\"回家\",\"vocalization\":\"回家\",\"image\":\"\",\"textOnly\":true},{\"id\":\"text-separator-9\",\"label\":\"。\",\"vocalization\":\"。\",\"image\":\"\",\"textOnly\":true}],\"pictogramSequence\":[{\"pictogramId\":\"pi-core-i\",\"label\":\"我\",\"source\":\"local_dict\",\"boardId\":\"pi-core-words-v1\",\"matchType\":\"exact\",\"confidence\":1,\"originalToken\":\"我\",\"sourceSpan\":{\"start\":0,\"end\":1,\"offsetUnit\":\"unicode-code-point\"},\"attribution\":{\"provider\":\"arasaac\",\"originalId\":\"6632\",\"name\":\"ARASAAC\",\"license\":\"CC BY-NC-SA 4.0\",\"licenseUrl\":\"https://creativecommons.org/licenses/by-nc-sa/4.0/\",\"author\":\"Sergio Palao\",\"authorUrl\":\"https://arasaac.org/\",\"sourceUrl\":\"https://arasaac.org/pictograms/zh/6632\",\"repoKey\":\"arasaac\"}},{\"pictogramId\":null,\"label\":\"今晚\",\"source\":\"text\",\"boardId\":\"\",\"matchType\":\"manual\",\"confidence\":1,\"originalToken\":\"今晚\",\"textOnly\":true,\"sourceSpan\":{\"start\":1,\"end\":3,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":\"pi-core-no\",\"label\":\"不\",\"source\":\"local_dict\",\"boardId\":\"pi-core-words-v1\",\"matchType\":\"exact\",\"confidence\":1,\"originalToken\":\"不\",\"sourceSpan\":{\"start\":3,\"end\":4,\"offsetUnit\":\"unicode-code-point\"},\"attribution\":{\"provider\":\"mulberry\",\"originalId\":\"pi-core-no\",\"name\":\"Mulberry Symbols\",\"license\":\"CC BY-SA 4.0\",\"licenseUrl\":\"https://creativecommons.org/licenses/by-sa/4.0/\",\"author\":\"Mulberry Symbols\",\"authorUrl\":\"https://mulberrysymbols.org/\",\"sourceUrl\":\"https://mulberrysymbols.org/\",\"repoKey\":\"mulberry\"}},{\"pictogramId\":null,\"label\":\"回家\",\"source\":\"text\",\"boardId\":\"\",\"matchType\":\"manual\",\"confidence\":1,\"originalToken\":\"回家\",\"textOnly\":true,\"sourceSpan\":{\"start\":4,\"end\":6,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":null,\"label\":\"吃饭\",\"source\":\"text\",\"boardId\":\"\",\"matchType\":\"manual\",\"confidence\":1,\"originalToken\":\"吃饭\",\"textOnly\":true,\"sourceSpan\":{\"start\":6,\"end\":8,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":null,\"label\":\"，\",\"source\":\"text\",\"boardId\":\"\",\"matchType\":\"manual\",\"confidence\":1,\"originalToken\":\"，\",\"textOnly\":true,\"sourceSpan\":{\"start\":8,\"end\":9,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":null,\"label\":\"明早\",\"source\":\"text\",\"boardId\":\"\",\"matchType\":\"manual\",\"confidence\":1,\"originalToken\":\"明早\",\"textOnly\":true,\"sourceSpan\":{\"start\":9,\"end\":11,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":null,\"label\":\"七点半\",\"source\":\"text\",\"boardId\":\"\",\"matchType\":\"manual\",\"confidence\":1,\"originalToken\":\"七点半\",\"textOnly\":true,\"sourceSpan\":{\"start\":11,\"end\":14,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":null,\"label\":\"回家\",\"source\":\"text\",\"boardId\":\"\",\"matchType\":\"manual\",\"confidence\":1,\"originalToken\":\"回家\",\"textOnly\":true,\"sourceSpan\":{\"start\":14,\"end\":16,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":null,\"label\":\"。\",\"source\":\"text\",\"boardId\":\"\",\"matchType\":\"manual\",\"confidence\":1,\"originalToken\":\"。\",\"textOnly\":true,\"sourceSpan\":{\"start\":16,\"end\":17,\"offsetUnit\":\"unicode-code-point\"}}],\"sessionId\":\"session_mvhovcxf_p66psqg0\",\"patientId\":\"patient_mvhovcxf_ntz7cofy\",\"workspaceId\":\"workspace_mvhovcxf_a4u7x0kx\",\"recordStatus\":\"confirmed\",\"updatedAt\":1792561570353,\"confirmedAt\":1792561570005,\"patientFeedback\":\"not_understood\",\"patientFeedbackAt\":1792561570353,\"patientFeedbackEvents\":[{\"type\":\"not_understood\",\"createdAt\":1792561570353}],\"contractVersion\":2}]",
+      "cboard_communication_missing_tokens": "[{\"id\":\"missing_token_mvhove1u_hb2vdo5t\",\"normalizedToken\":\"今晚\",\"status\":\"new\",\"occurrenceCount\":1,\"scenes\":[\"receiver\"],\"rawTextSamples\":[\"我今晚不回家吃饭，明早七点半回家。\"],\"suggestedPictogramId\":null,\"suggestedPictogram\":null,\"suggestedPictograms\":[],\"source\":null,\"resolvedPictogramId\":null,\"resolvedPictogram\":null,\"reviewedByCaregiver\":false,\"patientId\":\"patient_mvhovcxf_ntz7cofy\",\"workspaceId\":\"workspace_mvhovcxf_a4u7x0kx\",\"createdAt\":1792561562850,\"updatedAt\":1792561562850},{\"id\":\"missing_token_mvhove1u_689ohc6c\",\"normalizedToken\":\"回家\",\"status\":\"new\",\"occurrenceCount\":2,\"scenes\":[\"receiver\"],\"rawTextSamples\":[\"我今晚不回家吃饭，明早七点半回家。\"],\"suggestedPictogramId\":null,\"suggestedPictogram\":null,\"suggestedPictograms\":[],\"source\":null,\"resolvedPictogramId\":null,\"resolvedPictogram\":null,\"reviewedByCaregiver\":false,\"patientId\":\"patient_mvhovcxf_ntz7cofy\",\"workspaceId\":\"workspace_mvhovcxf_a4u7x0kx\",\"createdAt\":1792561562850,\"updatedAt\":1792561562850},{\"id\":\"missing_token_mvhove1u_nrni7xmg\",\"normalizedToken\":\"吃饭\",\"status\":\"new\",\"occurrenceCount\":1,\"scenes\":[\"receiver\"],\"rawTextSamples\":[\"我今晚不回家吃饭，明早七点半回家。\"],\"suggestedPictogramId\":null,\"suggestedPictogram\":null,\"suggestedPictograms\":[],\"source\":null,\"resolvedPictogramId\":null,\"resolvedPictogram\":null,\"reviewedByCaregiver\":false,\"patientId\":\"patient_mvhovcxf_ntz7cofy\",\"workspaceId\":\"workspace_mvhovcxf_a4u7x0kx\",\"createdAt\":1792561562850,\"updatedAt\":1792561562850},{\"id\":\"missing_token_mvhove1u_sphs66w8\",\"normalizedToken\":\"明早\",\"status\":\"new\",\"occurrenceCount\":1,\"scenes\":[\"receiver\"],\"rawTextSamples\":[\"我今晚不回家吃饭，明早七点半回家。\"],\"suggestedPictogramId\":null,\"suggestedPictogram\":null,\"suggestedPictograms\":[],\"source\":null,\"resolvedPictogramId\":null,\"resolvedPictogram\":null,\"reviewedByCaregiver\":false,\"patientId\":\"patient_mvhovcxf_ntz7cofy\",\"workspaceId\":\"workspace_mvhovcxf_a4u7x0kx\",\"createdAt\":1792561562850,\"updatedAt\":1792561562850},{\"id\":\"missing_token_mvhove1u_lnurlx3q\",\"normalizedToken\":\"七点半\",\"status\":\"new\",\"occurrenceCount\":1,\"scenes\":[\"receiver\"],\"rawTextSamples\":[\"我今晚不回家吃饭，明早七点半回家。\"],\"suggestedPictogramId\":null,\"suggestedPictogram\":null,\"suggestedPictograms\":[],\"source\":null,\"resolvedPictogramId\":null,\"resolvedPictogram\":null,\"reviewedByCaregiver\":false,\"patientId\":\"patient_mvhovcxf_ntz7cofy\",\"workspaceId\":\"workspace_mvhovcxf_a4u7x0kx\",\"createdAt\":1792561562850,\"updatedAt\":1792561562850}]",
+      "cboard_communication_patient_id": "patient_mvhovcxf_ntz7cofy",
+      "cboard_communication_personal_image_preferences": "[]",
+      "cboard_communication_preferences": "{\"highContrast\":false,\"fontSize\":\"normal\",\"gridColumns\":4,\"speechRate\":1,\"speechVoice\":\"\",\"candidateAutoplayDelaySeconds\":15,\"onlinePictogramSearchEnabled\":true,\"pictogramSortMode\":\"manual\",\"hiddenBoardIds\":[],\"onboardingComplete\":true}",
+      "cboard_communication_receiver_corrections": "[{\"id\":\"correction_mvhovedo_psaopqvt\",\"expressionId\":\"receiver_mvhovdtv_eqmqkdg5\",\"sessionId\":\"session_mvhovcxf_p66psqg0\",\"patientId\":\"patient_mvhovcxf_ntz7cofy\",\"workspaceId\":\"workspace_mvhovcxf_a4u7x0kx\",\"userId\":null,\"action\":\"replace_pictogram\",\"context\":\"live_review\",\"originalToken\":\"回家\",\"normalizedToken\":\"回家\",\"sequenceIndexBefore\":8,\"sequenceIndexAfter\":8,\"pictogramIdBefore\":null,\"pictogramIdAfter\":null,\"pictogramIdsBefore\":[\"pi-core-i\",null,\"pi-core-no\",null,null,null,null,null,null,null],\"pictogramIdsAfter\":[\"pi-core-i\",null,\"pi-core-no\",null,null,null,null,null,null,null],\"revisionBefore\":{\"labels\":[\"我\",\"今晚\",\"不\",\"回家\",\"吃饭\",\"，\",\"明早\",\"七点半\",\"。\"],\"output\":[{\"id\":\"pi-core-i\",\"label\":\"我\",\"image\":\"/symbols/arasaac/picinterpreter-care/6632.png\",\"vocalization\":\"我\",\"backgroundColor\":\"rgb(255, 241, 118)\",\"attribution\":{\"provider\":\"arasaac\",\"originalId\":\"6632\",\"name\":\"ARASAAC\",\"license\":\"CC BY-NC-SA 4.0\",\"licenseUrl\":\"https://creativecommons.org/licenses/by-nc-sa/4.0/\",\"author\":\"Sergio Palao\",\"authorUrl\":\"https://arasaac.org/\",\"sourceUrl\":\"https://arasaac.org/pictograms/zh/6632\",\"repoKey\":\"arasaac\"}},{\"id\":\"text-review_dq8i4zb3\",\"label\":\"今晚\",\"vocalization\":\"今晚\",\"image\":\"\",\"textOnly\":true},{\"id\":\"pi-core-no\",\"label\":\"不\",\"image\":\"/symbols/mulberry/no.svg\",\"vocalization\":\"不\",\"backgroundColor\":\"rgb(255, 241, 118)\",\"attribution\":{\"provider\":\"mulberry\",\"originalId\":\"pi-core-no\",\"name\":\"Mulberry Symbols\",\"license\":\"CC BY-SA 4.0\",\"licenseUrl\":\"https://creativecommons.org/licenses/by-sa/4.0/\",\"author\":\"Mulberry Symbols\",\"authorUrl\":\"https://mulberrysymbols.org/\",\"sourceUrl\":\"https://mulberrysymbols.org/\",\"repoKey\":\"mulberry\"}},{\"id\":\"text-review_xlwy5axo\",\"label\":\"回家\",\"vocalization\":\"回家\",\"image\":\"\",\"textOnly\":true},{\"id\":\"text-review_1b4wajml\",\"label\":\"吃饭\",\"vocalization\":\"吃饭\",\"image\":\"\",\"textOnly\":true},{\"id\":\"text-separator-5\",\"label\":\"，\",\"vocalization\":\"，\",\"image\":\"\",\"textOnly\":true},{\"id\":\"text-review_025m5v6n\",\"label\":\"明早\",\"vocalization\":\"明早\",\"image\":\"\",\"textOnly\":true},{\"id\":\"text-review_g9d2ywm2\",\"label\":\"七点半\",\"vocalization\":\"七点半\",\"image\":\"\",\"textOnly\":true},{\"id\":\"text-separator-9\",\"label\":\"。\",\"vocalization\":\"。\",\"image\":\"\",\"textOnly\":true}],\"pictogramSequence\":[{\"pictogramId\":\"pi-core-i\",\"label\":\"我\",\"source\":\"\",\"boardId\":\"pi-core-words-v1\",\"matchType\":\"exact\",\"confidence\":1,\"originalToken\":\"我\",\"sourceSpan\":{\"start\":0,\"end\":1,\"offsetUnit\":\"unicode-code-point\"},\"attribution\":{\"provider\":\"arasaac\",\"originalId\":\"6632\",\"name\":\"ARASAAC\",\"license\":\"CC BY-NC-SA 4.0\",\"licenseUrl\":\"https://creativecommons.org/licenses/by-nc-sa/4.0/\",\"author\":\"Sergio Palao\",\"authorUrl\":\"https://arasaac.org/\",\"sourceUrl\":\"https://arasaac.org/pictograms/zh/6632\",\"repoKey\":\"arasaac\"}},{\"pictogramId\":null,\"label\":\"今晚\",\"source\":\"text\",\"boardId\":\"\",\"matchType\":\"manual\",\"confidence\":1,\"originalToken\":\"今晚\",\"textOnly\":true,\"sourceSpan\":{\"start\":1,\"end\":3,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":\"pi-core-no\",\"label\":\"不\",\"source\":\"\",\"boardId\":\"pi-core-words-v1\",\"matchType\":\"exact\",\"confidence\":1,\"originalToken\":\"不\",\"sourceSpan\":{\"start\":3,\"end\":4,\"offsetUnit\":\"unicode-code-point\"},\"attribution\":{\"provider\":\"mulberry\",\"originalId\":\"pi-core-no\",\"name\":\"Mulberry Symbols\",\"license\":\"CC BY-SA 4.0\",\"licenseUrl\":\"https://creativecommons.org/licenses/by-sa/4.0/\",\"author\":\"Mulberry Symbols\",\"authorUrl\":\"https://mulberrysymbols.org/\",\"sourceUrl\":\"https://mulberrysymbols.org/\",\"repoKey\":\"mulberry\"}},{\"pictogramId\":null,\"label\":\"回家\",\"source\":\"text\",\"boardId\":\"\",\"matchType\":\"manual\",\"confidence\":1,\"originalToken\":\"回家\",\"textOnly\":true,\"sourceSpan\":{\"start\":4,\"end\":6,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":null,\"label\":\"吃饭\",\"source\":\"text\",\"boardId\":\"\",\"matchType\":\"manual\",\"confidence\":1,\"originalToken\":\"吃饭\",\"textOnly\":true,\"sourceSpan\":{\"start\":6,\"end\":8,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":null,\"label\":\"，\",\"source\":\"text\",\"boardId\":\"\",\"matchType\":\"manual\",\"confidence\":1,\"originalToken\":\"，\",\"textOnly\":true,\"sourceSpan\":{\"start\":8,\"end\":9,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":null,\"label\":\"明早\",\"source\":\"text\",\"boardId\":\"\",\"matchType\":\"manual\",\"confidence\":1,\"originalToken\":\"明早\",\"textOnly\":true,\"sourceSpan\":{\"start\":9,\"end\":11,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":null,\"label\":\"七点半\",\"source\":\"text\",\"boardId\":\"\",\"matchType\":\"manual\",\"confidence\":1,\"originalToken\":\"七点半\",\"textOnly\":true,\"sourceSpan\":{\"start\":11,\"end\":14,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":null,\"label\":\"回家\",\"source\":\"\",\"boardId\":\"\",\"matchType\":\"missing\",\"confidence\":0,\"originalToken\":\"回家\",\"sourceSpan\":{\"start\":14,\"end\":16,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":null,\"label\":\"。\",\"source\":\"text\",\"boardId\":\"\",\"matchType\":\"manual\",\"confidence\":1,\"originalToken\":\"。\",\"textOnly\":true,\"sourceSpan\":{\"start\":16,\"end\":17,\"offsetUnit\":\"unicode-code-point\"}}]},\"revisionAfter\":{\"labels\":[\"我\",\"今晚\",\"不\",\"回家\",\"吃饭\",\"，\",\"明早\",\"七点半\",\"回家\",\"。\"],\"output\":[{\"id\":\"pi-core-i\",\"label\":\"我\",\"image\":\"/symbols/arasaac/picinterpreter-care/6632.png\",\"vocalization\":\"我\",\"backgroundColor\":\"rgb(255, 241, 118)\",\"attribution\":{\"provider\":\"arasaac\",\"originalId\":\"6632\",\"name\":\"ARASAAC\",\"license\":\"CC BY-NC-SA 4.0\",\"licenseUrl\":\"https://creativecommons.org/licenses/by-nc-sa/4.0/\",\"author\":\"Sergio Palao\",\"authorUrl\":\"https://arasaac.org/\",\"sourceUrl\":\"https://arasaac.org/pictograms/zh/6632\",\"repoKey\":\"arasaac\"}},{\"id\":\"text-review_dq8i4zb3\",\"label\":\"今晚\",\"vocalization\":\"今晚\",\"image\":\"\",\"textOnly\":true},{\"id\":\"pi-core-no\",\"label\":\"不\",\"image\":\"/symbols/mulberry/no.svg\",\"vocalization\":\"不\",\"backgroundColor\":\"rgb(255, 241, 118)\",\"attribution\":{\"provider\":\"mulberry\",\"originalId\":\"pi-core-no\",\"name\":\"Mulberry Symbols\",\"license\":\"CC BY-SA 4.0\",\"licenseUrl\":\"https://creativecommons.org/licenses/by-sa/4.0/\",\"author\":\"Mulberry Symbols\",\"authorUrl\":\"https://mulberrysymbols.org/\",\"sourceUrl\":\"https://mulberrysymbols.org/\",\"repoKey\":\"mulberry\"}},{\"id\":\"text-review_xlwy5axo\",\"label\":\"回家\",\"vocalization\":\"回家\",\"image\":\"\",\"textOnly\":true},{\"id\":\"text-review_1b4wajml\",\"label\":\"吃饭\",\"vocalization\":\"吃饭\",\"image\":\"\",\"textOnly\":true},{\"id\":\"text-separator-5\",\"label\":\"，\",\"vocalization\":\"，\",\"image\":\"\",\"textOnly\":true},{\"id\":\"text-review_025m5v6n\",\"label\":\"明早\",\"vocalization\":\"明早\",\"image\":\"\",\"textOnly\":true},{\"id\":\"text-review_g9d2ywm2\",\"label\":\"七点半\",\"vocalization\":\"七点半\",\"image\":\"\",\"textOnly\":true},{\"id\":\"text-review_e4vts98k\",\"label\":\"回家\",\"vocalization\":\"回家\",\"image\":\"\",\"textOnly\":true},{\"id\":\"text-separator-9\",\"label\":\"。\",\"vocalization\":\"。\",\"image\":\"\",\"textOnly\":true}],\"pictogramSequence\":[{\"pictogramId\":\"pi-core-i\",\"label\":\"我\",\"source\":\"\",\"boardId\":\"pi-core-words-v1\",\"matchType\":\"exact\",\"confidence\":1,\"originalToken\":\"我\",\"sourceSpan\":{\"start\":0,\"end\":1,\"offsetUnit\":\"unicode-code-point\"},\"attribution\":{\"provider\":\"arasaac\",\"originalId\":\"6632\",\"name\":\"ARASAAC\",\"license\":\"CC BY-NC-SA 4.0\",\"licenseUrl\":\"https://creativecommons.org/licenses/by-nc-sa/4.0/\",\"author\":\"Sergio Palao\",\"authorUrl\":\"https://arasaac.org/\",\"sourceUrl\":\"https://arasaac.org/pictograms/zh/6632\",\"repoKey\":\"arasaac\"}},{\"pictogramId\":null,\"label\":\"今晚\",\"source\":\"text\",\"boardId\":\"\",\"matchType\":\"manual\",\"confidence\":1,\"originalToken\":\"今晚\",\"textOnly\":true,\"sourceSpan\":{\"start\":1,\"end\":3,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":\"pi-core-no\",\"label\":\"不\",\"source\":\"\",\"boardId\":\"pi-core-words-v1\",\"matchType\":\"exact\",\"confidence\":1,\"originalToken\":\"不\",\"sourceSpan\":{\"start\":3,\"end\":4,\"offsetUnit\":\"unicode-code-point\"},\"attribution\":{\"provider\":\"mulberry\",\"originalId\":\"pi-core-no\",\"name\":\"Mulberry Symbols\",\"license\":\"CC BY-SA 4.0\",\"licenseUrl\":\"https://creativecommons.org/licenses/by-sa/4.0/\",\"author\":\"Mulberry Symbols\",\"authorUrl\":\"https://mulberrysymbols.org/\",\"sourceUrl\":\"https://mulberrysymbols.org/\",\"repoKey\":\"mulberry\"}},{\"pictogramId\":null,\"label\":\"回家\",\"source\":\"text\",\"boardId\":\"\",\"matchType\":\"manual\",\"confidence\":1,\"originalToken\":\"回家\",\"textOnly\":true,\"sourceSpan\":{\"start\":4,\"end\":6,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":null,\"label\":\"吃饭\",\"source\":\"text\",\"boardId\":\"\",\"matchType\":\"manual\",\"confidence\":1,\"originalToken\":\"吃饭\",\"textOnly\":true,\"sourceSpan\":{\"start\":6,\"end\":8,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":null,\"label\":\"，\",\"source\":\"text\",\"boardId\":\"\",\"matchType\":\"manual\",\"confidence\":1,\"originalToken\":\"，\",\"textOnly\":true,\"sourceSpan\":{\"start\":8,\"end\":9,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":null,\"label\":\"明早\",\"source\":\"text\",\"boardId\":\"\",\"matchType\":\"manual\",\"confidence\":1,\"originalToken\":\"明早\",\"textOnly\":true,\"sourceSpan\":{\"start\":9,\"end\":11,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":null,\"label\":\"七点半\",\"source\":\"text\",\"boardId\":\"\",\"matchType\":\"manual\",\"confidence\":1,\"originalToken\":\"七点半\",\"textOnly\":true,\"sourceSpan\":{\"start\":11,\"end\":14,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":null,\"label\":\"回家\",\"source\":\"text\",\"boardId\":\"\",\"matchType\":\"manual\",\"confidence\":1,\"originalToken\":\"回家\",\"textOnly\":true,\"sourceSpan\":{\"start\":14,\"end\":16,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":null,\"label\":\"。\",\"source\":\"text\",\"boardId\":\"\",\"matchType\":\"manual\",\"confidence\":1,\"originalToken\":\"。\",\"textOnly\":true,\"sourceSpan\":{\"start\":16,\"end\":17,\"offsetUnit\":\"unicode-code-point\"}}]},\"isUsedForLearning\":true,\"createdAt\":1792561563276},{\"id\":\"correction_mvhovebv_zyry8a0p\",\"expressionId\":\"receiver_mvhovdtv_eqmqkdg5\",\"sessionId\":\"session_mvhovcxf_p66psqg0\",\"patientId\":\"patient_mvhovcxf_ntz7cofy\",\"workspaceId\":\"workspace_mvhovcxf_a4u7x0kx\",\"userId\":null,\"action\":\"replace_pictogram\",\"context\":\"live_review\",\"originalToken\":\"七点半\",\"normalizedToken\":\"七点半\",\"sequenceIndexBefore\":7,\"sequenceIndexAfter\":7,\"pictogramIdBefore\":null,\"pictogramIdAfter\":null,\"pictogramIdsBefore\":[\"pi-core-i\",null,\"pi-core-no\",null,null,null,null,null,null,null],\"pictogramIdsAfter\":[\"pi-core-i\",null,\"pi-core-no\",null,null,null,null,null,null,null],\"revisionBefore\":{\"labels\":[\"我\",\"今晚\",\"不\",\"回家\",\"吃饭\",\"，\",\"明早\",\"。\"],\"output\":[{\"id\":\"pi-core-i\",\"label\":\"我\",\"image\":\"/symbols/arasaac/picinterpreter-care/6632.png\",\"vocalization\":\"我\",\"backgroundColor\":\"rgb(255, 241, 118)\",\"attribution\":{\"provider\":\"arasaac\",\"originalId\":\"6632\",\"name\":\"ARASAAC\",\"license\":\"CC BY-NC-SA 4.0\",\"licenseUrl\":\"https://creativecommons.org/licenses/by-nc-sa/4.0/\",\"author\":\"Sergio Palao\",\"authorUrl\":\"https://arasaac.org/\",\"sourceUrl\":\"https://arasaac.org/pictograms/zh/6632\",\"repoKey\":\"arasaac\"}},{\"id\":\"text-review_dq8i4zb3\",\"label\":\"今晚\",\"vocalization\":\"今晚\",\"image\":\"\",\"textOnly\":true},{\"id\":\"pi-core-no\",\"label\":\"不\",\"image\":\"/symbols/mulberry/no.svg\",\"vocalization\":\"不\",\"backgroundColor\":\"rgb(255, 241, 118)\",\"attribution\":{\"provider\":\"mulberry\",\"originalId\":\"pi-core-no\",\"name\":\"Mulberry Symbols\",\"license\":\"CC BY-SA 4.0\",\"licenseUrl\":\"https://creativecommons.org/licenses/by-sa/4.0/\",\"author\":\"Mulberry Symbols\",\"authorUrl\":\"https://mulberrysymbols.org/\",\"sourceUrl\":\"https://mulberrysymbols.org/\",\"repoKey\":\"mulberry\"}},{\"id\":\"text-review_xlwy5axo\",\"label\":\"回家\",\"vocalization\":\"回家\",\"image\":\"\",\"textOnly\":true},{\"id\":\"text-review_1b4wajml\",\"label\":\"吃饭\",\"vocalization\":\"吃饭\",\"image\":\"\",\"textOnly\":true},{\"id\":\"text-separator-5\",\"label\":\"，\",\"vocalization\":\"，\",\"image\":\"\",\"textOnly\":true},{\"id\":\"text-review_025m5v6n\",\"label\":\"明早\",\"vocalization\":\"明早\",\"image\":\"\",\"textOnly\":true},{\"id\":\"text-separator-9\",\"label\":\"。\",\"vocalization\":\"。\",\"image\":\"\",\"textOnly\":true}],\"pictogramSequence\":[{\"pictogramId\":\"pi-core-i\",\"label\":\"我\",\"source\":\"\",\"boardId\":\"pi-core-words-v1\",\"matchType\":\"exact\",\"confidence\":1,\"originalToken\":\"我\",\"sourceSpan\":{\"start\":0,\"end\":1,\"offsetUnit\":\"unicode-code-point\"},\"attribution\":{\"provider\":\"arasaac\",\"originalId\":\"6632\",\"name\":\"ARASAAC\",\"license\":\"CC BY-NC-SA 4.0\",\"licenseUrl\":\"https://creativecommons.org/licenses/by-nc-sa/4.0/\",\"author\":\"Sergio Palao\",\"authorUrl\":\"https://arasaac.org/\",\"sourceUrl\":\"https://arasaac.org/pictograms/zh/6632\",\"repoKey\":\"arasaac\"}},{\"pictogramId\":null,\"label\":\"今晚\",\"source\":\"text\",\"boardId\":\"\",\"matchType\":\"manual\",\"confidence\":1,\"originalToken\":\"今晚\",\"textOnly\":true,\"sourceSpan\":{\"start\":1,\"end\":3,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":\"pi-core-no\",\"label\":\"不\",\"source\":\"\",\"boardId\":\"pi-core-words-v1\",\"matchType\":\"exact\",\"confidence\":1,\"originalToken\":\"不\",\"sourceSpan\":{\"start\":3,\"end\":4,\"offsetUnit\":\"unicode-code-point\"},\"attribution\":{\"provider\":\"mulberry\",\"originalId\":\"pi-core-no\",\"name\":\"Mulberry Symbols\",\"license\":\"CC BY-SA 4.0\",\"licenseUrl\":\"https://creativecommons.org/licenses/by-sa/4.0/\",\"author\":\"Mulberry Symbols\",\"authorUrl\":\"https://mulberrysymbols.org/\",\"sourceUrl\":\"https://mulberrysymbols.org/\",\"repoKey\":\"mulberry\"}},{\"pictogramId\":null,\"label\":\"回家\",\"source\":\"text\",\"boardId\":\"\",\"matchType\":\"manual\",\"confidence\":1,\"originalToken\":\"回家\",\"textOnly\":true,\"sourceSpan\":{\"start\":4,\"end\":6,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":null,\"label\":\"吃饭\",\"source\":\"text\",\"boardId\":\"\",\"matchType\":\"manual\",\"confidence\":1,\"originalToken\":\"吃饭\",\"textOnly\":true,\"sourceSpan\":{\"start\":6,\"end\":8,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":null,\"label\":\"，\",\"source\":\"text\",\"boardId\":\"\",\"matchType\":\"manual\",\"confidence\":1,\"originalToken\":\"，\",\"textOnly\":true,\"sourceSpan\":{\"start\":8,\"end\":9,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":null,\"label\":\"明早\",\"source\":\"text\",\"boardId\":\"\",\"matchType\":\"manual\",\"confidence\":1,\"originalToken\":\"明早\",\"textOnly\":true,\"sourceSpan\":{\"start\":9,\"end\":11,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":null,\"label\":\"七点半\",\"source\":\"\",\"boardId\":\"\",\"matchType\":\"missing\",\"confidence\":0,\"originalToken\":\"七点半\",\"sourceSpan\":{\"start\":11,\"end\":14,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":null,\"label\":\"回家\",\"source\":\"\",\"boardId\":\"\",\"matchType\":\"missing\",\"confidence\":0,\"originalToken\":\"回家\",\"sourceSpan\":{\"start\":14,\"end\":16,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":null,\"label\":\"。\",\"source\":\"text\",\"boardId\":\"\",\"matchType\":\"manual\",\"confidence\":1,\"originalToken\":\"。\",\"textOnly\":true,\"sourceSpan\":{\"start\":16,\"end\":17,\"offsetUnit\":\"unicode-code-point\"}}]},\"revisionAfter\":{\"labels\":[\"我\",\"今晚\",\"不\",\"回家\",\"吃饭\",\"，\",\"明早\",\"七点半\",\"。\"],\"output\":[{\"id\":\"pi-core-i\",\"label\":\"我\",\"image\":\"/symbols/arasaac/picinterpreter-care/6632.png\",\"vocalization\":\"我\",\"backgroundColor\":\"rgb(255, 241, 118)\",\"attribution\":{\"provider\":\"arasaac\",\"originalId\":\"6632\",\"name\":\"ARASAAC\",\"license\":\"CC BY-NC-SA 4.0\",\"licenseUrl\":\"https://creativecommons.org/licenses/by-nc-sa/4.0/\",\"author\":\"Sergio Palao\",\"authorUrl\":\"https://arasaac.org/\",\"sourceUrl\":\"https://arasaac.org/pictograms/zh/6632\",\"repoKey\":\"arasaac\"}},{\"id\":\"text-review_dq8i4zb3\",\"label\":\"今晚\",\"vocalization\":\"今晚\",\"image\":\"\",\"textOnly\":true},{\"id\":\"pi-core-no\",\"label\":\"不\",\"image\":\"/symbols/mulberry/no.svg\",\"vocalization\":\"不\",\"backgroundColor\":\"rgb(255, 241, 118)\",\"attribution\":{\"provider\":\"mulberry\",\"originalId\":\"pi-core-no\",\"name\":\"Mulberry Symbols\",\"license\":\"CC BY-SA 4.0\",\"licenseUrl\":\"https://creativecommons.org/licenses/by-sa/4.0/\",\"author\":\"Mulberry Symbols\",\"authorUrl\":\"https://mulberrysymbols.org/\",\"sourceUrl\":\"https://mulberrysymbols.org/\",\"repoKey\":\"mulberry\"}},{\"id\":\"text-review_xlwy5axo\",\"label\":\"回家\",\"vocalization\":\"回家\",\"image\":\"\",\"textOnly\":true},{\"id\":\"text-review_1b4wajml\",\"label\":\"吃饭\",\"vocalization\":\"吃饭\",\"image\":\"\",\"textOnly\":true},{\"id\":\"text-separator-5\",\"label\":\"，\",\"vocalization\":\"，\",\"image\":\"\",\"textOnly\":true},{\"id\":\"text-review_025m5v6n\",\"label\":\"明早\",\"vocalization\":\"明早\",\"image\":\"\",\"textOnly\":true},{\"id\":\"text-review_g9d2ywm2\",\"label\":\"七点半\",\"vocalization\":\"七点半\",\"image\":\"\",\"textOnly\":true},{\"id\":\"text-separator-9\",\"label\":\"。\",\"vocalization\":\"。\",\"image\":\"\",\"textOnly\":true}],\"pictogramSequence\":[{\"pictogramId\":\"pi-core-i\",\"label\":\"我\",\"source\":\"\",\"boardId\":\"pi-core-words-v1\",\"matchType\":\"exact\",\"confidence\":1,\"originalToken\":\"我\",\"sourceSpan\":{\"start\":0,\"end\":1,\"offsetUnit\":\"unicode-code-point\"},\"attribution\":{\"provider\":\"arasaac\",\"originalId\":\"6632\",\"name\":\"ARASAAC\",\"license\":\"CC BY-NC-SA 4.0\",\"licenseUrl\":\"https://creativecommons.org/licenses/by-nc-sa/4.0/\",\"author\":\"Sergio Palao\",\"authorUrl\":\"https://arasaac.org/\",\"sourceUrl\":\"https://arasaac.org/pictograms/zh/6632\",\"repoKey\":\"arasaac\"}},{\"pictogramId\":null,\"label\":\"今晚\",\"source\":\"text\",\"boardId\":\"\",\"matchType\":\"manual\",\"confidence\":1,\"originalToken\":\"今晚\",\"textOnly\":true,\"sourceSpan\":{\"start\":1,\"end\":3,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":\"pi-core-no\",\"label\":\"不\",\"source\":\"\",\"boardId\":\"pi-core-words-v1\",\"matchType\":\"exact\",\"confidence\":1,\"originalToken\":\"不\",\"sourceSpan\":{\"start\":3,\"end\":4,\"offsetUnit\":\"unicode-code-point\"},\"attribution\":{\"provider\":\"mulberry\",\"originalId\":\"pi-core-no\",\"name\":\"Mulberry Symbols\",\"license\":\"CC BY-SA 4.0\",\"licenseUrl\":\"https://creativecommons.org/licenses/by-sa/4.0/\",\"author\":\"Mulberry Symbols\",\"authorUrl\":\"https://mulberrysymbols.org/\",\"sourceUrl\":\"https://mulberrysymbols.org/\",\"repoKey\":\"mulberry\"}},{\"pictogramId\":null,\"label\":\"回家\",\"source\":\"text\",\"boardId\":\"\",\"matchType\":\"manual\",\"confidence\":1,\"originalToken\":\"回家\",\"textOnly\":true,\"sourceSpan\":{\"start\":4,\"end\":6,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":null,\"label\":\"吃饭\",\"source\":\"text\",\"boardId\":\"\",\"matchType\":\"manual\",\"confidence\":1,\"originalToken\":\"吃饭\",\"textOnly\":true,\"sourceSpan\":{\"start\":6,\"end\":8,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":null,\"label\":\"，\",\"source\":\"text\",\"boardId\":\"\",\"matchType\":\"manual\",\"confidence\":1,\"originalToken\":\"，\",\"textOnly\":true,\"sourceSpan\":{\"start\":8,\"end\":9,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":null,\"label\":\"明早\",\"source\":\"text\",\"boardId\":\"\",\"matchType\":\"manual\",\"confidence\":1,\"originalToken\":\"明早\",\"textOnly\":true,\"sourceSpan\":{\"start\":9,\"end\":11,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":null,\"label\":\"七点半\",\"source\":\"text\",\"boardId\":\"\",\"matchType\":\"manual\",\"confidence\":1,\"originalToken\":\"七点半\",\"textOnly\":true,\"sourceSpan\":{\"start\":11,\"end\":14,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":null,\"label\":\"回家\",\"source\":\"\",\"boardId\":\"\",\"matchType\":\"missing\",\"confidence\":0,\"originalToken\":\"回家\",\"sourceSpan\":{\"start\":14,\"end\":16,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":null,\"label\":\"。\",\"source\":\"text\",\"boardId\":\"\",\"matchType\":\"manual\",\"confidence\":1,\"originalToken\":\"。\",\"textOnly\":true,\"sourceSpan\":{\"start\":16,\"end\":17,\"offsetUnit\":\"unicode-code-point\"}}]},\"isUsedForLearning\":true,\"createdAt\":1792561563211},{\"id\":\"correction_mvhovea0_ftfionze\",\"expressionId\":\"receiver_mvhovdtv_eqmqkdg5\",\"sessionId\":\"session_mvhovcxf_p66psqg0\",\"patientId\":\"patient_mvhovcxf_ntz7cofy\",\"workspaceId\":\"workspace_mvhovcxf_a4u7x0kx\",\"userId\":null,\"action\":\"replace_pictogram\",\"context\":\"live_review\",\"originalToken\":\"明早\",\"normalizedToken\":\"明早\",\"sequenceIndexBefore\":6,\"sequenceIndexAfter\":6,\"pictogramIdBefore\":null,\"pictogramIdAfter\":null,\"pictogramIdsBefore\":[\"pi-core-i\",null,\"pi-core-no\",null,null,null,null,null,null,null],\"pictogramIdsAfter\":[\"pi-core-i\",null,\"pi-core-no\",null,null,null,null,null,null,null],\"revisionBefore\":{\"labels\":[\"我\",\"今晚\",\"不\",\"回家\",\"吃饭\",\"，\",\"。\"],\"output\":[{\"id\":\"pi-core-i\",\"label\":\"我\",\"image\":\"/symbols/arasaac/picinterpreter-care/6632.png\",\"vocalization\":\"我\",\"backgroundColor\":\"rgb(255, 241, 118)\",\"attribution\":{\"provider\":\"arasaac\",\"originalId\":\"6632\",\"name\":\"ARASAAC\",\"license\":\"CC BY-NC-SA 4.0\",\"licenseUrl\":\"https://creativecommons.org/licenses/by-nc-sa/4.0/\",\"author\":\"Sergio Palao\",\"authorUrl\":\"https://arasaac.org/\",\"sourceUrl\":\"https://arasaac.org/pictograms/zh/6632\",\"repoKey\":\"arasaac\"}},{\"id\":\"text-review_dq8i4zb3\",\"label\":\"今晚\",\"vocalization\":\"今晚\",\"image\":\"\",\"textOnly\":true},{\"id\":\"pi-core-no\",\"label\":\"不\",\"image\":\"/symbols/mulberry/no.svg\",\"vocalization\":\"不\",\"backgroundColor\":\"rgb(255, 241, 118)\",\"attribution\":{\"provider\":\"mulberry\",\"originalId\":\"pi-core-no\",\"name\":\"Mulberry Symbols\",\"license\":\"CC BY-SA 4.0\",\"licenseUrl\":\"https://creativecommons.org/licenses/by-sa/4.0/\",\"author\":\"Mulberry Symbols\",\"authorUrl\":\"https://mulberrysymbols.org/\",\"sourceUrl\":\"https://mulberrysymbols.org/\",\"repoKey\":\"mulberry\"}},{\"id\":\"text-review_xlwy5axo\",\"label\":\"回家\",\"vocalization\":\"回家\",\"image\":\"\",\"textOnly\":true},{\"id\":\"text-review_1b4wajml\",\"label\":\"吃饭\",\"vocalization\":\"吃饭\",\"image\":\"\",\"textOnly\":true},{\"id\":\"text-separator-5\",\"label\":\"，\",\"vocalization\":\"，\",\"image\":\"\",\"textOnly\":true},{\"id\":\"text-separator-9\",\"label\":\"。\",\"vocalization\":\"。\",\"image\":\"\",\"textOnly\":true}],\"pictogramSequence\":[{\"pictogramId\":\"pi-core-i\",\"label\":\"我\",\"source\":\"\",\"boardId\":\"pi-core-words-v1\",\"matchType\":\"exact\",\"confidence\":1,\"originalToken\":\"我\",\"sourceSpan\":{\"start\":0,\"end\":1,\"offsetUnit\":\"unicode-code-point\"},\"attribution\":{\"provider\":\"arasaac\",\"originalId\":\"6632\",\"name\":\"ARASAAC\",\"license\":\"CC BY-NC-SA 4.0\",\"licenseUrl\":\"https://creativecommons.org/licenses/by-nc-sa/4.0/\",\"author\":\"Sergio Palao\",\"authorUrl\":\"https://arasaac.org/\",\"sourceUrl\":\"https://arasaac.org/pictograms/zh/6632\",\"repoKey\":\"arasaac\"}},{\"pictogramId\":null,\"label\":\"今晚\",\"source\":\"text\",\"boardId\":\"\",\"matchType\":\"manual\",\"confidence\":1,\"originalToken\":\"今晚\",\"textOnly\":true,\"sourceSpan\":{\"start\":1,\"end\":3,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":\"pi-core-no\",\"label\":\"不\",\"source\":\"\",\"boardId\":\"pi-core-words-v1\",\"matchType\":\"exact\",\"confidence\":1,\"originalToken\":\"不\",\"sourceSpan\":{\"start\":3,\"end\":4,\"offsetUnit\":\"unicode-code-point\"},\"attribution\":{\"provider\":\"mulberry\",\"originalId\":\"pi-core-no\",\"name\":\"Mulberry Symbols\",\"license\":\"CC BY-SA 4.0\",\"licenseUrl\":\"https://creativecommons.org/licenses/by-sa/4.0/\",\"author\":\"Mulberry Symbols\",\"authorUrl\":\"https://mulberrysymbols.org/\",\"sourceUrl\":\"https://mulberrysymbols.org/\",\"repoKey\":\"mulberry\"}},{\"pictogramId\":null,\"label\":\"回家\",\"source\":\"text\",\"boardId\":\"\",\"matchType\":\"manual\",\"confidence\":1,\"originalToken\":\"回家\",\"textOnly\":true,\"sourceSpan\":{\"start\":4,\"end\":6,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":null,\"label\":\"吃饭\",\"source\":\"text\",\"boardId\":\"\",\"matchType\":\"manual\",\"confidence\":1,\"originalToken\":\"吃饭\",\"textOnly\":true,\"sourceSpan\":{\"start\":6,\"end\":8,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":null,\"label\":\"，\",\"source\":\"text\",\"boardId\":\"\",\"matchType\":\"manual\",\"confidence\":1,\"originalToken\":\"，\",\"textOnly\":true,\"sourceSpan\":{\"start\":8,\"end\":9,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":null,\"label\":\"明早\",\"source\":\"\",\"boardId\":\"\",\"matchType\":\"missing\",\"confidence\":0,\"originalToken\":\"明早\",\"sourceSpan\":{\"start\":9,\"end\":11,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":null,\"label\":\"七点半\",\"source\":\"\",\"boardId\":\"\",\"matchType\":\"missing\",\"confidence\":0,\"originalToken\":\"七点半\",\"sourceSpan\":{\"start\":11,\"end\":14,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":null,\"label\":\"回家\",\"source\":\"\",\"boardId\":\"\",\"matchType\":\"missing\",\"confidence\":0,\"originalToken\":\"回家\",\"sourceSpan\":{\"start\":14,\"end\":16,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":null,\"label\":\"。\",\"source\":\"text\",\"boardId\":\"\",\"matchType\":\"manual\",\"confidence\":1,\"originalToken\":\"。\",\"textOnly\":true,\"sourceSpan\":{\"start\":16,\"end\":17,\"offsetUnit\":\"unicode-code-point\"}}]},\"revisionAfter\":{\"labels\":[\"我\",\"今晚\",\"不\",\"回家\",\"吃饭\",\"，\",\"明早\",\"。\"],\"output\":[{\"id\":\"pi-core-i\",\"label\":\"我\",\"image\":\"/symbols/arasaac/picinterpreter-care/6632.png\",\"vocalization\":\"我\",\"backgroundColor\":\"rgb(255, 241, 118)\",\"attribution\":{\"provider\":\"arasaac\",\"originalId\":\"6632\",\"name\":\"ARASAAC\",\"license\":\"CC BY-NC-SA 4.0\",\"licenseUrl\":\"https://creativecommons.org/licenses/by-nc-sa/4.0/\",\"author\":\"Sergio Palao\",\"authorUrl\":\"https://arasaac.org/\",\"sourceUrl\":\"https://arasaac.org/pictograms/zh/6632\",\"repoKey\":\"arasaac\"}},{\"id\":\"text-review_dq8i4zb3\",\"label\":\"今晚\",\"vocalization\":\"今晚\",\"image\":\"\",\"textOnly\":true},{\"id\":\"pi-core-no\",\"label\":\"不\",\"image\":\"/symbols/mulberry/no.svg\",\"vocalization\":\"不\",\"backgroundColor\":\"rgb(255, 241, 118)\",\"attribution\":{\"provider\":\"mulberry\",\"originalId\":\"pi-core-no\",\"name\":\"Mulberry Symbols\",\"license\":\"CC BY-SA 4.0\",\"licenseUrl\":\"https://creativecommons.org/licenses/by-sa/4.0/\",\"author\":\"Mulberry Symbols\",\"authorUrl\":\"https://mulberrysymbols.org/\",\"sourceUrl\":\"https://mulberrysymbols.org/\",\"repoKey\":\"mulberry\"}},{\"id\":\"text-review_xlwy5axo\",\"label\":\"回家\",\"vocalization\":\"回家\",\"image\":\"\",\"textOnly\":true},{\"id\":\"text-review_1b4wajml\",\"label\":\"吃饭\",\"vocalization\":\"吃饭\",\"image\":\"\",\"textOnly\":true},{\"id\":\"text-separator-5\",\"label\":\"，\",\"vocalization\":\"，\",\"image\":\"\",\"textOnly\":true},{\"id\":\"text-review_025m5v6n\",\"label\":\"明早\",\"vocalization\":\"明早\",\"image\":\"\",\"textOnly\":true},{\"id\":\"text-separator-9\",\"label\":\"。\",\"vocalization\":\"。\",\"image\":\"\",\"textOnly\":true}],\"pictogramSequence\":[{\"pictogramId\":\"pi-core-i\",\"label\":\"我\",\"source\":\"\",\"boardId\":\"pi-core-words-v1\",\"matchType\":\"exact\",\"confidence\":1,\"originalToken\":\"我\",\"sourceSpan\":{\"start\":0,\"end\":1,\"offsetUnit\":\"unicode-code-point\"},\"attribution\":{\"provider\":\"arasaac\",\"originalId\":\"6632\",\"name\":\"ARASAAC\",\"license\":\"CC BY-NC-SA 4.0\",\"licenseUrl\":\"https://creativecommons.org/licenses/by-nc-sa/4.0/\",\"author\":\"Sergio Palao\",\"authorUrl\":\"https://arasaac.org/\",\"sourceUrl\":\"https://arasaac.org/pictograms/zh/6632\",\"repoKey\":\"arasaac\"}},{\"pictogramId\":null,\"label\":\"今晚\",\"source\":\"text\",\"boardId\":\"\",\"matchType\":\"manual\",\"confidence\":1,\"originalToken\":\"今晚\",\"textOnly\":true,\"sourceSpan\":{\"start\":1,\"end\":3,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":\"pi-core-no\",\"label\":\"不\",\"source\":\"\",\"boardId\":\"pi-core-words-v1\",\"matchType\":\"exact\",\"confidence\":1,\"originalToken\":\"不\",\"sourceSpan\":{\"start\":3,\"end\":4,\"offsetUnit\":\"unicode-code-point\"},\"attribution\":{\"provider\":\"mulberry\",\"originalId\":\"pi-core-no\",\"name\":\"Mulberry Symbols\",\"license\":\"CC BY-SA 4.0\",\"licenseUrl\":\"https://creativecommons.org/licenses/by-sa/4.0/\",\"author\":\"Mulberry Symbols\",\"authorUrl\":\"https://mulberrysymbols.org/\",\"sourceUrl\":\"https://mulberrysymbols.org/\",\"repoKey\":\"mulberry\"}},{\"pictogramId\":null,\"label\":\"回家\",\"source\":\"text\",\"boardId\":\"\",\"matchType\":\"manual\",\"confidence\":1,\"originalToken\":\"回家\",\"textOnly\":true,\"sourceSpan\":{\"start\":4,\"end\":6,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":null,\"label\":\"吃饭\",\"source\":\"text\",\"boardId\":\"\",\"matchType\":\"manual\",\"confidence\":1,\"originalToken\":\"吃饭\",\"textOnly\":true,\"sourceSpan\":{\"start\":6,\"end\":8,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":null,\"label\":\"，\",\"source\":\"text\",\"boardId\":\"\",\"matchType\":\"manual\",\"confidence\":1,\"originalToken\":\"，\",\"textOnly\":true,\"sourceSpan\":{\"start\":8,\"end\":9,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":null,\"label\":\"明早\",\"source\":\"text\",\"boardId\":\"\",\"matchType\":\"manual\",\"confidence\":1,\"originalToken\":\"明早\",\"textOnly\":true,\"sourceSpan\":{\"start\":9,\"end\":11,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":null,\"label\":\"七点半\",\"source\":\"\",\"boardId\":\"\",\"matchType\":\"missing\",\"confidence\":0,\"originalToken\":\"七点半\",\"sourceSpan\":{\"start\":11,\"end\":14,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":null,\"label\":\"回家\",\"source\":\"\",\"boardId\":\"\",\"matchType\":\"missing\",\"confidence\":0,\"originalToken\":\"回家\",\"sourceSpan\":{\"start\":14,\"end\":16,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":null,\"label\":\"。\",\"source\":\"text\",\"boardId\":\"\",\"matchType\":\"manual\",\"confidence\":1,\"originalToken\":\"。\",\"textOnly\":true,\"sourceSpan\":{\"start\":16,\"end\":17,\"offsetUnit\":\"unicode-code-point\"}}]},\"isUsedForLearning\":true,\"createdAt\":1792561563144},{\"id\":\"correction_mvhove86_t9pj4ytf\",\"expressionId\":\"receiver_mvhovdtv_eqmqkdg5\",\"sessionId\":\"session_mvhovcxf_p66psqg0\",\"patientId\":\"patient_mvhovcxf_ntz7cofy\",\"workspaceId\":\"workspace_mvhovcxf_a4u7x0kx\",\"userId\":null,\"action\":\"replace_pictogram\",\"context\":\"live_review\",\"originalToken\":\"吃饭\",\"normalizedToken\":\"吃饭\",\"sequenceIndexBefore\":4,\"sequenceIndexAfter\":4,\"pictogramIdBefore\":null,\"pictogramIdAfter\":null,\"pictogramIdsBefore\":[\"pi-core-i\",null,\"pi-core-no\",null,null,null,null,null,null,null],\"pictogramIdsAfter\":[\"pi-core-i\",null,\"pi-core-no\",null,null,null,null,null,null,null],\"revisionBefore\":{\"labels\":[\"我\",\"今晚\",\"不\",\"回家\",\"，\",\"。\"],\"output\":[{\"id\":\"pi-core-i\",\"label\":\"我\",\"image\":\"/symbols/arasaac/picinterpreter-care/6632.png\",\"vocalization\":\"我\",\"backgroundColor\":\"rgb(255, 241, 118)\",\"attribution\":{\"provider\":\"arasaac\",\"originalId\":\"6632\",\"name\":\"ARASAAC\",\"license\":\"CC BY-NC-SA 4.0\",\"licenseUrl\":\"https://creativecommons.org/licenses/by-nc-sa/4.0/\",\"author\":\"Sergio Palao\",\"authorUrl\":\"https://arasaac.org/\",\"sourceUrl\":\"https://arasaac.org/pictograms/zh/6632\",\"repoKey\":\"arasaac\"}},{\"id\":\"text-review_dq8i4zb3\",\"label\":\"今晚\",\"vocalization\":\"今晚\",\"image\":\"\",\"textOnly\":true},{\"id\":\"pi-core-no\",\"label\":\"不\",\"image\":\"/symbols/mulberry/no.svg\",\"vocalization\":\"不\",\"backgroundColor\":\"rgb(255, 241, 118)\",\"attribution\":{\"provider\":\"mulberry\",\"originalId\":\"pi-core-no\",\"name\":\"Mulberry Symbols\",\"license\":\"CC BY-SA 4.0\",\"licenseUrl\":\"https://creativecommons.org/licenses/by-sa/4.0/\",\"author\":\"Mulberry Symbols\",\"authorUrl\":\"https://mulberrysymbols.org/\",\"sourceUrl\":\"https://mulberrysymbols.org/\",\"repoKey\":\"mulberry\"}},{\"id\":\"text-review_xlwy5axo\",\"label\":\"回家\",\"vocalization\":\"回家\",\"image\":\"\",\"textOnly\":true},{\"id\":\"text-separator-5\",\"label\":\"，\",\"vocalization\":\"，\",\"image\":\"\",\"textOnly\":true},{\"id\":\"text-separator-9\",\"label\":\"。\",\"vocalization\":\"。\",\"image\":\"\",\"textOnly\":true}],\"pictogramSequence\":[{\"pictogramId\":\"pi-core-i\",\"label\":\"我\",\"source\":\"\",\"boardId\":\"pi-core-words-v1\",\"matchType\":\"exact\",\"confidence\":1,\"originalToken\":\"我\",\"sourceSpan\":{\"start\":0,\"end\":1,\"offsetUnit\":\"unicode-code-point\"},\"attribution\":{\"provider\":\"arasaac\",\"originalId\":\"6632\",\"name\":\"ARASAAC\",\"license\":\"CC BY-NC-SA 4.0\",\"licenseUrl\":\"https://creativecommons.org/licenses/by-nc-sa/4.0/\",\"author\":\"Sergio Palao\",\"authorUrl\":\"https://arasaac.org/\",\"sourceUrl\":\"https://arasaac.org/pictograms/zh/6632\",\"repoKey\":\"arasaac\"}},{\"pictogramId\":null,\"label\":\"今晚\",\"source\":\"text\",\"boardId\":\"\",\"matchType\":\"manual\",\"confidence\":1,\"originalToken\":\"今晚\",\"textOnly\":true,\"sourceSpan\":{\"start\":1,\"end\":3,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":\"pi-core-no\",\"label\":\"不\",\"source\":\"\",\"boardId\":\"pi-core-words-v1\",\"matchType\":\"exact\",\"confidence\":1,\"originalToken\":\"不\",\"sourceSpan\":{\"start\":3,\"end\":4,\"offsetUnit\":\"unicode-code-point\"},\"attribution\":{\"provider\":\"mulberry\",\"originalId\":\"pi-core-no\",\"name\":\"Mulberry Symbols\",\"license\":\"CC BY-SA 4.0\",\"licenseUrl\":\"https://creativecommons.org/licenses/by-sa/4.0/\",\"author\":\"Mulberry Symbols\",\"authorUrl\":\"https://mulberrysymbols.org/\",\"sourceUrl\":\"https://mulberrysymbols.org/\",\"repoKey\":\"mulberry\"}},{\"pictogramId\":null,\"label\":\"回家\",\"source\":\"text\",\"boardId\":\"\",\"matchType\":\"manual\",\"confidence\":1,\"originalToken\":\"回家\",\"textOnly\":true,\"sourceSpan\":{\"start\":4,\"end\":6,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":null,\"label\":\"吃饭\",\"source\":\"\",\"boardId\":\"\",\"matchType\":\"missing\",\"confidence\":0,\"originalToken\":\"吃饭\",\"sourceSpan\":{\"start\":6,\"end\":8,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":null,\"label\":\"，\",\"source\":\"text\",\"boardId\":\"\",\"matchType\":\"manual\",\"confidence\":1,\"originalToken\":\"，\",\"textOnly\":true,\"sourceSpan\":{\"start\":8,\"end\":9,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":null,\"label\":\"明早\",\"source\":\"\",\"boardId\":\"\",\"matchType\":\"missing\",\"confidence\":0,\"originalToken\":\"明早\",\"sourceSpan\":{\"start\":9,\"end\":11,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":null,\"label\":\"七点半\",\"source\":\"\",\"boardId\":\"\",\"matchType\":\"missing\",\"confidence\":0,\"originalToken\":\"七点半\",\"sourceSpan\":{\"start\":11,\"end\":14,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":null,\"label\":\"回家\",\"source\":\"\",\"boardId\":\"\",\"matchType\":\"missing\",\"confidence\":0,\"originalToken\":\"回家\",\"sourceSpan\":{\"start\":14,\"end\":16,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":null,\"label\":\"。\",\"source\":\"text\",\"boardId\":\"\",\"matchType\":\"manual\",\"confidence\":1,\"originalToken\":\"。\",\"textOnly\":true,\"sourceSpan\":{\"start\":16,\"end\":17,\"offsetUnit\":\"unicode-code-point\"}}]},\"revisionAfter\":{\"labels\":[\"我\",\"今晚\",\"不\",\"回家\",\"吃饭\",\"，\",\"。\"],\"output\":[{\"id\":\"pi-core-i\",\"label\":\"我\",\"image\":\"/symbols/arasaac/picinterpreter-care/6632.png\",\"vocalization\":\"我\",\"backgroundColor\":\"rgb(255, 241, 118)\",\"attribution\":{\"provider\":\"arasaac\",\"originalId\":\"6632\",\"name\":\"ARASAAC\",\"license\":\"CC BY-NC-SA 4.0\",\"licenseUrl\":\"https://creativecommons.org/licenses/by-nc-sa/4.0/\",\"author\":\"Sergio Palao\",\"authorUrl\":\"https://arasaac.org/\",\"sourceUrl\":\"https://arasaac.org/pictograms/zh/6632\",\"repoKey\":\"arasaac\"}},{\"id\":\"text-review_dq8i4zb3\",\"label\":\"今晚\",\"vocalization\":\"今晚\",\"image\":\"\",\"textOnly\":true},{\"id\":\"pi-core-no\",\"label\":\"不\",\"image\":\"/symbols/mulberry/no.svg\",\"vocalization\":\"不\",\"backgroundColor\":\"rgb(255, 241, 118)\",\"attribution\":{\"provider\":\"mulberry\",\"originalId\":\"pi-core-no\",\"name\":\"Mulberry Symbols\",\"license\":\"CC BY-SA 4.0\",\"licenseUrl\":\"https://creativecommons.org/licenses/by-sa/4.0/\",\"author\":\"Mulberry Symbols\",\"authorUrl\":\"https://mulberrysymbols.org/\",\"sourceUrl\":\"https://mulberrysymbols.org/\",\"repoKey\":\"mulberry\"}},{\"id\":\"text-review_xlwy5axo\",\"label\":\"回家\",\"vocalization\":\"回家\",\"image\":\"\",\"textOnly\":true},{\"id\":\"text-review_1b4wajml\",\"label\":\"吃饭\",\"vocalization\":\"吃饭\",\"image\":\"\",\"textOnly\":true},{\"id\":\"text-separator-5\",\"label\":\"，\",\"vocalization\":\"，\",\"image\":\"\",\"textOnly\":true},{\"id\":\"text-separator-9\",\"label\":\"。\",\"vocalization\":\"。\",\"image\":\"\",\"textOnly\":true}],\"pictogramSequence\":[{\"pictogramId\":\"pi-core-i\",\"label\":\"我\",\"source\":\"\",\"boardId\":\"pi-core-words-v1\",\"matchType\":\"exact\",\"confidence\":1,\"originalToken\":\"我\",\"sourceSpan\":{\"start\":0,\"end\":1,\"offsetUnit\":\"unicode-code-point\"},\"attribution\":{\"provider\":\"arasaac\",\"originalId\":\"6632\",\"name\":\"ARASAAC\",\"license\":\"CC BY-NC-SA 4.0\",\"licenseUrl\":\"https://creativecommons.org/licenses/by-nc-sa/4.0/\",\"author\":\"Sergio Palao\",\"authorUrl\":\"https://arasaac.org/\",\"sourceUrl\":\"https://arasaac.org/pictograms/zh/6632\",\"repoKey\":\"arasaac\"}},{\"pictogramId\":null,\"label\":\"今晚\",\"source\":\"text\",\"boardId\":\"\",\"matchType\":\"manual\",\"confidence\":1,\"originalToken\":\"今晚\",\"textOnly\":true,\"sourceSpan\":{\"start\":1,\"end\":3,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":\"pi-core-no\",\"label\":\"不\",\"source\":\"\",\"boardId\":\"pi-core-words-v1\",\"matchType\":\"exact\",\"confidence\":1,\"originalToken\":\"不\",\"sourceSpan\":{\"start\":3,\"end\":4,\"offsetUnit\":\"unicode-code-point\"},\"attribution\":{\"provider\":\"mulberry\",\"originalId\":\"pi-core-no\",\"name\":\"Mulberry Symbols\",\"license\":\"CC BY-SA 4.0\",\"licenseUrl\":\"https://creativecommons.org/licenses/by-sa/4.0/\",\"author\":\"Mulberry Symbols\",\"authorUrl\":\"https://mulberrysymbols.org/\",\"sourceUrl\":\"https://mulberrysymbols.org/\",\"repoKey\":\"mulberry\"}},{\"pictogramId\":null,\"label\":\"回家\",\"source\":\"text\",\"boardId\":\"\",\"matchType\":\"manual\",\"confidence\":1,\"originalToken\":\"回家\",\"textOnly\":true,\"sourceSpan\":{\"start\":4,\"end\":6,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":null,\"label\":\"吃饭\",\"source\":\"text\",\"boardId\":\"\",\"matchType\":\"manual\",\"confidence\":1,\"originalToken\":\"吃饭\",\"textOnly\":true,\"sourceSpan\":{\"start\":6,\"end\":8,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":null,\"label\":\"，\",\"source\":\"text\",\"boardId\":\"\",\"matchType\":\"manual\",\"confidence\":1,\"originalToken\":\"，\",\"textOnly\":true,\"sourceSpan\":{\"start\":8,\"end\":9,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":null,\"label\":\"明早\",\"source\":\"\",\"boardId\":\"\",\"matchType\":\"missing\",\"confidence\":0,\"originalToken\":\"明早\",\"sourceSpan\":{\"start\":9,\"end\":11,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":null,\"label\":\"七点半\",\"source\":\"\",\"boardId\":\"\",\"matchType\":\"missing\",\"confidence\":0,\"originalToken\":\"七点半\",\"sourceSpan\":{\"start\":11,\"end\":14,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":null,\"label\":\"回家\",\"source\":\"\",\"boardId\":\"\",\"matchType\":\"missing\",\"confidence\":0,\"originalToken\":\"回家\",\"sourceSpan\":{\"start\":14,\"end\":16,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":null,\"label\":\"。\",\"source\":\"text\",\"boardId\":\"\",\"matchType\":\"manual\",\"confidence\":1,\"originalToken\":\"。\",\"textOnly\":true,\"sourceSpan\":{\"start\":16,\"end\":17,\"offsetUnit\":\"unicode-code-point\"}}]},\"isUsedForLearning\":true,\"createdAt\":1792561563078},{\"id\":\"correction_mvhove6a_6hhxg7gm\",\"expressionId\":\"receiver_mvhovdtv_eqmqkdg5\",\"sessionId\":\"session_mvhovcxf_p66psqg0\",\"patientId\":\"patient_mvhovcxf_ntz7cofy\",\"workspaceId\":\"workspace_mvhovcxf_a4u7x0kx\",\"userId\":null,\"action\":\"replace_pictogram\",\"context\":\"live_review\",\"originalToken\":\"回家\",\"normalizedToken\":\"回家\",\"sequenceIndexBefore\":3,\"sequenceIndexAfter\":3,\"pictogramIdBefore\":null,\"pictogramIdAfter\":null,\"pictogramIdsBefore\":[\"pi-core-i\",null,\"pi-core-no\",null,null,null,null,null,null,null],\"pictogramIdsAfter\":[\"pi-core-i\",null,\"pi-core-no\",null,null,null,null,null,null,null],\"revisionBefore\":{\"labels\":[\"我\",\"今晚\",\"不\",\"，\",\"。\"],\"output\":[{\"id\":\"pi-core-i\",\"label\":\"我\",\"image\":\"/symbols/arasaac/picinterpreter-care/6632.png\",\"vocalization\":\"我\",\"backgroundColor\":\"rgb(255, 241, 118)\",\"attribution\":{\"provider\":\"arasaac\",\"originalId\":\"6632\",\"name\":\"ARASAAC\",\"license\":\"CC BY-NC-SA 4.0\",\"licenseUrl\":\"https://creativecommons.org/licenses/by-nc-sa/4.0/\",\"author\":\"Sergio Palao\",\"authorUrl\":\"https://arasaac.org/\",\"sourceUrl\":\"https://arasaac.org/pictograms/zh/6632\",\"repoKey\":\"arasaac\"}},{\"id\":\"text-review_dq8i4zb3\",\"label\":\"今晚\",\"vocalization\":\"今晚\",\"image\":\"\",\"textOnly\":true},{\"id\":\"pi-core-no\",\"label\":\"不\",\"image\":\"/symbols/mulberry/no.svg\",\"vocalization\":\"不\",\"backgroundColor\":\"rgb(255, 241, 118)\",\"attribution\":{\"provider\":\"mulberry\",\"originalId\":\"pi-core-no\",\"name\":\"Mulberry Symbols\",\"license\":\"CC BY-SA 4.0\",\"licenseUrl\":\"https://creativecommons.org/licenses/by-sa/4.0/\",\"author\":\"Mulberry Symbols\",\"authorUrl\":\"https://mulberrysymbols.org/\",\"sourceUrl\":\"https://mulberrysymbols.org/\",\"repoKey\":\"mulberry\"}},{\"id\":\"text-separator-5\",\"label\":\"，\",\"vocalization\":\"，\",\"image\":\"\",\"textOnly\":true},{\"id\":\"text-separator-9\",\"label\":\"。\",\"vocalization\":\"。\",\"image\":\"\",\"textOnly\":true}],\"pictogramSequence\":[{\"pictogramId\":\"pi-core-i\",\"label\":\"我\",\"source\":\"\",\"boardId\":\"pi-core-words-v1\",\"matchType\":\"exact\",\"confidence\":1,\"originalToken\":\"我\",\"sourceSpan\":{\"start\":0,\"end\":1,\"offsetUnit\":\"unicode-code-point\"},\"attribution\":{\"provider\":\"arasaac\",\"originalId\":\"6632\",\"name\":\"ARASAAC\",\"license\":\"CC BY-NC-SA 4.0\",\"licenseUrl\":\"https://creativecommons.org/licenses/by-nc-sa/4.0/\",\"author\":\"Sergio Palao\",\"authorUrl\":\"https://arasaac.org/\",\"sourceUrl\":\"https://arasaac.org/pictograms/zh/6632\",\"repoKey\":\"arasaac\"}},{\"pictogramId\":null,\"label\":\"今晚\",\"source\":\"text\",\"boardId\":\"\",\"matchType\":\"manual\",\"confidence\":1,\"originalToken\":\"今晚\",\"textOnly\":true,\"sourceSpan\":{\"start\":1,\"end\":3,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":\"pi-core-no\",\"label\":\"不\",\"source\":\"\",\"boardId\":\"pi-core-words-v1\",\"matchType\":\"exact\",\"confidence\":1,\"originalToken\":\"不\",\"sourceSpan\":{\"start\":3,\"end\":4,\"offsetUnit\":\"unicode-code-point\"},\"attribution\":{\"provider\":\"mulberry\",\"originalId\":\"pi-core-no\",\"name\":\"Mulberry Symbols\",\"license\":\"CC BY-SA 4.0\",\"licenseUrl\":\"https://creativecommons.org/licenses/by-sa/4.0/\",\"author\":\"Mulberry Symbols\",\"authorUrl\":\"https://mulberrysymbols.org/\",\"sourceUrl\":\"https://mulberrysymbols.org/\",\"repoKey\":\"mulberry\"}},{\"pictogramId\":null,\"label\":\"回家\",\"source\":\"\",\"boardId\":\"\",\"matchType\":\"missing\",\"confidence\":0,\"originalToken\":\"回家\",\"sourceSpan\":{\"start\":4,\"end\":6,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":null,\"label\":\"吃饭\",\"source\":\"\",\"boardId\":\"\",\"matchType\":\"missing\",\"confidence\":0,\"originalToken\":\"吃饭\",\"sourceSpan\":{\"start\":6,\"end\":8,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":null,\"label\":\"，\",\"source\":\"text\",\"boardId\":\"\",\"matchType\":\"manual\",\"confidence\":1,\"originalToken\":\"，\",\"textOnly\":true,\"sourceSpan\":{\"start\":8,\"end\":9,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":null,\"label\":\"明早\",\"source\":\"\",\"boardId\":\"\",\"matchType\":\"missing\",\"confidence\":0,\"originalToken\":\"明早\",\"sourceSpan\":{\"start\":9,\"end\":11,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":null,\"label\":\"七点半\",\"source\":\"\",\"boardId\":\"\",\"matchType\":\"missing\",\"confidence\":0,\"originalToken\":\"七点半\",\"sourceSpan\":{\"start\":11,\"end\":14,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":null,\"label\":\"回家\",\"source\":\"\",\"boardId\":\"\",\"matchType\":\"missing\",\"confidence\":0,\"originalToken\":\"回家\",\"sourceSpan\":{\"start\":14,\"end\":16,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":null,\"label\":\"。\",\"source\":\"text\",\"boardId\":\"\",\"matchType\":\"manual\",\"confidence\":1,\"originalToken\":\"。\",\"textOnly\":true,\"sourceSpan\":{\"start\":16,\"end\":17,\"offsetUnit\":\"unicode-code-point\"}}]},\"revisionAfter\":{\"labels\":[\"我\",\"今晚\",\"不\",\"回家\",\"，\",\"。\"],\"output\":[{\"id\":\"pi-core-i\",\"label\":\"我\",\"image\":\"/symbols/arasaac/picinterpreter-care/6632.png\",\"vocalization\":\"我\",\"backgroundColor\":\"rgb(255, 241, 118)\",\"attribution\":{\"provider\":\"arasaac\",\"originalId\":\"6632\",\"name\":\"ARASAAC\",\"license\":\"CC BY-NC-SA 4.0\",\"licenseUrl\":\"https://creativecommons.org/licenses/by-nc-sa/4.0/\",\"author\":\"Sergio Palao\",\"authorUrl\":\"https://arasaac.org/\",\"sourceUrl\":\"https://arasaac.org/pictograms/zh/6632\",\"repoKey\":\"arasaac\"}},{\"id\":\"text-review_dq8i4zb3\",\"label\":\"今晚\",\"vocalization\":\"今晚\",\"image\":\"\",\"textOnly\":true},{\"id\":\"pi-core-no\",\"label\":\"不\",\"image\":\"/symbols/mulberry/no.svg\",\"vocalization\":\"不\",\"backgroundColor\":\"rgb(255, 241, 118)\",\"attribution\":{\"provider\":\"mulberry\",\"originalId\":\"pi-core-no\",\"name\":\"Mulberry Symbols\",\"license\":\"CC BY-SA 4.0\",\"licenseUrl\":\"https://creativecommons.org/licenses/by-sa/4.0/\",\"author\":\"Mulberry Symbols\",\"authorUrl\":\"https://mulberrysymbols.org/\",\"sourceUrl\":\"https://mulberrysymbols.org/\",\"repoKey\":\"mulberry\"}},{\"id\":\"text-review_xlwy5axo\",\"label\":\"回家\",\"vocalization\":\"回家\",\"image\":\"\",\"textOnly\":true},{\"id\":\"text-separator-5\",\"label\":\"，\",\"vocalization\":\"，\",\"image\":\"\",\"textOnly\":true},{\"id\":\"text-separator-9\",\"label\":\"。\",\"vocalization\":\"。\",\"image\":\"\",\"textOnly\":true}],\"pictogramSequence\":[{\"pictogramId\":\"pi-core-i\",\"label\":\"我\",\"source\":\"\",\"boardId\":\"pi-core-words-v1\",\"matchType\":\"exact\",\"confidence\":1,\"originalToken\":\"我\",\"sourceSpan\":{\"start\":0,\"end\":1,\"offsetUnit\":\"unicode-code-point\"},\"attribution\":{\"provider\":\"arasaac\",\"originalId\":\"6632\",\"name\":\"ARASAAC\",\"license\":\"CC BY-NC-SA 4.0\",\"licenseUrl\":\"https://creativecommons.org/licenses/by-nc-sa/4.0/\",\"author\":\"Sergio Palao\",\"authorUrl\":\"https://arasaac.org/\",\"sourceUrl\":\"https://arasaac.org/pictograms/zh/6632\",\"repoKey\":\"arasaac\"}},{\"pictogramId\":null,\"label\":\"今晚\",\"source\":\"text\",\"boardId\":\"\",\"matchType\":\"manual\",\"confidence\":1,\"originalToken\":\"今晚\",\"textOnly\":true,\"sourceSpan\":{\"start\":1,\"end\":3,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":\"pi-core-no\",\"label\":\"不\",\"source\":\"\",\"boardId\":\"pi-core-words-v1\",\"matchType\":\"exact\",\"confidence\":1,\"originalToken\":\"不\",\"sourceSpan\":{\"start\":3,\"end\":4,\"offsetUnit\":\"unicode-code-point\"},\"attribution\":{\"provider\":\"mulberry\",\"originalId\":\"pi-core-no\",\"name\":\"Mulberry Symbols\",\"license\":\"CC BY-SA 4.0\",\"licenseUrl\":\"https://creativecommons.org/licenses/by-sa/4.0/\",\"author\":\"Mulberry Symbols\",\"authorUrl\":\"https://mulberrysymbols.org/\",\"sourceUrl\":\"https://mulberrysymbols.org/\",\"repoKey\":\"mulberry\"}},{\"pictogramId\":null,\"label\":\"回家\",\"source\":\"text\",\"boardId\":\"\",\"matchType\":\"manual\",\"confidence\":1,\"originalToken\":\"回家\",\"textOnly\":true,\"sourceSpan\":{\"start\":4,\"end\":6,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":null,\"label\":\"吃饭\",\"source\":\"\",\"boardId\":\"\",\"matchType\":\"missing\",\"confidence\":0,\"originalToken\":\"吃饭\",\"sourceSpan\":{\"start\":6,\"end\":8,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":null,\"label\":\"，\",\"source\":\"text\",\"boardId\":\"\",\"matchType\":\"manual\",\"confidence\":1,\"originalToken\":\"，\",\"textOnly\":true,\"sourceSpan\":{\"start\":8,\"end\":9,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":null,\"label\":\"明早\",\"source\":\"\",\"boardId\":\"\",\"matchType\":\"missing\",\"confidence\":0,\"originalToken\":\"明早\",\"sourceSpan\":{\"start\":9,\"end\":11,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":null,\"label\":\"七点半\",\"source\":\"\",\"boardId\":\"\",\"matchType\":\"missing\",\"confidence\":0,\"originalToken\":\"七点半\",\"sourceSpan\":{\"start\":11,\"end\":14,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":null,\"label\":\"回家\",\"source\":\"\",\"boardId\":\"\",\"matchType\":\"missing\",\"confidence\":0,\"originalToken\":\"回家\",\"sourceSpan\":{\"start\":14,\"end\":16,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":null,\"label\":\"。\",\"source\":\"text\",\"boardId\":\"\",\"matchType\":\"manual\",\"confidence\":1,\"originalToken\":\"。\",\"textOnly\":true,\"sourceSpan\":{\"start\":16,\"end\":17,\"offsetUnit\":\"unicode-code-point\"}}]},\"isUsedForLearning\":true,\"createdAt\":1792561563010},{\"id\":\"correction_mvhove4h_dqnagtwp\",\"expressionId\":\"receiver_mvhovdtv_eqmqkdg5\",\"sessionId\":\"session_mvhovcxf_p66psqg0\",\"patientId\":\"patient_mvhovcxf_ntz7cofy\",\"workspaceId\":\"workspace_mvhovcxf_a4u7x0kx\",\"userId\":null,\"action\":\"replace_pictogram\",\"context\":\"live_review\",\"originalToken\":\"今晚\",\"normalizedToken\":\"今晚\",\"sequenceIndexBefore\":1,\"sequenceIndexAfter\":1,\"pictogramIdBefore\":null,\"pictogramIdAfter\":null,\"pictogramIdsBefore\":[\"pi-core-i\",null,\"pi-core-no\",null,null,null,null,null,null,null],\"pictogramIdsAfter\":[\"pi-core-i\",null,\"pi-core-no\",null,null,null,null,null,null,null],\"revisionBefore\":{\"labels\":[\"我\",\"不\",\"，\",\"。\"],\"output\":[{\"id\":\"pi-core-i\",\"label\":\"我\",\"image\":\"/symbols/arasaac/picinterpreter-care/6632.png\",\"vocalization\":\"我\",\"backgroundColor\":\"rgb(255, 241, 118)\",\"attribution\":{\"provider\":\"arasaac\",\"originalId\":\"6632\",\"name\":\"ARASAAC\",\"license\":\"CC BY-NC-SA 4.0\",\"licenseUrl\":\"https://creativecommons.org/licenses/by-nc-sa/4.0/\",\"author\":\"Sergio Palao\",\"authorUrl\":\"https://arasaac.org/\",\"sourceUrl\":\"https://arasaac.org/pictograms/zh/6632\",\"repoKey\":\"arasaac\"}},{\"id\":\"pi-core-no\",\"label\":\"不\",\"image\":\"/symbols/mulberry/no.svg\",\"vocalization\":\"不\",\"backgroundColor\":\"rgb(255, 241, 118)\",\"attribution\":{\"provider\":\"mulberry\",\"originalId\":\"pi-core-no\",\"name\":\"Mulberry Symbols\",\"license\":\"CC BY-SA 4.0\",\"licenseUrl\":\"https://creativecommons.org/licenses/by-sa/4.0/\",\"author\":\"Mulberry Symbols\",\"authorUrl\":\"https://mulberrysymbols.org/\",\"sourceUrl\":\"https://mulberrysymbols.org/\",\"repoKey\":\"mulberry\"}},{\"id\":\"text-separator-5\",\"label\":\"，\",\"vocalization\":\"，\",\"image\":\"\",\"textOnly\":true},{\"id\":\"text-separator-9\",\"label\":\"。\",\"vocalization\":\"。\",\"image\":\"\",\"textOnly\":true}],\"pictogramSequence\":[{\"pictogramId\":\"pi-core-i\",\"label\":\"我\",\"source\":\"\",\"boardId\":\"pi-core-words-v1\",\"matchType\":\"exact\",\"confidence\":1,\"originalToken\":\"我\",\"sourceSpan\":{\"start\":0,\"end\":1,\"offsetUnit\":\"unicode-code-point\"},\"attribution\":{\"provider\":\"arasaac\",\"originalId\":\"6632\",\"name\":\"ARASAAC\",\"license\":\"CC BY-NC-SA 4.0\",\"licenseUrl\":\"https://creativecommons.org/licenses/by-nc-sa/4.0/\",\"author\":\"Sergio Palao\",\"authorUrl\":\"https://arasaac.org/\",\"sourceUrl\":\"https://arasaac.org/pictograms/zh/6632\",\"repoKey\":\"arasaac\"}},{\"pictogramId\":null,\"label\":\"今晚\",\"source\":\"\",\"boardId\":\"\",\"matchType\":\"missing\",\"confidence\":0,\"originalToken\":\"今晚\",\"sourceSpan\":{\"start\":1,\"end\":3,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":\"pi-core-no\",\"label\":\"不\",\"source\":\"\",\"boardId\":\"pi-core-words-v1\",\"matchType\":\"exact\",\"confidence\":1,\"originalToken\":\"不\",\"sourceSpan\":{\"start\":3,\"end\":4,\"offsetUnit\":\"unicode-code-point\"},\"attribution\":{\"provider\":\"mulberry\",\"originalId\":\"pi-core-no\",\"name\":\"Mulberry Symbols\",\"license\":\"CC BY-SA 4.0\",\"licenseUrl\":\"https://creativecommons.org/licenses/by-sa/4.0/\",\"author\":\"Mulberry Symbols\",\"authorUrl\":\"https://mulberrysymbols.org/\",\"sourceUrl\":\"https://mulberrysymbols.org/\",\"repoKey\":\"mulberry\"}},{\"pictogramId\":null,\"label\":\"回家\",\"source\":\"\",\"boardId\":\"\",\"matchType\":\"missing\",\"confidence\":0,\"originalToken\":\"回家\",\"sourceSpan\":{\"start\":4,\"end\":6,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":null,\"label\":\"吃饭\",\"source\":\"\",\"boardId\":\"\",\"matchType\":\"missing\",\"confidence\":0,\"originalToken\":\"吃饭\",\"sourceSpan\":{\"start\":6,\"end\":8,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":null,\"label\":\"，\",\"source\":\"text\",\"boardId\":\"\",\"matchType\":\"manual\",\"confidence\":1,\"originalToken\":\"，\",\"textOnly\":true,\"sourceSpan\":{\"start\":8,\"end\":9,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":null,\"label\":\"明早\",\"source\":\"\",\"boardId\":\"\",\"matchType\":\"missing\",\"confidence\":0,\"originalToken\":\"明早\",\"sourceSpan\":{\"start\":9,\"end\":11,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":null,\"label\":\"七点半\",\"source\":\"\",\"boardId\":\"\",\"matchType\":\"missing\",\"confidence\":0,\"originalToken\":\"七点半\",\"sourceSpan\":{\"start\":11,\"end\":14,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":null,\"label\":\"回家\",\"source\":\"\",\"boardId\":\"\",\"matchType\":\"missing\",\"confidence\":0,\"originalToken\":\"回家\",\"sourceSpan\":{\"start\":14,\"end\":16,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":null,\"label\":\"。\",\"source\":\"text\",\"boardId\":\"\",\"matchType\":\"manual\",\"confidence\":1,\"originalToken\":\"。\",\"textOnly\":true,\"sourceSpan\":{\"start\":16,\"end\":17,\"offsetUnit\":\"unicode-code-point\"}}]},\"revisionAfter\":{\"labels\":[\"我\",\"今晚\",\"不\",\"，\",\"。\"],\"output\":[{\"id\":\"pi-core-i\",\"label\":\"我\",\"image\":\"/symbols/arasaac/picinterpreter-care/6632.png\",\"vocalization\":\"我\",\"backgroundColor\":\"rgb(255, 241, 118)\",\"attribution\":{\"provider\":\"arasaac\",\"originalId\":\"6632\",\"name\":\"ARASAAC\",\"license\":\"CC BY-NC-SA 4.0\",\"licenseUrl\":\"https://creativecommons.org/licenses/by-nc-sa/4.0/\",\"author\":\"Sergio Palao\",\"authorUrl\":\"https://arasaac.org/\",\"sourceUrl\":\"https://arasaac.org/pictograms/zh/6632\",\"repoKey\":\"arasaac\"}},{\"id\":\"text-review_dq8i4zb3\",\"label\":\"今晚\",\"vocalization\":\"今晚\",\"image\":\"\",\"textOnly\":true},{\"id\":\"pi-core-no\",\"label\":\"不\",\"image\":\"/symbols/mulberry/no.svg\",\"vocalization\":\"不\",\"backgroundColor\":\"rgb(255, 241, 118)\",\"attribution\":{\"provider\":\"mulberry\",\"originalId\":\"pi-core-no\",\"name\":\"Mulberry Symbols\",\"license\":\"CC BY-SA 4.0\",\"licenseUrl\":\"https://creativecommons.org/licenses/by-sa/4.0/\",\"author\":\"Mulberry Symbols\",\"authorUrl\":\"https://mulberrysymbols.org/\",\"sourceUrl\":\"https://mulberrysymbols.org/\",\"repoKey\":\"mulberry\"}},{\"id\":\"text-separator-5\",\"label\":\"，\",\"vocalization\":\"，\",\"image\":\"\",\"textOnly\":true},{\"id\":\"text-separator-9\",\"label\":\"。\",\"vocalization\":\"。\",\"image\":\"\",\"textOnly\":true}],\"pictogramSequence\":[{\"pictogramId\":\"pi-core-i\",\"label\":\"我\",\"source\":\"\",\"boardId\":\"pi-core-words-v1\",\"matchType\":\"exact\",\"confidence\":1,\"originalToken\":\"我\",\"sourceSpan\":{\"start\":0,\"end\":1,\"offsetUnit\":\"unicode-code-point\"},\"attribution\":{\"provider\":\"arasaac\",\"originalId\":\"6632\",\"name\":\"ARASAAC\",\"license\":\"CC BY-NC-SA 4.0\",\"licenseUrl\":\"https://creativecommons.org/licenses/by-nc-sa/4.0/\",\"author\":\"Sergio Palao\",\"authorUrl\":\"https://arasaac.org/\",\"sourceUrl\":\"https://arasaac.org/pictograms/zh/6632\",\"repoKey\":\"arasaac\"}},{\"pictogramId\":null,\"label\":\"今晚\",\"source\":\"text\",\"boardId\":\"\",\"matchType\":\"manual\",\"confidence\":1,\"originalToken\":\"今晚\",\"textOnly\":true,\"sourceSpan\":{\"start\":1,\"end\":3,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":\"pi-core-no\",\"label\":\"不\",\"source\":\"\",\"boardId\":\"pi-core-words-v1\",\"matchType\":\"exact\",\"confidence\":1,\"originalToken\":\"不\",\"sourceSpan\":{\"start\":3,\"end\":4,\"offsetUnit\":\"unicode-code-point\"},\"attribution\":{\"provider\":\"mulberry\",\"originalId\":\"pi-core-no\",\"name\":\"Mulberry Symbols\",\"license\":\"CC BY-SA 4.0\",\"licenseUrl\":\"https://creativecommons.org/licenses/by-sa/4.0/\",\"author\":\"Mulberry Symbols\",\"authorUrl\":\"https://mulberrysymbols.org/\",\"sourceUrl\":\"https://mulberrysymbols.org/\",\"repoKey\":\"mulberry\"}},{\"pictogramId\":null,\"label\":\"回家\",\"source\":\"\",\"boardId\":\"\",\"matchType\":\"missing\",\"confidence\":0,\"originalToken\":\"回家\",\"sourceSpan\":{\"start\":4,\"end\":6,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":null,\"label\":\"吃饭\",\"source\":\"\",\"boardId\":\"\",\"matchType\":\"missing\",\"confidence\":0,\"originalToken\":\"吃饭\",\"sourceSpan\":{\"start\":6,\"end\":8,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":null,\"label\":\"，\",\"source\":\"text\",\"boardId\":\"\",\"matchType\":\"manual\",\"confidence\":1,\"originalToken\":\"，\",\"textOnly\":true,\"sourceSpan\":{\"start\":8,\"end\":9,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":null,\"label\":\"明早\",\"source\":\"\",\"boardId\":\"\",\"matchType\":\"missing\",\"confidence\":0,\"originalToken\":\"明早\",\"sourceSpan\":{\"start\":9,\"end\":11,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":null,\"label\":\"七点半\",\"source\":\"\",\"boardId\":\"\",\"matchType\":\"missing\",\"confidence\":0,\"originalToken\":\"七点半\",\"sourceSpan\":{\"start\":11,\"end\":14,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":null,\"label\":\"回家\",\"source\":\"\",\"boardId\":\"\",\"matchType\":\"missing\",\"confidence\":0,\"originalToken\":\"回家\",\"sourceSpan\":{\"start\":14,\"end\":16,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":null,\"label\":\"。\",\"source\":\"text\",\"boardId\":\"\",\"matchType\":\"manual\",\"confidence\":1,\"originalToken\":\"。\",\"textOnly\":true,\"sourceSpan\":{\"start\":16,\"end\":17,\"offsetUnit\":\"unicode-code-point\"}}]},\"isUsedForLearning\":true,\"createdAt\":1792561562946}]",
+      "cboard_communication_receiver_records": "[{\"direction\":\"receive\",\"sentence\":\"\",\"inputText\":\"我今晚不回家吃饭，明早七点半回家。\",\"labels\":[\"我\",\"今晚\",\"不\",\"回家\",\"吃饭\",\"，\",\"明早\",\"七点半\",\"回家\",\"。\"],\"createdAt\":1792561562563,\"isFavorite\":false,\"id\":\"receiver_mvhovdtv_eqmqkdg5\",\"output\":[{\"id\":\"pi-core-i\",\"image\":\"/symbols/arasaac/picinterpreter-care/6632.png\",\"label\":\"我\",\"vocalization\":\"我\",\"backgroundColor\":\"rgb(255, 241, 118)\",\"attribution\":{\"provider\":\"arasaac\",\"originalId\":\"6632\",\"name\":\"ARASAAC\",\"license\":\"CC BY-NC-SA 4.0\",\"licenseUrl\":\"https://creativecommons.org/licenses/by-nc-sa/4.0/\",\"author\":\"Sergio Palao\",\"authorUrl\":\"https://arasaac.org/\",\"sourceUrl\":\"https://arasaac.org/pictograms/zh/6632\",\"repoKey\":\"arasaac\"}},{\"id\":\"text-review_dq8i4zb3\",\"label\":\"今晚\",\"vocalization\":\"今晚\",\"image\":\"\",\"textOnly\":true},{\"id\":\"pi-core-no\",\"image\":\"/symbols/mulberry/no.svg\",\"label\":\"不\",\"vocalization\":\"不\",\"backgroundColor\":\"rgb(255, 241, 118)\",\"attribution\":{\"provider\":\"mulberry\",\"originalId\":\"pi-core-no\",\"name\":\"Mulberry Symbols\",\"license\":\"CC BY-SA 4.0\",\"licenseUrl\":\"https://creativecommons.org/licenses/by-sa/4.0/\",\"author\":\"Mulberry Symbols\",\"authorUrl\":\"https://mulberrysymbols.org/\",\"sourceUrl\":\"https://mulberrysymbols.org/\",\"repoKey\":\"mulberry\"}},{\"id\":\"text-review_xlwy5axo\",\"label\":\"回家\",\"vocalization\":\"回家\",\"image\":\"\",\"textOnly\":true},{\"id\":\"text-review_1b4wajml\",\"label\":\"吃饭\",\"vocalization\":\"吃饭\",\"image\":\"\",\"textOnly\":true},{\"id\":\"text-separator-5\",\"label\":\"，\",\"vocalization\":\"，\",\"image\":\"\",\"textOnly\":true},{\"id\":\"text-review_025m5v6n\",\"label\":\"明早\",\"vocalization\":\"明早\",\"image\":\"\",\"textOnly\":true},{\"id\":\"text-review_g9d2ywm2\",\"label\":\"七点半\",\"vocalization\":\"七点半\",\"image\":\"\",\"textOnly\":true},{\"id\":\"text-review_e4vts98k\",\"label\":\"回家\",\"vocalization\":\"回家\",\"image\":\"\",\"textOnly\":true},{\"id\":\"text-separator-9\",\"label\":\"。\",\"vocalization\":\"。\",\"image\":\"\",\"textOnly\":true}],\"pictogramSequence\":[{\"pictogramId\":\"pi-core-i\",\"label\":\"我\",\"source\":\"local_dict\",\"boardId\":\"pi-core-words-v1\",\"matchType\":\"exact\",\"confidence\":1,\"originalToken\":\"我\",\"sourceSpan\":{\"start\":0,\"end\":1,\"offsetUnit\":\"unicode-code-point\"},\"attribution\":{\"provider\":\"arasaac\",\"originalId\":\"6632\",\"name\":\"ARASAAC\",\"license\":\"CC BY-NC-SA 4.0\",\"licenseUrl\":\"https://creativecommons.org/licenses/by-nc-sa/4.0/\",\"author\":\"Sergio Palao\",\"authorUrl\":\"https://arasaac.org/\",\"sourceUrl\":\"https://arasaac.org/pictograms/zh/6632\",\"repoKey\":\"arasaac\"}},{\"pictogramId\":null,\"label\":\"今晚\",\"source\":\"text\",\"boardId\":\"\",\"matchType\":\"manual\",\"confidence\":1,\"originalToken\":\"今晚\",\"textOnly\":true,\"sourceSpan\":{\"start\":1,\"end\":3,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":\"pi-core-no\",\"label\":\"不\",\"source\":\"local_dict\",\"boardId\":\"pi-core-words-v1\",\"matchType\":\"exact\",\"confidence\":1,\"originalToken\":\"不\",\"sourceSpan\":{\"start\":3,\"end\":4,\"offsetUnit\":\"unicode-code-point\"},\"attribution\":{\"provider\":\"mulberry\",\"originalId\":\"pi-core-no\",\"name\":\"Mulberry Symbols\",\"license\":\"CC BY-SA 4.0\",\"licenseUrl\":\"https://creativecommons.org/licenses/by-sa/4.0/\",\"author\":\"Mulberry Symbols\",\"authorUrl\":\"https://mulberrysymbols.org/\",\"sourceUrl\":\"https://mulberrysymbols.org/\",\"repoKey\":\"mulberry\"}},{\"pictogramId\":null,\"label\":\"回家\",\"source\":\"text\",\"boardId\":\"\",\"matchType\":\"manual\",\"confidence\":1,\"originalToken\":\"回家\",\"textOnly\":true,\"sourceSpan\":{\"start\":4,\"end\":6,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":null,\"label\":\"吃饭\",\"source\":\"text\",\"boardId\":\"\",\"matchType\":\"manual\",\"confidence\":1,\"originalToken\":\"吃饭\",\"textOnly\":true,\"sourceSpan\":{\"start\":6,\"end\":8,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":null,\"label\":\"，\",\"source\":\"text\",\"boardId\":\"\",\"matchType\":\"manual\",\"confidence\":1,\"originalToken\":\"，\",\"textOnly\":true,\"sourceSpan\":{\"start\":8,\"end\":9,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":null,\"label\":\"明早\",\"source\":\"text\",\"boardId\":\"\",\"matchType\":\"manual\",\"confidence\":1,\"originalToken\":\"明早\",\"textOnly\":true,\"sourceSpan\":{\"start\":9,\"end\":11,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":null,\"label\":\"七点半\",\"source\":\"text\",\"boardId\":\"\",\"matchType\":\"manual\",\"confidence\":1,\"originalToken\":\"七点半\",\"textOnly\":true,\"sourceSpan\":{\"start\":11,\"end\":14,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":null,\"label\":\"回家\",\"source\":\"text\",\"boardId\":\"\",\"matchType\":\"manual\",\"confidence\":1,\"originalToken\":\"回家\",\"textOnly\":true,\"sourceSpan\":{\"start\":14,\"end\":16,\"offsetUnit\":\"unicode-code-point\"}},{\"pictogramId\":null,\"label\":\"。\",\"source\":\"text\",\"boardId\":\"\",\"matchType\":\"manual\",\"confidence\":1,\"originalToken\":\"。\",\"textOnly\":true,\"sourceSpan\":{\"start\":16,\"end\":17,\"offsetUnit\":\"unicode-code-point\"}}],\"sessionId\":\"session_mvhovcxf_p66psqg0\",\"patientId\":\"patient_mvhovcxf_ntz7cofy\",\"workspaceId\":\"workspace_mvhovcxf_a4u7x0kx\",\"recordStatus\":\"confirmed\",\"updatedAt\":1792561570353,\"confirmedAt\":1792561570005,\"patientFeedback\":\"not_understood\",\"patientFeedbackAt\":1792561570353,\"patientFeedbackEvents\":[{\"type\":\"not_understood\",\"createdAt\":1792561570353}],\"contractVersion\":2}]",
+      "cboard_communication_receiver_resume_record": "{\"recordId\":\"receiver_mvhovdtv_eqmqkdg5\",\"sessionId\":\"session_mvhovcxf_p66psqg0\"}",
+      "cboard_communication_repository_schema": "{\"schemaVersion\":7,\"migratedAt\":1792561561395}",
+      "cboard_communication_saved_phrase_tombstones": "[]",
+      "cboard_communication_saved_phrases": "[]",
+      "cboard_communication_user_id": "user_mvhovcxf_n6kix99x",
+      "cboard_communication_workspace_id": "workspace_mvhovcxf_a4u7x0kx"
+    },
+    "hashes": {
+      "cboard_communication_account_identity": {
+        "sha256": "61e642f12c3cc3be253e92e853c61fadd716b0d83bbf0716d1936bddd9872927",
+        "bytes": 74
+      },
+      "cboard_communication_active_session": {
+        "sha256": "fca923b64c3b05b664c8bad98a8c4f9c6dae3bc237b4cb6ba5d524831b6b7f28",
+        "bytes": 111
+      },
+      "cboard_communication_expression_candidate_feedback_drafts": {
+        "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "bytes": 2
+      },
+      "cboard_communication_expression_draft_v1": {
+        "sha256": "cffdb84764a441404bf438b7c018e3e4400ae6ab4b602a207c6c8d7462eb1f46",
+        "bytes": 2938
+      },
+      "cboard_communication_history": {
+        "sha256": "da88f7fce4e2c4bfa1932cba20d711f8da51a05145d52da9b42b43399e6121b5",
+        "bytes": 5079
+      },
+      "cboard_communication_missing_tokens": {
+        "sha256": "2675320c4db74d0f275f611755b80bdb9d8c9b6b6446118f95a3ad5213acdae5",
+        "bytes": 2539
+      },
+      "cboard_communication_patient_id": {
+        "sha256": "801bf76a8db5b55f126ef91a966de7eaff25e90b4e35985dea0af2d89c1f552c",
+        "bytes": 25
+      },
+      "cboard_communication_personal_image_preferences": {
+        "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "bytes": 2
+      },
+      "cboard_communication_preferences": {
+        "sha256": "8cd31cfd5b1f7a445c32879e3a078dc822cf798cd1b534c1ea5cde01bbc2683a",
+        "bytes": 236
+      },
+      "cboard_communication_receiver_corrections": {
+        "sha256": "d5c72f9244d9514aa0ef37e7fe6832bbdf8f26c094c5191cf1da4df275e64a5e",
+        "bytes": 53530
+      },
+      "cboard_communication_receiver_records": {
+        "sha256": "da88f7fce4e2c4bfa1932cba20d711f8da51a05145d52da9b42b43399e6121b5",
+        "bytes": 5079
+      },
+      "cboard_communication_receiver_resume_record": {
+        "sha256": "621c828f404e8ec8e5971f3b5a0b6c105b13b4b3e0f7f33baae4fcf35280303b",
+        "bytes": 81
+      },
+      "cboard_communication_repository_schema": {
+        "sha256": "0b0a235c994fc494f63b667be29f855d1e05fa7773f2d820ee9a7340ee2b1751",
+        "bytes": 46
+      },
+      "cboard_communication_saved_phrase_tombstones": {
+        "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "bytes": 2
+      },
+      "cboard_communication_saved_phrases": {
+        "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "bytes": 2
+      },
+      "cboard_communication_user_id": {
+        "sha256": "34077a5510872bde0203154b53ce8e36366f6ebc0bbabedede841d422a086cc2",
+        "bytes": 22
+      },
+      "cboard_communication_workspace_id": {
+        "sha256": "bebdf2f7c935d7d4709f202053b71980ab60d0acc66e9e06ff9271e727450dcc",
+        "bytes": 27
+      }
+    }
+  },
+  "evidenceFile": "local-receiver-restart-1792561576250.json"
+}

@@ -1,0 +1,21 @@
+{
+  "syntheticOnly": true,
+  "project": "<WORKSPACE>\\fork-cboard\\cboard-wechat-poc\\dist-local-20261022-onsite-ui-repair-v1",
+  "paidModelCalls": 0,
+  "phoneTest": false,
+  "speakerTest": false,
+  "steps": {
+    "setup": {
+      "userKeysBackedUp": 3,
+      "scope": "communication-v2:offline:synthetic-upload-family:synthetic-upload-profile:",
+      "networkBlocked": true,
+      "isolatedOfflineAccount": true,
+      "syntheticFavoriteCount": 2
+    },
+    "cleanup": {
+      "originalKeysRestored": true,
+      "syntheticKeysRemoved": 15,
+      "syntheticEngineFileCleanup": 0
+    }
+  }
+}

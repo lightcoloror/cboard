@@ -1,0 +1,99 @@
+{
+  "generatedAt": "2026-10-23T17:39:33.4071136+08:00",
+  "status": "cache-restoration-verified-language-fix-awaiting-rebuilt-production-check",
+  "runtime": "existing bundled Playwright 1.62.1 / WebKit 26.5 revision2336",
+  "modernEvidence": "local-modern-offline-1792747970754.json",
+  "cacheProbe": "local-new-runtime-cache.json",
+  "layers": [
+    {
+      "name": "online-precondition",
+      "controller": true,
+      "caches": [
+        {
+          "name": "sw-precache-v3-sw-precache-http://127.0.0.1:4208/",
+          "count": 1027
+        },
+        {
+          "name": "$$$toolbox-cache$$$http://127.0.0.1:4208/$$$",
+          "count": 0
+        },
+        {
+          "name": "symbols-cboard",
+          "count": 2
+        }
+      ],
+      "indexCached": true
+    },
+    {
+      "name": "setOffline-same-page",
+      "executed": false,
+      "reason": "isolated origin-stopped control; failed setOffline evidence retained in prior run"
+    },
+    {
+      "name": "origin-stopped",
+      "serverPid": 16648,
+      "serverExited": true,
+      "offlineEmulationFlag": false
+    },
+    {
+      "name": "origin-stopped-same-page",
+      "loaded": true,
+      "fromServiceWorker": true,
+      "documentTitle": "图语家辅助沟通",
+      "images": [
+        {
+          "src": "/police-filing.png",
+          "decoded": true,
+          "width": 36
+        }
+      ]
+    },
+    {
+      "name": "origin-stopped-new-page-same-context",
+      "loaded": true,
+      "fromServiceWorker": true,
+      "documentTitle": "图语家辅助沟通",
+      "images": [
+        {
+          "src": "/police-filing.png",
+          "decoded": true,
+          "width": 36
+        }
+      ]
+    },
+    {
+      "name": "origin-stopped-new-process",
+      "loaded": true,
+      "fromServiceWorker": true,
+      "documentTitle": "图语家辅助沟通",
+      "images": [
+        {
+          "src": "/police-filing.png",
+          "decoded": true,
+          "width": 36
+        }
+      ]
+    }
+  ],
+  "photoRestored": true,
+  "pageErrorsInOldBuild": [
+    {
+      "generation": 1,
+      "message": "TypeError: t.langs.sort is not a function. (In 't.langs.sort()', 't.langs.sort' is undefined)"
+    }
+  ],
+  "unitTests": {
+    "suitesPassed": 3,
+    "testsPassed": 8,
+    "regressionProvedBeforeFix": true,
+    "beforeLog": "language-fallback-before.log",
+    "afterLog": "language-fallback-after.log"
+  },
+  "productFilesChanged": [
+    "src/providers/LanguageProvider/LanguageProvider.container.js",
+    "src/providers/LanguageProvider/__tests__/LanguageProvider.test.js"
+  ],
+  "newProductionBuildRun": false,
+  "realModelsCalled": false,
+  "physicalDeviceTested": false
+}

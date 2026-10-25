@@ -1,0 +1,182 @@
+{
+  "observedAt": "2026-10-23T20:19:35.7051184+08:00",
+  "origin": "https://app.tuyujia.com.cn",
+  "candidate": ".local-build-20261023-gallery-durable-v2",
+  "artifactSha256FromParent": "a71840f41b8953ad24a06873eedbbe07d8e6bc5fdd4dabcbbf0c6a36192172ec",
+  "allThreeRequestedFlowsFinallyPassed": true,
+  "actualUiOnly": true,
+  "scope": "Receiver and favorite lifecycle; one source-card deletion favorite reference. No history/draft deletion-reference claim.",
+  "initialOperationAfterServiceWorkerReady": true,
+  "workflows": [
+    {
+      "evidence": "production-core-receiver-production-v2.json",
+      "passed": true,
+      "processes": [
+        {
+          "generation": 1,
+          "pid": 37456,
+          "startedAt": "2026-10-23T12:12:39.082Z",
+          "offline": false,
+          "exited": true,
+          "exitedAt": "2026-10-23T12:13:18.556Z"
+        },
+        {
+          "generation": 2,
+          "pid": 23008,
+          "startedAt": "2026-10-23T12:13:20.642Z",
+          "offline": true,
+          "exited": true,
+          "exitedAt": "2026-10-23T12:13:26.661Z"
+        }
+      ],
+      "bundleVerifications": [
+        {
+          "generation": 1,
+          "url": "https://app.tuyujia.com.cn/static/js/main.3e77d65e.js",
+          "sha256": "592d8ac68fecfd75e0eb68203487b65c113b4c43a100277ff5426dc9419ea28f",
+          "fromServiceWorker": true
+        },
+        {
+          "generation": 2,
+          "url": "https://app.tuyujia.com.cn/static/js/main.3e77d65e.js",
+          "sha256": "592d8ac68fecfd75e0eb68203487b65c113b4c43a100277ff5426dc9419ea28f",
+          "fromServiceWorker": true
+        }
+      ],
+      "httpRequestEvents": 224,
+      "blockedApiEvents": 6,
+      "externalRequestEvents": 0,
+      "modelAttempts": 0,
+      "privateAiChargeViolations": 0,
+      "pageErrors": 0,
+      "ownedProfileRemoved": true
+    },
+    {
+      "evidence": "production-core-favorites-production-v2.json",
+      "passed": true,
+      "processes": [
+        {
+          "generation": 1,
+          "pid": 78168,
+          "startedAt": "2026-10-23T12:13:28.933Z",
+          "offline": false,
+          "exited": true,
+          "exitedAt": "2026-10-23T12:14:10.249Z"
+        },
+        {
+          "generation": 2,
+          "pid": 91420,
+          "startedAt": "2026-10-23T12:14:12.281Z",
+          "offline": true,
+          "exited": true,
+          "exitedAt": "2026-10-23T12:14:21.628Z"
+        },
+        {
+          "generation": 3,
+          "pid": 90336,
+          "startedAt": "2026-10-23T12:14:23.421Z",
+          "offline": true,
+          "exited": true,
+          "exitedAt": "2026-10-23T12:14:26.981Z"
+        }
+      ],
+      "bundleVerifications": [
+        {
+          "generation": 1,
+          "url": "https://app.tuyujia.com.cn/static/js/main.3e77d65e.js",
+          "sha256": "592d8ac68fecfd75e0eb68203487b65c113b4c43a100277ff5426dc9419ea28f",
+          "fromServiceWorker": true
+        },
+        {
+          "generation": 2,
+          "url": "https://app.tuyujia.com.cn/static/js/main.3e77d65e.js",
+          "sha256": "592d8ac68fecfd75e0eb68203487b65c113b4c43a100277ff5426dc9419ea28f",
+          "fromServiceWorker": true
+        },
+        {
+          "generation": 3,
+          "url": "https://app.tuyujia.com.cn/static/js/main.3e77d65e.js",
+          "sha256": "592d8ac68fecfd75e0eb68203487b65c113b4c43a100277ff5426dc9419ea28f",
+          "fromServiceWorker": true
+        }
+      ],
+      "httpRequestEvents": 268,
+      "blockedApiEvents": 5,
+      "externalRequestEvents": 0,
+      "modelAttempts": 0,
+      "privateAiChargeViolations": 0,
+      "pageErrors": 0,
+      "ownedProfileRemoved": true
+    },
+    {
+      "evidence": "production-core-source-deletion-production-source-deletion-v2.json",
+      "passed": true,
+      "processes": [
+        {
+          "generation": 1,
+          "pid": 20336,
+          "startedAt": "2026-10-23T12:16:10.865Z",
+          "offline": false,
+          "exited": true,
+          "exitedAt": "2026-10-23T12:16:53.269Z"
+        },
+        {
+          "generation": 2,
+          "pid": 84788,
+          "startedAt": "2026-10-23T12:16:55.152Z",
+          "offline": true,
+          "exited": true,
+          "exitedAt": "2026-10-23T12:16:59.133Z"
+        }
+      ],
+      "bundleVerifications": [
+        {
+          "generation": 1,
+          "url": "https://app.tuyujia.com.cn/static/js/main.3e77d65e.js",
+          "sha256": "592d8ac68fecfd75e0eb68203487b65c113b4c43a100277ff5426dc9419ea28f",
+          "fromServiceWorker": true
+        },
+        {
+          "generation": 2,
+          "url": "https://app.tuyujia.com.cn/static/js/main.3e77d65e.js",
+          "sha256": "592d8ac68fecfd75e0eb68203487b65c113b4c43a100277ff5426dc9419ea28f",
+          "fromServiceWorker": true
+        }
+      ],
+      "httpRequestEvents": 201,
+      "blockedApiEvents": 3,
+      "externalRequestEvents": 0,
+      "modelAttempts": 0,
+      "privateAiChargeViolations": 0,
+      "pageErrors": 0,
+      "ownedProfileRemoved": true
+    }
+  ],
+  "harnessFailureRetained": {
+    "evidence": "production-core-source-deletion-production-v2.json",
+    "error": "page.evaluate: ReferenceError: _crypto is not defined\n    at eval (eval at evaluate (:234:30), <anonymous>:11:20)\n    at async <anonymous>:260:30",
+    "ownedProfileRemoved": true,
+    "processes": [
+      {
+        "generation": 1,
+        "pid": 17580,
+        "startedAt": "2026-10-23T12:14:29.329Z",
+        "offline": false,
+        "exited": true,
+        "exitedAt": "2026-10-23T12:15:10.387Z"
+      }
+    ],
+    "fixed": "Node import renamed nodeCrypto; browser hash uses globalThis.crypto; reran source deletion only."
+  },
+  "cleanup": {
+    "successfulProcessCount": 7,
+    "includingFailedProcessCount": 8,
+    "profilesRemoved": 4,
+    "profilesRemaining": 0,
+    "localServerStarted": false,
+    "port4209Listeners": 0
+  },
+  "productSourceEdited": false,
+  "deployedByThisSubtask": false,
+  "report": "README-production-v2.md"
+}

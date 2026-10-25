@@ -1,0 +1,61 @@
+{
+  "testedAt": "2026-10-23T18:11:31+08:00",
+  "scope": "isolated synthetic production build actual UI",
+  "candidate": ".local-build-20261023-gallery-durable-v1",
+  "artifactSha256FromParent": "92ccb64cfe4f5b9c2acea64cac4b3e1c1cdfb20ca77e500be17092ce6cd605a5",
+  "origin": "http://127.0.0.1:4209",
+  "overallPassed": false,
+  "workflows": [
+    {
+      "name": "receiver",
+      "passed": false,
+      "behavioralFlowPassed": true,
+      "publicImageDisplayPassed": false,
+      "evidence": "local-core-receiver-1792750236358.json",
+      "independentProcesses": 2
+    },
+    {
+      "name": "favorite lifecycle",
+      "passed": false,
+      "preparationEditCopyClassificationPassed": true,
+      "repositoryTransactionsAndOfflineReopenPassed": true,
+      "importDeleteUndoImmediateUiPassed": false,
+      "evidence": "local-core-favorites-1792750268168.json",
+      "independentProcesses": 4
+    },
+    {
+      "name": "namesake private images",
+      "passed": true,
+      "evidence": "local-core-namesake-1792750290122.json",
+      "independentProcesses": 3,
+      "actualUiUploadAndReview": true,
+      "selectedPersonIdSourceAndDecodedPixelSha256Preserved": true
+    }
+  ],
+  "confirmedDefects": [
+    "New matched packaged public images miss Cache API and localOnly preview/display has no img in cold context.",
+    "Import/delete/undo services persist repository then old React state is used for another compare-and-swap overwrite, causing UI refresh failure."
+  ],
+  "cleanup": {
+    "allNineBrowserPidsExited": true,
+    "allThreeOwnedProfilesRemoved": true,
+    "port4209Stopped": true,
+    "userProfilesTouched": false
+  },
+  "networkEvidence": {
+    "modelAttempts": 0,
+    "privateAiChargeViolations": 0,
+    "pageErrors": 0,
+    "boundary": "Browser context routes and offline launch; not OS-wide firewall proof."
+  },
+  "notCoveredThisRun": [
+    "physical devices or audible speaker",
+    "all 12 starters",
+    "99/100 capacity boundary",
+    "stale import preview conflict",
+    "storage or receipt fault injection"
+  ],
+  "report": "README-gallery-durable-v1.md",
+  "run": "core-run-04.log",
+  "playwrightReport": "browser-report.json"
+}

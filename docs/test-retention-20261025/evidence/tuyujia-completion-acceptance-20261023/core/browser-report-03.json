@@ -1,0 +1,254 @@
+{
+  "config": {
+    "configFile": "<WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\core\\core.config.cjs",
+    "rootDir": "<WORKSPACE>/outputs/tuyujia-completion-acceptance-20261023/core",
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "<WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\core\\browser-report.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 15000
+    },
+    "quiet": false,
+    "projects": [
+      {
+        "outputDir": "<WORKSPACE>/outputs/tuyujia-completion-acceptance-20261023/core/browser-artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {},
+        "id": "",
+        "name": "",
+        "testDir": "<WORKSPACE>/outputs/tuyujia-completion-acceptance-20261023/core",
+        "testIgnore": [],
+        "testMatch": [
+          "core.spec.js"
+        ],
+        "timeout": 240000
+      }
+    ],
+    "shard": null,
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.50.0",
+    "workers": 1,
+    "webServer": {
+      "command": "\"C:/Program Files/nodejs/node.exe\" scripts/serve-offline-build.mjs",
+      "cwd": "<WORKSPACE>\\fork-cboard\\cboard",
+      "env": {
+        "PLAYWRIGHT_OFFLINE_HOST": "127.0.0.1",
+        "PLAYWRIGHT_OFFLINE_PORT": "4209",
+        "PLAYWRIGHT_OFFLINE_BUILD_PATH": "<WORKSPACE>\\fork-cboard\\cboard\\.local-build-20261023-gallery-durable-v1"
+      },
+      "url": "http://127.0.0.1:4209",
+      "reuseExistingServer": false
+    }
+  },
+  "suites": [
+    {
+      "title": "core.spec.js",
+      "file": "core.spec.js",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "receiver manual segment replay, repair/cancel/reconfirm and changed-picture fallback survive real offline browser restart",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 240000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "status": "failed",
+                  "duration": 26432,
+                  "error": {
+                    "message": "Error: \u001b[31mTimed out 18000ms waiting for \u001b[39m\u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m\n\nLocator: getByRole('dialog').filter({ has: locator('.CommunicationSupportPanel__originalText') }).locator('img').first()\nExpected: visible\nReceived: <element(s) not found>\nCall log:\n\u001b[2m  - expect.toBeVisible with timeout 18000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('dialog').filter({ has: locator('.CommunicationSupportPanel__originalText') }).locator('img').first()\u001b[22m\n",
+                    "stack": "Error: \u001b[31mTimed out 18000ms waiting for \u001b[39m\u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m\n\nLocator: getByRole('dialog').filter({ has: locator('.CommunicationSupportPanel__originalText') }).locator('img').first()\nExpected: visible\nReceived: <element(s) not found>\nCall log:\n\u001b[2m  - expect.toBeVisible with timeout 18000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('dialog').filter({ has: locator('.CommunicationSupportPanel__originalText') }).locator('img').first()\u001b[22m\n\n    at imagesLoaded (<WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\core\\core.spec.js:41:68)\n    at <WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\core\\core.spec.js:59:9",
+                    "matcherResult": {
+                      "message": "\u001b[31mTimed out 18000ms waiting for \u001b[39m\u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m\n\nLocator: getByRole('dialog').filter({ has: locator('.CommunicationSupportPanel__originalText') }).locator('img').first()\nExpected: visible\nReceived: <element(s) not found>\nCall log:\n\u001b[2m  - expect.toBeVisible with timeout 18000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('dialog').filter({ has: locator('.CommunicationSupportPanel__originalText') }).locator('img').first()\u001b[22m\n",
+                      "pass": false,
+                      "actual": "<element(s) not found>",
+                      "name": "toBeVisible",
+                      "expected": "visible",
+                      "log": [
+                        "  - expect.toBeVisible with timeout 18000ms",
+                        "  - waiting for getByRole('dialog').filter({ has: locator('.CommunicationSupportPanel__originalText') }).locator('img').first()"
+                      ],
+                      "timeout": 18000
+                    },
+                    "location": {
+                      "file": "<WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\core\\core.spec.js",
+                      "column": 68,
+                      "line": 41
+                    },
+                    "snippet": "  39 |  expect(await missing.count()).toBe(0);\n  40 | }\n> 41 | async function imagesLoaded(locator){await expect(locator.first()).toBeVisible();expect(await locator.count()).toBeGreaterThan(0);await expect.poll(()=>locator.evaluateAll(ns=>ns.every(i=>i.complete&&i.naturalWidth>0))).toBe(true);}\n     |                                                                    ^\n  42 | async function privatePixels(p,src){\n  43 |  expect(src.startsWith('data:image/')).toBe(true);\n  44 |  return p.evaluate(async src=>{const i=new Image();i.src=src;await i.decode();const c=document.createElement('canvas');c.width=i.naturalWidth;c.height=i.naturalHeight;const x=c.getContext('2d');x.drawImage(i,0,0);const pixels=x.getImageData(0,0,c.width,c.height).data;const digest=await crypto.subtle.digest('SHA-256',pixels);return{width:c.width,height:c.height,pixelSha256:Array.from(new Uint8Array(digest)).map(v=>v.toString(16).padStart(2,'0')).join('')};},src);"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "<WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\core\\core.spec.js",
+                        "column": 68,
+                        "line": 41
+                      },
+                      "message": "Error: \u001b[31mTimed out 18000ms waiting for \u001b[39m\u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m\n\nLocator: getByRole('dialog').filter({ has: locator('.CommunicationSupportPanel__originalText') }).locator('img').first()\nExpected: visible\nReceived: <element(s) not found>\nCall log:\n\u001b[2m  - expect.toBeVisible with timeout 18000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('dialog').filter({ has: locator('.CommunicationSupportPanel__originalText') }).locator('img').first()\u001b[22m\n\n\n  39 |  expect(await missing.count()).toBe(0);\n  40 | }\n> 41 | async function imagesLoaded(locator){await expect(locator.first()).toBeVisible();expect(await locator.count()).toBeGreaterThan(0);await expect.poll(()=>locator.evaluateAll(ns=>ns.every(i=>i.complete&&i.naturalWidth>0))).toBe(true);}\n     |                                                                    ^\n  42 | async function privatePixels(p,src){\n  43 |  expect(src.startsWith('data:image/')).toBe(true);\n  44 |  return p.evaluate(async src=>{const i=new Image();i.src=src;await i.decode();const c=document.createElement('canvas');c.width=i.naturalWidth;c.height=i.naturalHeight;const x=c.getContext('2d');x.drawImage(i,0,0);const pixels=x.getImageData(0,0,c.width,c.height).data;const digest=await crypto.subtle.digest('SHA-256',pixels);return{width:c.width,height:c.height,pixelSha256:Array.from(new Uint8Array(digest)).map(v=>v.toString(16).padStart(2,'0')).join('')};},src);\n    at imagesLoaded (<WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\core\\core.spec.js:41:68)\n    at <WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\core\\core.spec.js:59:9"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-23T10:05:30.060Z",
+                  "attachments": [],
+                  "errorLocation": {
+                    "file": "<WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\core\\core.spec.js",
+                    "column": 68,
+                    "line": 41
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "43b12c68676e60ca47dc-3517b34825f90de6b35a",
+          "file": "core.spec.js",
+          "line": 51,
+          "column": 5
+        },
+        {
+          "title": "favorite preparation edit copy classify import replay load delete undo and independent offline restart",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 240000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "status": "failed",
+                  "duration": 32820,
+                  "error": {
+                    "message": "Error: \u001b[31mTimed out 18000ms waiting for \u001b[39m\u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m\n\nLocator: locator('[role=\"dialog\"][aria-labelledby=\"communication-management-title\"]').locator('#saved-phrase-synthetic-imported-phrase')\nExpected: visible\nReceived: <element(s) not found>\nCall log:\n\u001b[2m  - expect.toBeVisible with timeout 18000ms\u001b[22m\n\u001b[2m  - waiting for locator('[role=\"dialog\"][aria-labelledby=\"communication-management-title\"]').locator('#saved-phrase-synthetic-imported-phrase')\u001b[22m\n",
+                    "stack": "Error: \u001b[31mTimed out 18000ms waiting for \u001b[39m\u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m\n\nLocator: locator('[role=\"dialog\"][aria-labelledby=\"communication-management-title\"]').locator('#saved-phrase-synthetic-imported-phrase')\nExpected: visible\nReceived: <element(s) not found>\nCall log:\n\u001b[2m  - expect.toBeVisible with timeout 18000ms\u001b[22m\n\u001b[2m  - waiting for locator('[role=\"dialog\"][aria-labelledby=\"communication-management-title\"]').locator('#saved-phrase-synthetic-imported-phrase')\u001b[22m\n\n    at <WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\core\\core.spec.js:128:152",
+                    "matcherResult": {
+                      "message": "\u001b[31mTimed out 18000ms waiting for \u001b[39m\u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m\n\nLocator: locator('[role=\"dialog\"][aria-labelledby=\"communication-management-title\"]').locator('#saved-phrase-synthetic-imported-phrase')\nExpected: visible\nReceived: <element(s) not found>\nCall log:\n\u001b[2m  - expect.toBeVisible with timeout 18000ms\u001b[22m\n\u001b[2m  - waiting for locator('[role=\"dialog\"][aria-labelledby=\"communication-management-title\"]').locator('#saved-phrase-synthetic-imported-phrase')\u001b[22m\n",
+                      "pass": false,
+                      "actual": "<element(s) not found>",
+                      "name": "toBeVisible",
+                      "expected": "visible",
+                      "log": [
+                        "  - expect.toBeVisible with timeout 18000ms",
+                        "  - waiting for locator('[role=\"dialog\"][aria-labelledby=\"communication-management-title\"]').locator('#saved-phrase-synthetic-imported-phrase')"
+                      ],
+                      "timeout": 18000
+                    },
+                    "location": {
+                      "file": "<WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\core\\core.spec.js",
+                      "column": 152,
+                      "line": 128
+                    },
+                    "snippet": "  126 |   await upload(p,[imported]);expect(await phrases(p)).toEqual(beforeImport);await manager(p).getByRole('button',{name:'取消导入',exact:true}).click();expect(await phrases(p)).toEqual(beforeImport);\n  127 |   await upload(p,[imported]);await doubleClick(manager(p).getByRole('button',{name:'确认整批导入',exact:true}));expect(await phrases(p)).toHaveLength(3);\n> 128 |   checkpoint('import-immediate-diagnostic',{state:await read(p,'favorite_state_v1'),ui:await manager(p).innerText()});await expect(row(p,imported.id)).toBeVisible();\n      |                                                                                                                                                        ^\n  129 |   proof.steps.push('copy-new-id','classify-cancel-and-save-filter','import-preview-zero-write-cancel-double-confirm');\n  130 |   await row(p,initial.id).getByRole('button',{name:'查看整句',exact:true}).click();const overlay=p.locator('[role=dialog][aria-labelledby=communication-playback-sentence]');\n  131 |   await expect(overlay).toContainText(edited.sentence);expect(await calls(p)).toEqual([]);"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "<WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\core\\core.spec.js",
+                        "column": 152,
+                        "line": 128
+                      },
+                      "message": "Error: \u001b[31mTimed out 18000ms waiting for \u001b[39m\u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m\n\nLocator: locator('[role=\"dialog\"][aria-labelledby=\"communication-management-title\"]').locator('#saved-phrase-synthetic-imported-phrase')\nExpected: visible\nReceived: <element(s) not found>\nCall log:\n\u001b[2m  - expect.toBeVisible with timeout 18000ms\u001b[22m\n\u001b[2m  - waiting for locator('[role=\"dialog\"][aria-labelledby=\"communication-management-title\"]').locator('#saved-phrase-synthetic-imported-phrase')\u001b[22m\n\n\n  126 |   await upload(p,[imported]);expect(await phrases(p)).toEqual(beforeImport);await manager(p).getByRole('button',{name:'取消导入',exact:true}).click();expect(await phrases(p)).toEqual(beforeImport);\n  127 |   await upload(p,[imported]);await doubleClick(manager(p).getByRole('button',{name:'确认整批导入',exact:true}));expect(await phrases(p)).toHaveLength(3);\n> 128 |   checkpoint('import-immediate-diagnostic',{state:await read(p,'favorite_state_v1'),ui:await manager(p).innerText()});await expect(row(p,imported.id)).toBeVisible();\n      |                                                                                                                                                        ^\n  129 |   proof.steps.push('copy-new-id','classify-cancel-and-save-filter','import-preview-zero-write-cancel-double-confirm');\n  130 |   await row(p,initial.id).getByRole('button',{name:'查看整句',exact:true}).click();const overlay=p.locator('[role=dialog][aria-labelledby=communication-playback-sentence]');\n  131 |   await expect(overlay).toContainText(edited.sentence);expect(await calls(p)).toEqual([]);\n    at <WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\core\\core.spec.js:128:152"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-23T10:05:56.992Z",
+                  "attachments": [],
+                  "errorLocation": {
+                    "file": "<WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\core\\core.spec.js",
+                    "column": 152,
+                    "line": 128
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "43b12c68676e60ca47dc-2c34c91d4a21b83e760f",
+          "file": "core.spec.js",
+          "line": 99,
+          "column": 5
+        },
+        {
+          "title": "namesake private images reviewed into preparation and favorite preserve selected identity across offline process restarts",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 240000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "status": "passed",
+                  "duration": 19045,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-23T10:06:30.281Z",
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "43b12c68676e60ca47dc-6231d3d1062c3618e2a0",
+          "file": "core.spec.js",
+          "line": 145,
+          "column": 5
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-23T10:05:29.342Z",
+    "duration": 80713.577,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 2,
+    "flaky": 0
+  }
+}

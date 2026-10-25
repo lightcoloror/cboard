@@ -1,0 +1,136 @@
+{
+  "generatedAt": "2026-10-23T08:34:03.423Z",
+  "scope": "Windows WebKit 18.2 revision 2123; Playwright 1.50.0; local production build .local-build-20261023-targeted-ui-v2; synthetic isolated data only",
+  "status": "partial-pass-offline-not-verified",
+  "evidence": {
+    "capabilities": "local-capabilities-1792743944962.json",
+    "photo": "local-local-photo-restart-1792743963368.json",
+    "deletion": "local-card-folder-delete-1792743985408.json",
+    "largeText": "local-large-font.json",
+    "responseInjection": "local-response-injected-repair.json",
+    "offline": "local-offline-layers-1792744229099.json",
+    "cache": "local-cache-roundtrip.json",
+    "cacheIsolation": "local-cache-isolation.json"
+  },
+  "claims": {
+    "bundledDisplayedImages": {
+      "decoded": 43,
+      "total": 43
+    },
+    "uiRepairResponseInjection": "passed: undo/backspace/clear/order/current-board; cache-response injection uses native image decoder, not native cache proof",
+    "viewports": [
+      1400,
+      1024,
+      768,
+      390
+    ],
+    "textEnlargement": {
+      "scale": 2,
+      "widths": [
+        390,
+        768,
+        1024
+      ],
+      "method": "computed font-size and line-height doubled for text nodes in communication panel/output; targeted button horizontal bounds and text width plus clear/undo interaction",
+      "nativeOsFontSetting": false
+    },
+    "syntheticPhotoOnlineProcessRestart": true,
+    "deleteCancelAndFolderChildOnlineProcessRestart": true,
+    "offlineLayers": [
+      {
+        "name": "online-ready",
+        "loaded": true
+      },
+      {
+        "name": "same-page-offline-reload",
+        "loaded": false,
+        "error": "page.reload: WebKit encountered an internal error\nCall log:\n\u001b[2m  - waiting for navigation until \"domcontentloaded\"\u001b[22m\n"
+      },
+      {
+        "name": "new-page-same-context-offline",
+        "loaded": false,
+        "error": "page.goto: WebKit encountered an internal error\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:4208/board/root\", waiting until \"domcontentloaded\"\u001b[22m\n"
+      },
+      {
+        "name": "new-browser-process-offline",
+        "loaded": false,
+        "error": "page.goto: WebKit encountered an internal error\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:4208/board/root\", waiting until \"domcontentloaded\"\u001b[22m\n"
+      },
+      {
+        "name": "same-restarted-process-online-recovery",
+        "loaded": true
+      }
+    ],
+    "nativeCacheRoundtrip": {
+      "sameMatch": false,
+      "reopenedMatch": false,
+      "keyCount": 0,
+      "validSvg": {
+        "ok": true,
+        "width": 8,
+        "height": 8
+      },
+      "corruptSvg": {
+        "ok": false,
+        "error": "Loading error."
+      },
+      "existingCaches": [
+        {
+          "name": "sw-precache-v3-sw-precache-http://127.0.0.1:4208/",
+          "count": 0
+        },
+        {
+          "name": "$$$toolbox-cache$$$http://127.0.0.1:4208/$$$",
+          "count": 0
+        },
+        {
+          "name": "symbols-cboard",
+          "count": 0
+        },
+        {
+          "name": "tuyujia-cache-roundtrip",
+          "count": 0
+        }
+      ]
+    },
+    "cacheIsolation": [
+      {
+        "mode": "route-enabled",
+        "controller": false,
+        "keys": [],
+        "found": false
+      },
+      {
+        "mode": "route-disabled",
+        "controller": false,
+        "keys": [],
+        "found": false
+      }
+    ]
+  },
+  "audit": {
+    "recordedProcesses": 20,
+    "allRecordedProcessesExited": true,
+    "unclosed": [],
+    "requestCount": 1690,
+    "privateOrAiAttemptCount": 0,
+    "pageErrors": [],
+    "externalRequestAttempts": [],
+    "physicalDeviceTested": false,
+    "realModelsCalled": false,
+    "productFilesEdited": false,
+    "deployed": false
+  },
+  "limits": [
+    "No iPhone/iPad/iOS Safari/WeChat real device was tested.",
+    "TTS uses existing deterministic harness; no physical voice, microphone, OS lifecycle, filesystem quota/eviction or user data tested.",
+    "No claim that diagnostic test pass implies offline app pass. Three offline emulation layers failed.",
+    "CacheStorage API presence and activated service worker do not prove stored responses. Minimal inert JSON control also failed native cache write/read with route enabled and disabled.",
+    "Upstream issue #42775 documents similar offline emulation error on a newer Playwright/Linux environment; it is context, not proof of this Windows root cause."
+  ],
+  "sources": [
+    "https://playwright.dev/docs/browsers",
+    "https://playwright.dev/docs/intro",
+    "https://github.com/microsoft/playwright/issues/42775"
+  ]
+}

@@ -1,0 +1,138 @@
+{
+  "config": {
+    "configFile": "<WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\webkit\\modern-offline.config.cjs",
+    "rootDir": "<WORKSPACE>/outputs/tuyujia-completion-acceptance-20261023/webkit",
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "<WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\webkit/modern-offline-report.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 15000
+    },
+    "quiet": false,
+    "projects": [
+      {
+        "outputDir": "<WORKSPACE>/outputs/tuyujia-completion-acceptance-20261023/webkit/modern-offline-artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {},
+        "id": "",
+        "name": "",
+        "testDir": "<WORKSPACE>/outputs/tuyujia-completion-acceptance-20261023/webkit",
+        "testIgnore": [],
+        "testMatch": [
+          "modern-offline.spec.js"
+        ],
+        "timeout": 120000
+      }
+    ],
+    "shard": null,
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.50.0",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "modern-offline.spec.js",
+      "file": "modern-offline.spec.js",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "modern WebKit production cache and photo restoration with owned origin stopped",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "status": "failed",
+                  "duration": 5276,
+                  "error": {
+                    "message": "Error: toBeHidden can be only used with Locator object",
+                    "stack": "Error: toBeHidden can be only used with Locator object\n    at dismissBoardTour (<WORKSPACE>\\fork-cboard\\cboard\\tests\\offline\\helpers\\communicationSupport.js:56:59)\n    at manage (<WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\webkit\\modern-offline.spec.js:13:27)\n    at <WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\webkit\\modern-offline.spec.js:17:189",
+                    "location": {
+                      "file": "<WORKSPACE>\\fork-cboard\\cboard\\tests\\offline\\helpers\\communicationSupport.js",
+                      "column": 59,
+                      "line": 56
+                    },
+                    "snippet": "\u001b[90m   at \u001b[39m..\\..\\..\\fork-cboard\\cboard\\tests\\offline\\helpers\\communicationSupport.js:56\n\n  54 |   if (await skipButton.isVisible()) {\n  55 |     await activate(skipButton, useTouch);\n> 56 |     await expect(page.locator('.react-joyride__overlay')).toBeHidden();\n     |                                                           ^\n  57 |   }\n  58 | }\n  59 |"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "<WORKSPACE>\\fork-cboard\\cboard\\tests\\offline\\helpers\\communicationSupport.js",
+                        "column": 59,
+                        "line": 56
+                      },
+                      "message": "Error: toBeHidden can be only used with Locator object\n\n   at ..\\..\\..\\fork-cboard\\cboard\\tests\\offline\\helpers\\communicationSupport.js:56\n\n  54 |   if (await skipButton.isVisible()) {\n  55 |     await activate(skipButton, useTouch);\n> 56 |     await expect(page.locator('.react-joyride__overlay')).toBeHidden();\n     |                                                           ^\n  57 |   }\n  58 | }\n  59 |\n    at dismissBoardTour (<WORKSPACE>\\fork-cboard\\cboard\\tests\\offline\\helpers\\communicationSupport.js:56:59)\n    at manage (<WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\webkit\\modern-offline.spec.js:13:27)\n    at <WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\webkit\\modern-offline.spec.js:17:189"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-23T09:18:21.160Z",
+                  "attachments": [
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "<WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\webkit\\modern-offline-artifacts\\modern-offline-modern-WebK-38733-n-with-owned-origin-stopped\\trace.zip"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "<WORKSPACE>\\fork-cboard\\cboard\\tests\\offline\\helpers\\communicationSupport.js",
+                    "column": 59,
+                    "line": 56
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "0345485ab346a373bfc2-44118c7d9cf76c3a33c8",
+          "file": "modern-offline.spec.js",
+          "line": 9,
+          "column": 5
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-23T09:18:20.203Z",
+    "duration": 6272.582,
+    "expected": 0,
+    "skipped": 0,
+    "unexpected": 1,
+    "flaky": 0
+  }
+}

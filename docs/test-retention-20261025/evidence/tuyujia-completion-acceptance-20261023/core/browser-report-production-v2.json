@@ -1,0 +1,195 @@
+{
+  "config": {
+    "configFile": "<WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\core\\core.config.cjs",
+    "rootDir": "<WORKSPACE>/outputs/tuyujia-completion-acceptance-20261023/core",
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "<WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\core\\browser-report-production-v2.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 15000
+    },
+    "quiet": false,
+    "projects": [
+      {
+        "outputDir": "<WORKSPACE>/outputs/tuyujia-completion-acceptance-20261023/core/browser-artifacts-production-v2",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {},
+        "id": "",
+        "name": "",
+        "testDir": "<WORKSPACE>/outputs/tuyujia-completion-acceptance-20261023/core",
+        "testIgnore": [],
+        "testMatch": [
+          "core.spec.js"
+        ],
+        "timeout": 240000
+      }
+    ],
+    "shard": null,
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.50.0",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "core.spec.js",
+      "file": "core.spec.js",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "receiver manual segment replay, repair/cancel/reconfirm and changed-picture fallback survive real offline browser restart",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 240000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "status": "passed",
+                  "duration": 50145,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-23T12:12:36.836Z",
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "43b12c68676e60ca47dc-3517b34825f90de6b35a",
+          "file": "core.spec.js",
+          "line": 61,
+          "column": 5
+        },
+        {
+          "title": "favorite preparation edit copy classify import replay load delete undo and independent offline restart",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 240000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "status": "passed",
+                  "duration": 60330,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-23T12:13:26.988Z",
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "43b12c68676e60ca47dc-2c34c91d4a21b83e760f",
+          "file": "core.spec.js",
+          "line": 114,
+          "column": 5
+        },
+        {
+          "title": "source gallery card deletion preserves reviewed favorite identity and decoded image after independent offline restart",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 240000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "status": "failed",
+                  "duration": 43320,
+                  "error": {
+                    "message": "Error: page.evaluate: ReferenceError: _crypto is not defined\n    at eval (eval at evaluate (:234:30), <anonymous>:11:20)\n    at async <anonymous>:260:30",
+                    "stack": "Error: page.evaluate: ReferenceError: _crypto is not defined\n    at eval (eval at evaluate (:234:30), <anonymous>:11:20)\n    at async <anonymous>:260:30\n    at eval (<WORKSPACE>\\eval at evaluate (:234:30), <anonymous>:11:20)\n    at <WORKSPACE>\\async <anonymous>:260:30\n    at privatePixels (<WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\core\\core.spec.js:54:11)\n    at <WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\core\\core.spec.js:217:110",
+                    "location": {
+                      "file": "<WORKSPACE>\\eval at evaluate (:234:30), <anonymous>",
+                      "column": 20,
+                      "line": 11
+                    }
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "<WORKSPACE>\\eval at evaluate (:234:30), <anonymous>",
+                        "column": 20,
+                        "line": 11
+                      },
+                      "message": "Error: page.evaluate: ReferenceError: _crypto is not defined\n    at eval (eval at evaluate (:234:30), <anonymous>:11:20)\n    at async <anonymous>:260:30\n    at eval (<WORKSPACE>\\eval at evaluate (:234:30), <anonymous>:11:20)\n    at <WORKSPACE>\\async <anonymous>:260:30\n    at privatePixels (<WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\core\\core.spec.js:54:11)\n    at <WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\core\\core.spec.js:217:110"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-23T12:14:27.320Z",
+                  "attachments": [],
+                  "errorLocation": {
+                    "file": "<WORKSPACE>\\eval at evaluate (:234:30), <anonymous>",
+                    "column": 20,
+                    "line": 11
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "43b12c68676e60ca47dc-3da830a8efd760f81f25",
+          "file": "core.spec.js",
+          "line": 203,
+          "column": 5
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-23T12:12:36.032Z",
+    "duration": 154638.813,
+    "expected": 2,
+    "skipped": 0,
+    "unexpected": 1,
+    "flaky": 0
+  }
+}

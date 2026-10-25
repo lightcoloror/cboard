@@ -1,0 +1,262 @@
+{
+  "config": {
+    "configFile": "<WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\core\\core.config.cjs",
+    "rootDir": "<WORKSPACE>/outputs/tuyujia-completion-acceptance-20261023/core",
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "<WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\core\\browser-report.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 15000
+    },
+    "quiet": false,
+    "projects": [
+      {
+        "outputDir": "<WORKSPACE>/outputs/tuyujia-completion-acceptance-20261023/core/browser-artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {},
+        "id": "",
+        "name": "",
+        "testDir": "<WORKSPACE>/outputs/tuyujia-completion-acceptance-20261023/core",
+        "testIgnore": [],
+        "testMatch": [
+          "core.spec.js"
+        ],
+        "timeout": 240000
+      }
+    ],
+    "shard": null,
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.50.0",
+    "workers": 1,
+    "webServer": {
+      "command": "\"C:/Program Files/nodejs/node.exe\" scripts/serve-offline-build.mjs",
+      "cwd": "<WORKSPACE>\\fork-cboard\\cboard",
+      "env": {
+        "PLAYWRIGHT_OFFLINE_HOST": "127.0.0.1",
+        "PLAYWRIGHT_OFFLINE_PORT": "4209",
+        "PLAYWRIGHT_OFFLINE_BUILD_PATH": "<WORKSPACE>\\fork-cboard\\cboard\\.local-build-20261023-gallery-durable-v1"
+      },
+      "url": "http://127.0.0.1:4209",
+      "reuseExistingServer": false
+    }
+  },
+  "suites": [
+    {
+      "title": "core.spec.js",
+      "file": "core.spec.js",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "receiver manual segment replay, repair/cancel/reconfirm and changed-picture fallback survive real offline browser restart",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 240000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "status": "failed",
+                  "duration": 4405,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeGreaterThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: > \u001b[32m0\u001b[39m\nReceived:   \u001b[31m0\u001b[39m",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeGreaterThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: > \u001b[32m0\u001b[39m\nReceived:   \u001b[31m0\u001b[39m\n    at imagesLoaded (<WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\core\\core.spec.js:40:68)\n    at <WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\core\\core.spec.js:58:3",
+                    "matcherResult": {
+                      "message": "\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeGreaterThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: > \u001b[32m0\u001b[39m\nReceived:   \u001b[31m0\u001b[39m",
+                      "pass": false
+                    },
+                    "location": {
+                      "file": "<WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\core\\core.spec.js",
+                      "column": 68,
+                      "line": 40
+                    },
+                    "snippet": "  38 |  expect(await missing.count()).toBe(0);\n  39 | }\n> 40 | async function imagesLoaded(locator){expect(await locator.count()).toBeGreaterThan(0);await expect.poll(()=>locator.evaluateAll(ns=>ns.every(i=>i.complete&&i.naturalWidth>0))).toBe(true);}\n     |                                                                    ^\n  41 | async function privatePixels(p,src){\n  42 |  expect(src.startsWith('data:image/')).toBe(true);\n  43 |  return p.evaluate(async src=>{const i=new Image();i.src=src;await i.decode();const c=document.createElement('canvas');c.width=i.naturalWidth;c.height=i.naturalHeight;const x=c.getContext('2d');x.drawImage(i,0,0);const pixels=x.getImageData(0,0,c.width,c.height).data;const digest=await crypto.subtle.digest('SHA-256',pixels);return{width:c.width,height:c.height,pixelSha256:Array.from(new Uint8Array(digest)).map(v=>v.toString(16).padStart(2,'0')).join('')};},src);"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "<WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\core\\core.spec.js",
+                        "column": 68,
+                        "line": 40
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeGreaterThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: > \u001b[32m0\u001b[39m\nReceived:   \u001b[31m0\u001b[39m\n\n  38 |  expect(await missing.count()).toBe(0);\n  39 | }\n> 40 | async function imagesLoaded(locator){expect(await locator.count()).toBeGreaterThan(0);await expect.poll(()=>locator.evaluateAll(ns=>ns.every(i=>i.complete&&i.naturalWidth>0))).toBe(true);}\n     |                                                                    ^\n  41 | async function privatePixels(p,src){\n  42 |  expect(src.startsWith('data:image/')).toBe(true);\n  43 |  return p.evaluate(async src=>{const i=new Image();i.src=src;await i.decode();const c=document.createElement('canvas');c.width=i.naturalWidth;c.height=i.naturalHeight;const x=c.getContext('2d');x.drawImage(i,0,0);const pixels=x.getImageData(0,0,c.width,c.height).data;const digest=await crypto.subtle.digest('SHA-256',pixels);return{width:c.width,height:c.height,pixelSha256:Array.from(new Uint8Array(digest)).map(v=>v.toString(16).padStart(2,'0')).join('')};},src);\n    at imagesLoaded (<WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\core\\core.spec.js:40:68)\n    at <WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\core\\core.spec.js:58:3"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-23T10:03:05.772Z",
+                  "attachments": [],
+                  "errorLocation": {
+                    "file": "<WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\core\\core.spec.js",
+                    "column": 68,
+                    "line": 40
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "43b12c68676e60ca47dc-3517b34825f90de6b35a",
+          "file": "core.spec.js",
+          "line": 50,
+          "column": 5
+        },
+        {
+          "title": "favorite preparation edit copy classify import replay load delete undo and independent offline restart",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 240000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "status": "failed",
+                  "duration": 33245,
+                  "error": {
+                    "message": "TimeoutError: locator.click: Timeout 18000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[role=\"dialog\"][aria-labelledby=\"communication-management-title\"]').locator('#saved-phrase-synthetic-imported-phrase').getByRole('button', { name: '重用', exact: true })\u001b[22m\n",
+                    "stack": "TimeoutError: locator.click: Timeout 18000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[role=\"dialog\"][aria-labelledby=\"communication-management-title\"]').locator('#saved-phrase-synthetic-imported-phrase').getByRole('button', { name: '重用', exact: true })\u001b[22m\n\n    at <WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\core\\core.spec.js:132:71",
+                    "location": {
+                      "file": "<WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\core\\core.spec.js",
+                      "column": 71,
+                      "line": 132
+                    },
+                    "snippet": "  130 |   await overlay.getByRole('button',{name:'播报整句',exact:true}).click();await expect.poll(async()=>(await calls(p)).at(-1)?.text).toBe(edited.sentence);\n  131 |   await overlay.getByRole('button',{name:'返回',exact:true}).click();await manage(p);\n> 132 |   await row(p,imported.id).getByRole('button',{name:'重用',exact:true}).click();await expect(p.locator('.CommunicationSupportPanel')).toContainText(imported.sentence);await manage(p);\n      |                                                                       ^\n  133 |   const beforeDelete=await phrases(p);for(const item of beforeDelete)await row(p,item.id).getByRole('button',{name:'删除',exact:true}).click();expect(await phrases(p)).toEqual([]);\n  134 |   for(let i=0;i<beforeDelete.length;i++)await undo(p).click();const restored=await phrases(p);expect(restored).toHaveLength(3);\n  135 |   for(const old of beforeDelete){const item=restored.find(x=>x.sentence===old.sentence);expect(item.id).not.toBe(old.id);expect(item.output).toEqual(old.output);expect(item.lifeContext).toBe(old.lifeContext);}"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "<WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\core\\core.spec.js",
+                        "column": 71,
+                        "line": 132
+                      },
+                      "message": "TimeoutError: locator.click: Timeout 18000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[role=\"dialog\"][aria-labelledby=\"communication-management-title\"]').locator('#saved-phrase-synthetic-imported-phrase').getByRole('button', { name: '重用', exact: true })\u001b[22m\n\n\n  130 |   await overlay.getByRole('button',{name:'播报整句',exact:true}).click();await expect.poll(async()=>(await calls(p)).at(-1)?.text).toBe(edited.sentence);\n  131 |   await overlay.getByRole('button',{name:'返回',exact:true}).click();await manage(p);\n> 132 |   await row(p,imported.id).getByRole('button',{name:'重用',exact:true}).click();await expect(p.locator('.CommunicationSupportPanel')).toContainText(imported.sentence);await manage(p);\n      |                                                                       ^\n  133 |   const beforeDelete=await phrases(p);for(const item of beforeDelete)await row(p,item.id).getByRole('button',{name:'删除',exact:true}).click();expect(await phrases(p)).toEqual([]);\n  134 |   for(let i=0;i<beforeDelete.length;i++)await undo(p).click();const restored=await phrases(p);expect(restored).toHaveLength(3);\n  135 |   for(const old of beforeDelete){const item=restored.find(x=>x.sentence===old.sentence);expect(item.id).not.toBe(old.id);expect(item.output).toEqual(old.output);expect(item.lifeContext).toBe(old.lifeContext);}\n    at <WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\core\\core.spec.js:132:71"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-23T10:03:10.699Z",
+                  "attachments": [],
+                  "errorLocation": {
+                    "file": "<WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\core\\core.spec.js",
+                    "column": 71,
+                    "line": 132
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "43b12c68676e60ca47dc-2c34c91d4a21b83e760f",
+          "file": "core.spec.js",
+          "line": 98,
+          "column": 5
+        },
+        {
+          "title": "namesake private images reviewed into preparation and favorite preserve selected identity across offline process restarts",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 240000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "status": "failed",
+                  "duration": 7279,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeTruthy\u001b[2m()\u001b[22m\n\nReceived: \u001b[31mundefined\u001b[39m",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeTruthy\u001b[2m()\u001b[22m\n\nReceived: \u001b[31mundefined\u001b[39m\n    at <WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\core\\core.spec.js:165:96",
+                    "matcherResult": {
+                      "message": "\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeTruthy\u001b[2m()\u001b[22m\n\nReceived: \u001b[31mundefined\u001b[39m",
+                      "pass": false
+                    },
+                    "location": {
+                      "file": "<WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\core\\core.spec.js",
+                      "column": 96,
+                      "line": 165
+                    },
+                    "snippet": "  163 |   const missing=prep(p).getByRole('button',{name:'保留文字',exact:true});for(let i=0;i<25;i++){const activated=await missing.evaluateAll(ns=>{if(!ns.length)return false;ns[0].click();return true;});if(!activated)break;}\n  164 |   await prep(p).getByRole('textbox',{name:'生活情境',exact:true}).fill('饭后散步');const before=Object.values(await read(p,'phrase_preparation'))[0];\n> 165 |   const selectedPerson=before.output.find(x=>x.label==='欧阳明澈');expect(selectedPerson.personId).toBeTruthy();expect(selectedPerson.image).toBe(selectedSource);\n      |                                                                                                ^\n  166 |   await waitForProductionServiceWorker(p);await h.close();p=await open(h,true);await manage(p);await manager(p).getByRole('button',{name:'准备常用表达',exact:true}).click();await prep(p).getByRole('button',{name:'继续准备',exact:true}).click();\n  167 |   const resumed=Object.values(await read(p,'phrase_preparation'))[0];expect(resumed).toMatchObject({inputText:before.inputText,lifeContext:before.lifeContext,output:before.output,pictogramSequence:before.pictogramSequence});expect(await calls(p)).toEqual([]);\n  168 |   await imagesLoaded(prep(p).locator('.CommunicationSupportPanel__results img'));expect(await privatePixels(p,resumed.output.find(x=>x.personId===selectedPerson.personId).image)).toEqual(selectedPixels);"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "<WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\core\\core.spec.js",
+                        "column": 96,
+                        "line": 165
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeTruthy\u001b[2m()\u001b[22m\n\nReceived: \u001b[31mundefined\u001b[39m\n\n  163 |   const missing=prep(p).getByRole('button',{name:'保留文字',exact:true});for(let i=0;i<25;i++){const activated=await missing.evaluateAll(ns=>{if(!ns.length)return false;ns[0].click();return true;});if(!activated)break;}\n  164 |   await prep(p).getByRole('textbox',{name:'生活情境',exact:true}).fill('饭后散步');const before=Object.values(await read(p,'phrase_preparation'))[0];\n> 165 |   const selectedPerson=before.output.find(x=>x.label==='欧阳明澈');expect(selectedPerson.personId).toBeTruthy();expect(selectedPerson.image).toBe(selectedSource);\n      |                                                                                                ^\n  166 |   await waitForProductionServiceWorker(p);await h.close();p=await open(h,true);await manage(p);await manager(p).getByRole('button',{name:'准备常用表达',exact:true}).click();await prep(p).getByRole('button',{name:'继续准备',exact:true}).click();\n  167 |   const resumed=Object.values(await read(p,'phrase_preparation'))[0];expect(resumed).toMatchObject({inputText:before.inputText,lifeContext:before.lifeContext,output:before.output,pictogramSequence:before.pictogramSequence});expect(await calls(p)).toEqual([]);\n  168 |   await imagesLoaded(prep(p).locator('.CommunicationSupportPanel__results img'));expect(await privatePixels(p,resumed.output.find(x=>x.personId===selectedPerson.personId).image)).toEqual(selectedPixels);\n    at <WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\core\\core.spec.js:165:96"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-23T10:03:44.443Z",
+                  "attachments": [],
+                  "errorLocation": {
+                    "file": "<WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\core\\core.spec.js",
+                    "column": 96,
+                    "line": 165
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "43b12c68676e60ca47dc-6231d3d1062c3618e2a0",
+          "file": "core.spec.js",
+          "line": 143,
+          "column": 5
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-23T10:03:05.072Z",
+    "duration": 47430.757999999994,
+    "expected": 0,
+    "skipped": 0,
+    "unexpected": 3,
+    "flaky": 0
+  }
+}

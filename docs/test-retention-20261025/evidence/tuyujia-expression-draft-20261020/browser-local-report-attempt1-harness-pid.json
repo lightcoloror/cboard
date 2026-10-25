@@ -1,0 +1,254 @@
+{
+  "config": {
+    "configFile": "<WORKSPACE>\\outputs\\tuyujia-expression-draft-20261020\\expression-draft.config.cjs",
+    "rootDir": "<WORKSPACE>/outputs/tuyujia-expression-draft-20261020",
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "<WORKSPACE>\\outputs\\tuyujia-expression-draft-20261020\\browser-local-report.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 15000
+    },
+    "quiet": false,
+    "projects": [
+      {
+        "outputDir": "<WORKSPACE>/outputs/tuyujia-expression-draft-20261020/browser-local-artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {},
+        "id": "",
+        "name": "",
+        "testDir": "<WORKSPACE>/outputs/tuyujia-expression-draft-20261020",
+        "testIgnore": [],
+        "testMatch": [
+          "expression-draft-production.spec.js"
+        ],
+        "timeout": 240000
+      }
+    ],
+    "shard": null,
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.50.0",
+    "workers": 1,
+    "webServer": {
+      "command": "\"C:/Program Files/nodejs/node.exe\" scripts/serve-offline-build.mjs",
+      "cwd": "<WORKSPACE>\\fork-cboard\\cboard",
+      "env": {
+        "PLAYWRIGHT_OFFLINE_HOST": "127.0.0.1",
+        "PLAYWRIGHT_OFFLINE_PORT": "4198",
+        "PLAYWRIGHT_OFFLINE_BUILD_PATH": "<WORKSPACE>\\fork-cboard\\cboard\\.server-private-build-20261021-expression-draft-v1"
+      },
+      "url": "http://127.0.0.1:4198",
+      "reuseExistingServer": false
+    }
+  },
+  "suites": [
+    {
+      "title": "expression-draft-production.spec.js",
+      "file": "expression-draft-production.spec.js",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "cold offline process restart preserves exact identity, rejected candidates and Later/Cancel choices",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 240000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "status": "failed",
+                  "duration": 1162,
+                  "error": {
+                    "message": "TypeError: Cannot read properties of undefined (reading 'pid')",
+                    "stack": "TypeError: Cannot read properties of undefined (reading 'pid')\n    at Object.close (<WORKSPACE>\\outputs\\tuyujia-expression-draft-20261020\\persistent-browser-harness.cjs:155:35)\n    at <WORKSPACE>\\outputs\\tuyujia-expression-draft-20261020\\expression-draft-production.spec.js:190:5",
+                    "location": {
+                      "file": "<WORKSPACE>\\outputs\\tuyujia-expression-draft-20261020\\persistent-browser-harness.cjs",
+                      "column": 35,
+                      "line": 155
+                    },
+                    "snippet": "\u001b[90m   at \u001b[39mpersistent-browser-harness.cjs:155\n\n  153 |     const current = evidence.processes[evidence.processes.length - 1];\n  154 |     await context.close();\n> 155 |     await waitUntilExited(current.pid);\n      |                                   ^\n  156 |     current.exited = true;\n  157 |     current.exitedAt = new Date().toISOString();\n  158 |     page = null;"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "<WORKSPACE>\\outputs\\tuyujia-expression-draft-20261020\\persistent-browser-harness.cjs",
+                        "column": 35,
+                        "line": 155
+                      },
+                      "message": "TypeError: Cannot read properties of undefined (reading 'pid')\n\n   at persistent-browser-harness.cjs:155\n\n  153 |     const current = evidence.processes[evidence.processes.length - 1];\n  154 |     await context.close();\n> 155 |     await waitUntilExited(current.pid);\n      |                                   ^\n  156 |     current.exited = true;\n  157 |     current.exitedAt = new Date().toISOString();\n  158 |     page = null;\n    at Object.close (<WORKSPACE>\\outputs\\tuyujia-expression-draft-20261020\\persistent-browser-harness.cjs:155:35)\n    at <WORKSPACE>\\outputs\\tuyujia-expression-draft-20261020\\expression-draft-production.spec.js:190:5"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-20T17:08:21.123Z",
+                  "attachments": [],
+                  "errorLocation": {
+                    "file": "<WORKSPACE>\\outputs\\tuyujia-expression-draft-20261020\\persistent-browser-harness.cjs",
+                    "column": 35,
+                    "line": 155
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "5887654cbd20b8139c1c-a9ee379d37afc284250a",
+          "file": "expression-draft-production.spec.js",
+          "line": 139,
+          "column": 5
+        },
+        {
+          "title": "silent storage failure preserves prior draft; cleanup failure and double confirmation write one history record",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 240000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "status": "failed",
+                  "duration": 1119,
+                  "error": {
+                    "message": "TypeError: Cannot read properties of undefined (reading 'pid')",
+                    "stack": "TypeError: Cannot read properties of undefined (reading 'pid')\n    at Object.close (<WORKSPACE>\\outputs\\tuyujia-expression-draft-20261020\\persistent-browser-harness.cjs:155:35)\n    at <WORKSPACE>\\outputs\\tuyujia-expression-draft-20261020\\expression-draft-production.spec.js:257:5",
+                    "location": {
+                      "file": "<WORKSPACE>\\outputs\\tuyujia-expression-draft-20261020\\persistent-browser-harness.cjs",
+                      "column": 35,
+                      "line": 155
+                    },
+                    "snippet": "\u001b[90m   at \u001b[39mpersistent-browser-harness.cjs:155\n\n  153 |     const current = evidence.processes[evidence.processes.length - 1];\n  154 |     await context.close();\n> 155 |     await waitUntilExited(current.pid);\n      |                                   ^\n  156 |     current.exited = true;\n  157 |     current.exitedAt = new Date().toISOString();\n  158 |     page = null;"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "<WORKSPACE>\\outputs\\tuyujia-expression-draft-20261020\\persistent-browser-harness.cjs",
+                        "column": 35,
+                        "line": 155
+                      },
+                      "message": "TypeError: Cannot read properties of undefined (reading 'pid')\n\n   at persistent-browser-harness.cjs:155\n\n  153 |     const current = evidence.processes[evidence.processes.length - 1];\n  154 |     await context.close();\n> 155 |     await waitUntilExited(current.pid);\n      |                                   ^\n  156 |     current.exited = true;\n  157 |     current.exitedAt = new Date().toISOString();\n  158 |     page = null;\n    at Object.close (<WORKSPACE>\\outputs\\tuyujia-expression-draft-20261020\\persistent-browser-harness.cjs:155:35)\n    at <WORKSPACE>\\outputs\\tuyujia-expression-draft-20261020\\expression-draft-production.spec.js:257:5"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-20T17:08:22.850Z",
+                  "attachments": [],
+                  "errorLocation": {
+                    "file": "<WORKSPACE>\\outputs\\tuyujia-expression-draft-20261020\\persistent-browser-harness.cjs",
+                    "column": 35,
+                    "line": 155
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "5887654cbd20b8139c1c-eec35d27bc04f01604d0",
+          "file": "expression-draft-production.spec.js",
+          "line": 196,
+          "column": 5
+        },
+        {
+          "title": "clear and confirmed Start new do not resurrect expression after another offline browser process restart",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 240000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "status": "failed",
+                  "duration": 1193,
+                  "error": {
+                    "message": "TypeError: Cannot read properties of undefined (reading 'pid')",
+                    "stack": "TypeError: Cannot read properties of undefined (reading 'pid')\n    at Object.close (<WORKSPACE>\\outputs\\tuyujia-expression-draft-20261020\\persistent-browser-harness.cjs:155:35)\n    at <WORKSPACE>\\outputs\\tuyujia-expression-draft-20261020\\expression-draft-production.spec.js:299:5",
+                    "location": {
+                      "file": "<WORKSPACE>\\outputs\\tuyujia-expression-draft-20261020\\persistent-browser-harness.cjs",
+                      "column": 35,
+                      "line": 155
+                    },
+                    "snippet": "\u001b[90m   at \u001b[39mpersistent-browser-harness.cjs:155\n\n  153 |     const current = evidence.processes[evidence.processes.length - 1];\n  154 |     await context.close();\n> 155 |     await waitUntilExited(current.pid);\n      |                                   ^\n  156 |     current.exited = true;\n  157 |     current.exitedAt = new Date().toISOString();\n  158 |     page = null;"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "<WORKSPACE>\\outputs\\tuyujia-expression-draft-20261020\\persistent-browser-harness.cjs",
+                        "column": 35,
+                        "line": 155
+                      },
+                      "message": "TypeError: Cannot read properties of undefined (reading 'pid')\n\n   at persistent-browser-harness.cjs:155\n\n  153 |     const current = evidence.processes[evidence.processes.length - 1];\n  154 |     await context.close();\n> 155 |     await waitUntilExited(current.pid);\n      |                                   ^\n  156 |     current.exited = true;\n  157 |     current.exitedAt = new Date().toISOString();\n  158 |     page = null;\n    at Object.close (<WORKSPACE>\\outputs\\tuyujia-expression-draft-20261020\\persistent-browser-harness.cjs:155:35)\n    at <WORKSPACE>\\outputs\\tuyujia-expression-draft-20261020\\expression-draft-production.spec.js:299:5"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-20T17:08:24.545Z",
+                  "attachments": [],
+                  "errorLocation": {
+                    "file": "<WORKSPACE>\\outputs\\tuyujia-expression-draft-20261020\\persistent-browser-harness.cjs",
+                    "column": 35,
+                    "line": 155
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "5887654cbd20b8139c1c-0e9b0616b584fd38aea6",
+          "file": "expression-draft-production.spec.js",
+          "line": 263,
+          "column": 5
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-20T17:08:20.241Z",
+    "duration": 6162.49,
+    "expected": 0,
+    "skipped": 0,
+    "unexpected": 3,
+    "flaky": 0
+  }
+}

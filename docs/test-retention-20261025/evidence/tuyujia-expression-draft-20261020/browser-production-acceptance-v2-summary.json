@@ -1,0 +1,159 @@
+{
+  "generatedAt": "2026-10-20T17:30:40.455534+00:00",
+  "status": "passed",
+  "url": "https://app.tuyujia.com.cn/board/root",
+  "productionBuild": ".server-private-build-20261021-expression-draft-v2",
+  "inventorySha256": "127c65c38613775382cd9a3036f575f82d878e39629d1f13a6f45338d8b6d7f0",
+  "servedIndexSha256VerifiedByAllThreeTests": "e86f771d1e0cf3146c44794f20c4f014d63a620e4b6f9083efdcde9c852a90b1",
+  "assetVerificationBoundary": "Every scenario compares real HTTP index.html bytes to the v2 inventory before interacting. Full server inventory verification is root's deployment evidence.",
+  "scenarioCount": 3,
+  "scenarios": [
+    {
+      "title": "cold offline process restart preserves exact identity, rejected candidates and Later/Cancel choices",
+      "durationMs": 55571,
+      "attachments": [
+        {
+          "name": "last-synthetic-page",
+          "path": "<WORKSPACE>\\outputs\\tuyujia-expression-draft-20261020\\browser-production-artifacts\\expression-draft-productio-dadd5-es-and-Later-Cancel-choices\\attachments\\last-synthetic-page-334dfc6e71cc61c7681a40fbd0fcb6575b54ef46.png"
+        }
+      ]
+    },
+    {
+      "title": "silent storage failure preserves prior draft; cleanup failure and double confirmation write one history record",
+      "durationMs": 61405,
+      "attachments": [
+        {
+          "name": "last-synthetic-page",
+          "path": "<WORKSPACE>\\outputs\\tuyujia-expression-draft-20261020\\browser-production-artifacts\\expression-draft-productio-05f1d-on-write-one-history-record\\attachments\\last-synthetic-page-7ae0be9f282d67efa17a261d2902d117222de432.png"
+        }
+      ]
+    },
+    {
+      "title": "clear and confirmed Start new do not resurrect expression after another offline browser process restart",
+      "durationMs": 61303,
+      "attachments": [
+        {
+          "name": "last-synthetic-page",
+          "path": "<WORKSPACE>\\outputs\\tuyujia-expression-draft-20261020\\browser-production-artifacts\\expression-draft-productio-d4290-ine-browser-process-restart\\attachments\\last-synthetic-page-46482b98ceb0cd7acfff2a1fe20c9715691ec4c0.png"
+        }
+      ]
+    }
+  ],
+  "freshBrowserProcessCount": 9,
+  "offlineFreshProcessCount": 6,
+  "processes": [
+    {
+      "generation": 1,
+      "pid": 69576,
+      "startedAt": "2026-10-20T17:27:05.986Z",
+      "offline": false,
+      "exited": true,
+      "exitedAt": "2026-10-20T17:27:47.179Z",
+      "evidence": "production-browser-cold-identity.json"
+    },
+    {
+      "generation": 2,
+      "pid": 43924,
+      "startedAt": "2026-10-20T17:27:48.818Z",
+      "offline": true,
+      "exited": true,
+      "exitedAt": "2026-10-20T17:27:59.787Z",
+      "evidence": "production-browser-cold-identity.json"
+    },
+    {
+      "generation": 1,
+      "pid": 76388,
+      "startedAt": "2026-10-20T17:28:01.678Z",
+      "offline": false,
+      "exited": true,
+      "exitedAt": "2026-10-20T17:28:47.737Z",
+      "evidence": "production-browser-storage-confirmation.json"
+    },
+    {
+      "generation": 2,
+      "pid": 16084,
+      "startedAt": "2026-10-20T17:28:49.669Z",
+      "offline": true,
+      "exited": true,
+      "exitedAt": "2026-10-20T17:28:58.142Z",
+      "evidence": "production-browser-storage-confirmation.json"
+    },
+    {
+      "generation": 3,
+      "pid": 34616,
+      "startedAt": "2026-10-20T17:28:59.865Z",
+      "offline": true,
+      "exited": true,
+      "exitedAt": "2026-10-20T17:29:01.193Z",
+      "evidence": "production-browser-storage-confirmation.json"
+    },
+    {
+      "generation": 1,
+      "pid": 53860,
+      "startedAt": "2026-10-20T17:29:03.097Z",
+      "offline": false,
+      "exited": true,
+      "exitedAt": "2026-10-20T17:29:44.352Z",
+      "evidence": "production-browser-clear-discard.json"
+    },
+    {
+      "generation": 2,
+      "pid": 69540,
+      "startedAt": "2026-10-20T17:29:46.045Z",
+      "offline": true,
+      "exited": true,
+      "exitedAt": "2026-10-20T17:29:49.157Z",
+      "evidence": "production-browser-clear-discard.json"
+    },
+    {
+      "generation": 3,
+      "pid": 91476,
+      "startedAt": "2026-10-20T17:29:51.019Z",
+      "offline": true,
+      "exited": true,
+      "exitedAt": "2026-10-20T17:29:59.515Z",
+      "evidence": "production-browser-clear-discard.json"
+    },
+    {
+      "generation": 4,
+      "pid": 42884,
+      "startedAt": "2026-10-20T17:30:01.284Z",
+      "offline": true,
+      "exited": true,
+      "exitedAt": "2026-10-20T17:30:02.498Z",
+      "evidence": "production-browser-clear-discard.json"
+    }
+  ],
+  "requestCount": 615,
+  "privateOrAiRequestAttempts": 0,
+  "pageErrors": [],
+  "evidenceFiles": [
+    "production-browser-cold-identity.json",
+    "production-browser-storage-confirmation.json",
+    "production-browser-clear-discard.json"
+  ],
+  "cleanup": {
+    "checkedAt": "2026-10-20T17:30:40.3348627Z",
+    "loopback4198Listeners": 0,
+    "ownedSyntheticChromeProcesses": 0
+  },
+  "report": "browser-production-report.json",
+  "faultInjection": [
+    "Storage.setItem silently drops expression draft writes: prior valid draft remains; explicit retry persists current selection.",
+    "History write succeeds while confirmed-marker write throws: user retry and double click retain one unchanged history entry.",
+    "All API and cross-origin HTTP requests blocked in the isolated browser."
+  ],
+  "verifiedFlows": [
+    "Full saved sentence, ordered same-name/different-person snapshots, rejected state and unavailable-image hint.",
+    "Continue, defer, Start-new cancellation and management roundtrip preserve unfinished work.",
+    "Actual Chrome process exit and new offline process reuse the same owned profile and Service Worker cache.",
+    "Confirmed state, clear and explicitly discarded expression do not resurrect after another cold offline restart.",
+    "Existing receiver and phrase-preparation drafts, favorites and history remain isolated."
+  ],
+  "limits": [
+    "Synthetic local fixtures and geometric pictures only; no authenticated real user's state.",
+    "No paid model request, physical phone, physical speaker, or clinical test.",
+    "TTS uses the existing deterministic browser harness.",
+    "This does not replace mini-program runtime restart acceptance."
+  ]
+}

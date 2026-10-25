@@ -1,0 +1,46 @@
+{
+  "scope": "isolated-synthetic-production-app",
+  "profile": "<WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\webkit\\synthetic-profile-0e8sIU",
+  "fixtureMarker": "tuyujia-expression-draft-c855b429-1d15-4e96-b1c5-979166b09297",
+  "origin": "http://127.0.0.1:4208",
+  "processes": [
+    {
+      "generation": 1,
+      "pid": 98488,
+      "startedAt": "2026-10-23T08:32:22.894Z",
+      "offline": false,
+      "exited": true,
+      "exitedAt": "2026-10-23T08:32:23.648Z"
+    }
+  ],
+  "requests": [
+    {
+      "generation": 1,
+      "method": "GET",
+      "origin": "http://127.0.0.1:4208",
+      "path": "/manifest.json",
+      "bodySha256": null,
+      "containsPrivate": false,
+      "aiOrCharge": false
+    }
+  ],
+  "violations": [],
+  "pageErrors": [],
+  "externalModelsCalled": false,
+  "physicalDeviceTested": false,
+  "checks": [
+    {
+      "mode": "route-enabled",
+      "controller": false,
+      "keys": [],
+      "found": false
+    },
+    {
+      "mode": "route-disabled",
+      "controller": false,
+      "keys": [],
+      "found": false
+    }
+  ],
+  "evidenceFile": "local-cache-isolation.json"
+}

@@ -1,0 +1,142 @@
+{
+  "config": {
+    "configFile": "<WORKSPACE>\\outputs\\tuyujia-targeted-acceptance-20261023\\local.config.cjs",
+    "rootDir": "<WORKSPACE>/outputs/tuyujia-targeted-acceptance-20261023",
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "<WORKSPACE>\\outputs\\tuyujia-targeted-acceptance-20261023/delete-candidate-v2-report.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 15000
+    },
+    "quiet": false,
+    "projects": [
+      {
+        "outputDir": "<WORKSPACE>/outputs/tuyujia-targeted-acceptance-20261023/delete-candidate-v2-artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {},
+        "id": "",
+        "name": "",
+        "testDir": "<WORKSPACE>/outputs/tuyujia-targeted-acceptance-20261023",
+        "testIgnore": [],
+        "testMatch": [
+          "gallery.spec.js"
+        ],
+        "timeout": 120000
+      }
+    ],
+    "shard": null,
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.50.0",
+    "workers": 1,
+    "webServer": {
+      "command": "\"C:/Program Files/nodejs/node.exe\" scripts/serve-offline-build.mjs",
+      "cwd": "<WORKSPACE>\\fork-cboard\\cboard",
+      "env": {
+        "PLAYWRIGHT_OFFLINE_HOST": "127.0.0.1",
+        "PLAYWRIGHT_OFFLINE_PORT": "4198",
+        "PLAYWRIGHT_OFFLINE_BUILD_PATH": ".local-build-20261023-targeted-ui-v1"
+      },
+      "url": "http://127.0.0.1:4198",
+      "reuseExistingServer": false
+    }
+  },
+  "suites": [
+    {
+      "title": "gallery.spec.js",
+      "file": "gallery.spec.js",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "CBoard card and folder-link deletion requires confirmation; cancel preserves content",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "status": "failed",
+                  "duration": 19127,
+                  "error": {
+                    "message": "TimeoutError: locator.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('button', { name: 'edit-board-tiles', exact: true })\u001b[22m\n",
+                    "stack": "TimeoutError: locator.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('button', { name: 'edit-board-tiles', exact: true })\u001b[22m\n\n    at <WORKSPACE>\\outputs\\tuyujia-targeted-acceptance-20261023\\gallery.spec.js:46:68",
+                    "location": {
+                      "file": "<WORKSPACE>\\outputs\\tuyujia-targeted-acceptance-20261023\\gallery.spec.js",
+                      "column": 68,
+                      "line": 46
+                    },
+                    "snippet": "  44 |   await folder.click();const folderUrl=p.url();await c.addSimpleTile('Synthetic child',{skipUnlock:true});\n  45 |   await p.goto('/board/root');await dismissBoardTour(p,false);\n> 46 |   await p.getByRole('button',{name:'edit-board-tiles',exact:true}).click();\n     |                                                                    ^\n  47 |   await c.getTileByLabel('Synthetic card').click();await c.getTileByLabel('Synthetic folder').click();\n  48 |   await p.getByRole('button',{name:'Delete selected tiles',exact:true}).click();\n  49 |   const modal=p.getByRole('dialog').filter({hasText:'Are you sure you want to delete'});"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "<WORKSPACE>\\outputs\\tuyujia-targeted-acceptance-20261023\\gallery.spec.js",
+                        "column": 68,
+                        "line": 46
+                      },
+                      "message": "TimeoutError: locator.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('button', { name: 'edit-board-tiles', exact: true })\u001b[22m\n\n\n  44 |   await folder.click();const folderUrl=p.url();await c.addSimpleTile('Synthetic child',{skipUnlock:true});\n  45 |   await p.goto('/board/root');await dismissBoardTour(p,false);\n> 46 |   await p.getByRole('button',{name:'edit-board-tiles',exact:true}).click();\n     |                                                                    ^\n  47 |   await c.getTileByLabel('Synthetic card').click();await c.getTileByLabel('Synthetic folder').click();\n  48 |   await p.getByRole('button',{name:'Delete selected tiles',exact:true}).click();\n  49 |   const modal=p.getByRole('dialog').filter({hasText:'Are you sure you want to delete'});\n    at <WORKSPACE>\\outputs\\tuyujia-targeted-acceptance-20261023\\gallery.spec.js:46:68"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-23T05:47:35.839Z",
+                  "attachments": [],
+                  "errorLocation": {
+                    "file": "<WORKSPACE>\\outputs\\tuyujia-targeted-acceptance-20261023\\gallery.spec.js",
+                    "column": 68,
+                    "line": 46
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "c668d4c0fb87f924a774-df218180d8d5eb883a9b",
+          "file": "gallery.spec.js",
+          "line": 35,
+          "column": 5
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-23T05:47:35.143Z",
+    "duration": 20409.145999999997,
+    "expected": 0,
+    "skipped": 0,
+    "unexpected": 1,
+    "flaky": 0
+  }
+}

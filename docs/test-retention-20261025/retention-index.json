@@ -1,0 +1,36 @@
+{
+  "created_date": "2026-10-25",
+  "tool": "Codex",
+  "exact_model": "not independently verified",
+  "status": "prepared_rebuild_smoke_passed_pending_remote",
+  "source_roots": [
+    "tuyujia-completion-acceptance-20261023",
+    "tuyujia-expression-draft-20261020",
+    "tuyujia-favorite-durable-20261021",
+    "tuyujia-image-reliability-20261021",
+    "tuyujia-onsite-audit-20261022",
+    "tuyujia-receiver-durable-20261021",
+    "tuyujia-targeted-acceptance-20261023"
+  ],
+  "counts": {
+    "tuyujia-completion-acceptance-20261023": 105,
+    "tuyujia-expression-draft-20261020": 28,
+    "tuyujia-favorite-durable-20261021": 24,
+    "tuyujia-image-reliability-20261021": 22,
+    "tuyujia-onsite-audit-20261022": 20,
+    "tuyujia-receiver-durable-20261021": 32,
+    "tuyujia-targeted-acceptance-20261023": 27
+  },
+  "matched_profiles": 96,
+  "unmatched_profiles": 6,
+  "bytes": 6144969,
+  "blocked_files": [],
+  "boundary": "Historical evidence only; no new application acceptance claimed. Source files remain unchanged.",
+  "rebuild_smoke": "rebuild-smoke.json",
+  "privacy_review": {
+    "gitleaks_findings": 0,
+    "real_browser_profiles_included": false,
+    "screenshot": "synthetic black square photo, visually inspected",
+    "sensitive_json_fields": []
+  }
+}

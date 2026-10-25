@@ -1,0 +1,17 @@
+{
+  "webLocalFlows": 2,
+  "webProductionFlows": 2,
+  "miniNativeRestartGroups": 2,
+  "miniArtifactUnchanged": true,
+  "miniContextFaultAndDeleteUndoPassed": true,
+  "emptyPrimaryNoLegacyResurrection": true,
+  "originalSessionRestored": true,
+  "webTestCount": 1996,
+  "miniTestCount": 1003,
+  "miniSkipped": 7,
+  "syncHandoffFixtureTests": 13,
+  "serverApiBusinessCodeChanged": false,
+  "newPaidModelCalls": false,
+  "phoneTested": false,
+  "familySyncEndToEndVerified": false
+}

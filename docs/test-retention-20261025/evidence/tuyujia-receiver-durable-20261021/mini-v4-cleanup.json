@@ -1,0 +1,22 @@
+{
+  "syntheticOnly": true,
+  "success": true,
+  "privateBackupRetained": false,
+  "restoration": {
+    "originalKeysRestored": true,
+    "originalKeyCount": 3,
+    "syntheticKeysRemoved": 15,
+    "ownedFilesRemoved": [],
+    "ownedFilesAbsent": [],
+    "expressionPageUnmounted": true
+  },
+  "disk": {
+    "originalKeysMatchDisk": true,
+    "syntheticScopeAbsentFromDisk": true,
+    "fileIdentitySha256": "614b2d70be8b21ef743ebf308891545386aa3aebc6607ae206f2c98f68394073"
+  },
+  "filesRemainAbsent": true,
+  "diskStableReads": 2,
+  "elapsedSeconds": 12.220180500065908,
+  "privateBackupRemoved": true
+}

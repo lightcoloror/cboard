@@ -1,0 +1,257 @@
+{
+  "config": {
+    "configFile": "<WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\core\\core.config.cjs",
+    "rootDir": "<WORKSPACE>/outputs/tuyujia-completion-acceptance-20261023/core",
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "<WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\core\\browser-report.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 15000
+    },
+    "quiet": false,
+    "projects": [
+      {
+        "outputDir": "<WORKSPACE>/outputs/tuyujia-completion-acceptance-20261023/core/browser-artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {},
+        "id": "",
+        "name": "",
+        "testDir": "<WORKSPACE>/outputs/tuyujia-completion-acceptance-20261023/core",
+        "testIgnore": [],
+        "testMatch": [
+          "core.spec.js"
+        ],
+        "timeout": 240000
+      }
+    ],
+    "shard": null,
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.50.0",
+    "workers": 1,
+    "webServer": {
+      "command": "\"C:/Program Files/nodejs/node.exe\" scripts/serve-offline-build.mjs",
+      "cwd": "<WORKSPACE>\\fork-cboard\\cboard",
+      "env": {
+        "PLAYWRIGHT_OFFLINE_HOST": "127.0.0.1",
+        "PLAYWRIGHT_OFFLINE_PORT": "4209",
+        "PLAYWRIGHT_OFFLINE_BUILD_PATH": "<WORKSPACE>\\fork-cboard\\cboard\\.local-build-20261023-gallery-durable-v1"
+      },
+      "url": "http://127.0.0.1:4209",
+      "reuseExistingServer": false
+    }
+  },
+  "suites": [
+    {
+      "title": "core.spec.js",
+      "file": "core.spec.js",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "receiver manual segment replay, repair/cancel/reconfirm and changed-picture fallback survive real offline browser restart",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 240000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "status": "failed",
+                  "duration": 17107,
+                  "error": {
+                    "message": "Error: Matched public pictures must be displayed on the fresh local build\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeGreaterThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: > \u001b[32m0\u001b[39m\nReceived:   \u001b[31m0\u001b[39m",
+                    "stack": "Error: Matched public pictures must be displayed on the fresh local build\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeGreaterThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: > \u001b[32m0\u001b[39m\nReceived:   \u001b[31m0\u001b[39m\n    at <WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\core\\core.spec.js:61:114",
+                    "matcherResult": {
+                      "message": "\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeGreaterThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: > \u001b[32m0\u001b[39m\nReceived:   \u001b[31m0\u001b[39m",
+                      "pass": false
+                    },
+                    "location": {
+                      "file": "<WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\core\\core.spec.js",
+                      "column": 114,
+                      "line": 61
+                    },
+                    "snippet": "  59 |   proof.coldDisplay={imageCount:await display(p).locator('img').count(),cacheState:await p.evaluate(async output=>Promise.all(output.filter(x=>x.image).map(async x=>({image:x.image,cached:Boolean(await caches.match(x.image))}))),original.output)};\n  60 |   checkpoint('receiver-cold-display-cache',proof.coldDisplay);\n> 61 |   expect.soft(proof.coldDisplay.imageCount,'Matched public pictures must be displayed on the fresh local build').toBeGreaterThan(0);\n     |                                                                                                                  ^\n  62 |   const count=(await calls(p)).length;await display(p).getByRole('button',{name:'按原文分段阅读'}).click();\n  63 |   await expect(display(p)).toContainText('第 1 / 2 段');await display(p).getByRole('button',{name:'下一段',exact:true}).click();\n  64 |   await expect(display(p)).toContainText('第 2 / 2 段');expect((await calls(p)).length).toBe(count);"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "<WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\core\\core.spec.js",
+                        "column": 114,
+                        "line": 61
+                      },
+                      "message": "Error: Matched public pictures must be displayed on the fresh local build\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeGreaterThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: > \u001b[32m0\u001b[39m\nReceived:   \u001b[31m0\u001b[39m\n\n  59 |   proof.coldDisplay={imageCount:await display(p).locator('img').count(),cacheState:await p.evaluate(async output=>Promise.all(output.filter(x=>x.image).map(async x=>({image:x.image,cached:Boolean(await caches.match(x.image))}))),original.output)};\n  60 |   checkpoint('receiver-cold-display-cache',proof.coldDisplay);\n> 61 |   expect.soft(proof.coldDisplay.imageCount,'Matched public pictures must be displayed on the fresh local build').toBeGreaterThan(0);\n     |                                                                                                                  ^\n  62 |   const count=(await calls(p)).length;await display(p).getByRole('button',{name:'按原文分段阅读'}).click();\n  63 |   await expect(display(p)).toContainText('第 1 / 2 段');await display(p).getByRole('button',{name:'下一段',exact:true}).click();\n  64 |   await expect(display(p)).toContainText('第 2 / 2 段');expect((await calls(p)).length).toBe(count);\n    at <WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\core\\core.spec.js:61:114"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-23T10:10:19.591Z",
+                  "attachments": [],
+                  "errorLocation": {
+                    "file": "<WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\core\\core.spec.js",
+                    "column": 114,
+                    "line": 61
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "43b12c68676e60ca47dc-3517b34825f90de6b35a",
+          "file": "core.spec.js",
+          "line": 51,
+          "column": 5
+        },
+        {
+          "title": "favorite preparation edit copy classify import replay load delete undo and independent offline restart",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 240000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "status": "failed",
+                  "duration": 31177,
+                  "error": {
+                    "message": "Error: Committed import must immediately be visible without restart\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m",
+                    "stack": "Error: Committed import must immediately be visible without restart\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n    at <WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\core\\core.spec.js:131:120",
+                    "matcherResult": {
+                      "actual": false,
+                      "expected": true,
+                      "message": "\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m",
+                      "name": "toBe",
+                      "pass": false
+                    },
+                    "location": {
+                      "file": "<WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\core\\core.spec.js",
+                      "column": 120,
+                      "line": 131
+                    },
+                    "snippet": "  129 |   await upload(p,[imported]);await doubleClick(manager(p).getByRole('button',{name:'确认整批导入',exact:true}));expect(await phrases(p)).toHaveLength(3);\n  130 |   proof.importImmediate={state:await read(p,'favorite_state_v1'),ui:await manager(p).innerText(),importedRowVisible:await row(p,imported.id).isVisible()};checkpoint('import-immediate-diagnostic',proof.importImmediate);\n> 131 |   expect.soft(proof.importImmediate.importedRowVisible,'Committed import must immediately be visible without restart').toBe(true);\n      |                                                                                                                        ^\n  132 |   if(!proof.importImmediate.importedRowVisible){await h.close();p=await open(h,true);await manage(p);await expect(row(p,imported.id)).toBeVisible();proof.steps.push('import-required-browser-restart-to-refresh-ui');}\n  133 |   proof.steps.push('copy-new-id','classify-cancel-and-save-filter','import-preview-zero-write-cancel-double-confirm');\n  134 |   await row(p,initial.id).getByRole('button',{name:'查看整句',exact:true}).click();const overlay=p.locator('[role=dialog][aria-labelledby=communication-playback-sentence]');"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "<WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\core\\core.spec.js",
+                        "column": 120,
+                        "line": 131
+                      },
+                      "message": "Error: Committed import must immediately be visible without restart\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n\n  129 |   await upload(p,[imported]);await doubleClick(manager(p).getByRole('button',{name:'确认整批导入',exact:true}));expect(await phrases(p)).toHaveLength(3);\n  130 |   proof.importImmediate={state:await read(p,'favorite_state_v1'),ui:await manager(p).innerText(),importedRowVisible:await row(p,imported.id).isVisible()};checkpoint('import-immediate-diagnostic',proof.importImmediate);\n> 131 |   expect.soft(proof.importImmediate.importedRowVisible,'Committed import must immediately be visible without restart').toBe(true);\n      |                                                                                                                        ^\n  132 |   if(!proof.importImmediate.importedRowVisible){await h.close();p=await open(h,true);await manage(p);await expect(row(p,imported.id)).toBeVisible();proof.steps.push('import-required-browser-restart-to-refresh-ui');}\n  133 |   proof.steps.push('copy-new-id','classify-cancel-and-save-filter','import-preview-zero-write-cancel-double-confirm');\n  134 |   await row(p,initial.id).getByRole('button',{name:'查看整句',exact:true}).click();const overlay=p.locator('[role=dialog][aria-labelledby=communication-playback-sentence]');\n    at <WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\core\\core.spec.js:131:120"
+                    },
+                    {
+                      "location": {
+                        "file": "<WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\core\\core.spec.js",
+                        "column": 107,
+                        "line": 141
+                      },
+                      "message": "Error: Deleted favorites must immediately disappear from UI\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m0\u001b[39m\nReceived: \u001b[31m5\u001b[39m\n\n  139 |   const beforeDelete=await phrases(p);for(const item of beforeDelete)await row(p,item.id).getByRole('button',{name:'删除',exact:true}).click();expect(await phrases(p)).toEqual([]);\n  140 |   proof.deleteImmediate={storage:await phrases(p),ui:await manager(p).innerText(),remainingRows:await manager(p).locator('[id^=\"saved-phrase-\"]').count()};checkpoint('delete-immediate-diagnostic',proof.deleteImmediate);\n> 141 |   expect.soft(proof.deleteImmediate.remainingRows,'Deleted favorites must immediately disappear from UI').toBe(0);\n      |                                                                                                           ^\n  142 |   for(let i=0;i<beforeDelete.length;i++)await undo(p).click();const restored=await phrases(p);expect(restored).toHaveLength(3);\n  143 |   for(const old of beforeDelete){const item=restored.find(x=>x.sentence===old.sentence);expect(item.id).not.toBe(old.id);expect(item.output).toEqual(old.output);expect(item.lifeContext).toBe(old.lifeContext);}\n  144 |   proof.undoImmediate={state:await read(p,'favorite_state_v1'),ui:await manager(p).innerText(),newIdsVisible:await Promise.all(restored.map(x=>row(p,x.id).isVisible()))};checkpoint('undo-immediate-diagnostic',proof.undoImmediate);\n    at <WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\core\\core.spec.js:141:107"
+                    },
+                    {
+                      "location": {
+                        "file": "<WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\core\\core.spec.js",
+                        "column": 127,
+                        "line": 145
+                      },
+                      "message": "Error: Restored favorites with new IDs must immediately be visible\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n\n  143 |   for(const old of beforeDelete){const item=restored.find(x=>x.sentence===old.sentence);expect(item.id).not.toBe(old.id);expect(item.output).toEqual(old.output);expect(item.lifeContext).toBe(old.lifeContext);}\n  144 |   proof.undoImmediate={state:await read(p,'favorite_state_v1'),ui:await manager(p).innerText(),newIdsVisible:await Promise.all(restored.map(x=>row(p,x.id).isVisible()))};checkpoint('undo-immediate-diagnostic',proof.undoImmediate);\n> 145 |   expect.soft(proof.undoImmediate.newIdsVisible.every(Boolean),'Restored favorites with new IDs must immediately be visible').toBe(true);\n      |                                                                                                                               ^\n  146 |   const state=await read(p,'favorite_state_v1');await h.close();p=await open(h,true);await manage(p);expect(await read(p,'favorite_state_v1')).toEqual(state);await expect(undo(p)).toBeDisabled();expect(await calls(p)).toEqual([]);\n  147 |   expect(await read(p,'receiver_records')).toEqual(protectedReceiver);await p.screenshot({path:info.outputPath('favorites-restored.png'),fullPage:true});\n  148 |   proof.steps.push('silent-view-and-exact-explicit-replay','text-only-load','delete-all-continuous-undo','favorite-state-offline-process-restart-undo-cleared');\n    at <WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\core\\core.spec.js:145:127"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-23T10:10:37.337Z",
+                  "attachments": [],
+                  "errorLocation": {
+                    "file": "<WORKSPACE>\\outputs\\tuyujia-completion-acceptance-20261023\\core\\core.spec.js",
+                    "column": 120,
+                    "line": 131
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "43b12c68676e60ca47dc-2c34c91d4a21b83e760f",
+          "file": "core.spec.js",
+          "line": 101,
+          "column": 5
+        },
+        {
+          "title": "namesake private images reviewed into preparation and favorite preserve selected identity across offline process restarts",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 240000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "status": "passed",
+                  "duration": 21329,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-23T10:11:09.158Z",
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "43b12c68676e60ca47dc-6231d3d1062c3618e2a0",
+          "file": "core.spec.js",
+          "line": 153,
+          "column": 5
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-23T10:10:18.358Z",
+    "duration": 72858.993,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 2,
+    "flaky": 0
+  }
+}
