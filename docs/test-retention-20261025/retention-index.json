@@ -32,5 +32,6 @@
     "real_browser_profiles_included": false,
     "screenshot": "synthetic black square photo, visually inspected",
     "sensitive_json_fields": []
-  }
+  },
+  "text_hash_convention": "UTF-8 with LF, matching Git blobs; original_sha256 refers to untouched original source bytes."
 }
