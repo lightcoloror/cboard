@@ -18,6 +18,13 @@ import {
 import { setDemoModeOverride } from '../../demoMode';
 
 describe('communication support local data', () => {
+  test('unreadable private preferences render originals with an explicit error and never overwrite the list', () => {
+    const key = 'cboard_communication_personal_image_preferences';
+    window.localStorage.setItem(key, '{broken');
+    expect(loadPersonalImageRuntime()).toEqual(expect.objectContaining({ preferences: [], error: expect.stringContaining('原数据已保留') }));
+    expect(() => savePersonalImagePreference({ tileId: 'water', image: 'local://new' })).toThrow();
+    expect(window.localStorage.getItem(key)).toBe('{broken');
+  });
   beforeEach(() => {
     window.localStorage.clear();
     resetDemoCommunicationStorage();
@@ -428,7 +435,7 @@ describe('communication support local data', () => {
     ).toBe('本机旧记录');
   });
 
-  test('overwriteCommunicationSettings persists both neutral and legacy local keys', () => {
+  test('overwriteCommunicationSettings persists authoritative favorites without legacy dual writes', () => {
     overwriteCommunicationSettings({
       savedPhrases: [
         {
@@ -447,15 +454,8 @@ describe('communication support local data', () => {
 
     expect(loadCommunicationSavedPhrases()[0].sentence).toBe('我要去厕所');
     expect(loadCommunicationHistory()[0].direction).toBe('express');
-    expect(
-      JSON.parse(
-        window.localStorage.getItem('cboard_communication_saved_phrases')
-      )[0].sentence
-    ).toBe('我要去厕所');
-    expect(
-      JSON.parse(window.localStorage.getItem('cboard_tuyujia_saved_phrases'))[0]
-        .sentence
-    ).toBe('我要去厕所');
+    expect(JSON.parse(window.localStorage.getItem('cboard_communication_favorite_state_v1')).phrases[0].sentence).toBe('我要去厕所');
+    expect(window.localStorage.getItem('cboard_tuyujia_saved_phrases')).toBeNull();
   });
 
   test('keeps personal images in the browser-only repository boundary', () => {

@@ -1,5 +1,5 @@
 import {
-  applyCommunicationPersonContextGuard,
+  applyCommunicationContextGuards,
   buildCommunicationTileCatalog,
   createCommunicationOutputFromMatches,
   createTextCommunicationCatalogItem,
@@ -19,11 +19,14 @@ import {
   DEVICE_PRIVATE_PICTOGRAM_PROVIDER,
   getPictogramAttribution
 } from './pictogramAttribution';
+import { isAutomaticCommunicationCandidateAllowed } from './chineseLexicon';
 
 export {
   RECEIVER_LOW_CONFIDENCE_THRESHOLD,
   RECEIVER_PIPELINE_CONTRACT_VERSION,
   buildReceiverMatchQuality,
+  buildReceiverMeaningAssessment,
+  isReceiverPunctuation,
   getReceiverMatchConfidence,
   normalizeReceiverMatchType
 } from './receiverContract';
@@ -58,6 +61,9 @@ export function buildReceiverReviewItems(
     token: match.token,
     tile: match.tile,
     matchType: match.matchType,
+    ...(match.personalReference
+      ? { personalReference: true, personCandidates: match.personCandidates }
+      : {}),
     ...(match.lookupToken ? { lookupToken: match.lookupToken } : {}),
     ...(match.sourceSpan ? { sourceSpan: match.sourceSpan } : {}),
     ...(match.source ? { source: match.source } : {})
@@ -81,7 +87,7 @@ export function buildReceiverLoopState(text, boards, options = {}) {
     ? buildCommunicationTileCatalog(boards, options.intl)
     : [];
   const reviewItems = missingTokenRecords.length
-    ? applyCommunicationPersonContextGuard(
+    ? applyCommunicationContextGuards(
         applyMissingTokenResolutions(
           initialReviewItems,
           applicableMissingTokenRecords,
@@ -98,7 +104,7 @@ export function buildReceiverLoopState(text, boards, options = {}) {
     matches: result.matches,
     reviewItems,
     missingTokens: reviewItems
-      .filter(item => !item.tile)
+      .filter(item => !item.tile && !item.personalReference)
       .map(item => item.token),
     outputPreview: buildReceiverOutputPreview(reviewItems),
     matchRate: reviewItems.length
@@ -115,8 +121,8 @@ function createPersistedCatalogItem(sequenceItem, outputItem) {
     getPictogramAttribution(outputItem);
 
   const displayLabel = String(
-    outputItem.label ||
-      sequenceItem.label ||
+    sequenceItem.label ||
+      outputItem.label ||
       sequenceItem.originalToken ||
       pictogramId
   ).trim();
@@ -129,6 +135,7 @@ function createPersistedCatalogItem(sequenceItem, outputItem) {
     ...(outputItem.video ? { video: outputItem.video } : {}),
     ...(pictogramAttribution ? { pictogramAttribution } : {})
   };
+  if (outputItem.personId) tile.semanticDomain = 'people';
   if (outputItem.keyPath) tile.keyPath = outputItem.keyPath;
   if (outputItem.backgroundColor) {
     tile.backgroundColor = outputItem.backgroundColor;
@@ -137,14 +144,15 @@ function createPersistedCatalogItem(sequenceItem, outputItem) {
   return {
     id: pictogramId,
     tile,
+    persistedOutput: { ...outputItem },
     ...(pictogramAttribution ? { pictogramAttribution } : {}),
-    boardId: '',
+    boardId: String(sequenceItem.boardId || ''),
     boardName: '已保存图片',
     displayLabel,
     labels: [displayLabel],
     synonyms: [],
     excludeTokens: [],
-    semanticDomain: null
+    semanticDomain: outputItem.personId ? 'people' : null
   };
 }
 
@@ -152,16 +160,19 @@ export function restoreReceiverLoopState(entry, boards, options = {}) {
   if (
     !entry ||
     entry.direction !== 'receive' ||
-    !Array.isArray(entry.pictogramSequence)
+    (!Array.isArray(entry.pictogramSequence) && entry.recordStatus !== 'draft')
   ) {
     return null;
   }
 
   const inputText = String(entry.inputText || '');
-  const sequence = entry.pictogramSequence.filter(
-    item => item && (item.originalToken || item.label)
-  );
-  if (!inputText || !sequence.length) return null;
+  // Storage omits empty sequences: an unfinished text-only draft is still resumable.
+  const sequence = (Array.isArray(entry.pictogramSequence)
+    ? entry.pictogramSequence
+    : []
+  ).filter(item => item && (item.originalToken || item.label));
+  if (!inputText || (!sequence.length && entry.recordStatus !== 'draft'))
+    return null;
 
   const catalogById = new Map(
     buildCommunicationTileCatalog(boards, options.intl).map(item => [
@@ -169,39 +180,74 @@ export function restoreReceiverLoopState(entry, boards, options = {}) {
       item
     ])
   );
-  const outputById = new Map(
-    (Array.isArray(entry.output) ? entry.output : [])
-      .filter(item => item && item.id)
-      .map(item => [String(item.id), item])
-  );
+  const savedOutput = Array.isArray(entry.output) ? entry.output : [];
+  let outputCursor = 0;
   const createId =
     typeof options.createId === 'function'
       ? options.createId
       : createReceiverReviewId;
-  const reviewItems = sequence.map(item => {
+  let reviewItems = sequence.map(item => {
     const pictogramId = String(item.pictogramId || '').trim();
     const token = String(item.originalToken || item.label || '');
-    const tile =
+    const outputIndex = Number.isInteger(item.preparedOutputIndex) ? item.preparedOutputIndex : outputCursor;
+    const saved = savedOutput[outputIndex];
+    if (pictogramId || item.textOnly) outputCursor += 1;
+    const aligned = saved && (item.textOnly
+      ? saved.textOnly && saved.label === token
+      : String(saved.id) === pictogramId);
+    let tile =
       item.textOnly === true
         ? createTextCommunicationCatalogItem(
             token,
-            `text-restored-${createId('text')}`
+            aligned ? saved.id : `text-restored-${createId('text')}`
           )
         : pictogramId
-        ? catalogById.get(pictogramId) ||
-          createPersistedCatalogItem(item, outputById.get(pictogramId))
+        ? (aligned ? createPersistedCatalogItem(item, saved)
+          : savedOutput.length ? null : catalogById.get(pictogramId))
         : null;
+    if (tile && item.textOnly && aligned) tile.persistedOutput = { ...saved };
+
+    // Drafts may outlive a dictionary repair. Recheck automatic choices while
+    // preserving manual order, explicit choices, text and completed history.
+    const matchType = normalizeReceiverMatchType(item.matchType);
+    const explicitChoice = ['manual', 'corrected'].includes(item.source);
+    const automatic =
+      !explicitChoice &&
+      ['exact', 'synonym', 'lexicon', 'partial', 'ai'].includes(matchType);
+    if (
+      entry.recordStatus === 'draft' &&
+      tile &&
+      !tile.textOnly &&
+      automatic &&
+      (matchType === 'partial' ||
+        !isAutomaticCommunicationCandidateAllowed(
+          token,
+          tile.displayLabel,
+          tile.tile.vocalization || tile.displayLabel,
+          tile.tile
+        ))
+    ) {
+      tile = null;
+    }
 
     return {
       id: createId('review'),
       token,
       tile: tile || null,
-      matchType: normalizeReceiverMatchType(item.matchType),
+      matchType: tile ? matchType : 'none',
       ...(item.lookupToken ? { lookupToken: item.lookupToken } : {}),
       ...(item.sourceSpan ? { sourceSpan: item.sourceSpan } : {}),
-      ...(item.source ? { source: String(item.source) } : {})
+      ...(item.source ? { source: String(item.source) } : {}),
+      ...(Number.isInteger(item.preparedOutputIndex) ? { preparedOutputIndex: item.preparedOutputIndex } : {})
     };
   });
+  if (entry.recordStatus === 'draft') {
+    reviewItems = applyCommunicationContextGuards(
+      reviewItems,
+      Array.from(catalogById.values()),
+      { preserveExplicitChoices: true }
+    );
+  }
   const outputPreview = buildReceiverOutputPreview(reviewItems);
   const matchedCount = reviewItems.filter(item => item.tile).length;
 
@@ -214,7 +260,7 @@ export function restoreReceiverLoopState(entry, boards, options = {}) {
     matches: reviewItems,
     reviewItems,
     missingTokens: reviewItems
-      .filter(item => !item.tile)
+      .filter(item => !item.tile && !item.personalReference)
       .map(item => item.token),
     outputPreview,
     matchRate: reviewItems.length ? matchedCount / reviewItems.length : 0
@@ -286,6 +332,7 @@ export function replaceReceiverReviewItem(reviewItems, itemId, candidate) {
     return {
       ...item,
       tile: candidate,
+      personCandidates: [],
       matchType: 'manual',
       source: candidate && candidate.textOnly ? 'text' : 'corrected'
     };
@@ -302,10 +349,17 @@ export function retainReceiverReviewItemAsText(reviewItems, itemId) {
   );
 }
 
+// Called only after explicit partner confirmation. No correction learning,
+// picture substitution, or inferred patient feedback is produced here.
+export function prepareReceiverAssistedItems(reviewItems) {
+  return reviewItems.reduce((items, item) => !item.tile
+    ? retainReceiverReviewItemAsText(items, item.id) : items, reviewItems);
+}
+
 export function buildReceiverOutputPreview(reviewItems) {
-  return createCommunicationOutputFromMatches(reviewItems, {
-    preserveAutomaticSource: true
-  });
+  return reviewItems.flatMap(item => item.tile && item.tile.persistedOutput
+    ? [{ ...item.tile.persistedOutput }]
+    : createCommunicationOutputFromMatches([item], { preserveAutomaticSource: true }));
 }
 
 export function buildReceiverHistoryEntry(inputText, reviewItems) {
@@ -313,9 +367,14 @@ export function buildReceiverHistoryEntry(inputText, reviewItems) {
     ? reviewItems.filter(item => item && typeof item === 'object')
     : [];
   const outputItems = buildReceiverOutputPreview(safeReviewItems);
+  let outputIndex = 0;
   const pictogramSequence = safeReviewItems.map(item => {
     const matchType = normalizeReceiverMatchType(item && item.matchType);
     const tile = item && item.tile;
+    // Unresolved cards are not present in output. Index snapshots by the
+    // emitted occurrence, not by the review row (or by a repeated tile ID).
+    const emitsOutput = tile && !(tile.textOnly && !String(item.token || '').trim());
+    const preparedOutputIndex = emitsOutput ? outputIndex++ : -1;
     const explicitSource = String((item && item.source) || '').trim();
     const attribution = getPictogramAttribution(tile);
     const provider = String((attribution && attribution.provider) || '').trim();
@@ -339,6 +398,7 @@ export function buildReceiverHistoryEntry(inputText, reviewItems) {
       ...(tile && tile.textOnly ? { textOnly: true } : {}),
       ...(item.lookupToken ? { lookupToken: item.lookupToken } : {}),
       ...(item.sourceSpan ? { sourceSpan: item.sourceSpan } : {}),
+      ...(emitsOutput ? { preparedOutputIndex } : {}),
       ...(attribution ? { attribution } : {})
     };
   });

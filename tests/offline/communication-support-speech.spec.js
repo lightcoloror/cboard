@@ -79,7 +79,7 @@ test.describe('Production communication speech feedback', () => {
       useTouch
     );
     await expect(
-      receiverWorkspace.getByRole('status').filter({ hasText: '匹配结果' })
-    ).toContainText('已全部匹配');
+      receiverWorkspace.getByRole('status').filter({ hasText: '图片匹配' })
+    ).toContainText('已全部配图');
   });
 });

@@ -1,9 +1,19 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { currentImageOperationEpoch } from '../../../common/communicationSupport/imageOperationEpoch';
+import { verifyBrowserLocalImage } from '../../../common/communicationSupport/browserImageVerification';
+import { requireAvailableImage } from '../../../common/communicationSupport/imageAvailability';
 import PropTypes from 'prop-types';
 import shortid from 'shortid';
+import isEqual from 'lodash/isEqual';
 import Button from '@material-ui/core/Button';
 import TextField from '@material-ui/core/TextField';
 import InputImage from '../../UI/InputImage';
+import { getPersonalPeople } from '../../../common/communicationSupport/personalPeople';
+import {
+  buildPersonalPictogramTileDTO,
+  appendPersonalPictogramToBoard,
+  updatePersonalPictogramInBoards
+} from '../../../common/communicationSupport/pictogramMetadataSuggestion';
 import { buildCommunicationTileCatalog } from '../../../common/communicationSupport/symbolMatching';
 import {
   normalizeExpressionPictogramSearchQuery,
@@ -14,7 +24,8 @@ import {
   createDevicePrivatePictogramAttribution,
   normalizePublicPictogramAttribution
 } from '../../../common/communicationSupport/pictogramAttribution';
-import { isPersonalCommunicationBoard } from '../../../common/communicationSupport/boardManagement';
+import { isPersonalCommunicationBoard, PERSONAL_COMMUNICATION_BOARD_ID_PREFIX } from '../../../common/communicationSupport/boardManagement';
+import { getCommunicationStorageScopeKey } from '../../../common/communicationSupport/localData';
 import {
   CURATED_PUBLIC_PICTOGRAM_ID_PREFIX,
   createCuratedPublicPictogram,
@@ -26,6 +37,7 @@ import {
   createTileDTO
 } from '../../../common/communicationSupport/dto';
 import './PersonalImageManager.css';
+import GalleryTileUndoControl from './GalleryTileUndoControl.component';
 
 export function readPersonalImageBlob(blob) {
   return new Promise((resolve, reject) => {
@@ -35,7 +47,13 @@ export function readPersonalImageBlob(blob) {
     }
 
     const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result || ''));
+    reader.onload = async () => {
+      try {
+        const image = String(reader.result || '');
+        requireAvailableImage(await verifyBrowserLocalImage(image));
+        resolve(image);
+      } catch (error) { reject(error); }
+    };
     reader.onerror = () =>
       reject(reader.error || new Error('Image read failed'));
     reader.readAsDataURL(blob);
@@ -82,14 +100,33 @@ export default function PersonalImageManager({
   boards,
   editableBoards,
   preferences,
+  preferencesError,
   onSave,
   onRemove,
   onBoardSave,
+  galleryUndo,
   onCreatePersonalBoard,
   createCuratedId
 }) {
   const [query, setQuery] = useState('');
+  const [person, setPerson] = useState({
+    id: '',
+    boardId: '',
+    label: '',
+    image: ''
+  });
   const [selectedKey, setSelectedKey] = useState('');
+  const selection = useRef(null);
+  selection.current = { selectedKey, person };
+  const mounted = useRef(true);
+  useEffect(() => () => { mounted.current = false; }, []);
+  const operationRevision = useRef(0);
+  const busy = useRef(false);
+  const pendingOperation = useRef(null);
+  const personDraft = useRef(null);
+  const [saving, setSaving] = useState(false);
+  const [retryOperation, setRetryOperation] = useState(null);
+  const [imageCandidate, setImageCandidate] = useState(null);
   const [targetBoardId, setTargetBoardId] = useState('');
   const [newBoardName, setNewBoardName] = useState('我的常用图卡');
   const [attributionAuthor, setAttributionAuthor] = useState('');
@@ -185,6 +222,7 @@ export default function PersonalImageManager({
   const selectedCandidate = candidateByKey.get(selectedKey) || null;
   const selectedPreference = preferenceByKey.get(selectedKey) || null;
   const personalBoards = editableBoardDtos.filter(isPersonalCommunicationBoard);
+  const people = getPersonalPeople(editableCatalog);
   const selectedTargetBoardId = personalBoards.some(
     board => board.id === targetBoardId
   )
@@ -214,7 +252,56 @@ export default function PersonalImageManager({
     return [{ candidate, sourceTile }];
   });
 
+  function changedInput() {
+    operationRevision.current += 1;
+    pendingOperation.current = null;
+    setRetryOperation(null);
+  }
+
+  function changePerson(next, startNew = false) {
+    changedInput();
+    if (startNew) personDraft.current = null;
+    selection.current.person = next;
+    setPerson(next);
+  }
+
+  function prepareOperation(key, submit, success, failure, onSuccess) {
+    if (pendingOperation.current && pendingOperation.current.key === key &&
+        pendingOperation.current.revision === operationRevision.current) return pendingOperation.current;
+    return { key, submit, success, failure, onSuccess,
+      revision: operationRevision.current, scope: getCommunicationStorageScopeKey(), epoch: currentImageOperationEpoch() };
+  }
+
+  async function runOperation(operation) {
+    if (!operation || busy.current) return false;
+    const current = () => mounted.current && operation.revision === operationRevision.current &&
+      operation.scope === getCommunicationStorageScopeKey() && operation.epoch === currentImageOperationEpoch();
+    if (!current()) return false;
+    busy.current = true;
+    pendingOperation.current = operation;
+    setSaving(true);
+    setRetryOperation(null);
+    try {
+      const saved = await operation.submit(current);
+      if (!saved) throw new Error('Save not confirmed');
+      if (!current()) return false;
+      pendingOperation.current = null;
+      if (operation.onSuccess) operation.onSuccess(saved);
+      setNotice(operation.success);
+      return true;
+    } catch (error) {
+      if (current()) { setRetryOperation(operation); setNotice(operation.failure); }
+      return false;
+    } finally {
+      busy.current = false;
+      if (mounted.current) setSaving(false);
+    }
+  }
+
   function selectCandidate(key) {
+    changedInput();
+    selection.current.selectedKey = key;
+    setImageCandidate(null);
     const preference = preferenceByKey.get(key);
     const attribution = preference && preference.pictogramAttribution;
     setSelectedKey(key);
@@ -230,61 +317,120 @@ export default function PersonalImageManager({
 
   async function handleImageChange(blob) {
     if (!selectedCandidate) return;
+    changedInput();
+    const epoch = currentImageOperationEpoch();
+    const revision = operationRevision.current;
+    const scope = getCommunicationStorageScopeKey();
+    const current = () => mounted.current && epoch === currentImageOperationEpoch() &&
+      revision === operationRevision.current && scope === getCommunicationStorageScopeKey() && selection.current.selectedKey === selectedKey;
 
     try {
       const image = await readPersonalImageBlob(blob);
-      const saved = onSave(
-        buildPersonalImageSaveEntry(selectedCandidate, image, {
-          author: attributionAuthor,
-          license: attributionLicense
-        })
-      );
-      setNotice(
-        saved
-          ? `已为“${candidateLabel(selectedCandidate)}”启用当前设备的熟悉图片。`
-          : '图片已读取，但本地偏好保存失败，请稍后重试。'
-      );
+      if (!current()) return;
+      const candidate = { key: selectedKey, image, epoch, scope };
+      setImageCandidate(candidate);
+      return saveCandidateImage(candidate);
     } catch (error) {
-      setNotice('图片读取失败，请重新选择。');
+      if (current()) setNotice('图片读取失败，请重新选择。');
     }
+  }
+
+  function saveCandidateImage(candidate = imageCandidate) {
+    if (!candidate || !selectedCandidate || candidate.key !== selectedKey ||
+        candidate.scope !== getCommunicationStorageScopeKey() || candidate.epoch !== currentImageOperationEpoch()) return false;
+    const entry = buildPersonalImageSaveEntry(selectedCandidate, candidate.image, {
+      author: attributionAuthor, license: attributionLicense
+    });
+    return runOperation(prepareOperation(`preference:${selectedKey}`,
+      guard => onSave(entry, { guard }),
+      `已为“${candidateLabel(selectedCandidate)}”启用当前设备的熟悉图片。`,
+      '图片已读取，但本地偏好保存失败；新照片仍保留，请重试保存。',
+      () => setImageCandidate(null)));
   }
 
   function saveAttribution() {
-    if (!selectedCandidate || !selectedPreference) return;
-
-    const saved = onSave(
-      buildPersonalImageSaveEntry(selectedCandidate, selectedPreference.image, {
-        author: attributionAuthor,
-        license: attributionLicense
-      })
-    );
-    setNotice(
-      saved
-        ? `已保存“${candidateLabel(selectedCandidate)}”的本机图片说明。`
-        : '图片说明保存失败，请稍后重试。'
-    );
+    if (!selectedCandidate || !selectedPreference) return false;
+    const entry = buildPersonalImageSaveEntry(selectedCandidate, selectedPreference.image, {
+      author: attributionAuthor, license: attributionLicense
+    });
+    return runOperation(prepareOperation(`attribution:${selectedKey}`,
+      guard => onSave(entry, { guard }),
+      `已保存“${candidateLabel(selectedCandidate)}”的本机图片说明。`,
+      '图片说明保存失败，请稍后重试。'));
   }
 
   function restoreDefault(preference, candidate) {
-    const removed = onRemove(preference.tileId, preference.boardId);
-    setNotice(
-      removed
-        ? `“${candidateLabel(candidate)}”已恢复 CBoard 默认图片。`
-        : '恢复默认图片失败，请稍后重试。'
-    );
+    return runOperation(prepareOperation(`restore:${preferenceKey(preference.tileId, preference.boardId)}`,
+      guard => onRemove(preference.tileId, preference.boardId, { guard }),
+      `“${candidateLabel(candidate)}”已恢复 CBoard 默认图片。`,
+      '恢复默认图片失败，请稍后重试。'));
   }
 
-  function createPersonalBoard() {
-    const boardId = onCreatePersonalBoard(newBoardName);
-    if (!boardId) {
-      setNotice('个人板创建失败，请检查名称后重试。');
+  async function createPersonalBoard() {
+    if (busy.current) return false;
+    if (pendingOperation.current && pendingOperation.current.key === 'create-board' &&
+        pendingOperation.current.revision === operationRevision.current) return runOperation(pendingOperation.current);
+    const id = `${PERSONAL_COMMUNICATION_BOARD_ID_PREFIX}${shortid.generate()}`;
+    return runOperation(prepareOperation('create-board',
+      guard => onCreatePersonalBoard(newBoardName, { id, guard }),
+      `已创建个人板“${newBoardName.trim()}”，现在可以添加人物或收纳公开图卡。`,
+      '个人板创建失败，名称仍保留，请重试。', setTargetBoardId));
+  }
+
+  async function savePerson() {
+    if (busy.current) return false;
+    if (pendingOperation.current && pendingOperation.current.key === 'person' &&
+        pendingOperation.current.revision === operationRevision.current) return runOperation(pendingOperation.current);
+    const boardId = person.boardId || selectedTargetBoardId;
+    if (!boardId || !person.label.trim() || !person.image) {
+      setNotice('请先选择个人板，填写全名并选择本人照片。');
       return;
     }
-    setTargetBoardId(boardId);
-    setNotice(`已创建个人板“${newBoardName.trim()}”，现在可以收纳公开图卡。`);
+    try {
+      if (!personDraft.current) personDraft.current = {
+        id: person.id || `device_private_custom_${createCuratedId()}`, boardId
+      };
+      const draft = personDraft.current;
+      if (draft.attemptedTile && draft.boardId !== boardId) {
+        setNotice('这次人物保存尚未确认，请先选择原个人板后重试。');
+        return false;
+      }
+      const tile = buildPersonalPictogramTileDTO({
+        ...person,
+        boardId,
+        id: draft.id,
+        category: 'people'
+      });
+      const existingBoard = editableBoardDtos.find(board => board.tiles.some(item => item.id === draft.id));
+      if (existingBoard && (!(draft.attemptedTile || draft.baseTile) ||
+          !isEqual(existingBoard.tiles.find(item => item.id === draft.id), draft.attemptedTile || draft.baseTile)))
+        throw new Error('Person changed after previous attempt');
+      const next = person.id || existingBoard
+        ? updatePersonalPictogramInBoards(
+            editableBoardDtos,
+            person.boardId || existingBoard.id,
+            boardId,
+            tile
+          )
+        : appendPersonalPictogramToBoard(editableBoardDtos, boardId, tile);
+      draft.attemptedTile = tile;
+      const nextBoard = next.find(board => board.id === boardId);
+      const expectedBoard = sourceBoards.find(board => board.id === boardId);
+      return runOperation(prepareOperation('person',
+        guard => onBoardSave(nextBoard, { expectedBoard, guard }),
+        '人物已保存到个人图库。使用全名匹配；照片不会用于公共补图或模型建议。',
+        '人物保存失败，草稿仍保留，请重试。',
+        () => { personDraft.current = null; changePerson({ id: '', boardId: '', label: '', image: '' }); }));
+    } catch (error) {
+      setNotice('人物保存失败，草稿仍保留，请重试。');
+    }
   }
 
-  function curatePublicPictogram(sourceTile) {
+  async function curatePublicPictogram(sourceTile) {
+    if (busy.current) return false;
+    const key = `curate:${selectedTargetBoardId}:${sourceTile.boardId}:${sourceTile.id}`;
+    if (pendingOperation.current && pendingOperation.current.key === key &&
+        pendingOperation.current.revision === operationRevision.current) return runOperation(pendingOperation.current);
     if (!selectedTargetBoardId) {
       setNotice('请先创建或选择一个个人板。');
       return;
@@ -298,12 +444,11 @@ export default function PersonalImageManager({
       const nextBoard = result.boards.find(
         board => board.id === selectedTargetBoardId
       );
-      const saved = onBoardSave(nextBoard);
-      setNotice(
-        saved
-          ? `已把“${sourceTile.label}”的公开原图加入个人板。`
-          : '图卡已准备，但个人板保存失败，请稍后重试。'
-      );
+      const expectedBoard = sourceBoards.find(board => board.id === selectedTargetBoardId);
+      return runOperation(prepareOperation(key,
+        guard => onBoardSave(nextBoard, { expectedBoard, guard }),
+        `已把“${sourceTile.label}”的公开原图加入个人板。`,
+        '图卡已准备，但个人板保存失败，请重试。'));
     } catch (error) {
       setNotice(
         error && /already exists/.test(error.message)
@@ -313,7 +458,11 @@ export default function PersonalImageManager({
     }
   }
 
-  function removeCuratedPictogram(boardId, tileId, label) {
+  async function removeCuratedPictogram(boardId, tileId, label) {
+    if (busy.current) return false;
+    const key = `remove:${boardId}:${tileId}`;
+    if (pendingOperation.current && pendingOperation.current.key === key &&
+        pendingOperation.current.revision === operationRevision.current) return runOperation(pendingOperation.current);
     try {
       const result = removeCuratedPublicPictogram(
         editableBoardDtos,
@@ -322,10 +471,11 @@ export default function PersonalImageManager({
       );
       const nextBoard =
         result && result.boards.find(board => board.id === boardId);
-      const saved = nextBoard && onBoardSave(nextBoard);
-      setNotice(
-        saved ? `已从个人板移除“${label}”。` : '公开图卡移除失败，请稍后重试。'
-      );
+      if (!nextBoard) throw new Error('Missing curated tile');
+      const expectedBoard = sourceBoards.find(board => board.id === boardId);
+      return runOperation(prepareOperation(key,
+        guard => onBoardSave(nextBoard, { expectedBoard, guard, galleryDeleteTileId: tileId }),
+        `已从个人板移除“${label}”，可以撤销；原图片文件保留。`, '公开图卡移除失败，请重试。'));
     } catch (error) {
       setNotice('只能从个人板移除由公开图库收纳的图卡。');
     }
@@ -333,9 +483,105 @@ export default function PersonalImageManager({
 
   return (
     <div className="PersonalImageManager">
+      <GalleryTileUndoControl service={galleryUndo} />
       <div className="PersonalImageManager__privacy" role="status">
         {notice}
       </div>
+      {preferencesError && <p role="alert">{preferencesError}</p>}
+      {saving && <p role="status">正在确认本机保存…</p>}
+      {retryOperation && <Button disabled={saving} onClick={() => runOperation(retryOperation)}>重试保存</Button>}
+      <section
+        className="PersonalImageManager__section"
+        aria-label="人物全名与照片"
+      >
+        <h3>人物全名与照片</h3>
+        <p>
+          录入全名与本人照片，接收文字中使用全名。同名时由你选择照片确认，暂不使用亲属称呼或昵称判断人物。
+        </p>
+        <TextField
+          select
+          SelectProps={{ native: true }}
+          label="新增或编辑人物"
+          value={person.id}
+          onChange={event => {
+            const entry = people.find(item => item.id === event.target.value);
+            changePerson(
+              entry
+                ? {
+                    id: entry.id,
+                    boardId: entry.boardId,
+                    label: entry.tile.label,
+                    synonyms: entry.synonyms.join(','),
+                    image: entry.tile.image
+                  }
+                : { id: '', boardId: '', label: '', image: '' }, true
+            );
+            if (entry) personDraft.current = {
+              id: entry.id, boardId: entry.boardId,
+              baseTile: editableBoardDtos.find(board => board.id === entry.boardId).tiles.find(tile => tile.id === entry.id)
+            };
+          }}
+        >
+          <option value="">新增人物</option>
+          {people.map(item => (
+            <option key={item.id} value={item.id}>
+              {item.displayLabel} · {item.boardName}
+            </option>
+          ))}
+        </TextField>
+        <TextField
+          label="全名"
+          value={person.label}
+          onChange={event =>
+            changePerson({ ...person, label: event.target.value })
+          }
+        />
+        <TextField
+          select
+          SelectProps={{ native: true }}
+          label="保存到个人板"
+          value={person.boardId || selectedTargetBoardId}
+          disabled={Boolean(person.id)}
+          onChange={event =>
+            changePerson({ ...person, boardId: event.target.value })
+          }
+        >
+          <option value="">请先在下方创建个人板</option>
+          {personalBoards.map(board => (
+            <option key={board.id} value={board.id}>
+              {board.name}
+            </option>
+          ))}
+        </TextField>
+        {person.image && (
+          <img alt="本人照片预览" src={person.image} width="80" />
+        )}
+        <InputImage
+          setIsLoadingImage={setIsLoadingImage}
+          onChange={async blob => {
+            changedInput();
+            const original = person;
+            const epoch = currentImageOperationEpoch();
+            const revision = operationRevision.current;
+            const scope = getCommunicationStorageScopeKey();
+            const current = () => mounted.current && epoch === currentImageOperationEpoch() &&
+              revision === operationRevision.current && scope === getCommunicationStorageScopeKey() && selection.current.person === original;
+            try {
+              const image = await readPersonalImageBlob(blob);
+              if (!current()) return;
+              changePerson({ ...original, image });
+            } catch (error) {
+              if (current()) setNotice('照片读取失败，请重新选择。');
+            }
+          }}
+        />
+        <small>
+          照片在本地读取，不发送给视觉模型；使用前请获得照片本人的同意。
+        </small>
+        <Button color="primary" disabled={isLoadingImage || saving} onClick={savePerson}>
+          保存人物
+        </Button>
+      </section>
 
       {configured.length > 0 && (
         <section className="PersonalImageManager__section">
@@ -384,7 +630,9 @@ export default function PersonalImageManager({
           <img
             alt={candidateLabel(selectedCandidate)}
             src={
-              selectedPreference
+              imageCandidate && imageCandidate.key === selectedKey
+                ? imageCandidate.image
+                : selectedPreference
                 ? selectedPreference.image
                 : selectedCandidate.tile.image
             }
@@ -399,7 +647,7 @@ export default function PersonalImageManager({
                 fullWidth
                 label="拍摄者或图片提供者（可选）"
                 value={attributionAuthor}
-                onChange={event => setAttributionAuthor(event.target.value)}
+                onChange={event => { changedInput(); setAttributionAuthor(event.target.value); }}
                 variant="outlined"
               />
               <TextField
@@ -407,7 +655,7 @@ export default function PersonalImageManager({
                 helperText="这是本机来源备注，不代表平台核验了公开授权。"
                 label="使用说明"
                 value={attributionLicense}
-                onChange={event => setAttributionLicense(event.target.value)}
+                onChange={event => { changedInput(); setAttributionLicense(event.target.value); }}
                 variant="outlined"
               />
             </div>
@@ -416,8 +664,13 @@ export default function PersonalImageManager({
               setIsLoadingImage={setIsLoadingImage}
             />
             {isLoadingImage && <small>正在压缩并读取图片…</small>}
-            {selectedPreference && (
-              <Button color="primary" onClick={saveAttribution} size="small">
+            {imageCandidate && imageCandidate.key === selectedKey && (
+              <div><small>新照片尚未确认保存。</small>
+                <Button disabled={saving || isLoadingImage} color="primary" onClick={() => saveCandidateImage()} size="small">保存新照片</Button>
+              </div>
+            )}
+            {selectedPreference && !imageCandidate && (
+              <Button disabled={saving} color="primary" onClick={saveAttribution} size="small">
                 保存图片说明
               </Button>
             )}
@@ -474,7 +727,7 @@ export default function PersonalImageManager({
           <TextField
             fullWidth
             label="收纳到个人板"
-            onChange={event => setTargetBoardId(event.target.value)}
+            onChange={event => { changedInput(); setTargetBoardId(event.target.value); }}
             SelectProps={{ native: true }}
             select
             value={selectedTargetBoardId}
@@ -491,13 +744,13 @@ export default function PersonalImageManager({
             <TextField
               fullWidth
               label="新个人板名称"
-              onChange={event => setNewBoardName(event.target.value)}
+              onChange={event => { changedInput(); setNewBoardName(event.target.value); }}
               value={newBoardName}
               variant="outlined"
             />
             <Button
               color="primary"
-              disabled={!newBoardName.trim()}
+              disabled={!newBoardName.trim() || saving}
               onClick={createPersonalBoard}
               variant="contained"
             >
@@ -527,7 +780,7 @@ export default function PersonalImageManager({
                 <div className="PersonalImageManager__actions">
                   <Button
                     color="primary"
-                    disabled={!selectedTargetBoardId}
+                    disabled={!selectedTargetBoardId || saving}
                     onClick={() => curatePublicPictogram(sourceTile)}
                     size="small"
                   >
@@ -560,6 +813,7 @@ export default function PersonalImageManager({
                   </div>
                   <div className="PersonalImageManager__actions">
                     <Button
+                      disabled={saving}
                       onClick={() =>
                         removeCuratedPictogram(
                           item.boardId,
@@ -586,6 +840,7 @@ PersonalImageManager.propTypes = {
   boards: PropTypes.arrayOf(PropTypes.object),
   editableBoards: PropTypes.arrayOf(PropTypes.object),
   preferences: PropTypes.arrayOf(PropTypes.object),
+  preferencesError: PropTypes.string,
   onSave: PropTypes.func.isRequired,
   onRemove: PropTypes.func.isRequired,
   onBoardSave: PropTypes.func,
@@ -597,6 +852,7 @@ PersonalImageManager.defaultProps = {
   boards: [],
   editableBoards: [],
   preferences: [],
+  preferencesError: '',
   onBoardSave: () => false,
   onCreatePersonalBoard: () => false,
   createCuratedId: createDefaultCuratedId

@@ -1,117 +1,168 @@
-// In production, we register a service worker to serve assets from local cache.
-
-// This lets the app load faster on subsequent visits in production, and gives
-// it offline capabilities. However, it also means that developers (and users)
-// will only see deployed updates on the "N+1" visit to a page, since previously
-// cached resources are updated in the background.
-
-// To learn more about the benefits of this model, read https://goo.gl/KwvDNy.
-// This link also includes instructions on opting out of this behavior.
-
-const isLocalhost = Boolean(
-  window.location.hostname === 'localhost' ||
-    // [::1] is the IPv6 localhost address.
-    window.location.hostname === '[::1]' ||
-    // 127.0.0.1/8 is considered localhost for IPv4.
-    window.location.hostname.match(
-      /^127(?:\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}$/
-    )
-);
+// The production worker precaches the page during install, then claims it during
+// activation. A completed install alone does not make the current page offline-ready.
 
 export function runWhenPageLoaded(callback) {
   if (document.readyState === 'complete') {
     callback();
-    return;
+    return () => {};
   }
 
   window.addEventListener('load', callback, { once: true });
+  return () => window.removeEventListener('load', callback);
 }
 
-export default function register(onNewContentAvailable, onContentCached) {
-  if (process.env.NODE_ENV === 'production' && 'serviceWorker' in navigator) {
-    // The URL constructor is available in all browsers that support SW.
-    const publicUrl = new URL(process.env.PUBLIC_URL, window.location.href);
-    if (publicUrl.origin !== window.location.origin) {
-      // Our service worker won't work if PUBLIC_URL is on a different origin
-      // from what our page is served on. This might happen if a CDN is used to
-      // serve assets; see https://github.com/facebookincubator/create-react-app/issues/2374
+export default function register(
+  onNewContentAvailable = () => {},
+  onContentCached = () => {},
+  onReadinessChange = () => {}
+) {
+  let stopped = false;
+  let registration;
+  let failed = false;
+  let lastStatus;
+  let cachedNotified = false;
+  const cleanups = [];
+  const watched = new Set();
+  const notifiedUpdates = new Set();
+  const serviceWorker = navigator.serviceWorker;
+  let pageVersion = serviceWorker && serviceWorker.controller;
+
+  const report = status => {
+    if (stopped || status === lastStatus) return;
+    lastStatus = status;
+    onReadinessChange({ status });
+  };
+  const cleanup = () => {
+    stopped = true;
+    cleanups.forEach(remove => remove());
+  };
+  const listen = (target, event, handler) => {
+    target.addEventListener(event, handler);
+    cleanups.push(() => target.removeEventListener(event, handler));
+  };
+
+  if (
+    process.env.NODE_ENV !== 'production' ||
+    !serviceWorker ||
+    window.isSecureContext === false
+  ) {
+    report('unavailable');
+    return cleanup;
+  }
+
+  const publicUrl = new URL(
+    process.env.PUBLIC_URL || '/',
+    window.location.href
+  );
+  if (publicUrl.origin !== window.location.origin) {
+    report('unavailable');
+    return cleanup;
+  }
+  const swUrl = new URL(
+    `${publicUrl.pathname.replace(/\/$/, '')}/service-worker.js`,
+    publicUrl.origin
+  ).href;
+
+  const watchWorker = worker => {
+    if (!worker || watched.has(worker)) return;
+    watched.add(worker);
+    let previousState = worker.state;
+    listen(worker, 'statechange', () => {
+      // Retiring an already active version is a normal update transition.
+      if (worker.state === 'redundant' && previousState !== 'activated') {
+        failed = true;
+      }
+      previousState = worker.state;
+      updateReadiness();
+    });
+  };
+  const updateReadiness = () => {
+    if (stopped) return;
+    if (registration) {
+      watchWorker(registration.installing);
+      watchWorker(registration.waiting);
+      watchWorker(registration.active);
+    }
+    const active = registration && registration.active;
+    const ready =
+      active &&
+      active.state === 'activated' &&
+      active === serviceWorker.controller &&
+      active.scriptURL === swUrl;
+
+    if (!ready) {
+      report(failed ? 'error' : 'preparing');
       return;
     }
 
+    report('ready');
+    if (pageVersion && active !== pageVersion) {
+      if (!notifiedUpdates.has(active)) {
+        notifiedUpdates.add(active);
+        onNewContentAvailable();
+      }
+    } else if (!pageVersion && !cachedNotified) {
+      pageVersion = active;
+      cachedNotified = true;
+      onContentCached();
+    }
+  };
+  const observeRegistration = next => {
+    if (stopped || !next) return;
+    registration = next;
+    if (!watched.has(next)) {
+      watched.add(next);
+      listen(next, 'updatefound', () => {
+        failed = false;
+        updateReadiness();
+      });
+    }
+    updateReadiness();
+  };
+
+  report('preparing');
+  listen(serviceWorker, 'controllerchange', updateReadiness);
+  cleanups.push(
     runWhenPageLoaded(() => {
-      const swUrl = `${process.env.PUBLIC_URL}/service-worker.js`;
-
-      if (!isLocalhost) {
-        // Is not local host. Just register service worker
-        registerValidSW(swUrl, onNewContentAvailable, onContentCached);
-      } else {
-        // This is running on localhost. Lets check if a service worker still exists or not.
-        checkValidServiceWorker(swUrl);
+      // Recover readiness on a reopen even when the network registration fails.
+      // Never unregister a usable old worker as a side effect of that failure.
+      if (typeof serviceWorker.getRegistration === 'function') {
+        serviceWorker
+          .getRegistration(swUrl)
+          .then(existing => {
+            if (!registration) observeRegistration(existing);
+          })
+          .catch(() => {});
       }
-    });
-  }
-}
 
-function registerValidSW(
-  swUrl,
-  onNewContentAvailable = () => {},
-  onContentCached = () => {}
-) {
-  navigator.serviceWorker
-    .register(swUrl)
-    .then(registration => {
-      registration.onupdatefound = () => {
-        const installingWorker = registration.installing;
-        installingWorker.onstatechange = () => {
-          if (installingWorker.state === 'installed') {
-            if (navigator.serviceWorker.controller) {
-              // At this point, the old content will have been purged and
-              // the fresh content will have been added to the cache.
-              // It's the perfect time to display a "New content is
-              // available; please refresh." message in your web app.
-              onNewContentAvailable();
-              console.log('New content is available; please refresh.');
-            } else {
-              // At this point, everything has been precached.
-              // It's the perfect time to display a
-              // "Content is cached for offline use." message.
-              onContentCached();
-              console.log('Content is cached for offline use.');
+      const hostname = window.location.hostname;
+      const isLocalhost =
+        hostname === 'localhost' ||
+        hostname === '[::1]' ||
+        /^127(?:\.\d{1,3}){3}$/.test(hostname);
+      const check = isLocalhost
+        ? fetch(swUrl).then(response => {
+            const contentType = response.headers.get('content-type') || '';
+            if (!response.ok || !contentType.includes('javascript')) {
+              throw new Error('Service worker script is unavailable');
             }
-          }
-        };
-      };
-    })
-    .catch(error => {
-      console.error('Error during service worker registration:', error);
-    });
-}
+          })
+        : Promise.resolve();
 
-function checkValidServiceWorker(swUrl) {
-  // Check if the service worker can be found. If it can't reload the page.
-  fetch(swUrl)
-    .then(response => {
-      // Ensure service worker exists, and that we really are getting a JS file.
-      if (
-        response.status === 404 ||
-        response.headers.get('content-type').indexOf('javascript') === -1
-      ) {
-        // No service worker found. Probably a different app. Reload the page.
-        navigator.serviceWorker.ready.then(registration => {
-          registration.unregister().then(() => {
-            window.location.reload();
-          });
+      check
+        .then(() => {
+          if (!stopped) return serviceWorker.register(swUrl);
+        })
+        .then(observeRegistration)
+        .catch(error => {
+          if (stopped) return;
+          failed = true;
+          updateReadiness();
+          console.error('Error during service worker registration:', error);
         });
-      } else {
-        // Service worker found. Proceed as normal.
-        registerValidSW(swUrl);
-      }
     })
-    .catch(() => {
-      console.log(
-        'No internet connection found. App is running in offline mode.'
-      );
-    });
+  );
+  return cleanup;
 }
 
 export function unregister() {

@@ -32,16 +32,25 @@ export function createCandidateAutoplayController({
   setTimer,
   clearTimer,
   playCandidates,
-  stopPlayback
+  stopPlayback,
+  onPendingChange = () => {}
 }) {
   let timerId = null;
   let generation = 0;
   let active = false;
+  let pendingDelayMs = 0;
+
+  function updatePending(delayMs) {
+    if (pendingDelayMs === delayMs) return;
+    pendingDelayMs = delayMs;
+    onPendingChange(delayMs);
+  }
 
   function clearPendingTimer() {
     if (timerId === null) return false;
     clearTimer(timerId);
     timerId = null;
+    updatePending(0);
     return true;
   }
 
@@ -65,8 +74,10 @@ export function createCandidateAutoplayController({
 
     const scheduledGeneration = generation;
     timerId = setTimer(async () => {
-      timerId = null;
+      // A late callback must not clear a newer timer or its visible state.
       if (generation !== scheduledGeneration) return;
+      timerId = null;
+      updatePending(0);
 
       active = true;
       try {
@@ -79,6 +90,7 @@ export function createCandidateAutoplayController({
         }
       }
     }, plan.delayMs);
+    updatePending(plan.delayMs);
     return true;
   }
 

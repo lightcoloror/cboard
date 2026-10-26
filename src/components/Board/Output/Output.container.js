@@ -4,12 +4,15 @@ import { injectIntl, intlShape } from 'react-intl';
 import { connect } from 'react-redux';
 import keycode from 'keycode';
 import shortid from 'shortid';
-import { loadPersonalImageRuntime } from '../../../common/communicationSupport/localData';
-import { applyPersonalImagePreferencesToItems } from '../../../common/communicationSupport/personalImagePreferences';
+import { equals } from 'ramda';
 import {
-  EXPRESSION_PLAYBACK_FRAME_TYPES,
-  createExpressionPlaybackFrames
-} from '../../../common/communicationSupport/expressionPlayback';
+  getCommunicationStorageScopeKey,
+  loadPersonalImageRuntime
+} from '../../../common/communicationSupport/localData';
+import { applyPersonalImagePreferencesToItems } from '../../../common/communicationSupport/personalImagePreferences';
+import { playExpressionOutput } from '../../../common/communicationSupport/expressionPlaybackCoordinator';
+import { createBrowserExpressionAudio } from '../../../common/communicationSupport/browserExpressionAudio';
+import { subscribeSpeechInterruption } from '../../../providers/SpeechProvider/speechInterruption';
 import messages from '../Board.messages';
 import { showNotification } from '../../Notifications/Notifications.actions';
 import { isAndroid } from '../../../cordova-util';
@@ -59,21 +62,61 @@ export class OutputContainer extends Component {
   };
 
   static getDerivedStateFromProps(props, state) {
-    if (props.output.length !== state.translatedOutput.length) {
+    const scopeChanged = props.outputScope !== state.outputScope;
+    if (
+      scopeChanged ||
+      !equals(props.output, state.observedOutput) ||
+      props.intl.messages !== state.intlMessages
+    ) {
       const translatedOutput = translateOutput(props.output, props.intl);
-      return { translatedOutput };
+      // An unrelated new sequence must never be replaced by an old deletion.
+      const retainUndo =
+        !scopeChanged && equals(props.output, state.undoTarget);
+      return {
+        translatedOutput,
+        observedOutput: props.output,
+        intlMessages: props.intl.messages,
+        outputScope: props.outputScope,
+        undoHistory: retainUndo ? state.undoHistory : [],
+        undoTarget: retainUndo ? state.undoTarget : null
+      };
     }
     return null;
   }
 
   state = {
-    translatedOutput: []
+    translatedOutput: [],
+    observedOutput: null,
+    intlMessages: null,
+    outputScope: undefined,
+    undoHistory: [],
+    undoTarget: null
   };
 
   componentDidMount() {
+    this.unsubscribeSpeech = subscribeSpeechInterruption(owner => {
+      if (this.playbackActive && owner !== this.playbackOwner) {
+        // The action already owns provider cancellation/start. Do not cancel
+        // again after a newer tile or candidate has started speaking.
+        this.stopPlayback(false);
+      }
+    });
     document.addEventListener('keydown', this.handleRepeatLastSpokenSentence);
   }
+  componentDidUpdate(previousProps) {
+    if (
+      this.playbackActive &&
+      (previousProps.outputScope !== this.props.outputScope ||
+        previousProps.isLiveMode !== this.props.isLiveMode ||
+        previousProps.intl.messages !== this.props.intl.messages ||
+        !equals(this.playbackExpectedOutput, this.props.output))
+    ) {
+      this.stopPlayback();
+    }
+  }
   componentWillUnmount() {
+    if (this.unsubscribeSpeech) this.unsubscribeSpeech();
+    if (this.playbackActive) this.stopPlayback();
     document.removeEventListener(
       'keydown',
       this.handleRepeatLastSpokenSentence
@@ -81,100 +124,152 @@ export class OutputContainer extends Component {
   }
 
   clearOutput() {
-    const { changeOutput, isLiveMode } = this.props;
-    const output = [];
-    isLiveMode ? this.addLiveOutputTileClearOutput() : changeOutput(output);
+    const { output, isLiveMode } = this.props;
+    if (
+      !output.length ||
+      (isLiveMode &&
+        output.length === 1 &&
+        output[0].type === 'live' &&
+        !output[0].label)
+    )
+      return;
+    this.applyDeletion(isLiveMode ? [this.createEmptyLiveTile()] : []);
   }
 
   popOutput() {
-    const { changeOutput, isLiveMode } = this.props;
-    const output = [...this.props.output];
-    output.pop();
-    isLiveMode && output.length === 0
-      ? this.addLiveOutputTileClearOutput()
-      : changeOutput(output);
+    this.spliceOutput(this.props.output.length - 1);
   }
 
   spliceOutput(index) {
-    const { changeOutput, isLiveMode } = this.props;
+    const { isLiveMode } = this.props;
+    if (
+      !Number.isInteger(index) ||
+      index < 0 ||
+      index >= this.props.output.length
+    )
+      return;
+    // Clearing live mode leaves a blank input tile. Backspace on that placeholder
+    // is not a new deletion and must not hide the real sequence behind an empty undo.
+    if (
+      isLiveMode &&
+      this.props.output.length === 1 &&
+      this.props.output[0].type === 'live' &&
+      !this.props.output[0].label
+    )
+      return;
     const output = [...this.props.output];
     output.splice(index, 1);
-    isLiveMode && output.length === 0
-      ? this.addLiveOutputTileClearOutput()
-      : changeOutput(output);
+    this.applyDeletion(
+      isLiveMode && !output.length ? [this.createEmptyLiveTile()] : output
+    );
   }
-  async speakOutput(text) {
+
+  applyDeletion(nextOutput) {
+    const before = this.props.output;
+    if (equals(before, nextOutput)) return;
+    // Session-only snapshots: do not persist or sync personal pictures. Keep
+    // complete tile fields (text, audio, video and chosen image), not a rematch.
+    this.setState(
+      state => ({
+        undoHistory: [...state.undoHistory, before.slice()].slice(-20),
+        undoTarget: nextOutput
+      }),
+      () => this.props.changeOutput(nextOutput)
+    );
+  }
+
+  handleUndoDelete = () => {
+    const { undoHistory, undoTarget, outputScope } = this.state;
+    if (
+      !undoHistory.length ||
+      outputScope !== this.props.outputScope ||
+      !equals(this.props.output, undoTarget)
+    )
+      return;
+    const restored = undoHistory[undoHistory.length - 1];
+    this.stopPlayback();
+    this.setState(
+      {
+        undoHistory: undoHistory.slice(0, -1),
+        undoTarget: restored
+      },
+      () => this.props.changeOutput(restored)
+    );
+  };
+  playbackGeneration = 0;
+  playbackOwner = {};
+  playbackActive = false;
+  playbackExpectedOutput = null;
+  finishSpeech = null;
+  audioPort = createBrowserExpressionAudio();
+
+  stopPlayback = (cancelProvider = true) => {
+    this.playbackGeneration += 1;
+    this.playbackActive = false;
+    this.audioPort.stop();
+    if (this.finishSpeech) {
+      this.finishSpeech({ ok: false, reason: 'stopped', message: '朗读已停止。' });
+    }
+    if (cancelProvider) this.props.cancelSpeech();
+  };
+
+  speakOutput(text) {
+    return this.play(text);
+  }
+
+  speakFrame(text, generation) {
+    if (generation !== this.playbackGeneration)
+      return Promise.resolve({ ok: false, reason: 'stopped' });
     this.props.clickOutput(text.trim());
     return new Promise(resolve => {
-      const { cancelSpeech, speak } = this.props;
-
-      const onend = () => {
-        resolve();
+      let settled = false;
+      const finish = result => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        if (this.finishSpeech === finish) this.finishSpeech = null;
+        resolve(result);
       };
-
-      cancelSpeech();
-      speak(text, onend);
-    });
-  }
-
-  playAudio(src) {
-    return new Promise((resolve, reject) => {
-      let audio = new Audio();
-
-      audio.onended = () => {
-        resolve();
-      };
-      audio.onerror = reject;
-
-      audio.src = src;
-      const playback = audio.play();
-      if (playback && typeof playback.catch === 'function') {
-        playback.catch(reject);
+      const timer = setTimeout(() => {
+        finish({ ok: false, reason: 'timeout' });
+        this.props.cancelSpeech();
+      }, 60000);
+      this.finishSpeech = finish;
+      try {
+        const result = this.props.speak(text, event => finish(
+          event?.error ? { ok: false, reason: 'provider' } : { ok: true }
+        ), { playbackOwner: this.playbackOwner });
+        if (result?.catch) result.catch(() => finish({ ok: false, reason: 'provider' }));
+      } catch (_) {
+        finish({ ok: false, reason: 'provider' });
       }
     });
   }
 
-  async asyncForEach(array, callback) {
-    for (let index = 0; index < array.length; index++) {
-      await callback(array[index], index, array);
-    }
-  }
-
   async play(liveText = '') {
-    if (liveText) {
-      await this.speakOutput(liveText);
-    } else {
-      const outputFrames = createExpressionPlaybackFrames(
-        this.state.translatedOutput
-      );
-
-      await this.asyncForEach(outputFrames, async frame => {
-        if (frame.type === EXPRESSION_PLAYBACK_FRAME_TYPES.speech) {
-          await this.speakOutput(frame.text);
-        } else {
-          await this.asyncForEach(frame.clips, async clip => {
-            try {
-              await this.playAudio(clip.source);
-            } catch (error) {
-              if (clip.fallbackText) {
-                await this.speakOutput(clip.fallbackText);
-              }
-            }
-          });
-        }
+    this.stopPlayback();
+    const generation = this.playbackGeneration;
+    this.playbackExpectedOutput = this.props.output;
+    this.playbackActive = true;
+    try {
+      return await playExpressionOutput({
+        output: liveText ? [{ label: liveText }] : this.state.translatedOutput,
+        speechPort: { speak: text => this.speakFrame(text, generation) },
+        audioPort: this.audioPort,
+        isCurrent: () => generation === this.playbackGeneration
       });
+    } finally {
+      if (generation === this.playbackGeneration) this.playbackActive = false;
     }
   }
 
   handleBackspaceClick = () => {
-    const { cancelSpeech } = this.props;
-    cancelSpeech();
+    this.stopPlayback();
     this.popOutput();
   };
 
   handleClearClick = () => {
-    const { cancelSpeech } = this.props;
-    cancelSpeech();
+    this.stopPlayback();
     this.clearOutput();
   };
 
@@ -203,8 +298,7 @@ export class OutputContainer extends Component {
   };
 
   handleRemoveClick = index => event => {
-    const { cancelSpeech } = this.props;
-    cancelSpeech();
+    this.stopPlayback();
     this.spliceOutput(index);
   };
 
@@ -261,17 +355,23 @@ export class OutputContainer extends Component {
     type: 'live'
   };
 
+  createEmptyLiveTile() {
+    return { ...this.defaultLiveTile, id: shortid.generate() };
+  }
+
   addLiveOutputTile() {
     const { changeOutput } = this.props;
-    this.defaultLiveTile.id = shortid.generate();
-    changeOutput([...this.state.translatedOutput, this.defaultLiveTile]);
+    const next = [...this.state.translatedOutput, this.createEmptyLiveTile()];
+    // Enter appends an empty input after speaking the submitted text. That
+    // expected append must not cancel the utterance; other edits still do.
+    if (this.playbackActive) this.playbackExpectedOutput = next;
+    changeOutput(next);
   }
 
   addLiveOutputTileClearOutput() {
     const { changeOutput } = this.props;
     this.setState({ translatedOutput: [] });
-    this.defaultLiveTile.id = shortid.generate();
-    changeOutput([this.defaultLiveTile]);
+    changeOutput([this.createEmptyLiveTile()]);
   }
 
   handleSwitchLiveMode = event => {
@@ -308,6 +408,11 @@ export class OutputContainer extends Component {
       <SymbolOutput
         onBackspaceClick={this.handleBackspaceClick}
         onClearClick={this.handleClearClick}
+        onUndoDelete={this.handleUndoDelete}
+        canUndoDelete={
+          this.state.undoHistory.length > 0 &&
+          equals(output, this.state.undoTarget)
+        }
         onCopyClick={this.handleCopyClick}
         onRemoveClick={this.handleRemoveClick}
         onClick={isLiveMode ? undefined : this.handleOutputClick}
@@ -325,7 +430,7 @@ export class OutputContainer extends Component {
   }
 }
 
-const mapStateToProps = ({ board, app }) => {
+const mapStateToProps = ({ board, app, communicator }) => {
   const personalImageRuntime = loadPersonalImageRuntime();
 
   return {
@@ -334,6 +439,12 @@ const mapStateToProps = ({ board, app }) => {
       personalImageRuntime.preferences,
       personalImageRuntime.identity
     ),
+    outputScope: JSON.stringify([
+      getCommunicationStorageScopeKey(),
+      app.userData &&
+        (app.userData.id || app.userData._id || app.userData.email),
+      communicator && communicator.activeCommunicatorId
+    ]),
     isLiveMode: board.isLiveMode,
     navigationSettings: app.navigationSettings,
     increaseOutputButtons: app.displaySettings.increaseOutputButtons

@@ -11,7 +11,13 @@ import {
   validateResegmentSource
 } from './resegmentationContract';
 import { buildExpressionLoopState } from './expressionPipeline';
-import { buildReceiverLoopState } from './receiverPipeline';
+import {
+  buildReceiverLoopState,
+  buildReceiverHistoryEntry,
+  replaceReceiverReviewItem,
+  retainReceiverReviewItemAsText,
+  restoreReceiverLoopState
+} from './receiverPipeline';
 
 function createBoards() {
   return [
@@ -28,6 +34,123 @@ function createBoards() {
 }
 
 describe('communicationAi contract', () => {
+  test('keeps occurrence-specific manual pictures and text through AI adoption and offline restore', () => {
+    const text = '🙂水水';
+    const boards = createBoards();
+    const local = buildReceiverLoopState(text, boards, {
+      preSegmented: ['🙂', '水', '水'],
+      preserveSegments: true
+    });
+    const selected = {
+      id: 'personal-water',
+      displayLabel: '我的水杯',
+      tile: {
+        id: 'personal-water',
+        label: '我的水杯',
+        image: '/cached/personal-water.png'
+      }
+    };
+    let items = retainReceiverReviewItemAsText(
+      local.reviewItems,
+      local.reviewItems[0].id
+    );
+    items = replaceReceiverReviewItem(items, items[1].id, selected);
+    items = retainReceiverReviewItemAsText(items, items[2].id);
+    const result = applyCommunicationAiResegmentation({
+      text,
+      boards,
+      currentReviewItems: items,
+      response: { tokens: ['🙂', '水', '水'] }
+    });
+    expect(result.requiresConfirmation).toBe(true);
+    expect(result.reviewItems[0].tile.textOnly).toBe(true);
+    expect(result.reviewItems[1].tile).toBe(selected);
+    expect(result.reviewItems[1]).toMatchObject({
+      matchType: 'manual',
+      source: 'corrected'
+    });
+    expect(result.reviewItems[2].tile.textOnly).toBe(true);
+    expect(result.quality).toMatchObject({
+      imageCount: 1,
+      textOnlyCount: 2,
+      missingCount: 0
+    });
+    const entry = JSON.parse(
+      JSON.stringify(buildReceiverHistoryEntry(text, result.reviewItems))
+    );
+    const restored = restoreReceiverLoopState(
+      { ...entry, recordStatus: 'draft' },
+      []
+    );
+    expect(restored.reviewItems[1].tile.tile.image).toBe(
+      '/cached/personal-water.png'
+    );
+    expect(restored.reviewItems[2].tile.textOnly).toBe(true);
+    expect(restored.reviewItems.map(item => item.token).join('')).toBe(text);
+  });
+
+  test('keeps confirmed backfill provenance instead of relabeling pictures as AI matches', () => {
+    const local = buildReceiverLoopState('水', createBoards());
+    const current = [
+      { ...local.reviewItems[0], matchType: 'online', source: 'opensymbols' }
+    ];
+    const result = applyCommunicationAiResegmentation({
+      text: '水',
+      boards: createBoards(),
+      currentReviewItems: current,
+      response: { tokens: ['水'] }
+    });
+    expect(result.reviewItems[0]).toMatchObject({
+      matchType: 'online',
+      source: 'opensymbols'
+    });
+    const fresh = applyCommunicationAiResegmentation({
+      text: '水',
+      boards: createBoards(),
+      currentReviewItems: [],
+      response: { tokens: ['水'] }
+    });
+    expect(fresh.reviewItems[0].matchType).toBe('exact');
+  });
+
+  test('does not move a manual choice onto a split token or a changed source', () => {
+    const boards = createBoards();
+    const current = buildReceiverLoopState('喝水', boards, {
+      preSegmented: ['喝水'],
+      preserveSegments: true
+    });
+    const selected = {
+      id: 'personal-action',
+      displayLabel: '我的动作',
+      tile: {
+        id: 'personal-action',
+        label: '我的动作',
+        image: '/cached/action.png'
+      }
+    };
+    const items = replaceReceiverReviewItem(
+      current.reviewItems,
+      current.reviewItems[0].id,
+      selected
+    );
+    const split = applyCommunicationAiResegmentation({
+      text: '喝水',
+      boards,
+      currentReviewItems: items,
+      response: { tokens: ['喝', '水'] }
+    });
+    expect(split.reviewItems.every(item => item.tile !== selected)).toBe(true);
+    const changed = applyCommunicationAiResegmentation({
+      text: '喝水水',
+      boards,
+      currentReviewItems: items,
+      response: { tokens: ['喝水', '水'] }
+    });
+    expect(changed.reviewItems.every(item => item.tile !== selected)).toBe(
+      true
+    );
+  });
+
   test('builds a bounded current-request payload without previous conversations or feedback', () => {
     const output = Array.from({ length: 20 }, (_, index) => ({
       id: String(index),
@@ -78,17 +201,61 @@ describe('communicationAi contract', () => {
     );
     expect(
       applyCommunicationAiSentenceResponse(localState, {
-        candidates: [' 我想喝水。 ', '我想喝水。'],
+        candidates: ['水。', '水。'],
         provider: 'test-ai'
       })
     ).toEqual(
       expect.objectContaining({
-        candidateSentences: ['我想喝水。'],
+        candidateSentences: ['水。', '我的意思是：水。', '我想表达的是：水。'],
         candidateProvider: 'test-ai',
         isOfflineFallback: false,
         selectedIndex: 0
       })
     );
+  });
+
+  test('requests three choices and keeps the first three distinct AI alternatives', () => {
+    const output = [{ id: 'drink', label: '喝水' }];
+    expect(buildCommunicationAiSentenceRequest({ output }).candidateCount).toBe(
+      3
+    );
+    const state = applyCommunicationAiSentenceResponse(
+      buildExpressionLoopState(output),
+      {
+        candidates: [
+          '喝水。',
+          '我的意思是：喝水。',
+          '喝水。',
+          '我想表达的是：喝水。',
+          '我现在喝水。'
+        ]
+      }
+    );
+    expect(state.candidateSentences).toEqual([
+      '喝水。',
+      '我的意思是：喝水。',
+      '我想表达的是：喝水。'
+    ]);
+  });
+
+  test('reuses safe local choices after an older API or cached response adds degree/time', () => {
+    const local = buildExpressionLoopState([
+      { id: 'me', label: '我' },
+      { id: 'pain', label: '痛' }
+    ]);
+    expect(
+      applyCommunicationAiSentenceResponse(local, {
+        candidates: ['我好痛。', '我现在很痛。']
+      })
+    ).toBe(local);
+    const mixed = applyCommunicationAiSentenceResponse(local, {
+      candidates: ['我现在很痛。', '我的意思是：我痛。']
+    });
+    expect(mixed.candidateSentences).toEqual([
+      '我的意思是：我痛。',
+      '我痛。',
+      '我想表达的是：我痛。'
+    ]);
   });
 
   test('limits resegmentation to missing tokens and a bounded local vocabulary', () => {

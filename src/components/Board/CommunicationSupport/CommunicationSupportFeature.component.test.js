@@ -21,7 +21,7 @@ describe('CommunicationSupportFeature', () => {
     expect(panel.prop('initialMode')).toBeUndefined();
   });
 
-  test('configures the TuYuJia variant to open directly in receive mode', () => {
+  test('reveals expression after selecting images without opening receiver on load', () => {
     const onPictogramUsed = jest.fn();
     const pictogramOrdering = { usageByTileKey: {} };
     const wrapper = shallow(
@@ -38,6 +38,7 @@ describe('CommunicationSupportFeature', () => {
       TUYUJIA_COMMUNICATION_SUPPORT_COPY
     );
     expect(panel.prop('initialMode')).toBe('receive');
+    expect(panel.prop('autoExpandOnOutput')).toBe(true);
     expect(panel.prop('pictogramOrdering')).toBe(pictogramOrdering);
     expect(panel.prop('onPictogramUsed')).toBe(onPictogramUsed);
   });

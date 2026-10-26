@@ -54,4 +54,35 @@ test('punctuation loss is rejected but distinguished from lexical change',()=>{
  assert.equal(r.sourcePreserved,false);assert.equal(r.sourceMismatchKind,'punctuation_only');
  assert.equal(scoreConstraints({text:'不要吃药'},['要','吃药']).sourceMismatchKind,'content_changed');
 });
+test('whole request may be accepted without accepting an arbitrary sentence blob',()=>{
+ const ref={text:'请再说一次。',constraints:[{text:'请再说一次',alternatives:[['请再说一次'],['请','再说一次'],['请','再','说','一次']]}]};
+ for(const t of [['请再说一次','。'],['请','再说一次','。'],['请','再','说','一次','。']])assert.equal(scoreConstraints(ref,t).granularityPass,true);
+ assert.equal(scoreConstraints(ref,['请再说一次。']).granularityPass,false);
+});
+test('invalid reference alternatives fail instead of silently scoring every model wrong',()=>{
+ assert.throws(()=>scoreConstraints({text:'不回家',constraints:[{text:'不回家',alternatives:[['回家']]}]},['不','回家']),/INVALID_EVALUATION_REFERENCE/);
+ assert.throws(()=>scoreConstraints({text:'我',constraints:[{text:'她',alternatives:[['她']]}]},['我']),/INVALID_EVALUATION_REFERENCE/);
+});
+test('explicit sense rules catch a correct label attached to a prohibited source image',()=>{
+ const ref={text:'洗手液',pictureRules:[{text:'洗手液',scope:'exact',forbiddenTileIds:['known-soap-bar'],reason:'液体不是肥皂块'}]};
+ const r=scorePictureEvidence(ref,[{token:'洗手液',label:'洗手液',tileId:'known-soap-bar',image:'bar.png',verifiedPictureCandidate:true}],true);
+ assert.equal(r.knownMeaningErrors,1);assert.equal(r.verifiedCharacters,0);
+});
+test('a negative whole phrase cannot be pictured as its positive action',()=>{
+ const ref={text:'不回家',pictureRules:[{text:'不回家',scope:'exact',forbiddenLabels:['回家','家'],reason:'不能丢掉否定'}]};
+ const image=(token,label)=>({token,label,image:'x.png',verifiedPictureCandidate:true});
+ assert.equal(scorePictureEvidence(ref,[image('不回家','回家')],true).knownMeaningErrors,1);
+ assert.equal(scorePictureEvidence(ref,[{token:'不',imageDecision:'text_fallback'},image('回家','回家')],true).knownMeaningErrors,0);
+});
+test('compound picture rule does not penalize a separate correct occurrence',()=>{
+ const ref={text:'🙂葡萄柚和葡萄',pictureRules:[{text:'葡萄柚',scope:'contained',forbiddenLabels:['葡萄']} ]};
+ const r=scorePictureEvidence(ref,[{token:'🙂'},{token:'葡萄',label:'葡萄',image:'grape.png',verifiedPictureCandidate:true},{token:'柚和'},{token:'葡萄',label:'葡萄',image:'grape.png',verifiedPictureCandidate:true}],true);
+ assert.equal(r.knownMeaningErrors,1);assert.equal(r.meaningErrors[0].start,1);assert.equal(r.verifiedCharacters,2);
+});
+test('verification flag without an actual picture never counts as image coverage',()=>{
+ assert.equal(scorePictureEvidence({text:'水'},[{token:'水',verifiedPictureCandidate:true}],true).verifiedCharacters,0);
+});
+test('bad picture rule scope is a reference error, not a model error',()=>{
+ assert.throws(()=>scorePictureEvidence({text:'水',pictureRules:[{text:'水',scope:'anything',forbiddenLabels:['火']}]},[{token:'水'}],true),/INVALID_EVALUATION_REFERENCE/);
+});
 console.log(JSON.stringify({passed:checks}));

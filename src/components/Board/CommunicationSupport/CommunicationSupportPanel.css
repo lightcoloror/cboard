@@ -655,9 +655,34 @@
 
 .CommunicationSupportPanel__content {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
   gap: 16px;
   margin-top: 12px;
+}
+
+.CommunicationSupportPanel__draftStatus {
+  grid-column: 1 / -1;
+  min-width: 0;
+}
+
+.CommunicationSupportPanel__imageRepair {
+  flex: 1 1 100%;
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+.CommunicationSupportPanel__imageRepair > div {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.CommunicationSupportPanel__imageRepair button {
+  max-width: 100%;
+  white-space: normal;
 }
 
 .CommunicationSupportPanel__section {
@@ -1557,7 +1582,7 @@
 
 .CommunicationSupportPanel__onlineSuggestions {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
   gap: 8px;
   margin-top: 8px;
 }
@@ -1579,6 +1604,7 @@
   align-items: flex-start;
   flex-direction: column;
   gap: 5px;
+  overflow-wrap: anywhere;
 }
 
 .CommunicationSupportPanel__onlineSuggestionCopy .MuiButton-root {
@@ -1599,7 +1625,8 @@
 .CommunicationSupportPanel__missingQueueItem {
   display: flex;
   padding: 11px 12px;
-  align-items: center;
+  align-items: stretch;
+  flex-direction: column;
   justify-content: space-between;
   gap: 12px;
   border: 1px solid #e4e9ef;
@@ -1619,6 +1646,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-wrap: wrap;
   color: #133152;
 }
 
@@ -1667,6 +1695,7 @@
 
 .CommunicationSupportPanel__sequenceItem {
   display: flex;
+  flex-wrap: wrap;
   min-width: 0;
   padding: 8px;
   align-items: center;
@@ -1694,7 +1723,8 @@
 
 .CommunicationSupportPanel__sequenceActions {
   display: flex;
-  flex: 0 0 auto;
+  flex: 1 1 100%;
+  min-width: 0;
   flex-wrap: wrap;
   gap: 6px;
 }
@@ -1724,7 +1754,7 @@
   box-sizing: border-box;
   min-height: 100%;
   padding: clamp(20px, 5vw, 64px) !important;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   background: radial-gradient(circle at 85% 10%, #d8eee6 0, transparent 34%),
     linear-gradient(145deg, #f7f2e8, #e8f0eb);
@@ -1733,6 +1763,9 @@
 .CommunicationSupportPanel__playbackCard {
   width: 100%;
   max-width: 1120px;
+  flex-shrink: 0;
+  margin-top: auto;
+  margin-bottom: auto;
   border: 3px solid #173f36;
   border-radius: 28px;
   background: rgba(255, 255, 255, 0.96);
@@ -1776,8 +1809,11 @@
   align-items: center;
   justify-content: center;
   color: #9a3412;
-  font-size: clamp(40px, 8vw, 76px);
-  font-weight: 800;
+  padding: 12px;
+  font-size: clamp(16px, 2vw, 24px);
+  font-weight: 700;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
 }
 
 .CommunicationSupportPanel__playbackLabel {
@@ -1868,3 +1904,36 @@
     width: 100%;
   }
 }
+.CommunicationSupportPanel__personChoices {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.CommunicationSupportPanel__personChoices .Symbol {
+  max-width: 80px;
+  max-height: 80px;
+}
+.CommunicationSupportPanel__reading,
+.CommunicationSupportPanel__repair {
+  padding: 16px;
+  margin: 12px 0;
+  border: 1px solid currentColor;
+  border-radius: 8px;
+  overflow-wrap: anywhere;
+}
+
+.CommunicationSupportPanel__originalText {
+  font-size: 1.4em;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.CommunicationSupportPanel__textReference {
+  display: block;
+  overflow-wrap: anywhere;
+  white-space: normal;
+  font-size: inherit;
+  line-height: 1.5;
+}
+

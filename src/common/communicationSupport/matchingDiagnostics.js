@@ -1,4 +1,7 @@
 import { matchTextToCommunicationTiles } from './symbolMatching';
+import { buildCommunicationTileCatalog } from './symbolMatching';
+import { getLocalPictogramCandidates } from './pictogramSemantics';
+import { isReceiverPunctuation, buildReceiverMeaningAssessment } from './receiverContract';
 
 export const COMMUNICATION_MATCHING_DIAGNOSTIC_MAX_LENGTH = 120;
 
@@ -39,6 +42,8 @@ function createDiagnosticItem(match) {
 
   return {
     token: String((match && match.token) || ''),
+    sourceSpan: (match && match.sourceSpan) || null,
+    personalReference: Boolean(match && match.personalReference),
     matched: Boolean(catalogItem),
     matchType: (match && match.matchType) || 'none',
     pictogramId: catalogItem ? catalogItem.id : null,
@@ -62,7 +67,20 @@ export function analyzeCommunicationMatching(text, boards, options = {}) {
       : {})
   });
   const elapsedMs = Math.max(0, readNow(options.now) - startedAt);
-  const items = result.matches.map(createDiagnosticItem);
+  const catalog = buildCommunicationTileCatalog(boards, options.intl);
+  const items = result.matches.map(match => {
+    const item = createDiagnosticItem(match);
+    const candidates = match.personalReference ? [] : getLocalPictogramCandidates(match.token, catalog);
+    return { ...item, candidateCount: candidates.length,
+      candidates: candidates.map(value => ({ sourceId: value.sourceId, relation: value.relation, reason: value.hint })),
+      diagnosticCategory: isReceiverPunctuation(match.token) ? 'punctuation'
+        : match.personalReference && !match.tile ? 'person-choice'
+        : match.tile && match.tile.textOnly ? 'text-reference'
+        : !match.tile ? candidates.length ? 'candidate-needs-review' : 'no-reviewed-candidate-in-checked-catalog'
+        : 'matched-needs-meaning-check',
+      imageAvailability: match.tile && !match.tile.textOnly ? (options.imageStates && options.imageStates[item.pictogramId]) || 'unverified' : 'not-applicable'
+    };
+  });
   const matchedCount = items.filter(item => item.matched).length;
 
   return {
@@ -75,6 +93,22 @@ export function analyzeCommunicationMatching(text, boards, options = {}) {
     unmatchedTokens: items
       .filter(item => !item.matched)
       .map(item => item.token),
-    elapsedMs
+    elapsedMs,
+    sourcePreserved: result.segmentation.segments.join('') === inputText,
+    meaning: buildReceiverMeaningAssessment(inputText, result.matches),
+    correctionCount: Array.isArray(options.corrections) ? options.corrections.length : null
+  };
+}
+
+// Diagnostic export is opt-in and never includes local image addresses or IDs.
+export function redactCommunicationMatchingDiagnostic(report) {
+  let text = report.inputText;
+  const names = report.items.filter(item => item.personalReference).map(item => item.token).filter(Boolean);
+  const redact = value => names.reduce((result, name) => result.split(name).join('[本机人物]'), String(value || ''));
+  return {
+    inputText: redact(text), engine: report.segmentation.engine, sourcePreserved: report.sourcePreserved,
+    elapsedMs: report.elapsedMs, correctionCount: report.correctionCount,
+    items: report.items.map(item => ({ token: redact(item.token), category: item.diagnosticCategory,
+      sourceSpan: item.sourceSpan, candidateCount: item.candidateCount, imageAvailability: item.imageAvailability }))
   };
 }

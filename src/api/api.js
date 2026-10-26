@@ -18,6 +18,12 @@ import {
 import { logout } from '../components/Account/Login/Login.actions.js';
 import { cvaFileToBlob, isAndroid } from '../cordova-util';
 import { buildConfirmedReceiverSyncPayload } from '../common/communicationSupport/receiverSync';
+import { getExpressionDraftRequestContext } from '../common/communicationSupport/expressionDraft';
+import { createCareAiRequestJournal } from '../common/communicationSupport/careAiRequestJournal';
+import {
+  getPrivatePersonRequestIdentity,
+  restorePrivatePersonAiResponse
+} from '../common/communicationSupport/privatePersonAi';
 import {
   buildCommunicationSavedPhraseSyncPayload,
   normalizeSavedPhraseTombstones
@@ -32,10 +38,20 @@ const isUnrecoverableFileError = error =>
   !!error &&
   (error.code === FILE_NOT_FOUND_ERR || error.code === FILE_ENCODING_ERR);
 
-const resolveTrustedApiMediaUrl = value => {
+export const resolveTrustedApiMediaUrl = value => {
   try {
     const apiUrl = new URL(BASE_URL, window.location.href);
-    const mediaUrl = new URL(String(value || ''), apiUrl);
+    const raw = String(value || '');
+    // Pictogram paths are relative to the API mount, not the website root.
+    // Keep /api/ when using the same-origin production gateway.
+    const mediaUrl = new URL(raw, apiUrl);
+    if (
+      mediaUrl.origin === apiUrl.origin &&
+      mediaUrl.pathname.startsWith('/pictograms/')
+    ) {
+      mediaUrl.pathname =
+        apiUrl.pathname.replace(/\/$/, '') + mediaUrl.pathname;
+    }
     return mediaUrl.origin === apiUrl.origin ? mediaUrl.href : '';
   } catch (error) {
     return '';
@@ -85,6 +101,40 @@ const getAuthToken = () => {
   return userData.authToken || null;
 };
 
+const careAiFailure = code => Object.assign(new Error(code), { code });
+const careAiJournal = () =>
+  createCareAiRequestJournal({ storage: window.localStorage });
+const careAiTargetUrl = config =>
+  new URL(axios.getUri(config), window.location.href).href;
+
+function currentCareAiScope() {
+  const user = getUserData();
+  const accountId = user && (user.id || user._id);
+  if (!accountId || !user.authToken) throw careAiFailure('LOGIN_REQUIRED');
+  let selected;
+  try {
+    selected = JSON.parse(
+      localStorage.getItem(`care-selection-v1:${accountId}`) || 'null'
+    );
+  } catch (_) {
+    throw careAiFailure('AI_REQUEST_STORAGE_UNAVAILABLE');
+  }
+  const profileId = selected && selected.id;
+  const fundingId =
+    profileId &&
+    localStorage.getItem(`care-funding-v1:${accountId}:${profileId}`);
+  if (!profileId || !fundingId)
+    throw careAiFailure('EXPLICIT_FUNDING_REQUIRED');
+  if (selected.locked) throw careAiFailure('PROFILE_ACCESS_DENIED');
+  return {
+    origin: new URL(BASE_URL, window.location.href).href.replace(/\/+$/, ''),
+    accountId: String(accountId),
+    familyId: String(selected.familyId || ''),
+    profileId: String(profileId),
+    fundingId: String(fundingId)
+  };
+}
+
 const getQueryParameters = (obj = {}) => {
   return Object.keys(obj)
     .map(k => `${encodeURIComponent(k)}=${encodeURIComponent(obj[k])}`)
@@ -96,6 +146,37 @@ export const applyCareRequestHeaders = (
   configuredBaseUrl = BASE_URL
 ) => {
   if (request.accountClosure) return request;
+  if (request.careAiRequestScope) {
+    const frozen = request.careAiRequestScope;
+    const expectedUrl = careAiTargetUrl({
+      ...request,
+      baseURL: request.baseURL || configuredBaseUrl
+    });
+    let current;
+    try {
+      current = currentCareAiScope();
+    } catch (_) {
+      throw careAiFailure('AI_REQUEST_CONTEXT_CHANGED');
+    }
+    if (
+      process.env.REACT_APP_CARE_COLLABORATION !== 'true' ||
+      JSON.stringify(current) !== JSON.stringify(frozen.scope) ||
+      getAuthToken() !== frozen.token ||
+      expectedUrl !== frozen.target ||
+      request.headers?.['Idempotency-Key'] !== frozen.requestId
+    ) {
+      throw careAiFailure('AI_REQUEST_CONTEXT_CHANGED');
+    }
+    // Fixed scope is verified here, immediately before transport. Do not let
+    // the generic interceptor silently move an old intent to another family.
+    request.headers = {
+      ...request.headers,
+      'X-Care-Profile-Id': current.profileId,
+      'X-Care-Funding-Id': current.fundingId
+    };
+    delete request.careAiRequestScope;
+    return request;
+  }
   if (process.env.REACT_APP_CARE_COLLABORATION !== 'true') return request;
   const user = getUserData();
   const id = user && (user.id || user._id);
@@ -133,6 +214,12 @@ export const applyCareRequestHeaders = (
   return request;
 };
 
+function assertNativeMediaCurrent(options) {
+  if (options?.guard && !options.guard()) {
+    throw Object.assign(new Error('Board media upload was superseded'), { code: 'BOARD_SAVE_CANCELLED' });
+  }
+}
+
 class API {
   constructor(config = {}) {
     this.axiosInstance = axios.create({
@@ -143,11 +230,19 @@ class API {
     this.axiosInstance.interceptors.response.use(
       response => response,
       error => {
+        const failedAuthorization =
+          error.config?.headers?.Authorization ||
+          error.config?.headers?.authorization;
+        const currentToken = getAuthToken();
         if (
           error.response?.status === 401 &&
           !error.config?.accountClosure &&
-          error.config?.baseURL === BASE_URL
+          error.config?.baseURL === BASE_URL &&
+          currentToken &&
+          failedAuthorization === `Bearer ${currentToken}`
         ) {
+          // An expired response from an older account/login must not log out
+          // the newer session that is now using this same Axios instance.
           if (isAndroid()) {
             window.FirebasePlugin?.unregister?.();
             window.facebookConnectPlugin.logout(
@@ -504,7 +599,12 @@ class API {
     return data;
   }
 
-  async generateCommunicationSentences(request = {}, options = {}) {
+  async requestCareTextAi(path, operation, request, options = {}) {
+    const originalRequest = request;
+    const draftContext = getExpressionDraftRequestContext(request);
+    const localIdentity = getPrivatePersonRequestIdentity(request);
+    // The hash and wire payload must describe the same immutable submission.
+    request = JSON.parse(JSON.stringify(request));
     const authToken = getAuthToken();
     if (!(authToken && authToken.length)) {
       throw new Error('Need to be authenticated to perform this request');
@@ -517,13 +617,93 @@ class API {
     if (Number.isFinite(timeout) && timeout > 0) {
       requestConfig.timeout = Math.min(Math.round(timeout), 60000);
     }
+    let ticket;
+    let journal;
+    if (process.env.REACT_APP_CARE_COLLABORATION === 'true') {
+      const scope = currentCareAiScope();
+      journal = careAiJournal();
+      ticket = journal.prepare({
+        ...scope,
+        operation,
+        body: request,
+        localIdentity
+      });
+      if (draftContext) draftContext.beforeDispatch({ ...ticket, body: request });
+      requestConfig.headers['Idempotency-Key'] = ticket.requestId;
+      requestConfig.careAiRequestScope = {
+        scope,
+        token: authToken,
+        requestId: ticket.requestId,
+        target: careAiTargetUrl({ baseURL: BASE_URL, url: path })
+      };
+    }
+    try {
+      const response = await this.axiosInstance.post(
+        path,
+        request,
+        requestConfig
+      );
+      if (ticket) {
+        try {
+          journal.observe(ticket, { status: response.status || 200 });
+          if (draftContext) draftContext.afterResponse(ticket, true);
+        } catch (_) {
+          /* Identity was durably written before send. */
+        }
+        // Drop responses delivered after changing identity; the server receipt
+        // remains available under the original account and request identity.
+        let unchanged = false;
+        try {
+          unchanged =
+            getAuthToken() === authToken &&
+            JSON.stringify(currentCareAiScope()) ===
+              JSON.stringify(ticket.scope);
+        } catch (_) {
+          /* Context became unavailable. */
+        }
+        if (!unchanged) throw careAiFailure('AI_REQUEST_CONTEXT_CHANGED');
+      }
+      return restorePrivatePersonAiResponse(
+        originalRequest,
+        response.data,
+        operation
+      );
+    } catch (error) {
+      if (ticket) {
+        const code =
+          error?.response?.data?.code ||
+          error?.response?.data?.error?.code ||
+          error?.code;
+        try {
+          journal.observe(ticket, { status: error?.response?.status, code });
+          if (draftContext) draftContext.afterResponse(ticket, false);
+        } catch (_) {
+          /* Keep original pending identity. */
+        }
+        if (
+          !error.response &&
+          ![
+            'AI_REQUEST_CONTEXT_CHANGED',
+            'LOGIN_REQUIRED',
+            'PROFILE_ACCESS_DENIED',
+            'AI_REQUEST_STORAGE_UNAVAILABLE',
+            'AI_PERSON_REFERENCE_MISMATCH'
+          ].includes(code)
+        ) {
+          error.code = 'AI_REQUEST_RESULT_UNKNOWN';
+        }
+      }
+      throw error;
+    }
+  }
 
-    const { data } = await this.axiosInstance.post(
+  async generateCommunicationSentences(request = {}, options = {}) {
+    return this.requestCareTextAi(
       '/gpt/communication/sentences',
+      'communication-sentences',
       request,
-      requestConfig
+      options
     );
-    return data;
   }
 
   async generateCommunicationPictogram(request = {}, options = {}) {
@@ -611,17 +791,11 @@ class API {
   }
 
   async resegmentCommunicationText(request = {}) {
-    const authToken = getAuthToken();
-    if (!(authToken && authToken.length)) {
-      throw new Error('Need to be authenticated to perform this request');
-    }
-
-    const { data } = await this.axiosInstance.post(
+    return this.requestCareTextAi(
       '/gpt/communication/resegment',
-      request,
-      { headers: { Authorization: `Bearer ${authToken}` } }
+      'communication-resegment',
+      request
     );
-    return data;
   }
 
   async normalizeCommunicationDialectText(request = {}) {
@@ -811,14 +985,24 @@ class API {
 
   async downloadCommunicationPictogram(pictogram) {
     const url = resolveTrustedApiMediaUrl(pictogram && pictogram.image);
-    if (!url || !/\/pictograms\/(arasaac\/[0-9]+|opensymbols\/[a-zA-Z0-9_-]+\.[a-f0-9]{32})\/image$/.test(new URL(url).pathname)) {
+    if (
+      !url ||
+      !/\/pictograms\/(arasaac\/[0-9]+|(?:opensymbols|globalsymbols)\/[a-zA-Z0-9_-]+\.[a-f0-9]{32})\/image$/.test(
+        new URL(url).pathname
+      )
+    ) {
       throw new Error('Invalid public pictogram media URL');
     }
     const { data } = await this.axiosInstance.get(url, {
-      responseType: 'blob', timeout: 15000
+      responseType: 'blob',
+      timeout: 15000
     });
-    if (!data || !data.size || data.size > 1024 * 1024 ||
-        !/^image\/(png|jpeg|gif|webp)$/.test(data.type)) {
+    if (
+      !data ||
+      !data.size ||
+      data.size > 1024 * 1024 ||
+      !/^image\/(png|jpeg|gif|webp)$/.test(data.type)
+    ) {
       throw new Error('Invalid pictogram image or image exceeds 1 MiB');
     }
     return data;
@@ -1289,7 +1473,8 @@ class API {
     return data;
   }
 
-  async tryUploadDataURL(dataURL, filename, checkExtension = false) {
+  async tryUploadDataURL(dataURL, filename, checkExtension = false, options) {
+    assertNativeMediaCurrent(options);
     let blob;
     try {
       blob = dataURLtoBlob(dataURL);
@@ -1303,8 +1488,10 @@ class API {
     }
     try {
       const url = await this.uploadFile(blob, name);
+      assertNativeMediaCurrent(options);
       return { url, unrecoverable: false };
     } catch (e) {
+      if (e.code === 'BOARD_SAVE_CANCELLED') throw e;
       return { url: null, unrecoverable: false };
     }
   }
@@ -1318,12 +1505,14 @@ class API {
     return url;
   }
 
-  async uploadTileImageMedia(tile) {
+  async uploadTileImageMedia(tile, options) {
+    assertNativeMediaCurrent(options);
     if (isDataURL(tile.image)) {
       const { url, unrecoverable } = await this.tryUploadDataURL(
         tile.image,
         tile.id,
-        true
+        true,
+        ...(options ? [options] : [])
       );
       return { attempted: true, url, unrecoverable };
     }
@@ -1341,6 +1530,7 @@ class API {
           error => resolve({ error })
         );
       });
+      assertNativeMediaCurrent(options);
       if (!resolved.file) {
         return {
           attempted: true,
@@ -1356,12 +1546,16 @@ class API {
         return { attempted: true, url: null, unrecoverable: true };
       }
 
+      assertNativeMediaCurrent(options);
+
       try {
         const segments = tile.image.split('/');
         const name = segments[segments.length - 1] || tile.id;
         const url = await this.uploadFile(realBlob, name);
+        assertNativeMediaCurrent(options);
         return { attempted: true, url, unrecoverable: false };
       } catch (e) {
+        if (e.code === 'BOARD_SAVE_CANCELLED') throw e;
         return { attempted: true, url: null, unrecoverable: false };
       }
     }
@@ -1369,11 +1563,13 @@ class API {
     return { attempted: false, url: null, unrecoverable: false };
   }
 
-  async uploadTileSoundMedia(tile) {
+  async uploadTileSoundMedia(tile, options) {
+    assertNativeMediaCurrent(options);
     if (isDataURL(tile.sound)) {
       const { url, unrecoverable } = await this.tryUploadDataURL(
         tile.sound,
-        `${tile.id}.mp3`
+        `${tile.id}.mp3`,
+        ...(options ? [false, options] : [])
       );
       return { attempted: true, url, unrecoverable };
     }
@@ -1381,12 +1577,14 @@ class API {
     return { attempted: false, url: null, unrecoverable: false };
   }
 
-  async uploadBoardCaptionMedia(board) {
+  async uploadBoardCaptionMedia(board, options) {
+    assertNativeMediaCurrent(options);
     if (isDataURL(board?.caption)) {
       const { url, unrecoverable } = await this.tryUploadDataURL(
         board.caption,
         board.id,
-        true
+        true,
+        ...(options ? [options] : [])
       );
       return { attempted: true, url, unrecoverable };
     }
@@ -1394,7 +1592,8 @@ class API {
     return { attempted: false, url: null, unrecoverable: false };
   }
 
-  async uploadBoardLocalMedia(board) {
+  async uploadBoardLocalMedia(board, options) {
+    assertNativeMediaCurrent(options);
     const tiles = board?.tiles || [];
     const targets = tiles.filter(
       tile =>
@@ -1420,15 +1619,18 @@ class API {
     };
 
     const captionPromise = captionIsTarget
-      ? this.uploadBoardCaptionMedia(board)
+      ? this.uploadBoardCaptionMedia(board, ...(options ? [options] : []))
+          .then(value => ({ value }), error => ({ error }))
       : null;
 
     const uploadTarget = async tile => {
       try {
+        assertNativeMediaCurrent(options);
         const [image, sound] = await Promise.all([
-          this.uploadTileImageMedia(tile),
-          this.uploadTileSoundMedia(tile)
+          this.uploadTileImageMedia(tile, ...(options ? [options] : [])),
+          this.uploadTileSoundMedia(tile, ...(options ? [options] : []))
         ]);
+        assertNativeMediaCurrent(options);
 
         const update = {};
         applyMedia(image, url => (update.image = url));
@@ -1438,13 +1640,16 @@ class API {
           tileUpdates[tile.id] = update;
         }
       } catch (e) {
+        if (e.code === 'BOARD_SAVE_CANCELLED') throw e;
         hadFailure = true;
       }
     };
 
     const CONCURRENCY = 5;
     for (let i = 0; i < targets.length; i += CONCURRENCY) {
+      assertNativeMediaCurrent(options);
       await Promise.all(targets.slice(i, i + CONCURRENCY).map(uploadTarget));
+      assertNativeMediaCurrent(options);
     }
 
     const sanitizedBoard = {
@@ -1456,9 +1661,12 @@ class API {
     };
 
     if (captionPromise) {
-      applyMedia(await captionPromise, url => (sanitizedBoard.caption = url));
+      const caption = await captionPromise;
+      if (caption.error) throw caption.error;
+      applyMedia(caption.value, url => (sanitizedBoard.caption = url));
     }
 
+    assertNativeMediaCurrent(options);
     return { board: sanitizedBoard, hadFailure };
   }
 

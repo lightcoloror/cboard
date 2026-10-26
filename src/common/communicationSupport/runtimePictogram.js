@@ -1,3 +1,4 @@
+import { normalizePictogramSemantics } from './pictogramSemantics';
 import {
   DEVICE_PRIVATE_PICTOGRAM_PROVIDER,
   createAiGeneratedPictogramAttribution,
@@ -9,6 +10,17 @@ function normalizeString(value) {
 }
 
 export const DEVICE_PRIVATE_RUNTIME_PICTOGRAM_PROVIDER = DEVICE_PRIVATE_PICTOGRAM_PROVIDER;
+
+// Report only what the stored representation proves. A saved path still needs
+// a successful image load; remote URLs and blob URLs do not prove persistence.
+export function getRuntimePictogramStorageState(pictogram) {
+  const image = normalizeString(pictogram && pictogram.image);
+  if (/^data:image\/(png|jpeg|gif|webp);base64,[A-Za-z0-9+/=]+$/.test(image))
+    return 'embedded';
+  if (/^(wxfile:\/\/|https?:\/\/usr\/|file:\/\/)/.test(image))
+    return 'local-file';
+  return image ? 'remote' : 'missing';
+}
 
 export function buildDevicePrivateRuntimePictogram(value = {}) {
   const recordId = normalizeString(value.recordId);
@@ -104,6 +116,9 @@ export function normalizeRuntimePictogram(value) {
 
   return {
     id,
+    ...(normalizePictogramSemantics(value.semantics)
+      ? { semantics: normalizePictogramSemantics(value.semantics) }
+      : {}),
     label,
     vocalization: normalizeString(value.vocalization) || label,
     image,
@@ -140,6 +155,9 @@ export function buildRuntimeCommunicationCatalogItem(value) {
       keyPath: '',
       loadBoardId: '',
       pictogramAttribution: pictogram.source,
+      ...(pictogram.semantics
+        ? { pictogramSemantics: pictogram.semantics }
+        : {}),
       communication: {
         synonyms: [],
         excludeTokens: [],

@@ -249,8 +249,8 @@ describe('TileEditor tests', () => {
     editingTiles: [],
     boards: [],
     folders: [],
-    onEditSubmit: jest.fn(),
-    onAddSubmit: jest.fn(),
+    onEditSubmit: jest.fn().mockResolvedValue(true),
+    onAddSubmit: jest.fn().mockResolvedValue(true),
     userData: { email: 'caregiver@example.com' }
   };
 
@@ -419,7 +419,8 @@ describe('TileEditor tests', () => {
     expect(props.onAddSubmit).toHaveBeenCalledWith(
       expect.objectContaining({
         image: 'https://cdn.example.test/drink.gif'
-      })
+      }),
+      expect.objectContaining({ guard: expect.any(Function) })
     );
   });
 
@@ -457,7 +458,8 @@ describe('TileEditor tests', () => {
     await wrapper.instance().handleSubmit();
 
     expect(props.onAddSubmit).toHaveBeenCalledWith(
-      expect.objectContaining({ image: 'data:image/gif;base64,R0lGODlh' })
+      expect.objectContaining({ image: 'data:image/gif;base64,R0lGODlh' }),
+      expect.objectContaining({ guard: expect.any(Function) })
     );
     expect(API.uploadFile).toHaveBeenCalledTimes(1);
   });
@@ -485,7 +487,8 @@ describe('TileEditor tests', () => {
       expect.objectContaining({
         mediaType: 'video',
         video: 'https://cdn.example.test/action.mp4'
-      })
+      }),
+      expect.objectContaining({ guard: expect.any(Function) })
     );
   });
 

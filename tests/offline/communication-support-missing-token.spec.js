@@ -162,12 +162,14 @@ test.describe('Production missing-token maintenance', () => {
       useTouch
     );
     await expect(
-      receiverWorkspace.getByRole('status').filter({ hasText: '匹配结果' })
-    ).toContainText('已全部匹配');
+      receiverWorkspace.getByRole('status').filter({ hasText: '图片匹配' })
+    ).toContainText('已全部配图');
 
     // The application shell comes from the isolated local build; ALL image/API
     // network requests now fail. Only persisted bytes can render the adopted image.
-    await page.route('**/pictograms/**', route => route.abort('internetdisconnected'));
+    await page.route('**/pictograms/**', route =>
+      route.abort('internetdisconnected')
+    );
     await page.reload({ waitUntil: 'domcontentloaded' });
     const restoredPanel = page.locator('.CommunicationSupportPanel');
     await activate(
@@ -184,16 +186,22 @@ test.describe('Production missing-token maintenance', () => {
       useTouch
     );
     await expect(
-      receiverWorkspace.getByRole('status').filter({ hasText: '匹配结果' })
-    ).toContainText('已全部匹配');
+      receiverWorkspace.getByRole('status').filter({ hasText: '图片匹配' })
+    ).toContainText('已全部配图');
     await expect(
       receiverWorkspace
         .locator('.CommunicationSupportPanel__resultMeta')
         .filter({ hasText: pendingRecord.normalizedToken })
     ).toBeVisible();
-    const cachedImages = receiverWorkspace.locator('img[src^="data:image/png;base64,"]');
+    const cachedImages = receiverWorkspace.locator(
+      'img[src^="data:image/png;base64,"]'
+    );
     await expect.poll(() => cachedImages.count()).toBeGreaterThan(0);
-    expect(await cachedImages.evaluateAll(images => images.every(image => image.complete && image.naturalWidth > 0))).toBe(true);
+    expect(
+      await cachedImages.evaluateAll(images =>
+        images.every(image => image.complete && image.naturalWidth > 0)
+      )
+    ).toBe(true);
     expect(searchRequests).toHaveLength(2);
   });
 });

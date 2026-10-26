@@ -2,11 +2,11 @@ import { connect } from 'react-redux';
 import { injectIntl } from 'react-intl';
 import {
   changeOutput,
-  createBoard,
-  switchBoard,
-  updateBoard
+  switchBoard
 } from '../Board.actions';
-import { addBoardCommunicator } from '../../Communicator/Communicator.actions';
+import { saveVerifiedBoard } from '../../../common/communicationSupport/verifiedBoardPersistence';
+import { getGalleryTileUndo } from '../../../common/communicationSupport/webGalleryTileUndo';
+import { getVisibleBoards } from '../Board.selectors';
 import { updateDisplaySettings } from '../../App/App.actions';
 import {
   cancelSpeech,
@@ -16,13 +16,17 @@ import {
 import CommunicationSupportPanel from './CommunicationSupportPanel.component';
 
 export const mapStateToProps = ({ board, app, speech = {} }, ownProps) => ({
-  boards: board.boards || [],
+  boards: getVisibleBoards({ board: { ...board, boards: board.boards || [] } }),
   output: board.output || [],
   activeBoardId: board.activeBoardId,
   intl: ownProps.intl,
   isLogged: Boolean(
     !ownProps.demoMode && app && app.userData && app.userData.authToken
   ),
+  accountId:
+    !ownProps.demoMode && app && app.userData
+      ? String(app.userData.id || app.userData._id || '')
+      : '',
   displaySettings: (app && app.displaySettings) || {},
   speechSettings: {
     voiceURI: speech.options && speech.options.voiceURI,
@@ -41,15 +45,11 @@ export const mapStateToProps = ({ board, app, speech = {} }, ownProps) => ({
 });
 
 export const mapDispatchToProps = dispatch => ({
-  onCreateCommunicationBoard: board => {
-    dispatch(createBoard(board));
-    dispatch(addBoardCommunicator(board.id));
-    return board.id;
-  },
-  onUpdateCommunicationBoard: board => {
-    dispatch(updateBoard(board));
-    return true;
-  },
+  getGalleryTileUndo: () => dispatch(getGalleryTileUndo()),
+  onCreateCommunicationBoard: (board, options = {}) =>
+    dispatch(saveVerifiedBoard(board, { ...options, expectedBoard: null, create: true })),
+  onUpdateCommunicationBoard: (board, options) =>
+    dispatch(saveVerifiedBoard(board, options)),
   onApplyOutput: nextOutput => dispatch(changeOutput(nextOutput)),
   onJumpBoard: boardId => dispatch(switchBoard(boardId)),
   onSpeak: (text, onend) => dispatch(speak(text, onend)),

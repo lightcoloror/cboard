@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import API from '../../../api';
+import { getSemanticCandidateHint } from '../../../common/communicationSupport/pictogramSemantics';
+import API, { resolveTrustedApiMediaUrl } from '../../../api';
 import PropTypes from 'prop-types';
 import Button from '@material-ui/core/Button';
 import Dialog from '@material-ui/core/Dialog';
@@ -9,6 +10,9 @@ import DialogTitle from '@material-ui/core/DialogTitle';
 import TextField from '@material-ui/core/TextField';
 import InputImage from '../../UI/InputImage';
 import Symbol from '../Symbol';
+import ImageAvailabilityLabel from './ImageAvailabilityLabel.component';
+import { createImageRepairOperation } from '../../../common/communicationSupport/imageRepair';
+import { currentImageOperationEpoch } from '../../../common/communicationSupport/imageOperationEpoch';
 import {
   countCatalogAutoResolvedMissingTokens,
   countPendingMissingTokens,
@@ -117,6 +121,8 @@ export default function MissingTokenQueue({
   const [query, setQuery] = useState('');
   const [notice, setNotice] = useState('');
   const [privateImageRecordId, setPrivateImageRecordId] = useState(null);
+  const privateSelectionRef = useRef(privateImageRecordId);
+  privateSelectionRef.current = privateImageRecordId;
   const [isLoadingPrivateImage, setIsLoadingPrivateImage] = useState(false);
   const [recentLocalResolvedCount, setRecentLocalResolvedCount] = useState(0);
   const [isSearchingOnline, setIsSearchingOnline] = useState(false);
@@ -124,10 +130,17 @@ export default function MissingTokenQueue({
   const [generatedCandidate, setGeneratedCandidate] = useState(null);
   const [cachingRecordId, setCachingRecordId] = useState(null);
   const cachingRef = useRef(false);
+  const imagePreparationRef = useRef(createImageRepairOperation());
   const mountedRef = useRef(true);
   const recordsRef = useRef(records);
   recordsRef.current = records;
-  useEffect(() => () => { mountedRef.current = false; }, []);
+  useEffect(
+    () => () => {
+      mountedRef.current = false;
+      imagePreparationRef.current.cancel();
+    },
+    []
+  );
 
   async function confirmOnlinePictogram(record, pictogram) {
     if (cachingRef.current) return;
@@ -136,17 +149,29 @@ export default function MissingTokenQueue({
     try {
       // Reuse the private-image byte representation and the scoped repository.
       // A remote URL alone is never evidence of offline availability.
-      const blob = await downloadOnlineImage(pictogram);
-      const image = await readPrivateImage(blob);
+      const image = await imagePreparationRef.current.prepare(
+        JSON.stringify([record.id, record.updatedAt, pictogram.id, pictogram.image]),
+        async () => readPrivateImage(await downloadOnlineImage(pictogram))
+      );
+      if (!image) return;
       if (!/^data:image\/(png|jpeg|gif|webp);base64,/.test(image))
         throw new Error('Image bytes unavailable');
       const current = recordsRef.current.find(item => item.id === record.id);
-      if (!mountedRef.current || !current || current.status !== 'suggested' ||
-          current.updatedAt !== record.updatedAt ||
-          !getMissingTokenSuggestions(current).some(item => item.id === pictogram.id && item.image === pictogram.image)) return;
+      if (
+        !mountedRef.current ||
+        !current ||
+        current.status !== 'suggested' ||
+        current.updatedAt !== record.updatedAt ||
+        !getMissingTokenSuggestions(current).some(
+          item => item.id === pictogram.id && item.image === pictogram.image
+        )
+      )
+        return;
       const saved = applyReview(record.id, {
-        status: 'resolved', resolvedPictogramId: pictogram.id,
-        resolvedPictogram: { ...pictogram, image }, source: 'online'
+        status: 'resolved',
+        resolvedPictogramId: pictogram.id,
+        resolvedPictogram: { ...pictogram, image },
+        source: 'online'
       });
       if (!saved) setNotice(copy.cacheFailed);
     } catch (_) {
@@ -264,10 +289,15 @@ export default function MissingTokenQueue({
 
   async function resolveWithPrivateImage(blob) {
     if (!privateImageRecord) return;
+    const expected = privateImageRecord;
+    const epoch = currentImageOperationEpoch();
 
     setIsLoadingPrivateImage(true);
     try {
       const image = await readPrivateImage(blob);
+      const current = recordsRef.current.find(item => item.id === expected.id);
+        if (!mountedRef.current || privateSelectionRef.current !== expected.id || epoch !== currentImageOperationEpoch() ||
+        !current || current.updatedAt !== expected.updatedAt || current.status !== expected.status) return;
       const pictogram = buildDevicePrivateRuntimePictogram({
         recordId: privateImageRecord.id,
         label: privateImageRecord.normalizedToken,
@@ -462,7 +492,10 @@ export default function MissingTokenQueue({
                         record.status
                       }`}
                     >
-                      {STATUS_LABELS[record.status] || record.status}
+                      {record.status === 'suggested' &&
+                      !onlineSuggestions.length
+                        ? STATUS_LABELS.new
+                        : STATUS_LABELS[record.status] || record.status}
                     </span>
                   </div>
                   <span className="CommunicationSupportPanel__meta">
@@ -482,6 +515,14 @@ export default function MissingTokenQueue({
                           : resolvedPictogram.label}
                       </span>
                     )}
+                  {record.status === 'resolved' && resolvedPictogram && (
+                    <span
+                      className="CommunicationSupportPanel__meta"
+                      role="status"
+                    >
+                      <ImageAvailabilityLabel source={resolvedPictogram.image} />
+                    </span>
+                  )}
                   {record.status === 'resolved' &&
                     record.source === 'device-private' && (
                       <span className="CommunicationSupportPanel__meta">
@@ -498,7 +539,7 @@ export default function MissingTokenQueue({
                           >
                             <Symbol
                               className="CommunicationSupportPanel__symbol CommunicationSupportPanel__symbol--online"
-                              image={pictogram.image}
+                              image={resolveTrustedApiMediaUrl(pictogram.image)}
                               label={pictogram.label}
                               labelpos="Below"
                             />
@@ -506,12 +547,16 @@ export default function MissingTokenQueue({
                               <span className="CommunicationSupportPanel__meta">
                                 {copy.onlineSuggestion}：{pictogram.label}
                               </span>
-                              {pictogram.semantics && pictogram.semantics.requiresReview && (
-                                <span className="CommunicationSupportPanel__meta">
-                                  {pictogram.semantics.relation === 'conflict'
-                                    ? copy.semanticConflict : copy.semanticUnverified}
-                                </span>
-                              )}
+                              {pictogram.semantics &&
+                                pictogram.semantics.requiresReview && (
+                                  <span className="CommunicationSupportPanel__meta">
+                                    {pictogram.semantics.relation === 'conflict'
+                                      ? copy.semanticConflict
+                                      : getSemanticCandidateHint(
+                                          pictogram.semantics
+                                        ) || copy.semanticUnverified}
+                                  </span>
+                                )}
                               <span className="CommunicationSupportPanel__meta">
                                 {copy.sourceAndLicense}：{pictogram.source.name}{' '}
                                 · {pictogram.source.license}
@@ -521,9 +566,13 @@ export default function MissingTokenQueue({
                                 color="primary"
                                 variant="contained"
                                 disabled={Boolean(cachingRecordId)}
-                                onClick={() => confirmOnlinePictogram(record, pictogram)}
+                                onClick={() =>
+                                  confirmOnlinePictogram(record, pictogram)
+                                }
                               >
-                                {cachingRecordId === record.id ? copy.cachingOnline : copy.confirmOnline}
+                                {cachingRecordId === record.id
+                                  ? copy.cachingOnline
+                                  : copy.confirmOnline}
                               </Button>
                             </div>
                           </div>
@@ -747,6 +796,7 @@ MissingTokenQueue.defaultProps = {
   aiImageGenerationAvailable: false,
   onGeneratePictogram: null,
   readPrivateImage: readPersonalImageBlob,
-  downloadOnlineImage: pictogram => API.downloadCommunicationPictogram(pictogram),
+  downloadOnlineImage: pictogram =>
+    API.downloadCommunicationPictogram(pictogram),
   copyOverrides: null
 };

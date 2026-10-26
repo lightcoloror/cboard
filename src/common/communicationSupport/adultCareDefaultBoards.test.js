@@ -68,10 +68,26 @@ describe('PicInterpreter adult-care profile on CBoard defaults', () => {
 
   test('provides dedicated core-word and repair vocabularies', () => {
     const core = getBoard('pi-core-words-v1');
-    expect(core.tiles).toHaveLength(15);
+    // The inspected 她 card is separate from 他; retain the actual source meaning.
+    expect(core.tiles).toHaveLength(16);
     expect(getLiteralLabels('pi-core-words-v1')).toEqual(
-      expect.arrayContaining(['我', '你', '他/她', '要', '可以', '不', '有'])
+      expect.arrayContaining(['我', '你', '他', '她', '要', '不', '有'])
     );
+    // 6544 depicts a tin can. The old fixture expected the ambiguous English
+    // "can" as ability; retain the corrected source meaning, never that alias.
+    expect(
+      core.tiles.find(tile => tile.pictogramOriginalId === '6544')
+    ).toEqual(
+      expect.objectContaining({
+        label: '罐头',
+        vocalization: '罐头',
+        communicationCategory: 'food'
+      })
+    );
+    expect(
+      core.tiles.find(tile => tile.pictogramOriginalId === '6544')
+        .communicationSynonyms
+    ).not.toContain('可以');
     expect(core.tiles.map(tile => tile.labelKey).filter(Boolean)).toEqual(
       expect.arrayContaining([
         'symbol.peopleActions.toGo',
@@ -109,9 +125,11 @@ describe('PicInterpreter adult-care profile on CBoard defaults', () => {
         expect.objectContaining({
           provider: 'arasaac',
           originalId: tile.pictogramOriginalId,
-          sourceUrl: `https://arasaac.org/pictograms/zh/${
-            tile.pictogramOriginalId
-          }`
+          // Legacy bundled filenames are not numeric upstream pictogram IDs.
+          // Do not fabricate a pictogram permalink for she.png.
+          sourceUrl: /^\d+$/.test(tile.pictogramOriginalId)
+            ? `https://arasaac.org/pictograms/zh/${tile.pictogramOriginalId}`
+            : 'https://arasaac.org/'
         })
       );
     });

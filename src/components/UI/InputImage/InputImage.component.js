@@ -43,21 +43,38 @@ export class InputImage extends Component {
     /**
      * Set image loading state
      */
-    setIsLoadingImage: PropTypes.func.isRequired
+    setIsLoadingImage: PropTypes.func.isRequired,
+    createChangeGuard: PropTypes.func
   };
 
-  async resizeImage(file, imageName = null) {
+  changeRevision = 0;
+  unmounted = false;
+
+  componentWillUnmount() {
+    this.unmounted = true;
+    this.changeRevision += 1;
+  }
+
+  beginChange = () => {
+    const revision = ++this.changeRevision;
+    const parentGuard = this.props.createChangeGuard ? this.props.createChangeGuard() : () => true;
+    return () => !this.unmounted && revision === this.changeRevision && parentGuard();
+  };
+
+  async resizeImage(file, imageName = null, guard = this.beginChange()) {
     //if you cancel the image uploaded, the event is dispached and the file is null
     try {
       const { onChange } = this.props;
+      if (!guard()) return;
       const fileName = imageName || file.name;
       if (isAnimatedGifFile(file, fileName)) {
         onChange(file, fileName, file);
         return;
       }
       const resizedBlob = await readAndCompressImage(file, configLQ);
+      if (!guard()) return;
       const blobHQ = await readAndCompressImage(file, configHQ);
-      onChange(resizedBlob, fileName, blobHQ);
+      if (guard()) onChange(resizedBlob, fileName, blobHQ);
     } catch (err) {
       console.error(err);
     }
@@ -65,11 +82,14 @@ export class InputImage extends Component {
 
   onClick = async () => {
     const { setIsLoadingImage } = this.props;
+    const guard = this.beginChange();
     try {
       const imageURL = await window.cordova.plugins.safMediastore.selectFile();
+      if (!guard()) return;
       const imageName = await window.cordova.plugins.safMediastore.getFileName(
         imageURL
       );
+      if (!guard()) return;
       setIsLoadingImage(true);
       const file = await new Promise((resolve, reject) => {
         window.resolveLocalFileSystemURL(
@@ -92,24 +112,25 @@ export class InputImage extends Component {
         );
       });
 
-      if (file) {
-        await this.resizeImage(file, imageName);
+      if (file && guard()) {
+        await this.resizeImage(file, imageName, guard);
       }
     } catch (err) {
       console.error(err);
     }
-    setIsLoadingImage(false);
+    if (guard()) setIsLoadingImage(false);
   };
 
   handleChange = async event => {
     const { setIsLoadingImage } = this.props;
+    const guard = this.beginChange();
     setIsLoadingImage(true);
     const file = event.target.files[0];
     if (file) {
       //if you cancel the image uploaded, the event is dispached and the file is null
-      await this.resizeImage(file);
+      await this.resizeImage(file, null, guard);
     }
-    setIsLoadingImage(false);
+    if (guard()) setIsLoadingImage(false);
   };
   render() {
     const { intl } = this.props;

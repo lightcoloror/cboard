@@ -38,11 +38,9 @@ export function getReviewedSourceSegments(token) {
 
 export function getReviewedLookupToken(token) {
   const aliases = (reviewedArasaac && reviewedArasaac.aliases) || {};
-  return (
-    (Object.prototype.hasOwnProperty.call(aliases, token)
-      ? aliases[token]
-      : token)
-  );
+  return Object.prototype.hasOwnProperty.call(aliases, token)
+    ? aliases[token]
+    : token;
 }
 
 export function getReviewedArasaacIds(token) {

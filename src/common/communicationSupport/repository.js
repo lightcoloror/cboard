@@ -1,4 +1,8 @@
+import { createFavoriteStateStore, FAVORITE_STATE_KEY } from './favoriteState';
 import { LEGACY_COMMUNICATION_STORAGE_KEYS } from './legacy';
+import { PREPARATION_STORAGE_KEY } from './savedPhrasePreparation';
+import { EXPRESSION_DRAFT_STORAGE_KEY, normalizeExpressionDraft } from './expressionDraft';
+import { receiverDraftContentSignature } from './receiverDraftPersistence';
 import {
   DEFAULT_PERSONAL_IMAGE_PREFERENCE_LIMIT,
   deletePersonalImagePreference,
@@ -51,6 +55,9 @@ import {
 } from './savedPhraseSync';
 
 export const COMMUNICATION_STORAGE_KEYS = {
+  expressionDraft: EXPRESSION_DRAFT_STORAGE_KEY,
+  savedPhrasePreparation: PREPARATION_STORAGE_KEY,
+  favoriteState: FAVORITE_STATE_KEY,
   savedPhrases: 'cboard_communication_saved_phrases',
   savedPhraseTombstones: 'cboard_communication_saved_phrase_tombstones',
   history: 'cboard_communication_history',
@@ -207,11 +214,6 @@ export function migrateCommunicationRepositoryStorage({
     Number.isInteger(maxMissingTokens) && maxMissingTokens > 0
       ? maxMissingTokens
       : DEFAULT_MISSING_TOKEN_LIMIT;
-  const personalImagePreferenceLimit =
-    Number.isInteger(maxPersonalImagePreferences) &&
-    maxPersonalImagePreferences > 0
-      ? maxPersonalImagePreferences
-      : DEFAULT_PERSONAL_IMAGE_PREFERENCE_LIMIT;
   const repairedKeys = new Set();
   let changed = previousVersion < COMMUNICATION_REPOSITORY_SCHEMA_VERSION;
   let timestamp;
@@ -276,12 +278,8 @@ export function migrateCommunicationRepositoryStorage({
     });
   }
 
-  synchronizeList(
-    COMMUNICATION_STORAGE_KEYS.savedPhrases,
-    LEGACY_COMMUNICATION_STORAGE_KEYS.savedPhrases,
-    normalizeCommunicationSavedPhrases,
-    Infinity
-  );
+  // Favorites migrate once through their verified aggregate, never by merging
+  // an explicitly empty primary list with a stale legacy mirror.
   synchronizeList(
     COMMUNICATION_STORAGE_KEYS.history,
     LEGACY_COMMUNICATION_STORAGE_KEYS.history,
@@ -294,12 +292,7 @@ export function migrateCommunicationRepositoryStorage({
     normalizeReceiverRecordsForRepository,
     itemLimit
   );
-  synchronizeList(
-    COMMUNICATION_STORAGE_KEYS.savedPhraseTombstones,
-    null,
-    normalizeSavedPhraseTombstones,
-    itemLimit
-  );
+
   synchronizeList(
     COMMUNICATION_STORAGE_KEYS.receiverCorrections,
     null,
@@ -312,12 +305,8 @@ export function migrateCommunicationRepositoryStorage({
     normalizeCommunicationMissingTokens,
     missingTokenLimit
   );
-  synchronizeList(
-    COMMUNICATION_STORAGE_KEYS.personalImagePreferences,
-    null,
-    normalizePersonalImagePreferences,
-    personalImagePreferenceLimit
-  );
+  // Private images are read strictly by their own operations. Opening another
+  // feature must never repair an unreadable image list into an empty list.
   synchronizeList(
     COMMUNICATION_STORAGE_KEYS.expressionCandidateFeedbackDrafts,
     null,
@@ -458,6 +447,12 @@ export function migrateCommunicationRepositoryStorage({
   };
 }
 
+// The browser adapter recreates repositories between calls. Keep only an
+// outstanding write receipt on the caller's exact draft object; never a
+// cross-account cache keyed merely by record ID. Scope/CAS checks still run.
+const receiverWriteAttempts = new WeakMap();
+const personalImageWriteAttempts = new WeakMap();
+
 export function createCommunicationRepository({
   storage,
   now = Date.now,
@@ -533,6 +528,25 @@ export function createCommunicationRepository({
     if (storage.setItem(key, value) === false) {
       throw new Error(`Communication repository failed to write ${key}`);
     }
+    if ([COMMUNICATION_STORAGE_KEYS.missingTokens,
+      COMMUNICATION_STORAGE_KEYS.personalImagePreferences,
+      COMMUNICATION_STORAGE_KEYS.receiverRecords,
+      COMMUNICATION_STORAGE_KEYS.receiverResumeRecord,
+      COMMUNICATION_STORAGE_KEYS.receiverCorrections,
+      COMMUNICATION_STORAGE_KEYS.savedPhrasePreparation,
+      COMMUNICATION_STORAGE_KEYS.session,
+      COMMUNICATION_STORAGE_KEYS.history, LEGACY_COMMUNICATION_STORAGE_KEYS.history
+    ].includes(key) && String(storage.getItem(key) || '') !== value) {
+      throw new Error('本机保存后核对失败，请保留当前内容并重试。');
+    }
+  }
+
+  function readRequiredShape(key, empty, accepts) {
+    const raw = storage.getItem(key);
+    if (raw === null || raw === undefined || raw === '') return empty;
+    const value = JSON.parse(raw);
+    if (!accepts(value)) throw new Error('本机草稿格式不可读取，原数据已保留。');
+    return value;
   }
 
   function readList(primaryKey, legacyKey) {
@@ -564,7 +578,7 @@ export function createCommunicationRepository({
 
   function readConversationSession() {
     return normalizeConversationSession(
-      safeParse(storage.getItem(COMMUNICATION_STORAGE_KEYS.session), null)
+      readRequiredShape(COMMUNICATION_STORAGE_KEYS.session, null, value => value === null || isPlainRecord(value))
     );
   }
 
@@ -577,12 +591,29 @@ export function createCommunicationRepository({
   }
 
   function getActiveConversationSession() {
-    const resolved = resolveConversationSession(readConversationSession(), {
+    const previous = readConversationSession();
+    const resolved = resolveConversationSession(previous, {
       now,
       createId: createRepositoryId
     });
 
     if (resolved.reason !== 'active') {
+      // Idle expiry clears AI context, not unfinished human work. Carry only
+      // this patient's draft forward; an explicit new conversation stays empty.
+      if (resolved.reason === 'idle' && previous) {
+        const identity = loadCommunicationIdentity();
+        const records = loadReceiverRecords();
+        overwriteReceiverRecords(
+          records.map(record =>
+            record.recordStatus === 'draft' &&
+            record.sessionId === previous.id &&
+            record.patientId === identity.patientId &&
+            record.workspaceId === identity.workspaceId
+              ? { ...record, sessionId: resolved.session.id }
+              : record
+          )
+        );
+      }
       writeConversationSession(resolved.session);
     }
 
@@ -607,65 +638,35 @@ export function createCommunicationRepository({
     );
   }
 
+  const favoriteStore = createFavoriteStateStore(storage, { capacity: itemLimit });
+  let observedFavorites = null;
+  function readFavoriteState() {
+    if (repositorySchema.status === 'future') throw new Error('Communication repository data uses a newer schema version');
+    observedFavorites = favoriteStore.read();
+    return observedFavorites;
+  }
+  function commitFavoriteState(expected, changes) {
+    if (repositorySchema.status === 'future') throw new Error('Communication repository data uses a newer schema version');
+    const saved = favoriteStore.commit(expected, changes);
+    observedFavorites = saved;
+    return saved;
+  }
   function loadCommunicationSavedPhraseTombstones() {
-    return normalizeSavedPhraseTombstones(
-      readList(COMMUNICATION_STORAGE_KEYS.savedPhraseTombstones, null)
-    ).slice(0, itemLimit);
+    return readFavoriteState().tombstones;
   }
-
   function loadCommunicationSavedPhrases() {
-    const deletedIds = new Set(
-      loadCommunicationSavedPhraseTombstones().map(item => item.id)
-    );
-
-    return normalizeCommunicationSavedPhrases(
-      readList(
-        COMMUNICATION_STORAGE_KEYS.savedPhrases,
-        LEGACY_COMMUNICATION_STORAGE_KEYS.savedPhrases
-      )
-    ).filter(item => !deletedIds.has(item.id));
+    return readFavoriteState().phrases;
   }
-
   function overwriteCommunicationSavedPhraseTombstones(entries) {
-    const tombstones = normalizeSavedPhraseTombstones(entries).slice(
-      0,
-      itemLimit
-    );
-    const deletedIds = new Set(tombstones.map(item => item.id));
-    const activePhrases = normalizeCommunicationSavedPhrases(
-      readList(
-        COMMUNICATION_STORAGE_KEYS.savedPhrases,
-        LEGACY_COMMUNICATION_STORAGE_KEYS.savedPhrases
-      )
-    ).filter(item => !deletedIds.has(item.id));
-
-    writeList(
-      COMMUNICATION_STORAGE_KEYS.savedPhraseTombstones,
-      null,
-      tombstones
-    );
-    writeList(
-      COMMUNICATION_STORAGE_KEYS.savedPhrases,
-      LEGACY_COMMUNICATION_STORAGE_KEYS.savedPhrases,
-      activePhrases
-    );
-    return tombstones;
+    const expected = observedFavorites || readFavoriteState();
+    return commitFavoriteState(expected, { tombstones: entries }).tombstones;
   }
-
-  function overwriteCommunicationSavedPhrases(entries) {
-    const deletedIds = new Set(
-      loadCommunicationSavedPhraseTombstones().map(item => item.id)
-    );
-    const phrases = normalizeCommunicationSavedPhrases(entries).filter(
-      item => !deletedIds.has(item.id)
-    );
-
-    writeList(
-      COMMUNICATION_STORAGE_KEYS.savedPhrases,
-      LEGACY_COMMUNICATION_STORAGE_KEYS.savedPhrases,
-      phrases
-    );
-    return phrases;
+  function overwriteCommunicationSavedPhrases(entries, { expectedPhrases } = {}) {
+    const expected = observedFavorites || readFavoriteState();
+    if (expectedPhrases && JSON.stringify(expected.phrases) !== JSON.stringify(expectedPhrases)) {
+      throw new Error('常用语已变化，请重新查看，未覆盖当前内容。');
+    }
+    return commitFavoriteState(expected, { phrases: entries }).phrases;
   }
 
   function saveCommunicationPhrase(entry) {
@@ -789,10 +790,7 @@ export function createCommunicationRepository({
       normalized
     );
     const ids = new Set(normalized.map(item => item.id));
-    const receiver = safeParse(
-      storage.getItem(COMMUNICATION_STORAGE_KEYS.receiverRecords),
-      []
-    );
+    const receiver = readRequiredShape(COMMUNICATION_STORAGE_KEYS.receiverRecords, [], Array.isArray);
     if (Array.isArray(receiver))
       writeStorageValue(
         COMMUNICATION_STORAGE_KEYS.receiverRecords,
@@ -987,15 +985,16 @@ export function createCommunicationRepository({
   }
 
   function loadAllPersonalImagePreferences() {
-    return normalizePersonalImagePreferences(
-      safeParse(
-        storage.getItem(COMMUNICATION_STORAGE_KEYS.personalImagePreferences),
-        []
-      )
-    ).slice(0, personalImagePreferenceLimit);
+    const raw = storage.getItem(COMMUNICATION_STORAGE_KEYS.personalImagePreferences);
+    const entries = raw === null || raw === undefined ? [] : JSON.parse(raw);
+    if (!Array.isArray(entries) || entries.some(entry => normalizePersonalImagePreferences([entry]).length !== 1)) {
+      throw new Error('熟悉图片列表格式不可读取，原数据已保留。');
+    }
+    return normalizePersonalImagePreferences(entries).slice(0, personalImagePreferenceLimit);
   }
 
   function overwriteAllPersonalImagePreferences(entries) {
+    loadAllPersonalImagePreferences();
     return writePersonalImagePreferences(entries);
   }
 
@@ -1019,20 +1018,40 @@ export function createCommunicationRepository({
   }
 
   function savePersonalImagePreference(entry) {
+    const scope = storage.getScopeKey ? storage.getScopeKey() : 'local';
     const identity = loadCommunicationIdentity();
+    const current = loadAllPersonalImagePreferences();
+    const match = preference => preference.tileId === String(entry.tileId || '').trim() &&
+      preference.boardId === String(entry.boardId || '').trim();
+    const snapshot = preferences => JSON.stringify(getPersonalImagePreferencesForIdentity(preferences, identity).find(match) || null);
+    const context = JSON.stringify([scope, identity.patientId, identity.workspaceId]);
+    const assertCurrent = () => {
+      const nextScope = storage.getScopeKey ? storage.getScopeKey() : 'local';
+      const nextIdentity = loadCommunicationIdentity();
+      if (JSON.stringify([nextScope, nextIdentity.patientId, nextIdentity.workspaceId]) !== context) {
+        throw new Error('熟悉图片保存对象已切换，请在当前对象下重新选择。');
+      }
+    };
+    assertCurrent();
+    const attempt = personalImageWriteAttempts.get(entry);
+    const expected = snapshot(current);
+    if (attempt && (attempt.context !== context ||
+        (expected !== attempt.expected && expected !== attempt.desired))) {
+      throw new Error('熟悉图片已有后续修改，未覆盖；请重新选择。');
+    }
     const next = upsertPersonalImagePreference(
-      loadAllPersonalImagePreferences(),
+      current,
       entry,
       { identity, now }
     );
+    personalImageWriteAttempts.set(entry, { context, expected, desired: snapshot(next) });
+    assertCurrent();
     writePersonalImagePreferences(next);
+    assertCurrent();
+    personalImageWriteAttempts.delete(entry);
 
     return (
-      getPersonalImagePreferencesForIdentity(next, identity).find(
-        preference =>
-          preference.tileId === String(entry.tileId || '').trim() &&
-          preference.boardId === String(entry.boardId || '').trim()
-      ) || null
+      getPersonalImagePreferencesForIdentity(next, identity).find(match) || null
     );
   }
 
@@ -1075,7 +1094,7 @@ export function createCommunicationRepository({
 
   function loadReceiverRecords() {
     return normalizeReceiverRecordsForRepository(
-      safeParse(storage.getItem(COMMUNICATION_STORAGE_KEYS.receiverRecords), [])
+      readRequiredShape(COMMUNICATION_STORAGE_KEYS.receiverRecords, [], Array.isArray)
     ).slice(0, itemLimit);
   }
 
@@ -1091,14 +1110,30 @@ export function createCommunicationRepository({
   function upsertReceiverRecord(entry) {
     const current = loadReceiverRecords().filter(item => item.id !== entry.id);
     overwriteReceiverRecords([entry, ...current]);
-    return loadReceiverRecords().find(item => item.id === entry.id) || entry;
+    const saved = loadReceiverRecords().find(item => item.id === entry.id);
+    if (!saved) throw new Error('接收草稿未保存，请重试。');
+    return saved;
   }
 
   function createReceiverDraft(entry) {
     const identity = loadCommunicationIdentity();
     const sessionId =
       String(entry.sessionId || '').trim() || getActiveConversationSession().id;
-    const draft = createReceiverDraftEntry(entry, {
+    // Only an existing confirmed record in the current scope may start a repair.
+    const records = loadReceiverRecords();
+    const resume = safeParse(storage.getItem(COMMUNICATION_STORAGE_KEYS.receiverResumeRecord), null);
+    const source = entry.repairOfRecordId && records.find(record =>
+      record.id === entry.repairOfRecordId && record.recordStatus === 'confirmed' &&
+      record.patientId === identity.patientId && record.workspaceId === identity.workspaceId &&
+      (record.sessionId === sessionId || (resume && resume.recordId === record.id && resume.sessionId === sessionId)));
+    if (entry.repairOfRecordId && !source) throw new Error('Receiver repair source unavailable');
+    const existing = source && records.find(record => record.recordStatus === 'draft' &&
+      record.repairOfRecordId === source.id && record.patientId === identity.patientId &&
+      record.workspaceId === identity.workspaceId && record.sessionId === sessionId);
+    if (existing) return existing;
+    const draft = createReceiverDraftEntry({ ...entry,
+      ...(source ? { repairSourceSessionId: source.sessionId } : {})
+    }, {
       sessionId,
       identity,
       now,
@@ -1116,9 +1151,9 @@ export function createCommunicationRepository({
     overwriteReceiverRecords([draft, ...current]);
     writeStorageValue(COMMUNICATION_STORAGE_KEYS.receiverResumeRecord, '');
     touchConversationSessionId(draft.sessionId);
-    return (
-      loadReceiverRecords().find(record => record.id === draft.id) || draft
-    );
+    const saved = loadReceiverRecords().find(record => record.id === draft.id);
+    if (!saved) throw new Error('接收草稿未保存，请重试。');
+    return saved;
   }
 
   function loadResumableReceiverRecord(options = {}) {
@@ -1126,7 +1161,8 @@ export function createCommunicationRepository({
     const sessionId =
       String(options.sessionId || '').trim() ||
       getActiveConversationSession().id;
-    const records = loadReceiverRecords().filter(
+    const allRecords = loadReceiverRecords();
+    const records = allRecords.filter(
       record =>
         record.patientId === identity.patientId &&
         record.workspaceId === identity.workspaceId &&
@@ -1139,6 +1175,13 @@ export function createCommunicationRepository({
       storage.getItem(COMMUNICATION_STORAGE_KEYS.receiverResumeRecord) || ''
     ).trim();
     if (!resumeRecordId) return null;
+
+    const carriedResume = safeParse(resumeRecordId, null);
+    if (carriedResume && carriedResume.sessionId === sessionId) {
+      return allRecords.find(record => record.id === carriedResume.recordId &&
+        record.patientId === identity.patientId && record.workspaceId === identity.workspaceId &&
+        record.recordStatus === 'confirmed' && record.patientFeedback === RECEIVER_PATIENT_FEEDBACK.notUnderstood) || null;
+    }
 
     return (
       records.find(
@@ -1159,14 +1202,19 @@ export function createCommunicationRepository({
       String(options.sessionId || '').trim() ||
       getActiveConversationSession().id;
     const records = loadReceiverRecords();
+    const resume = safeParse(storage.getItem(COMMUNICATION_STORAGE_KEYS.receiverResumeRecord), null);
     const target = records.find(
       record =>
         record.id === normalizedRecordId &&
         record.patientId === identity.patientId &&
         record.workspaceId === identity.workspaceId &&
-        record.sessionId === sessionId
+        (record.sessionId === sessionId ||
+          (resume && resume.recordId === record.id && resume.sessionId === sessionId))
     );
     if (!target) return false;
+
+    if (options.expected && receiverSignature(target) !== receiverSignature(options.expected))
+      throw new Error('草稿已有新内容，旧页面不能取消，请重新打开。');
 
     let changed = false;
     if (target.recordStatus === 'draft') {
@@ -1174,12 +1222,20 @@ export function createCommunicationRepository({
         records.filter(record => record.id !== normalizedRecordId)
       );
       changed = true;
+      const source = target.repairOfRecordId && records.find(record =>
+        record.id === target.repairOfRecordId && record.recordStatus === 'confirmed' &&
+        record.patientId === target.patientId && record.workspaceId === target.workspaceId &&
+        record.sessionId === (target.repairSourceSessionId || target.sessionId) && record.patientFeedback === RECEIVER_PATIENT_FEEDBACK.notUnderstood);
+      if (source) writeStorageValue(COMMUNICATION_STORAGE_KEYS.receiverResumeRecord,
+        JSON.stringify({ recordId: source.id, sessionId }));
     }
 
     const resumeRecordId = String(
       storage.getItem(COMMUNICATION_STORAGE_KEYS.receiverResumeRecord) || ''
     ).trim();
-    if (resumeRecordId === normalizedRecordId) {
+    const currentResume = safeParse(resumeRecordId, null);
+    if (resumeRecordId === normalizedRecordId ||
+        (currentResume && currentResume.recordId === normalizedRecordId && currentResume.sessionId === sessionId)) {
       writeStorageValue(COMMUNICATION_STORAGE_KEYS.receiverResumeRecord, '');
       changed = true;
     }
@@ -1187,17 +1243,56 @@ export function createCommunicationRepository({
     return changed;
   }
 
+  // Compare persisted snapshots, not timestamps alone (rapid input may share a millisecond).
+  // Session rollover is allowed; it expires AI context without changing human work.
+  function receiverAttemptInput(entry) {
+    return JSON.stringify([receiverDraftContentSignature(entry), entry.repairOfRecordId || '', entry.repairSourceSessionId || '']);
+  }
+  function receiverSignature(record) {
+    const normalized = normalizeReceiverRecordsForRepository([record])[0];
+    if (!normalized) return '';
+    const { sessionId, ...content } = normalized;
+    return JSON.stringify(content);
+  }
+  function requireCurrentReceiver(draft) {
+    const identity = loadCommunicationIdentity();
+    const current = loadReceiverRecords().find(record => record.id === draft.id);
+    if (!current || current.patientId !== identity.patientId || current.workspaceId !== identity.workspaceId)
+      throw new Error('草稿已关闭或档案已切换，请重新打开。');
+    return current;
+  }
   function updateReceiverDraft(draft, entry) {
-    const updated = upsertReceiverRecord(
-      updateReceiverDraftEntry(draft, entry, { now })
-    );
+    getActiveConversationSession();
+    const current = requireCurrentReceiver(draft);
+    const attempted = receiverWriteAttempts.get(draft);
+    if (receiverSignature(current) !== receiverSignature(draft)) {
+      if (attempted && attempted.expected === receiverSignature(draft) &&
+        attempted.input === receiverAttemptInput(entry) && attempted.desired === receiverSignature(current)) return current;
+      throw new Error('草稿已有新内容，请重新打开，旧操作未覆盖。');
+    }
+    const next = updateReceiverDraftEntry(current, entry, { now });
+    receiverWriteAttempts.set(draft, { expected: receiverSignature(draft), input: receiverAttemptInput(entry), desired: receiverSignature(next) });
+    const updated = upsertReceiverRecord(next);
     touchConversationSessionId(updated.sessionId);
     return updated;
   }
 
   function confirmReceiverDraft(draft, entry) {
+    getActiveConversationSession();
+    const current = requireCurrentReceiver(draft);
+    // Replayed confirmation of the same draft must not append another record.
+    if (current.recordStatus === 'confirmed') {
+      if (receiverDraftContentSignature(current) !== receiverDraftContentSignature(entry))
+        throw new Error('这条接收记录已确认，修改内容请新建草稿。');
+      const history = loadCommunicationHistory();
+      if (!history.some(record => record.id === current.id)) appendCommunicationHistory(current);
+      else overwriteCommunicationHistory(history);
+      return current;
+    }
+    if (receiverSignature(current) !== receiverSignature(draft))
+      throw new Error('草稿已有新内容，请重新复核后确认。');
     const confirmed = upsertReceiverRecord(
-      confirmReceiverDraftEntry(draft, entry, { now })
+      confirmReceiverDraftEntry(current, entry, { now })
     );
     appendCommunicationHistory(confirmed);
     touchConversationSessionId(confirmed.sessionId);
@@ -1233,14 +1328,15 @@ export function createCommunicationRepository({
     const resumeRecordId = String(
       storage.getItem(COMMUNICATION_STORAGE_KEYS.receiverResumeRecord) || ''
     ).trim();
+    const carriedResume = safeParse(resumeRecordId, null);
     if (feedback === RECEIVER_PATIENT_FEEDBACK.notUnderstood) {
       writeStorageValue(
         COMMUNICATION_STORAGE_KEYS.receiverResumeRecord,
-        updated.id
+        carriedResume && carriedResume.recordId === updated.id ? resumeRecordId : updated.id
       );
     } else if (
       feedback === RECEIVER_PATIENT_FEEDBACK.understood &&
-      resumeRecordId === updated.id
+      (resumeRecordId === updated.id || (carriedResume && carriedResume.recordId === updated.id))
     ) {
       writeStorageValue(COMMUNICATION_STORAGE_KEYS.receiverResumeRecord, '');
     }
@@ -1253,10 +1349,7 @@ export function createCommunicationRepository({
 
   function loadReceiverCorrections() {
     return normalizeCommunicationReceiverCorrections(
-      safeParse(
-        storage.getItem(COMMUNICATION_STORAGE_KEYS.receiverCorrections),
-        []
-      )
+      readRequiredShape(COMMUNICATION_STORAGE_KEYS.receiverCorrections, [], Array.isArray)
     ).slice(0, itemLimit);
   }
 
@@ -1329,7 +1422,65 @@ export function createCommunicationRepository({
     return normalized;
   }
 
+  function preparationScope() {
+    const identity = loadCommunicationIdentity();
+    return JSON.stringify([identity.workspaceId, identity.patientId]);
+  }
+  // A malformed/future draft is never normalized to empty and overwritten.
+  function readExpressionDraftMap() {
+    const raw = storage.getItem(EXPRESSION_DRAFT_STORAGE_KEY);
+    if (raw === null || raw === undefined || raw === '') return {};
+    const values = JSON.parse(raw);
+    if (!isPlainRecord(values)) throw new Error('Expression draft storage is invalid');
+    return values;
+  }
+  function loadExpressionDraft() {
+    return normalizeExpressionDraft(readExpressionDraftMap()[preparationScope()] || null);
+  }
+  function writeExpressionDraft(draft, expected) {
+    const values = readExpressionDraftMap();
+    const key = preparationScope();
+    const current = normalizeExpressionDraft(values[key] || null);
+    if (expected !== undefined && JSON.stringify(current) !== JSON.stringify(expected))
+      throw new Error('Expression draft changed; reload before saving');
+    const normalized = normalizeExpressionDraft(draft);
+    const serialized = JSON.stringify({ ...values, [key]: normalized });
+    writeStorageValue(EXPRESSION_DRAFT_STORAGE_KEY, serialized);
+    if (storage.getItem(EXPRESSION_DRAFT_STORAGE_KEY) !== serialized)
+      throw new Error('Expression draft storage read-back failed');
+    return normalized;
+  }
+  function loadSavedPhrasePreparation() {
+    const values = readRequiredShape(PREPARATION_STORAGE_KEY, {}, isPlainRecord);
+    const draft = values && values[preparationScope()];
+    if (draft && (draft.preparationVersion !== 1 || draft.recordStatus !== 'draft'))
+      throw new Error('准备草稿版本不可读取，原数据已保留。');
+    return draft && draft.preparationVersion === 1 && draft.recordStatus === 'draft' ? draft : null;
+  }
+  function clearExpressionDrafts() {
+    writeStorageValue(EXPRESSION_DRAFT_STORAGE_KEY, '{}');
+    if (storage.getItem(EXPRESSION_DRAFT_STORAGE_KEY) !== '{}')
+      throw new Error('Expression draft privacy clear failed');
+  }
+  function writeSavedPhrasePreparation(draft, expected) {
+    const values = readRequiredShape(PREPARATION_STORAGE_KEY, {}, isPlainRecord);
+    const current = loadSavedPhrasePreparation();
+    if (expected !== undefined && JSON.stringify(current) !== JSON.stringify(expected))
+      throw new Error('准备草稿已有新内容，旧操作未覆盖。');
+    const next = { ...(isPlainRecord(values) ? values : {}) };
+    if (draft) next[preparationScope()] = draft;
+    else delete next[preparationScope()];
+    writeStorageValue(PREPARATION_STORAGE_KEY, JSON.stringify(next));
+    return draft;
+  }
+
   return {
+    loadExpressionDraft,
+    writeExpressionDraft,
+    clearExpressionDrafts,
+    loadSavedPhrasePreparation,
+    writeSavedPhrasePreparation,
+    savedPhraseCapacity: itemLimit,
     appendCommunicationHistory,
     appendReceiverCorrection,
     clearCommunicationSavedPhrases,
@@ -1346,6 +1497,8 @@ export function createCommunicationRepository({
     loadCommunicationAccountIdentity,
     loadCommunicationIdentity,
     loadCommunicationHistory,
+    readFavoriteState,
+    commitFavoriteState,
     loadCommunicationSavedPhraseTombstones,
     loadCommunicationSavedPhrases,
     loadConversationContext,

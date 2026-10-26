@@ -4,7 +4,8 @@ import {
   blockRemoteHttpRequests,
   completeCommunicationOnboarding,
   dismissBoardTour,
-  installBrowserShareHarness
+  installBrowserShareHarness,
+  openPatientExpression
 } from './helpers/communicationSupport';
 
 test.describe('Production communication sharing', () => {
@@ -21,14 +22,17 @@ test.describe('Production communication sharing', () => {
     const tiles = page.locator('button.Tile:visible');
     await expect(tiles.first()).toBeVisible();
     await activate(tiles.nth(0), useTouch);
+    await completeCommunicationOnboarding(page, useTouch);
     await activate(tiles.nth(1), useTouch);
 
     const panel = page.locator('.CommunicationSupportPanel');
-    await activate(panel.getByRole('button', { name: '患者表达' }), useTouch);
-    await completeCommunicationOnboarding(page, useTouch);
+    await openPatientExpression(panel, useTouch);
     const currentOutput = panel.getByText(/^当前输出：/);
     const outputBeforeShare = await currentOutput.textContent();
-    await activate(panel.getByRole('button', { name: '生成并播报' }), useTouch);
+    await activate(
+      panel.getByRole('button', { name: '立即全部播报' }),
+      useTouch
+    );
     await expect(
       panel.locator('.CommunicationSupportPanel__candidate').first()
     ).toBeVisible();
@@ -65,8 +69,8 @@ test.describe('Production communication sharing', () => {
       useTouch
     );
     await expect(
-      receiverWorkspace.getByRole('status').filter({ hasText: '匹配结果' })
-    ).toContainText('已全部匹配');
+      receiverWorkspace.getByRole('status').filter({ hasText: /^图片匹配：/ })
+    ).toContainText('已全部配图');
     const sequenceBeforeShare = await receiverWorkspace
       .locator('.CommunicationSupportPanel__resultMeta')
       .textContent();

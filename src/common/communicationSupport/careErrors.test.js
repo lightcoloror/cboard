@@ -76,6 +76,14 @@ test('maps public trial claim outcomes without implying payment or email deliver
 });
 
 test('server JSON auth and service failures retain distinct recovery instructions', () => {
+  expect(careErrorMessage({ code: 'AI_REQUEST_INPUT_CHANGED' })).toContain(
+    '已停止再次发送'
+  );
+  expect(
+    careErrorMessage({
+      response: { data: { error: { code: 'USAGE_ID_REUSED' } } }
+    })
+  ).toContain('不会另建请求重复扣费');
   expect(careErrorMessage({ data: { code: 'LOGIN_REQUIRED' } })).toContain(
     '重新登录'
   );

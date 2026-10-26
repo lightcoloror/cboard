@@ -215,6 +215,18 @@ export default defineMessages({
     id: 'cboard.components.Board.live',
     defaultMessage: 'LIVE'
   },
+  undoDeletion: {
+    id: 'cboard.components.Board.undoDeletion',
+    defaultMessage: 'Undo deletion'
+  },
+  outputBackspace: {
+    id: 'cboard.components.Board.outputBackspace',
+    defaultMessage: 'Backspace'
+  },
+  outputClear: {
+    id: 'cboard.components.Board.outputClear',
+    defaultMessage: 'Clear'
+  },
   writeAndSay: {
     id: 'cboard.components.Board.writeAndSay',
     defaultMessage: 'Write and say'

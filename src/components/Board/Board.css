@@ -36,6 +36,11 @@
   right: 0;
   width: 100%;
   z-index: 2;
+  /* Keep the next picture reachable when three candidates expand above it. */
+  flex: 0 1 auto;
+  max-height: 50%;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .Board__loading {

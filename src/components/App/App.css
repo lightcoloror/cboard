@@ -2,6 +2,74 @@
   height: 100%;
 }
 
+.App__content {
+  height: 100%;
+}
+.App.has-filing {
+  display: flex;
+  flex-direction: column;
+}
+.App.has-filing .App__content {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+.App__filing {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 2px 18px;
+  padding: 4px 12px;
+  padding-bottom: max(4px, env(safe-area-inset-bottom));
+  background: #f5f5f5;
+  color: #454545;
+  border-top: 1px solid #ddd;
+  font-size: 12px;
+  line-height: 20px;
+}
+.App__filing a {
+  color: inherit;
+  white-space: nowrap;
+}
+.App__policeFiling {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.App__policeFiling img {
+  display: block;
+  flex: none;
+  object-fit: contain;
+}
+.is-dark .App__filing {
+  background: #333;
+  color: #eee;
+  border-color: #555;
+}
+.App__filing a:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+.App__offlineStatus {
+  flex: none;
+  padding: 5px 12px;
+  border-top: 1px solid #ddd;
+  background: #f5f5f5;
+  color: #454545;
+  font-size: 12px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.is-dark .App__offlineStatus {
+  background: #333;
+  color: #eee;
+  border-color: #555;
+}
+
 .App.is-demo {
   box-sizing: border-box;
   padding-top: 52px;

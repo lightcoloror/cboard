@@ -31,8 +31,8 @@ describe('expressionPipeline', () => {
     expect(state.outputSnapshot.map(item => item.label)).toEqual(['想', '水']);
     expect(state.candidateSentences).toEqual([
       '想水。',
-      '我想水。',
-      '请想水。'
+      '我的意思是：想水。',
+      '我想表达的是：想水。'
     ]);
     expect(state.outputSignature).toBe(
       buildExpressionOutputSignature([
@@ -74,10 +74,10 @@ describe('expressionPipeline', () => {
       2
     );
 
-    expect(getSelectedExpressionSentence(state)).toBe('请想水。');
+    expect(getSelectedExpressionSentence(state)).toBe('我想表达的是：想水。');
     expect(buildExpressionSavedPhraseEntry(state)).toEqual({
       contractVersion: EXPRESSION_PIPELINE_CONTRACT_VERSION,
-      sentence: '请想水。',
+      sentence: '我想表达的是：想水。',
       output: [
         { id: 'want', label: '想', image: '/want.png' },
         { id: 'water', label: '水', image: '/water.png' }
@@ -86,7 +86,7 @@ describe('expressionPipeline', () => {
     expect(buildExpressionHistoryEntry(state)).toEqual({
       contractVersion: EXPRESSION_PIPELINE_CONTRACT_VERSION,
       direction: 'express',
-      sentence: '请想水。',
+      sentence: '我想表达的是：想水。',
       labels: ['想', '水'],
       output: [
         { id: 'want', label: '想', image: '/want.png' },
@@ -122,7 +122,7 @@ describe('expressionPipeline', () => {
     );
 
     expect(state.candidateSentences[0]).toBe('请帮我喝一点水。');
-    expect(state.candidateSentences).toHaveLength(4);
+    expect(state.candidateSentences).toHaveLength(3);
   });
 
   test('falls back to the first candidate for an invalid selection', () => {

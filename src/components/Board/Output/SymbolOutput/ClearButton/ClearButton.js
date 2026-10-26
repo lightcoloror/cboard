@@ -13,12 +13,12 @@ export class ClearButton extends Component {
   };
 
   render() {
-    const { hidden, increaseOutputButtons, ...other } = this.props;
+    const { hidden, increaseOutputButtons, label = 'Clear', ...other } = this.props;
 
     return (
       <Scannable disabled={hidden}>
         <IconButton
-          aria-label="Clear"
+          aria-label={label}
           className={
             increaseOutputButtons ? 'Output__button__lg' : 'Output__button__sm'
           }
@@ -29,6 +29,7 @@ export class ClearButton extends Component {
               increaseOutputButtons ? 'Output__icon__lg' : 'Output__icon__sm'
             }
           />
+          <span className="SymbolOutput__actionLabel">{label}</span>
         </IconButton>
       </Scannable>
     );

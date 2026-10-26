@@ -4,6 +4,7 @@ import { act } from 'react-dom/test-utils';
 import CareHome from './CareHome';
 import { runtime } from './Care';
 import CommunicationSupportPanel from '../Board/CommunicationSupport/CommunicationSupportPanel.component';
+import { createCommunicationRepository, COMMUNICATION_STORAGE_KEYS } from '../../common/communicationSupport/repository';
 
 jest.mock('react-intl', () => ({ injectIntl: component => component }));
 jest.mock(
@@ -40,7 +41,16 @@ jest.mock('./Care', () => {
     request: jest.fn(),
     storage: { get: jest.fn(), set: jest.fn() },
     selectProfile: jest.fn(),
-    newId: jest.fn()
+    newId: jest.fn(),
+    speechSettings: jest.fn(() => ({
+      rate: 1,
+      voiceURI: 'synthetic-local',
+      pitch: 0.9
+    })),
+    changeSpeechRate: jest.fn(),
+    cancelSpeech: jest.fn(),
+    speak: jest.fn(),
+    speakExpression: jest.fn()
   };
   return {
     __esModule: true,
@@ -81,8 +91,13 @@ describe('patient collaboration home', () => {
     });
     runtime.selectProfile.mockResolvedValue(undefined);
     runtime.newId.mockReturnValue('operation');
+    runtime.speechSettings.mockReturnValue({
+      rate: 1,
+      voiceURI: 'synthetic-local',
+      pitch: 0.9
+    });
   });
-  async function render(role, intl = {}) {
+  async function render(role, intl = {}, initialResources) {
     const relationship = {
       role,
       defaultMode: role === 'patient' ? 'expression' : 'receiver'
@@ -97,7 +112,7 @@ describe('patient collaboration home', () => {
         ...profile,
         cursor: 1,
         permissions: ['read'],
-        resources: [
+        resources: initialResources || [
           {
             id: 'favorite',
             kind: 'favorite',
@@ -134,15 +149,22 @@ describe('patient collaboration home', () => {
     const messages = require('../../translations/zh-CN.communication').default;
     const intl = { messages, formatMessage: ({ id }) => messages[id] || id };
     const fixture = require('../../common/communicationSupport/fixtures/builtin15Reuse.json');
-    const { matchTextToCommunicationTiles } = require('../../common/communicationSupport/symbolMatching');
+    const {
+      matchTextToCommunicationTiles
+    } = require('../../common/communicationSupport/symbolMatching');
     const wrapper = await render('relative', intl);
     const boards = wrapper.find(CommunicationSupportPanel).prop('boards');
-    for (const card of fixture.cards) for (const token of card.tokens) {
-      const result = matchTextToCommunicationTiles(token, boards, { intl });
-      expect(result.matches[0].tile.id).toBe(card.id);
-    }
-    expect(boards.find(board => board.id === 'board').tiles[0].label).toBe('喝水');
-    expect(runtime.request.mock.calls.filter(call => call[1] === 'POST')).toHaveLength(0);
+    for (const card of fixture.cards)
+      for (const token of card.tokens) {
+        const result = matchTextToCommunicationTiles(token, boards, { intl });
+        expect(result.matches[0].tile.id).toBe(card.id);
+      }
+    expect(boards.find(board => board.id === 'board').tiles[0].label).toBe(
+      '喝水'
+    );
+    expect(
+      runtime.request.mock.calls.filter(call => call[1] === 'POST')
+    ).toHaveLength(0);
     wrapper.unmount();
   });
   test.each([['patient', 'express'], ['relative', 'receive']])(
@@ -151,6 +173,7 @@ describe('patient collaboration home', () => {
       const wrapper = await render(role);
       const panel = wrapper.find(CommunicationSupportPanel);
       expect(panel.prop('initialMode')).toBe(mode);
+      expect(panel.prop('accountId')).toBe('account');
       expect(
         panel.prop('boards').find(board => board.id === 'board').tiles[0].label
       ).toBe('喝水');
@@ -392,6 +415,65 @@ describe('patient collaboration home', () => {
     );
     wrapper.unmount();
   });
+
+  test('care projection capacity overflow preserves 99 local phrases, displays its reason and allows retry', async () => {
+    const phrases = Array.from({ length: 101 }, (_, index) => ({
+      id: `care-capacity-${index}`, sentence: `合成同步${index}`, createdAt: index + 1,
+      output: [{ id: 'shape', label: '几何图', personId: `synthetic-${index}` }]
+    }));
+    const values = new Map([[COMMUNICATION_STORAGE_KEYS.savedPhrases, JSON.stringify(phrases.slice(0, 99))]]);
+    const repository = createCommunicationRepository({ storage: {
+      getItem: key => values.get(key) || null,
+      setItem: (key, value) => values.set(key, value)
+    }, now: () => 1000 });
+    const local = require('../../common/communicationSupport/localData');
+    local.loadCommunicationSavedPhrases.mockImplementation(() => repository.loadCommunicationSavedPhrases());
+    local.overwriteCommunicationSavedPhrases.mockImplementation(items => repository.overwriteCommunicationSavedPhrases(items));
+    const before = repository.readFavoriteState();
+    const resources = phrases.map(item => ({ id: item.id, kind: 'favorite', version: 1, seq: 1, value: item }));
+    const wrapper = await render('patient', {}, resources.slice(0, 99));
+    const baselineRequest = runtime.request.getMockImplementation();
+    runtime.request.mockImplementation(async (...args) => {
+      const result = await baselineRequest(...args);
+      return result.resources ? { ...result, cursor: 2, resources: resources.map(item => ({ ...item, seq: 2, version: 2 })) } : result;
+    });
+    const current = repository.readFavoriteState();
+    await act(async () => { tick(); await flush(); });
+    wrapper.update();
+    expect(wrapper.text()).toContain('容量上限');
+    expect(repository.readFavoriteState()).toEqual(current);
+    const previous = runtime.request.getMockImplementation();
+    runtime.request.mockImplementation(async (...args) => {
+      const result = await previous(...args);
+      return result.resources ? { ...result, cursor: 3, resources: result.resources.map(item =>
+        item.id === 'care-capacity-100' ? { ...item, deleted: true, version: 3, seq: 3 } : item
+      ) } : result;
+    });
+    await act(async () => { tick(); await flush(); });
+    wrapper.update();
+    expect(wrapper.text()).not.toContain('容量上限');
+    const saved = repository.loadCommunicationSavedPhrases();
+    expect(saved).toHaveLength(100);
+    for (const item of before.phrases) expect(saved.find(value => value.id === item.id)).toEqual(item);
+    wrapper.unmount();
+  });
+
+  test.each(['local', 'pending'])('care rejects a 101-item %s batch before cloud mutation and preserves its retry state', async source => {
+    const phrases = Array.from({ length: 101 }, (_, index) => ({ id: `full-${index}`, sentence: `合成满额${index}`, output: [], createdAt: index + 1 }));
+    const local = require('../../common/communicationSupport/localData');
+    const current = source === 'local' ? phrases : phrases.slice(0, 100);
+    local.loadCommunicationSavedPhrases.mockReturnValue(current);
+    const key = 'care-projection-v1:account:family:patient';
+    const pending = JSON.stringify({ favorites: phrases, favoritesBase: [] });
+    if (source === 'pending') localStorage.setItem(key, pending);
+    const wrapper = await render('patient');
+    expect(wrapper.text()).toContain('容量上限');
+    expect(local.loadCommunicationSavedPhrases()).toEqual(current);
+    expect(local.overwriteCommunicationSavedPhrases).not.toHaveBeenCalled();
+    expect(runtime.request.mock.calls.map(call => call[0])).toEqual(['/care/profiles', '/care/context']);
+    if (source === 'pending') expect(localStorage.getItem(key)).toBe(pending);
+    wrapper.unmount();
+  });
   test('restored offline profile never requests cloud synchronization on open or refresh', async () => {
     who = { id: 'offline', offline: true };
     localStorage.setItem(
@@ -564,5 +646,172 @@ describe('patient collaboration home', () => {
       expect.objectContaining({ resourceId: 'new-favorite', kind: 'favorite' })
     );
     wrapper.unmount();
+  });
+  test('recent usage persists in the patient scope and never creates a cloud operation', async () => {
+    let wrapper = await render('patient');
+    runtime.request.mockClear();
+    await act(async () => {
+      wrapper.find(CommunicationSupportPanel).prop('onPictogramUsed')(
+        'board',
+        'water'
+      );
+    });
+    wrapper.update();
+    expect(
+      wrapper.find(CommunicationSupportPanel).prop('pictogramOrdering')
+        .usageByTileKey['board:water'].count
+    ).toBe(1);
+    expect(runtime.request).not.toHaveBeenCalled();
+    wrapper.unmount();
+    wrapper = await render('patient');
+    expect(
+      wrapper.find(CommunicationSupportPanel).prop('pictogramOrdering')
+        .usageByTileKey['board:water'].count
+    ).toBe(1);
+    expect(
+      localStorage.getItem(
+        'communication-v2:account:family:patient:cboard_communication_pictogram_ordering_v1'
+      )
+    ).toContain('board:water');
+    expect(
+      localStorage.getItem(
+        'communication-v2:other:family:patient:cboard_communication_pictogram_ordering_v1'
+      )
+    ).toBeNull();
+    wrapper.unmount();
+  });
+  test('Care uses device speech settings and passes the saved phrase audio output to the original playback chain', async () => {
+    const wrapper = await render('patient');
+    const panel = wrapper.find(CommunicationSupportPanel);
+    expect(panel.prop('speechSettings')).toMatchObject({
+      voiceURI: 'synthetic-local',
+      pitch: 0.9
+    });
+    let finish;
+    runtime.speakExpression.mockReturnValue(
+      new Promise(resolve => {
+        finish = resolve;
+      })
+    );
+    const done = jest.fn(),
+      audio = [{ id: 'water', sound: 'data:audio/wav;base64,AA==' }];
+    const playing = panel.prop('onSpeak')('喝水', done, audio);
+    expect(done).not.toHaveBeenCalled();
+    expect(runtime.speakExpression).toHaveBeenCalledWith('喝水', audio, 1);
+    finish();
+    await playing;
+    expect(done).toHaveBeenCalledTimes(1);
+    runtime.request.mockClear();
+    await act(async () => {
+      panel.prop('onChangeSpeechRate')(0.8);
+    });
+    expect(runtime.changeSpeechRate).toHaveBeenCalledWith(0.8);
+    expect(runtime.request).not.toHaveBeenCalled();
+    wrapper.unmount();
+  });
+  test('same-profile local recordings survive a projection and remount while cloud deletions stay deleted', async () => {
+    const key = 'care-projection-v1:account:family:patient:tile-media';
+    const sound = 'data:audio/wav;base64,c3ludGhldGlj';
+    localStorage.setItem(
+      key,
+      JSON.stringify([
+        {
+          id: 'board',
+          tiles: [{ id: 'water', sound }, { id: 'removed', sound }]
+        }
+      ])
+    );
+    let wrapper = await render('patient');
+    const card = () =>
+      wrapper
+        .find(CommunicationSupportPanel)
+        .prop('boards')
+        .find(b => b.id === 'board');
+    expect(card().tiles.map(t => t.id)).toEqual(['water']);
+    expect(card().tiles[0].sound).toBe(sound);
+    const previous = runtime.request.getMockImplementation();
+    runtime.request.mockImplementation(async (...args) => {
+      const result = await previous(...args);
+      if (!result.resources) return result;
+      return {
+        ...result,
+        cursor: 2,
+        resources: result.resources.map(r =>
+          r.id === 'water' ? { ...r, seq: 2, version: 2, deleted: true } : r
+        )
+      };
+    });
+    await act(async () => {
+      tick();
+      await flush();
+    });
+    wrapper.update();
+    expect(card().tiles).toEqual([]);
+    wrapper.unmount();
+    await act(async () => {
+      wrapper = mount(<CareHome intl={{}} />);
+      await flush();
+    });
+    wrapper.update();
+    // Reopen against the same authoritative deletion, rather than resetting the server fixture.
+    expect(card().tiles).toEqual([]);
+    expect(JSON.stringify(runtime.request.mock.calls)).not.toContain(sound);
+    wrapper.unmount();
+  });
+  test('editing a recorded card keeps a stable local copy and only queues supported cloud fields', async () => {
+    const wrapper = await render('patient');
+    const sound = 'data:audio/wav;base64,c3ludGhldGlj';
+    const current = runtime.request.getMockImplementation();
+    runtime.request.mockImplementation(async (...args) => {
+      const result = await current(...args);
+      return result.resources
+        ? { ...result, permissions: ['read', 'library.edit'] }
+        : result;
+    });
+    await act(async () => {
+      tick();
+      await flush();
+    });
+    wrapper.update();
+    const board = wrapper
+      .find(CommunicationSupportPanel)
+      .prop('boards')
+      .find(b => b.id === 'board');
+    await act(async () => {
+      await wrapper
+        .find(CommunicationSupportPanel)
+        .prop('onUpdateCommunicationBoard')({
+        ...board,
+        tiles: board.tiles.map(t => ({ ...t, sound }))
+      });
+      await flush();
+    });
+    wrapper.update();
+    expect(
+      wrapper
+        .find(CommunicationSupportPanel)
+        .prop('boards')
+        .find(b => b.id === 'board').tiles[0].sound
+    ).toBe(sound);
+    expect(
+      localStorage.getItem(
+        'care-projection-v1:account:family:patient:tile-media'
+      )
+    ).toContain(sound);
+    expect(JSON.stringify(runtime.request.mock.calls)).not.toContain(sound);
+    wrapper.unmount();
+    let reopened;
+    await act(async () => {
+      reopened = mount(<CareHome intl={{}} />);
+      await flush();
+    });
+    reopened.update();
+    expect(
+      reopened
+        .find(CommunicationSupportPanel)
+        .prop('boards')
+        .find(b => b.id === 'board').tiles[0].sound
+    ).toBe(sound);
+    reopened.unmount();
   });
 });

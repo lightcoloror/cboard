@@ -8,6 +8,8 @@ import * as symbolMatching from '../../../common/communicationSupport/symbolMatc
 import * as localData from '../../../common/communicationSupport/localData';
 import * as communicationSpeech from '../../../common/communicationSupport/communicationSpeech';
 import API from '../../../api';
+import { createBoardDTO } from '../../../common/communicationSupport/dto';
+import { browserCommunicationSharePort, createBrowserCommunicationSharePort } from '../../../common/communicationSupport/browserCommunicationShare';
 
 const mockedOutput = [
   {
@@ -121,6 +123,8 @@ jest.mock('../../../common/communicationSupport/symbolMatching', () => ({
 }));
 
 jest.mock('../../../common/communicationSupport/localData', () => ({
+  createLocalSavedPhraseImport: options => jest.requireActual('../../../common/communicationSupport/localData').createLocalSavedPhraseImport(options),
+  createLocalSavedPhraseUndo: () => jest.requireActual('../../../common/communicationSupport/localData').createLocalSavedPhraseUndo(),
   appendCommunicationHistory: jest.fn(),
   appendReceiverCorrection: jest.fn(),
   buildCommunicationCloudSettingsPayload: jest.fn(),
@@ -250,6 +254,233 @@ describe('CommunicationSupportPanel receiver flow', () => {
     initiallyExpanded: true
   };
 
+  test('committed import, consecutive deletes and undo refresh the canonical list without another CAS write', async () => {
+    const actual = jest.requireActual('../../../common/communicationSupport/localData');
+    const { buildCommunicationSavedPhraseExport } = jest.requireActual('../../../common/communicationSupport/savedPhraseManagement');
+    window.localStorage.clear();
+    actual.overwriteCommunicationSavedPhrases([{ id: 'before-import', sentence: '合成原句', output: [], createdAt: 1 }]);
+    localData.loadCommunicationSavedPhrases.mockImplementation(actual.loadCommunicationSavedPhrases);
+    localData.overwriteCommunicationSavedPhrases.mockImplementation(actual.overwriteCommunicationSavedPhrases);
+    const wrapper = mount(<CommunicationSupportPanel {...props} />);
+    const click = label => {
+      act(() => wrapper.find('ForwardRef(Button)').filterWhere(node => node.text() === label).first().prop('onClick')());
+      wrapper.update();
+    };
+    const shown = () => wrapper.find('CommunicationManagementDialog').prop('savedPhrases');
+    try {
+      click('常用语与历史');
+      const payload = JSON.stringify(buildCommunicationSavedPhraseExport([{ id: 'imported', sentence: '合成导入句', output: [], createdAt: 2 }]));
+      await act(async () => wrapper.find('input[type="file"]').first().prop('onChange')({ target: { files: [{ text: async () => payload }], value: '' } }));
+      wrapper.update();
+      const confirm = wrapper.find('ForwardRef(Button)').filterWhere(node => node.text() === '确认整批导入').prop('onClick');
+      act(() => { confirm(); confirm(); }); wrapper.update();
+      expect(actual.loadCommunicationSavedPhrases()).toHaveLength(2);
+      expect(shown()).toEqual(actual.loadCommunicationSavedPhrases());
+      expect(wrapper.text()).not.toContain('常用语已变化');
+      click('删除'); click('删除');
+      expect(shown()).toEqual([]);
+      for (let i = 0; i < 2; i += 1) {
+        await act(async () => wrapper.find(PatientActionButton).filterWhere(node => node.prop('ariaLabel') === '撤销上次删除的常用语').prop('onClick')());
+        wrapper.update();
+        expect(shown()).toEqual(actual.loadCommunicationSavedPhrases());
+      }
+      expect(shown()).toHaveLength(2);
+      expect(shown().every(item => item.id.startsWith('phrase_restored_'))).toBe(true);
+      expect(localData.overwriteCommunicationSavedPhrases).not.toHaveBeenCalled();
+    } finally {
+      wrapper.unmount(); window.localStorage.clear();
+      localData.loadCommunicationSavedPhrases.mockReturnValue([]);
+      localData.overwriteCommunicationSavedPhrases.mockReset();
+    }
+  });
+
+  test.each([100, 101])('direct duplicate favorite at %i keeps the original person, images and normalized sentence', count => {
+    const { createCommunicationRepository, COMMUNICATION_STORAGE_KEYS: K } = jest.requireActual('../../../common/communicationSupport/repository');
+    const entries = Array.from({ length: count }, (_, index) => ({
+      id: `duplicate-old-${index}`, sentence: index ? `合成原句${index}` : '合成林安不回家', createdAt: index + 1,
+      lifeContext: '聊天', output: [{ id: 'same', label: '合成林安', personId: 'synthetic-a', image: '/synthetic-a.png' }]
+    }));
+    const values = new Map([[K.savedPhrases, JSON.stringify(entries)]]);
+    const repository = createCommunicationRepository({ storage: { getItem: key => values.get(key) ?? null, setItem: (key, value) => values.set(key, value) } });
+    localData.loadCommunicationSavedPhrases.mockImplementation(repository.loadCommunicationSavedPhrases);
+    localData.saveCommunicationPhrase.mockImplementation(repository.saveCommunicationPhrase);
+    localData.overwriteCommunicationSavedPhrases.mockImplementation(repository.overwriteCommunicationSavedPhrases);
+    const before = repository.loadCommunicationSavedPhrases();
+    const wrapper = mount(<CommunicationSupportPanel {...props} />);
+    try {
+      for (const sentence of ['合成林安不回家', '  合成林安不回家  ']) {
+        expect(() => act(() => { wrapper.find('ExpressionLoopPanel').prop('onSavePhrase')({
+          sentence, output: [{ id: 'same', label: '合成林安', personId: 'synthetic-b', image: '/synthetic-b.png' }]
+        }); })).not.toThrow();
+        wrapper.update();
+        expect(repository.loadCommunicationSavedPhrases()).toEqual(before);
+      }
+      expect(localData.overwriteCommunicationSavedPhrases).not.toHaveBeenCalled();
+      expect(props.onSpeak).not.toHaveBeenCalled();
+    } finally { wrapper.unmount(); localData.saveCommunicationPhrase.mockReset(); }
+  });
+
+  test.each([99, 100, 101])('history favorite preserves %i old items and retries against the authoritative store', count => {
+    const { createCommunicationRepository, COMMUNICATION_STORAGE_KEYS: K } = jest.requireActual('../../../common/communicationSupport/repository');
+    const values = new Map([[K.savedPhrases, JSON.stringify(Array.from({ length: count }, (_, index) => ({
+      id: `synthetic-old-${index}`, sentence: `合成原句${index}`, createdAt: index + 1, lifeContext: '吃饭',
+      output: [{ id: 'same', label: '合成林安', personId: `synthetic-${index}`, image: '/synthetic.png' }]
+    })))]]);
+    const repository = createCommunicationRepository({ storage: {
+      getItem: key => values.get(key) ?? null, setItem: (key, value) => values.set(key, value)
+    } });
+    repository.overwriteCommunicationHistory([{
+      id: 'synthetic-history', direction: 'express', sentence: '我今晚不回家吃饭', createdAt: 10,
+      output: [{ id: 'same', label: '合成林安', personId: 'synthetic-a' }, { id: 'same', label: '合成林安', personId: 'synthetic-b' }]
+    }]);
+    const before = repository.loadCommunicationSavedPhrases(), historyBefore = repository.loadCommunicationHistory();
+    localData.loadCommunicationSavedPhrases.mockImplementation(repository.loadCommunicationSavedPhrases);
+    localData.loadCommunicationHistory.mockImplementation(repository.loadCommunicationHistory);
+    localData.overwriteCommunicationHistory.mockImplementation(repository.overwriteCommunicationHistory);
+    let loseReceipt = count === 99;
+    localData.overwriteCommunicationSavedPhrases.mockImplementation((items, options) => {
+      const result = repository.overwriteCommunicationSavedPhrases(items, options);
+      if (loseReceipt) { loseReceipt = false; throw new Error('合成收藏已写入但回执丢失'); }
+      return result;
+    });
+    const wrapper = mount(<CommunicationSupportPanel {...props} />);
+    const click = label => {
+      act(() => wrapper.find('ForwardRef(Button)').filterWhere(node => node.text() === label).first().prop('onClick')());
+      wrapper.update();
+    };
+    try {
+      click('常用语与历史');
+      act(() => wrapper.find('ForwardRef(Button)').filterWhere(node => node.text().startsWith('沟通历史')).first().prop('onClick')()); wrapper.update();
+      click('收藏');
+      expect(repository.loadCommunicationHistory()).toEqual(historyBefore);
+      expect(wrapper.find('CommunicationManagementDialog').find('div[role="status"]').map(node => node.text()).join(' ')).toContain(count >= 100 ? '容量上限' : '合成收藏已写入但回执丢失');
+      if (count >= 100) {
+        expect(repository.loadCommunicationSavedPhrases()).toEqual(before);
+        while (repository.loadCommunicationSavedPhrases().length >= 100)
+          repository.deleteCommunicationSavedPhrase(repository.loadCommunicationSavedPhrases().slice(-1)[0].id);
+      }
+      click('收藏');
+      const after = repository.loadCommunicationSavedPhrases();
+      expect(after).toHaveLength(100);
+      expect(after.filter(item => item.sentence === historyBefore[0].sentence)).toHaveLength(1);
+      expect(after.find(item => item.sentence === historyBefore[0].sentence).output).toEqual(historyBefore[0].output);
+      expect(repository.loadCommunicationHistory()[0].isFavorite).toBe(true);
+      expect(repository.loadCommunicationHistory()[0].output).toEqual(historyBefore[0].output);
+      after.filter(item => item.id.startsWith('synthetic-old-')).forEach(item => {
+        expect(item).toEqual(before.find(old => old.id === item.id));
+      });
+      // An acknowledged-loss retry reads the already committed favorite. It does
+      // not issue a new write with the previous React list or a fresh identity.
+      if (count === 99) expect(localData.overwriteCommunicationSavedPhrases).toHaveBeenCalledTimes(1);
+      expect(props.onSpeak).not.toHaveBeenCalled();
+    } finally { wrapper.unmount(); }
+  });
+
+  test('committed refresh reads canonical data and preserves the current UI on read failure', () => {
+    const initial = [{ id: 'before', sentence: '保存前', output: [] }];
+    const canonical = [{ id: 'verified', sentence: '规范仓储', output: [] }];
+    localData.loadCommunicationSavedPhrases.mockReturnValue(initial);
+    const wrapper = mount(<CommunicationSupportPanel {...props} />);
+    const refresh = wrapper.find('CommunicationManagementDialog').prop('onSavedPhrasesCommitted');
+    try {
+      localData.loadCommunicationSavedPhrases.mockImplementationOnce(() => { throw new Error('read denied'); });
+      expect(() => refresh({ scopeKey: 'local', items: canonical })).toThrow('read denied');
+      expect(wrapper.find('CommunicationManagementDialog').prop('savedPhrases')).toEqual(initial);
+      localData.loadCommunicationSavedPhrases.mockReturnValue(canonical);
+      act(() => expect(refresh({ scopeKey: 'local', items: [{ id: 'forged' }] })).toEqual(canonical)); wrapper.update();
+      expect(wrapper.find('CommunicationManagementDialog').prop('savedPhrases')).toEqual(canonical);
+      expect(localData.overwriteCommunicationSavedPhrases).not.toHaveBeenCalled();
+    } finally { wrapper.unmount(); }
+  });
+
+  test('committed refresh rejects stale scope, changed guards and callbacks after unmount', () => {
+    const wrapper = mount(<CommunicationSupportPanel {...props} />);
+    const refresh = wrapper.find('CommunicationManagementDialog').prop('onSavedPhrasesCommitted');
+    localData.loadCommunicationSavedPhrases.mockClear();
+    expect(() => refresh({ scopeKey: 'another-family' })).toThrow('已切换');
+    expect(() => refresh({ scopeKey: 'local', guard: () => false })).toThrow('已切换');
+    expect(localData.loadCommunicationSavedPhrases).not.toHaveBeenCalled();
+    let valid = true;
+    localData.loadCommunicationSavedPhrases.mockImplementationOnce(() => { valid = false; return [{ id: 'late' }]; });
+    expect(() => refresh({ scopeKey: 'local', guard: () => valid })).toThrow('已切换');
+    expect(wrapper.find('CommunicationManagementDialog').prop('savedPhrases')).toEqual([]);
+    wrapper.unmount();
+    expect(() => refresh({ scopeKey: 'local' })).toThrow('已切换');
+  });
+
+  test('reports a rejected personal-board update as failure and permits retry with the same board', async () => {
+    const board = { id: 'device_private_board_test', name: '合成图板', tiles: [], grid: { rows: 1, columns: 3, order: [] } };
+    const save = jest.fn().mockResolvedValueOnce(false).mockRejectedValueOnce(new Error('synthetic write failure')).mockResolvedValueOnce(true);
+    const wrapper = mount(<CommunicationSupportPanel {...props} boards={[board]} onUpdateCommunicationBoard={save} />);
+    const dto = createBoardDTO(board);
+    const submit = wrapper.find('CommunicationManagementDialog').prop('onCuratedBoardSave');
+    await expect(submit(dto)).resolves.toBe(false);
+    await expect(submit(dto)).resolves.toBe(false);
+    await expect(submit(dto)).resolves.toBe(true);
+    expect(save).toHaveBeenCalledTimes(3);
+    expect(save.mock.calls[0][0]).toEqual(save.mock.calls[1][0]);
+    expect(save.mock.calls[0][1]).toEqual({ expectedBoard: board, guard: expect.any(Function) });
+    wrapper.unmount();
+  });
+
+  test('gallery save keeps the original native baseline and cancels confirmation after a scope switch', async () => {
+    const board = { id: 'device_private_board_scope', name: '合成图板', tiles: [], grid: { rows: 1, columns: 3, order: [] } };
+    let resolve;
+    const save = jest.fn(() => new Promise(done => { resolve = done; }));
+    const wrapper = mount(<CommunicationSupportPanel {...props} boards={[{ ...board, name: '最新内存板名' }]} onUpdateCommunicationBoard={save} />);
+    const guard = jest.fn(() => true);
+    const submit = wrapper.find('CommunicationManagementDialog').prop('onCuratedBoardSave');
+    const pending = submit(createBoardDTO(board), { expectedBoard: board, guard });
+    expect(save.mock.calls[0][1].expectedBoard).toBe(board);
+    expect(save.mock.calls[0][1].guard()).toBe(true);
+    localData.getCommunicationStorageScopeKey.mockReturnValue('another-family');
+    expect(save.mock.calls[0][1].guard()).toBe(false);
+    resolve(true);
+    await expect(pending).resolves.toBe(false);
+    localData.getCommunicationStorageScopeKey.mockReturnValue('local');
+    wrapper.unmount();
+  });
+
+  test('personal board creation reuses the supplied ID when its previous attempt is already in memory', async () => {
+    const board = { id: 'device_private_board_retry', name: '合成重试板', tiles: [], grid: { rows: 1, columns: 3, order: [] } };
+    const create = jest.fn().mockResolvedValueOnce(false).mockRejectedValueOnce(new Error('write failed')).mockResolvedValueOnce(board.id);
+    const wrapper = mount(<CommunicationSupportPanel {...props} boards={[board]} onCreateCommunicationBoard={create} />);
+    const submit = wrapper.find('CommunicationManagementDialog').prop('onCreatePersonalBoard');
+    await expect(submit(board.name, { id: board.id })).resolves.toBe(false);
+    await expect(submit(board.name, { id: board.id })).resolves.toBe(false);
+    await expect(submit(board.name, { id: board.id })).resolves.toBe(board.id);
+    expect(create.mock.calls[1][0]).toEqual(create.mock.calls[0][0]);
+    expect(create.mock.calls[2][0]).toEqual(create.mock.calls[0][0]);
+    wrapper.unmount();
+  });
+
+  test('forwards expression cancellation through the real parent and share adapter when switching to receiver', async () => {
+    let rejectShare;
+    const nativeShare = jest.fn(() => new Promise((resolve, reject) => { rejectShare = reject; }));
+    const downloadBlob = jest.fn();
+    const port = createBrowserCommunicationSharePort({ navigatorRef: { share: nativeShare }, downloadBlob });
+    const shareSpy = jest.spyOn(browserCommunicationSharePort, 'shareExpressionText').mockImplementation(port.shareExpressionText);
+    const wrapper = mount(<CommunicationSupportPanel {...props} output={mockedOutput} />);
+    try {
+      let task;
+      act(() => {
+        task = wrapper.find(PatientActionButton).filterWhere(button => button.prop('action') === PATIENT_ACTION_IDS.share).first().prop('onClick')();
+      });
+      expect(shareSpy).toHaveBeenCalledWith(expect.any(String), { isCurrent: expect.any(Function) });
+      expect(shareSpy.mock.calls[0][1].isCurrent()).toBe(true);
+      act(() => {
+        wrapper.find('ForwardRef(Button)').filterWhere(button => button.text() === '接收理解').first().simulate('click');
+      });
+      expect(shareSpy.mock.calls[0][1].isCurrent()).toBe(false);
+      await act(async () => { rejectShare(new Error('synthetic native failure')); await task; });
+      expect(downloadBlob).not.toHaveBeenCalled();
+      expect(nativeShare).toHaveBeenCalledTimes(1);
+    } finally {
+      wrapper.unmount();
+      shareSpy.mockRestore();
+    }
+  });
+
   it('keeps shared daily phrases outside personal persistence when reused', () => {
     const shared = {
       id: 'family-shared:one',
@@ -279,8 +510,64 @@ describe('CommunicationSupportPanel receiver flow', () => {
     wrapper.unmount();
   });
 
+  test.each(
+    ['disabled', 'login', 'profile', 'funding', 'ready'].flatMap(state =>
+      ['express', 'receive'].map(mode => [state, mode])
+    )
+  )(
+    'shows the controlled text AI state for %s in %s without calling the service',
+    (state, mode) => {
+      const previous = { ...process.env };
+      let wrapper;
+      process.env.REACT_APP_TUYUJIA_CLOUD_TRIAL = 'true';
+      process.env.REACT_APP_CARE_AI_TRIAL =
+        state === 'disabled' ? 'false' : 'true';
+      const accountId = 'synthetic-ai-ui';
+      try {
+        if (['funding', 'ready'].includes(state))
+          localStorage.setItem(
+            `care-selection-v1:${accountId}`,
+            JSON.stringify({ id: 'profile-ui' })
+          );
+        if (state === 'ready')
+          localStorage.setItem(
+            `care-funding-v1:${accountId}:profile-ui`,
+            'fund-ui'
+          );
+        wrapper = mount(
+          <CommunicationSupportPanel
+            {...props}
+            careMode
+            accountId={accountId}
+            isLogged={state !== 'login'}
+            initialMode={mode}
+          />
+        );
+        const panel = wrapper.find(
+          mode === 'express' ? 'ExpressionLoopPanel' : 'ReceiverLoopPanel'
+        );
+        expect(panel.prop('aiAvailable')).toBe(state === 'ready');
+        const expected = {
+          disabled: '尚未开放在线 AI',
+          login: '请先登录',
+          profile: '选择患者档案',
+          funding: '选择 AI 额度来源'
+        };
+        if (state !== 'ready') expect(panel.text()).toContain(expected[state]);
+        expect(API.resegmentCommunicationText).not.toHaveBeenCalled();
+        expect(API.generateCommunicationSentences).not.toHaveBeenCalled();
+      } finally {
+        if (wrapper) wrapper.unmount();
+        process.env = previous;
+        localStorage.removeItem(`care-selection-v1:${accountId}`);
+        localStorage.removeItem(`care-funding-v1:${accountId}:profile-ui`);
+      }
+    }
+  );
+
   beforeEach(() => {
     jest.useFakeTimers();
+    localData.getCommunicationStorageScopeKey.mockReturnValue('local');
     onApplyOutput.mockClear();
     props.onSpeak.mockClear();
     props.onCancelSpeech.mockClear();
@@ -477,7 +764,7 @@ describe('CommunicationSupportPanel receiver flow', () => {
 
   test('supports a closed receiver loop from text input to output apply', async () => {
     const wrapper = mount(<CommunicationSupportPanel {...props} />);
-    await openReceiveReview(wrapper, '我想喝水');
+    await openReceiveReview(wrapper, '想水');
 
     expect(
       wrapper
@@ -518,12 +805,12 @@ describe('CommunicationSupportPanel receiver flow', () => {
       expect.objectContaining({ id: 'receiver-draft', recordStatus: 'draft' }),
       expect.objectContaining({
         direction: 'receive',
-        inputText: '我想喝水',
+        inputText: '想水',
         labels: ['想', '水']
       })
     );
     expect(props.onSpeak).toHaveBeenCalledWith(
-      '我想喝水',
+      '想水',
       expect.any(Function)
     );
 
@@ -576,7 +863,7 @@ describe('CommunicationSupportPanel receiver flow', () => {
     });
 
     const wrapper = mount(<CommunicationSupportPanel {...props} />);
-    await openReceiveReview(wrapper, '我想喝水');
+    await openReceiveReview(wrapper, '想喝水');
 
     expect(
       wrapper
@@ -624,6 +911,17 @@ describe('CommunicationSupportPanel receiver flow', () => {
       .first();
     sendButton.simulate('click');
 
+    expect(sendButton.prop('disabled')).toBe(true);
+    expect(onApplyOutput).not.toHaveBeenCalled();
+    wrapper
+      .find('ForwardRef(Button)')
+      .filterWhere(node => node.text() === '全屏展示')
+      .first()
+      .simulate('click');
+
+    wrapper.update();
+    wrapper.find('ForwardRef(Button)').filterWhere(n => n.text() === '我会辅助解释，继续展示').first().simulate('click');
+    wrapper.update();
     expect(onApplyOutput).toHaveBeenCalledWith([
       {
         id: 'drink',
@@ -642,17 +940,11 @@ describe('CommunicationSupportPanel receiver flow', () => {
       }
     ]);
 
-    wrapper
-      .find('ForwardRef(Button)')
-      .filterWhere(node => node.text() === '全屏展示')
-      .first()
-      .simulate('click');
-
     expect(localData.confirmReceiverDraft).toHaveBeenCalledWith(
       expect.objectContaining({ id: 'receiver-draft', recordStatus: 'draft' }),
       expect.objectContaining({
         direction: 'receive',
-        inputText: '我想喝水',
+        inputText: '想喝水',
         labels: ['喝', '想', '饮料']
       })
     );
@@ -677,7 +969,7 @@ describe('CommunicationSupportPanel receiver flow', () => {
     });
     const receiver = wrapper.find('ReceiverLoopPanel').first();
     expect(receiver.text()).toContain('缺词提示：头晕');
-    expect(receiver.text()).toContain('请重点复核未匹配或部分匹配项');
+    expect(receiver.text()).toContain('尚有意思未图示，需要伙伴解释');
   });
 
   test('exposes the local missing-token queue only in caregiver receive mode', () => {
@@ -722,7 +1014,7 @@ describe('CommunicationSupportPanel receiver flow', () => {
     expect(receiver.exists()).toBe(true);
     expect(receiver.text()).toContain('文字转图片');
     expect(receiver.text()).toContain('生成图片序列');
-    expect(wrapper.find('ExpressionLoopPanel').exists()).toBe(false);
+    expect(wrapper.find('#communication-expression-panel').prop('hidden')).toBe(true);
   });
 
   test('keeps the board compact by default and opens receiver in a focused dialog', () => {
@@ -730,7 +1022,7 @@ describe('CommunicationSupportPanel receiver flow', () => {
       <CommunicationSupportPanel {...props} initiallyExpanded={false} />
     );
 
-    expect(wrapper.find('ExpressionLoopPanel').exists()).toBe(false);
+    expect(wrapper.find('#communication-expression-panel').prop('hidden')).toBe(true);
     expect(wrapper.find('ReceiverLoopPanel').exists()).toBe(false);
     expect(wrapper.find('CommunicationReceiverDialog').prop('open')).toBe(
       false
@@ -779,7 +1071,7 @@ describe('CommunicationSupportPanel receiver flow', () => {
       .simulate('click');
     wrapper.update();
 
-    expect(wrapper.find('ExpressionLoopPanel').exists()).toBe(true);
+    expect(wrapper.find('#communication-expression-panel').prop('hidden')).toBe(false);
 
     wrapper
       .find('ForwardRef(Button)')
@@ -788,7 +1080,7 @@ describe('CommunicationSupportPanel receiver flow', () => {
       .simulate('click');
     wrapper.update();
 
-    expect(wrapper.find('ExpressionLoopPanel').exists()).toBe(false);
+    expect(wrapper.find('#communication-expression-panel').prop('hidden')).toBe(true);
     expect(wrapper.find('ReceiverLoopPanel').exists()).toBe(true);
     expect(wrapper.find('CommunicationReceiverDialog').prop('open')).toBe(true);
 
@@ -801,6 +1093,40 @@ describe('CommunicationSupportPanel receiver flow', () => {
     expect(wrapper.find('CommunicationReceiverDialog').prop('open')).toBe(
       false
     );
+  });
+
+  test('reveals three choices after board selection and respects deliberate collapse', () => {
+    const wrapper = mount(
+      <CommunicationSupportPanel
+        {...props}
+        initiallyExpanded={false}
+        initialMode="receive"
+        autoExpandOnOutput
+        output={[]}
+      />
+    );
+    expect(wrapper.find('#communication-expression-panel').prop('hidden')).toBe(true);
+    wrapper.setProps({ output: mockedOutput });
+    wrapper.update();
+    expect(wrapper.find('#communication-expression-panel').prop('hidden')).toBe(false);
+    expect(
+      wrapper.find('button.CommunicationSupportPanel__candidate')
+    ).toHaveLength(3);
+    wrapper
+      .find(PatientActionButton)
+      .filterWhere(
+        button => button.prop('action') === PATIENT_ACTION_IDS.express
+      )
+      .first()
+      .simulate('click');
+    wrapper.setProps({ output: mockedOutput.map(item => ({ ...item })) });
+    expect(wrapper.find('#communication-expression-panel').prop('hidden')).toBe(true);
+    wrapper.setProps({
+      output: [...mockedOutput, { id: 'please', label: '请' }]
+    });
+    wrapper.update();
+    expect(wrapper.find('#communication-expression-panel').prop('hidden')).toBe(false);
+    wrapper.unmount();
   });
 
   test('wires optional AI through the existing authenticated API client', async () => {
@@ -918,16 +1244,95 @@ describe('CommunicationSupportPanel receiver flow', () => {
     expect(localData.reviewMissingToken).toHaveBeenCalledTimes(1);
   });
 
-  test('automatically searches newly recorded gaps once without adopting candidates', async () => {
-    const missing = { id: 'auto-gap', normalizedToken: '家里人', status: 'new', updatedAt: 1, rawTextSamples: [] };
-    localData.loadCommunicationPreferences.mockReturnValue({ onlinePictogramSearchEnabled: true });
+  test('ranks a later qualified candidate before the four-picture UI limit', async () => {
+    const missing = {
+      id: 'rank-gap',
+      normalizedToken: '回家',
+      status: 'new',
+      updatedAt: 1,
+      rawTextSamples: [],
+      occurrenceCount: 1
+    };
+    localData.loadMissingTokens.mockReturnValue([missing]);
+    const { buildArasaacSemanticFields } = jest.requireActual(
+      '../../../common/communicationSupport/pictogramSemantics'
+    );
+    API.searchCommunicationPictograms.mockResolvedValue(
+      [1, 2, 3, 4, 29714].map(id => ({
+        token: '回家',
+        pictogram: {
+          id: `rank-${id}`,
+          image: `/pictures/${id}.png`,
+          ...buildArasaacSemanticFields(
+            '回家',
+            id === 29714 ? 'come back' : 'go home',
+            'en',
+            id,
+            {
+              keywords: [{ keyword: id === 29714 ? 'come back' : 'go home' }]
+            }
+          ),
+          source: {
+            provider: 'arasaac',
+            originalId: String(id),
+            name: 'ARASAAC',
+            license: 'CC BY-NC-SA 4.0',
+            sourceUrl: `https://arasaac.org/pictograms/${id}`
+          }
+        }
+      }))
+    );
+    const wrapper = mount(
+      <CommunicationSupportPanel {...props} initialMode="receive" />
+    );
+    await act(async () => {
+      await wrapper
+        .find('MissingTokenQueue')
+        .first()
+        .prop('onSearchOnline')([missing.id]);
+    });
+    const review = localData.reviewMissingToken.mock.calls[0][1];
+    expect(review.suggestedPictograms.map(p => p.source.originalId)).toEqual([
+      '29714',
+      '1',
+      '2',
+      '3'
+    ]);
+    expect(review.status).toBe('suggested');
+    wrapper.unmount();
+  });
+
+  test('keeps receiver gaps local until the partner explicitly searches', async () => {
+    const missing = {
+      id: 'auto-gap',
+      normalizedToken: '家里人',
+      status: 'new',
+      updatedAt: 1,
+      rawTextSamples: []
+    };
+    localData.loadCommunicationPreferences.mockReturnValue({
+      onlinePictogramSearchEnabled: true
+    });
     localData.recordMissingTokens.mockReturnValue([missing]);
     localData.loadMissingTokens.mockReturnValue([missing]);
     API.searchCommunicationPictograms.mockReset();
     API.searchCommunicationPictograms.mockResolvedValue([]);
-    const wrapper = mount(<CommunicationSupportPanel {...props} initialMode="receive" />);
-    const record = wrapper.find('ReceiverLoopPanel').first().prop('onRecordMissingTokens');
-    await act(async () => { record({ tokens: ['家里人'] }); record({ tokens: ['家里人'] }); });
+    const wrapper = mount(
+      <CommunicationSupportPanel {...props} initialMode="receive" />
+    );
+    const record = wrapper
+      .find('ReceiverLoopPanel')
+      .first()
+      .prop('onRecordMissingTokens');
+    await act(async () => {
+      record({ tokens: ['家里人'] });
+      record({ tokens: ['家里人'] });
+    });
+    expect(API.searchCommunicationPictograms).not.toHaveBeenCalled();
+    await act(async () => {
+      await wrapper.find('ReceiverLoopPanel').first()
+        .prop('onSearchMissingTokensOnline')([missing.id]);
+    });
     expect(API.searchCommunicationPictograms).toHaveBeenCalledTimes(1);
     expect(API.searchCommunicationPictograms).toHaveBeenCalledWith(['家里人']);
     expect(localData.reviewMissingToken).not.toHaveBeenCalled();
@@ -935,26 +1340,64 @@ describe('CommunicationSupportPanel receiver flow', () => {
     localData.loadCommunicationPreferences.mockReturnValue({});
   });
 
-  test.each(['scope', 'review', 'unmount'])('discards late search results after %s changes', async change => {
-    const missing = { id: 'late-gap', normalizedToken: '家里人', status: 'new', updatedAt: 1, rawTextSamples: [] };
-    localData.loadMissingTokens.mockReturnValue([missing]);
-    localData.getCommunicationStorageScopeKey.mockReturnValue('family-a');
-    let complete;
-    API.searchCommunicationPictograms.mockImplementation(() => new Promise(resolve => { complete = resolve; }));
-    const wrapper = mount(<CommunicationSupportPanel {...props} initialMode="receive" />);
-    const pending = wrapper.find('MissingTokenQueue').first().prop('onSearchOnline')([missing.id]);
-    if (change === 'scope') localData.getCommunicationStorageScopeKey.mockReturnValue('family-b');
-    if (change === 'review') localData.loadMissingTokens.mockReturnValue([{ ...missing, status: 'ignored', updatedAt: 2 }]);
-    if (change === 'unmount') wrapper.unmount();
-    await act(async () => {
-      complete([{ token: '家里人', pictogram: { id: 'p2392', label: '家里人', image: '/p.png',
-        source: { provider: 'arasaac', name: 'ARASAAC', originalId: '2392', license: 'CC BY-NC-SA 4.0', sourceUrl: 'https://arasaac.org/pictograms/2392' } } }]);
-      await pending;
-    });
-    expect(localData.reviewMissingToken).not.toHaveBeenCalled();
-    if (change !== 'unmount') wrapper.unmount();
-    localData.getCommunicationStorageScopeKey.mockReturnValue('local');
-  });
+  test.each(['scope', 'review', 'unmount'])(
+    'discards late search results after %s changes',
+    async change => {
+      const missing = {
+        id: 'late-gap',
+        normalizedToken: '家里人',
+        status: 'new',
+        updatedAt: 1,
+        rawTextSamples: []
+      };
+      localData.loadMissingTokens.mockReturnValue([missing]);
+      localData.getCommunicationStorageScopeKey.mockReturnValue('family-a');
+      let complete;
+      API.searchCommunicationPictograms.mockImplementation(
+        () =>
+          new Promise(resolve => {
+            complete = resolve;
+          })
+      );
+      const wrapper = mount(
+        <CommunicationSupportPanel {...props} initialMode="receive" />
+      );
+      const pending = wrapper
+        .find('MissingTokenQueue')
+        .first()
+        .prop('onSearchOnline')([missing.id]);
+      if (change === 'scope')
+        localData.getCommunicationStorageScopeKey.mockReturnValue('family-b');
+      if (change === 'review')
+        localData.loadMissingTokens.mockReturnValue([
+          { ...missing, status: 'ignored', updatedAt: 2 }
+        ]);
+      if (change === 'unmount') wrapper.unmount();
+      await act(async () => {
+        complete([
+          {
+            token: '家里人',
+            pictogram: {
+              id: 'p2392',
+              label: '家里人',
+              image: '/p.png',
+              source: {
+                provider: 'arasaac',
+                name: 'ARASAAC',
+                originalId: '2392',
+                license: 'CC BY-NC-SA 4.0',
+                sourceUrl: 'https://arasaac.org/pictograms/2392'
+              }
+            }
+          }
+        ]);
+        await pending;
+      });
+      expect(localData.reviewMissingToken).not.toHaveBeenCalled();
+      if (change !== 'unmount') wrapper.unmount();
+      localData.getCommunicationStorageScopeKey.mockReturnValue('local');
+    }
+  );
 
   test('starts a new local conversation without deleting history', () => {
     const wrapper = mount(
@@ -1153,7 +1596,7 @@ describe('CommunicationSupportPanel receiver flow', () => {
             id: 'phrase-quick',
             usageCount: 1
           })
-        ]
+        ], expect.objectContaining({ expectedPhrases: expect.any(Array) })
       );
       if (careMode) {
         expect(onCareFavoritesChanged).not.toHaveBeenCalled();
@@ -1213,7 +1656,7 @@ describe('CommunicationSupportPanel receiver flow', () => {
 
     expect(localData.overwriteCommunicationSavedPhrases).toHaveBeenCalledWith([
       renamedPhrase
-    ]);
+    ], { expectedPhrases: [managedPhrase] });
     expect(
       localData.buildCommunicationCloudSettingsPayload
     ).toHaveBeenCalledWith([renamedPhrase], []);

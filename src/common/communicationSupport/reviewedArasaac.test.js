@@ -8,8 +8,13 @@ import {
 } from './reviewedArasaac';
 
 describe('PicInterpreter reviewed ARASAAC index', () => {
-  test.each([['家里人', '家人', 2392], ['困难', '困难的', 4629], ['安静', '安静的', 37828]])(
-    'uses the same lookup alias for local and online candidates: %s', (word, alias, id) => {
+  test.each([
+    ['家里人', '家人', 2392],
+    ['困难', '困难的', 4629],
+    ['安静', '安静的', 37828]
+  ])(
+    'uses the same lookup alias for local and online candidates: %s',
+    (word, alias, id) => {
       expect(getReviewedLookupToken(word)).toBe(alias);
       expect(getReviewedArasaacIds(word)).toEqual([id]);
     }

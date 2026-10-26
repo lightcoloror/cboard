@@ -1,4 +1,9 @@
-import React, { useMemo, useState } from 'react';
+import { createLocalSavedPhraseImport, createLocalSavedPhraseUndo, getCommunicationStorageScopeKey } from '../../../common/communicationSupport/localData';
+import { filterSavedPhrasesByText } from '../../../common/communicationSupport/savedPhraseUse';
+import { currentImageOperationEpoch } from '../../../common/communicationSupport/imageOperationEpoch';
+import PatientActionButton from './PatientActionButton.component';
+import { PATIENT_ACTION_IDS } from '../../../common/communicationSupport/patientActionLanguage';
+import React, { useMemo, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 import Button from '@material-ui/core/Button';
 import Dialog from '@material-ui/core/Dialog';
@@ -27,10 +32,8 @@ import {
 import {
   addCommunicationSavedPhrase,
   buildCommunicationSavedPhraseExport,
-  deleteCommunicationSavedPhrase,
-  importCommunicationSavedPhrases,
-  markCommunicationSavedPhraseUsed,
-  renameCommunicationSavedPhrase
+  assignSavedPhraseLifeContext,
+  filterSavedPhrasesByLifeContext
 } from '../../../common/communicationSupport/savedPhraseManagement';
 import { buildCommunicationTileCatalog } from '../../../common/communicationSupport/symbolMatching';
 import {
@@ -53,6 +56,7 @@ import {
   getEffectiveReceiverHistoryEntry
 } from '../../../common/communicationSupport/receiverLifecycle';
 import PersonalImageManager from './PersonalImageManager.component';
+import LifeContextFilter from './LifeContextFilter.component';
 
 function downloadText(filename, text, type) {
   if (
@@ -75,6 +79,9 @@ function downloadText(filename, text, type) {
 }
 
 export default function CommunicationManagementDialog({
+  onSavedPhraseAction,
+  onPrepareSavedPhrase,
+  preparedSelection,
   open,
   onClose,
   boards,
@@ -83,14 +90,19 @@ export default function CommunicationManagementDialog({
   savedPhrases,
   historyItems,
   personalImagePreferences,
+  personalImageError,
   correctionMemory,
   receiverCorrections,
   candidateFeedbackSyncAvailable,
   onSavedPhrasesChange,
+  onSaveHistoryPhrase,
+  onSavedPhrasesCommitted,
+  onSavedPhraseContextChange,
   onHistoryChange,
   onPersonalImageSave,
   onPersonalImageRemove,
   onCuratedBoardSave,
+  galleryUndo,
   onCreatePersonalBoard,
   onForgetCorrectionMemory,
   onReceiverCorrection,
@@ -101,8 +113,41 @@ export default function CommunicationManagementDialog({
   onSpeak
 }) {
   const [activeTab, setActiveTab] = useState('phrases');
-  const [editingId, setEditingId] = useState(null);
-  const [editingSentence, setEditingSentence] = useState('');
+  const [importPreview, setImportPreview] = useState(null);
+  const importService = useRef(null);
+  const importEpoch = useRef(0);
+  const dialogMounted = useRef(true);
+  const [committedRefresh, setCommittedRefresh] = useState(null);
+  React.useEffect(() => () => { dialogMounted.current = false; importEpoch.current += 1; if (importService.current) importService.current.cancel(); }, []);
+  React.useEffect(() => {
+    if (open) return;
+    importEpoch.current += 1;
+    if (importService.current) importService.current.cancel();
+    setImportPreview(null);
+    setCommittedRefresh(null);
+  }, [open]);
+  const [lifeContext, setLifeContext] = useState(null);
+  const [phraseQuery, setPhraseQuery] = useState('');
+  const undoScope = getCommunicationStorageScopeKey();
+  const undoService = useMemo(() => createLocalSavedPhraseUndo(), [open, undoScope]);
+  const [undoState, setUndoState] = useState({ count: 0, operationId: null });
+  React.useEffect(() => { setUndoState(undoService.state()); setPhraseQuery(''); }, [undoService]);
+  React.useEffect(() => {
+    if (!preparedSelection) return;
+    setActiveTab('phrases'); setLifeContext(preparedSelection.lifeContext || '');
+    setNotice(preparedSelection.cleanupPending ? '常用语已保存；准备草稿清理失败，重试保存不会重复收藏。' : '已定位这条常用语；播报或载入由你主动选择。');
+  }, [preparedSelection]);
+  React.useEffect(() => {
+    if (!open || !preparedSelection) return undefined;
+    const timer = setTimeout(() => {
+      const node = document.getElementById(`saved-phrase-${preparedSelection.id}`);
+      if (node) { node.focus(); if (node.scrollIntoView) node.scrollIntoView({ block: 'nearest' }); }
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [open, preparedSelection, lifeContext]);
+  const [contextEditingId, setContextEditingId] = useState(null);
+  const [contextDraft, setContextDraft] = useState('');
+  const contextPhrases = filterSavedPhrasesByText(filterSavedPhrasesByLifeContext(savedPhrases, lifeContext), phraseQuery);
   const [historyReview, setHistoryReview] = useState(null);
   const [historyPicker, setHistoryPicker] = useState(null);
   const [historyPickerQuery, setHistoryPickerQuery] = useState('');
@@ -163,38 +208,69 @@ export default function CommunicationManagementDialog({
     );
   }
 
+  const phraseActionPending = useRef(false);
+  const undoPending = useRef(false);
+  function dispatchPhrase(item, mode) {
+    if (phraseActionPending.current) return;
+    phraseActionPending.current = true;
+    try { if (onSavedPhraseAction) onSavedPhraseAction(item, mode); }
+    finally { Promise.resolve().then(() => { phraseActionPending.current = false; }); }
+  }
   function reusePhrase(item) {
-    const result = markCommunicationSavedPhraseUsed(savedPhrases, item.id);
-    if (result.changed) onSavedPhrasesChange(result.items);
-    onApplyOutput(item.output);
-    setNotice('常用语已放回输出栏。');
+    dispatchPhrase(item, 'reuse');
   }
 
-  function saveRename() {
-    const result = renameCommunicationSavedPhrase(
-      savedPhrases,
-      editingId,
-      editingSentence
-    );
-    if (result.changed) {
-      onSavedPhrasesChange(result.items);
-      setNotice('常用语名称已更新。');
-    } else {
-      setNotice(
-        result.reason === 'duplicate'
-          ? '已经存在相同常用语。'
-          : '请输入有效文字。'
-      );
+  function refreshCommittedPhrases(receipt) {
+    const current = () => dialogMounted.current && receipt.epoch === importEpoch.current &&
+      receipt.scopeKey === getCommunicationStorageScopeKey() && receipt.privacyEpoch === currentImageOperationEpoch();
+    if (!current()) return false;
+    try {
+      const items = onSavedPhrasesCommitted({ scopeKey: receipt.scopeKey, guard: current });
+      if (!Array.isArray(items)) throw new Error('没有读到已保存的常用语列表。');
+      if (!current()) return false;
+      setCommittedRefresh(null);
+      if (receipt.imported) setImportPreview(null);
+      setNotice(receipt.message);
+      return true;
+    } catch (error) {
+      if (current()) {
+        setCommittedRefresh(receipt);
+        setNotice('操作已保存到本机，但列表读取失败；请重新读取常用语。');
+      }
+      return false;
     }
-    setEditingId(null);
-    setEditingSentence('');
+  }
+
+  function refreshUndoState() {
+    if (!dialogMounted.current || undoScope !== getCommunicationStorageScopeKey()) return;
+    try { setUndoState(undoService.state()); }
+    catch (_) { setUndoState({ count: 0, operationId: null }); }
   }
 
   function removePhrase(id) {
-    const result = deleteCommunicationSavedPhrase(savedPhrases, id);
-    if (result.changed) {
-      onSavedPhrasesChange(result.items);
-      setNotice('常用语已删除。');
+    const epoch = importEpoch.current;
+    const privacyEpoch = currentImageOperationEpoch();
+    try {
+      const result = undoService.delete(id);
+      refreshCommittedPhrases({ scopeKey: undoScope, epoch, privacyEpoch,
+        message: result.changed ? '已删除，可以撤销。' : '这条常用语已经删除。' });
+    } catch (error) { setNotice(error.message || '删除失败，恢复快照仍保留。'); }
+    finally { refreshUndoState(); }
+  }
+
+  function undoDelete() {
+    if (undoPending.current) return;
+    undoPending.current = true;
+    const epoch = importEpoch.current;
+    const privacyEpoch = currentImageOperationEpoch();
+    try {
+      undoService.undo(undoState.operationId);
+      refreshCommittedPhrases({ scopeKey: undoScope, epoch, privacyEpoch,
+        message: '已恢复常用语，原句和图片保持不变。' });
+    } catch (error) { setNotice(error.message || '撤销失败，请重试。'); }
+    finally {
+      refreshUndoState();
+      Promise.resolve().then(() => { undoPending.current = false; });
     }
   }
 
@@ -220,28 +296,33 @@ export default function CommunicationManagementDialog({
   async function importPhrases(event) {
     const file = event.target && event.target.files && event.target.files[0];
     if (!file) return;
+    const ticket = ++importEpoch.current, scope = getCommunicationStorageScopeKey();
+    const privacyEpoch = currentImageOperationEpoch();
+    setImportPreview(null);
+    setCommittedRefresh(null);
+    if (importService.current) importService.current.cancel();
     try {
-      const result = importCommunicationSavedPhrases(
-        await file.text(),
-        savedPhrases,
-        {
-          availableTileIds: new Set(tileById.keys()),
-          resolveTile: id => tileById.get(id) || null
-        }
-      );
-      if (!result.ok) {
-        setNotice(result.error);
-      } else {
-        if (result.addedCount) onSavedPhrasesChange(result.items);
-        setNotice(
-          `已导入 ${result.addedCount} 条，跳过 ${result.skippedCount} 条。`
-        );
-      }
+        // Capture account and local identity before asynchronous file reading.
+        const operation = createLocalSavedPhraseImport({ availableTileIds: new Set(tileById.keys()), resolveTile: id => tileById.get(id) || null });
+        importService.current = operation;
+      const input = await file.text();
+      if (ticket !== importEpoch.current || scope !== getCommunicationStorageScopeKey() || privacyEpoch !== currentImageOperationEpoch()) return;
+        const preview = operation.preview(input);
+      setImportPreview(preview); setNotice(preview.error || '请查看导入预览，确认后才会保存。');
     } catch (error) {
-      setNotice('常用语文件读取失败。');
-    } finally {
-      if (event.target) event.target.value = '';
+      if (dialogMounted.current && ticket === importEpoch.current && scope === getCommunicationStorageScopeKey() && privacyEpoch === currentImageOperationEpoch()) setNotice(`导入失败：${error.message}`);
     }
+    finally { if (event.target) event.target.value = ''; }
+  }
+  function confirmImport() {
+    const epoch = importEpoch.current;
+    const privacyEpoch = currentImageOperationEpoch();
+    try {
+      const result = importService.current.commit();
+      if (!result.committed) { setImportPreview(result); setNotice(result.message || result.error); return; }
+      refreshCommittedPhrases({ scopeKey: undoScope, epoch, privacyEpoch, imported: true,
+        message: `已导入 ${result.addedCount} 条，重复 ${result.duplicateCount} 条，无效 ${result.invalidCount} 条，缺少图片 ${result.missingPictogramCount} 个。` });
+    } catch (error) { setNotice(`保存失败：${error.message}；请重试，原预览保留。`); }
   }
 
   function updateHistory(id, action) {
@@ -258,13 +339,18 @@ export default function CommunicationManagementDialog({
             entry,
             receiverCorrections
           );
-          const favorite = addCommunicationSavedPhrase(savedPhrases, {
+          const draft = {
             sentence: getCommunicationHistoryReplayText(effective),
             output: JSON.parse(JSON.stringify(effective.output || [])),
             sourceHistoryId: id
-          });
-          if (!favorite.item) throw new Error('这条记录没有可收藏的内容');
-          if (favorite.changed) onSavedPhrasesChange(favorite.items);
+          };
+          if (onSaveHistoryPhrase) {
+            onSaveHistoryPhrase(draft);
+          } else {
+            const favorite = addCommunicationSavedPhrase(savedPhrases, draft);
+            if (!favorite.item) throw new Error('这条记录没有可收藏的内容');
+            if (favorite.changed) onSavedPhrasesChange(favorite.items);
+          }
           setNotice('已独立保存到常用语，删除或淘汰这条历史不会删除收藏。');
         } else {
           setNotice('已取消历史标记；独立收藏仍保留，可在常用语管理中删除。');
@@ -717,9 +803,17 @@ export default function CommunicationManagementDialog({
             {notice}
           </div>
         )}
+        {committedRefresh && <Button onClick={() => refreshCommittedPhrases(committedRefresh)}>重新读取常用语</Button>}
 
         {activeTab === 'phrases' ? (
           <div>
+            {onPrepareSavedPhrase && <Button variant="contained" color="primary" onClick={() => onPrepareSavedPhrase()}>准备常用表达</Button>}
+            <LifeContextFilter items={savedPhrases} value={lifeContext} onChange={setLifeContext} />
+            <TextField id="saved-phrase-search" label="搜索常用语原句" value={phraseQuery} onChange={event => setPhraseQuery(event.target.value)} />
+            <PatientActionButton action={PATIENT_ACTION_IDS.undo} label={`撤销删除（${undoState.count}）`}
+              ariaLabel="撤销上次删除的常用语" disabled={!undoState.count} onClick={undoDelete} />
+            <p>本次使用可连续撤销最近 20 次删除；刷新、退出或切换档案后结束。图库图片不会随删除移除。</p>
+            <p>先把确认过的表达收藏，再按自己的生活情境整理；也可保留不分类。</p>
             <div className="CommunicationSupportPanel__managementActions">
               <Button
                 color="primary"
@@ -738,72 +832,51 @@ export default function CommunicationManagementDialog({
                 />
               </Button>
             </div>
+            {importPreview && <div role="group" aria-label="常用语导入预览">
+              <p>预计新增 {importPreview.wouldAddCount || 0} 条；重复 {importPreview.duplicateCount || 0} 条；无效 {importPreview.invalidCount || 0} 条；缺少图片 {importPreview.missingPictogramCount || 0} 个；剩余容量 {importPreview.availableSlots || 0} 条。</p>
+              {importPreview.error && <p>{importPreview.error}</p>}
+              <Button disabled={Boolean(importPreview.capacityExceeded || importPreview.error)} onClick={confirmImport}>确认整批导入</Button>
+              <Button onClick={() => { importEpoch.current += 1; if (importService.current) importService.current.cancel(); setImportPreview(null); }}>取消导入</Button>
+            </div>}
             <div className="CommunicationSupportPanel__managementList">
-              {savedPhrases.length ? (
-                savedPhrases.map(item => (
+              {contextPhrases.length ? (
+                contextPhrases.map(item => (
                   <article
+                    id={`saved-phrase-${item.id}`}
+                    tabIndex={-1}
+                    aria-label={preparedSelection && preparedSelection.id === item.id ? `已定位常用语：${item.sentence}` : undefined}
                     className="CommunicationSupportPanel__managementRow"
                     key={item.id || item.sentence}
                   >
-                    {editingId === item.id ? (
-                      <TextField
-                        className="CommunicationSupportPanel__managementEditor"
-                        fullWidth
-                        value={editingSentence}
-                        onChange={event =>
-                          setEditingSentence(event.target.value)
-                        }
-                      />
-                    ) : (
-                      <div>
-                        <strong>{item.sentence}</strong>
-                        <div className="CommunicationSupportPanel__meta">
-                          {(item.output || [])
-                            .map(output => output.label)
-                            .join(' / ')}
-                        </div>
-                      </div>
-                    )}
+                    <div><strong>{item.sentence}</strong><div className="CommunicationSupportPanel__meta">{(item.output || []).map(output => output.label).join(' / ')}</div></div>
                     <div className="CommunicationSupportPanel__matchActions">
-                      {editingId === item.id ? (
-                        <Button
-                          color="primary"
-                          size="small"
-                          onClick={saveRename}
-                        >
-                          保存修改
-                        </Button>
-                      ) : (
-                        <React.Fragment>
-                          <Button
-                            color="primary"
-                            size="small"
-                            onClick={() => reusePhrase(item)}
-                          >
-                            重用
-                          </Button>
-                          <Button
-                            size="small"
-                            onClick={() => {
-                              setEditingId(item.id);
-                              setEditingSentence(item.sentence);
-                            }}
-                          >
-                            编辑
-                          </Button>
-                          <Button
-                            size="small"
-                            onClick={() => removePhrase(item.id)}
-                          >
-                            删除
-                          </Button>
-                        </React.Fragment>
-                      )}
+                      <Button size="small" onClick={() => { setContextEditingId(item.id); setContextDraft(item.lifeContext || ''); }}>
+                        情境：{item.lifeContext || '未分类'}
+                      </Button>
+                      <Button size="small" onClick={() => reusePhrase(item)}>重用</Button>
+                      <Button size="small" onClick={() => dispatchPhrase(item, 'view')}>查看整句</Button>
+                      <Button size="small" onClick={() => dispatchPhrase(item, 'play')}>一键播报</Button>
+                      <Button size="small" disabled={item.careSharedReadOnly || !onPrepareSavedPhrase} onClick={() => onPrepareSavedPhrase({ id: item.id, mode: 'edit' })}>修改这条</Button>
+                      <Button size="small" disabled={item.careSharedReadOnly || !onPrepareSavedPhrase} onClick={() => onPrepareSavedPhrase({ id: item.id, mode: 'copy' })}>以此准备新句</Button>
+                      <Button size="small" disabled={item.careSharedReadOnly} onClick={() => removePhrase(item.id)}>删除</Button>
                     </div>
+                    {contextEditingId === item.id && <div role="group" aria-label="编辑生活情境">
+                      <TextField id={`life-context-${item.id}`} label="生活情境" value={contextDraft} inputProps={{ maxLength: 40 }}
+                        helperText="如吃饭、散步或自定义名称；留空为未分类，仅保存在本机。"
+                        onChange={event => setContextDraft(event.target.value)} />
+                      <Button onClick={() => {
+                        try {
+                          const result = assignSavedPhraseLifeContext(savedPhrases, item.id, contextDraft);
+                          if (result.changed) (onSavedPhraseContextChange || onSavedPhrasesChange)(result.items);
+                          setContextEditingId(null); setNotice('生活情境已保存在本机，原句和图片未改变。');
+                        } catch (error) { setNotice(`保存失败：${error.message}；情境修改仍保留，请重试。`); }
+                      }}>保存情境</Button>
+                      <Button onClick={() => setContextEditingId(null)}>取消</Button>
+                    </div>}
                   </article>
                 ))
               ) : (
-                <p>还没有收藏常用语。</p>
+                <p>{savedPhrases.length ? '这个情境还没有常用语，可切回全部进行整理。' : '还没有收藏常用语。'}</p>
               )}
             </div>
           </div>
@@ -1011,9 +1084,11 @@ export default function CommunicationManagementDialog({
             boards={boards}
             editableBoards={editableBoards}
             preferences={personalImagePreferences}
+            preferencesError={personalImageError}
             onSave={onPersonalImageSave}
             onRemove={onPersonalImageRemove}
             onBoardSave={onCuratedBoardSave}
+            galleryUndo={galleryUndo}
             onCreatePersonalBoard={onCreatePersonalBoard}
           />
         ) : activeTab === 'correction-memory' ? (
@@ -1261,12 +1336,17 @@ CommunicationManagementDialog.propTypes = {
   savedPhrases: PropTypes.arrayOf(PropTypes.object),
   historyItems: PropTypes.arrayOf(PropTypes.object),
   personalImagePreferences: PropTypes.arrayOf(PropTypes.object),
+  personalImageError: PropTypes.string,
   correctionMemory: PropTypes.shape({
     rules: PropTypes.arrayOf(PropTypes.object)
   }),
   receiverCorrections: PropTypes.arrayOf(PropTypes.object),
   candidateFeedbackSyncAvailable: PropTypes.bool,
+  onSavedPhraseAction: PropTypes.func,
   onSavedPhrasesChange: PropTypes.func.isRequired,
+  onSaveHistoryPhrase: PropTypes.func,
+  onSavedPhrasesCommitted: PropTypes.func,
+  onSavedPhraseContextChange: PropTypes.func,
   onHistoryChange: PropTypes.func.isRequired,
   onPersonalImageSave: PropTypes.func.isRequired,
   onPersonalImageRemove: PropTypes.func.isRequired,
@@ -1289,9 +1369,11 @@ CommunicationManagementDialog.defaultProps = {
   savedPhrases: [],
   historyItems: [],
   personalImagePreferences: [],
+  personalImageError: '',
   correctionMemory: { rules: [] },
   receiverCorrections: [],
   candidateFeedbackSyncAvailable: false,
+  onSavedPhrasesCommitted: () => false,
   onPersonalImageSave: () => false,
   onPersonalImageRemove: () => false,
   onCuratedBoardSave: () => false,

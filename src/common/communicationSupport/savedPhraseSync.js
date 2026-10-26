@@ -1,10 +1,13 @@
 import {
   normalizeCommunicationSavedPhrase,
-  normalizeCommunicationSavedPhraseList
+  normalizeCommunicationSavedPhraseList,
+  preserveLocalPhraseLifeContext,
+  DEFAULT_SAVED_PHRASE_CAPACITY,
+  assertSavedPhraseCapacity
 } from './savedPhraseManagement';
 import { buildCommunicationSupportCloudSettings } from './storage';
 
-export const MAX_SAVED_PHRASE_SYNC_ITEMS = 100;
+export const MAX_SAVED_PHRASE_SYNC_ITEMS = DEFAULT_SAVED_PHRASE_CAPACITY;
 
 function normalizeVersion(value, allowZero = false) {
   const version = Number(value);
@@ -73,15 +76,16 @@ export function normalizeSavedPhraseTombstones(values) {
     });
 
   return [...byId.values()]
-    .sort((left, right) => right.deletedAt - left.deletedAt)
-    .slice(0, MAX_SAVED_PHRASE_SYNC_ITEMS);
+    .sort((left, right) => right.deletedAt - left.deletedAt);
 }
 
 export function buildCommunicationSavedPhraseSyncPayload(entries) {
-  return normalizeCommunicationSavedPhraseList(entries)
+  const normalized = normalizeCommunicationSavedPhraseList(entries);
+  // Never turn an over-capacity device into a partial upload acknowledged as complete.
+  assertSavedPhraseCapacity(normalized, MAX_SAVED_PHRASE_SYNC_ITEMS);
+  return normalized
     .map(normalizeSavedPhraseSyncEntry)
     .filter(Boolean)
-    .slice(0, MAX_SAVED_PHRASE_SYNC_ITEMS)
     .map(entry => {
       const cloudEntry = buildCommunicationSupportCloudSettings([entry], [])
         .savedPhrases[0];
@@ -154,8 +158,12 @@ export function mergeVersionedCommunicationSavedPhrases(
     });
 
   const items = normalizeCommunicationSavedPhraseList([...byId.values()])
-    .filter(item => !deletedIds.has(item.id))
-    .slice(0, MAX_SAVED_PHRASE_SYNC_ITEMS);
+    .map(item => preserveLocalPhraseLifeContext(item, (localEntries || []).find(local => local.id === item.id)))
+    .filter(item => !deletedIds.has(item.id));
+
+  // Callers must retain their previous local state on overflow, not choose which
+  // person's expression to discard. A later explicit cleanup can safely retry.
+  assertSavedPhraseCapacity(items, MAX_SAVED_PHRASE_SYNC_ITEMS);
 
   return { items, tombstones, conflictCount };
 }

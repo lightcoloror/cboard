@@ -1,9 +1,14 @@
+// jsdom has no image decoder; real decoding is covered by production-browser acceptance.
+jest.mock('../../../common/communicationSupport/browserImageVerification', () => ({
+  verifyBrowserLocalImage: async () => ({ status: 'available', width: 1, height: 1 })
+}));
 import React from 'react';
 import { act } from 'react-dom/test-utils';
 import { mount } from 'enzyme';
 import Button from '@material-ui/core/Button';
 import TextField from '@material-ui/core/TextField';
 import PersonalImageManager from './PersonalImageManager.component';
+import InputImage from '../../UI/InputImage';
 
 jest.mock('../../UI/InputImage', () => () => null);
 
@@ -55,6 +60,50 @@ const personalBoard = {
 };
 
 describe('PersonalImageManager', () => {
+  test('creates a full-name private person in the existing board using a local image', async () => {
+    const onBoardSave = jest.fn(() => true);
+    const wrapper = mount(
+      <PersonalImageManager
+        boards={[personalBoard]}
+        editableBoards={[personalBoard]}
+        preferences={[]}
+        onSave={jest.fn()}
+        onRemove={jest.fn()}
+        onBoardSave={onBoardSave}
+        createCuratedId={() => 'synthetic-person'}
+      />
+    );
+    act(() =>
+      wrapper
+        .find(TextField)
+        .filterWhere(node => node.prop('label') === '全名')
+        .prop('onChange')({ target: { value: '林知岚' } })
+    );
+    wrapper.update();
+    await act(async () =>
+      wrapper
+        .find(InputImage)
+        .first()
+        .prop('onChange')(
+        new Blob(['synthetic-image'.repeat(100)], { type: 'image/png' })
+      )
+    );
+    wrapper.update();
+    await act(async () => {
+      await wrapper
+        .find(Button)
+        .filterWhere(node => node.text() === '保存人物')
+        .prop('onClick')();
+    });
+    expect(onBoardSave).toHaveBeenCalledTimes(1);
+    const tile = onBoardSave.mock.calls[0][0].tiles[0];
+    expect(tile.label).toBe('林知岚');
+    expect(tile.image.length).toBeGreaterThan(500);
+    expect(tile.communication.category).toBe('people');
+    expect(tile.pictogramAttribution.provider).toBe('device-private');
+    expect(wrapper.text()).not.toContain('谁会这样称呼此人');
+    wrapper.unmount();
+  });
   test('finds a cross-board tile by its Chinese synonym for caregiver maintenance', () => {
     const spoonBoard = {
       id: 'food',
@@ -103,7 +152,7 @@ describe('PersonalImageManager', () => {
     ).toContain('餐具');
   });
 
-  test('restores a configured tile to its CBoard default image', () => {
+  test('restores a configured tile to its CBoard default image', async () => {
     const onRemove = jest.fn(() => true);
     const wrapper = mount(
       <PersonalImageManager
@@ -121,17 +170,18 @@ describe('PersonalImageManager', () => {
       />
     );
 
-    wrapper
-      .find('ForwardRef(Button)')
+    await act(async () => wrapper
+      .find(Button)
       .filterWhere(node => node.text() === '恢复默认')
       .first()
-      .simulate('click');
+      .prop('onClick')());
+    wrapper.update();
 
-    expect(onRemove).toHaveBeenCalledWith('water', 'home');
+    expect(onRemove).toHaveBeenCalledWith('water', 'home', expect.objectContaining({ guard: expect.any(Function) }));
     expect(wrapper.text()).toContain('已恢复 CBoard 默认图片');
   });
 
-  test('edits local attribution without replacing the familiar image', () => {
+  test('edits local attribution without replacing the familiar image', async () => {
     const onSave = jest.fn(() => true);
     const wrapper = mount(
       <PersonalImageManager
@@ -177,11 +227,12 @@ describe('PersonalImageManager', () => {
       });
     });
     wrapper.update();
-    wrapper
+    await act(async () => wrapper
       .find(Button)
       .filterWhere(node => node.text() === '保存图片说明')
       .first()
-      .simulate('click');
+      .prop('onClick')());
+    wrapper.update();
 
     expect(onSave).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -193,12 +244,12 @@ describe('PersonalImageManager', () => {
           author: '家属',
           license: '家属提供，仅用于当前设备沟通'
         })
-      })
+      }), expect.objectContaining({ guard: expect.any(Function) })
     );
     expect(wrapper.text()).toContain('已保存“Water”的本机图片说明');
   });
 
-  test('curates a licensed public pictogram into the selected personal board', () => {
+  test('curates a licensed public pictogram into the selected personal board', async () => {
     const onBoardSave = jest.fn(() => true);
     const wrapper = mount(
       <PersonalImageManager
@@ -213,11 +264,12 @@ describe('PersonalImageManager', () => {
       />
     );
 
-    wrapper
+    await act(async () => wrapper
       .find(Button)
       .filterWhere(node => node.text() === '加入“我的常用”')
       .first()
-      .simulate('click');
+      .prop('onClick')());
+    wrapper.update();
 
     expect(onBoardSave).toHaveBeenCalledTimes(1);
     expect(onBoardSave.mock.calls[0][0]).toEqual(
@@ -240,7 +292,7 @@ describe('PersonalImageManager', () => {
     expect(wrapper.text()).toContain('已把“苹果”的公开原图加入个人板');
   });
 
-  test('offers personal board creation before public curation', () => {
+  test('offers personal board creation before public curation', async () => {
     const onCreatePersonalBoard = jest.fn(() => 'device_private_board_new');
     const wrapper = mount(
       <PersonalImageManager
@@ -254,17 +306,18 @@ describe('PersonalImageManager', () => {
       />
     );
 
-    wrapper
+    await act(async () => wrapper
       .find(Button)
       .filterWhere(node => node.text() === '创建个人板')
       .first()
-      .simulate('click');
+      .prop('onClick')());
+    wrapper.update();
 
-    expect(onCreatePersonalBoard).toHaveBeenCalledWith('我的常用图卡');
+    expect(onCreatePersonalBoard).toHaveBeenCalledWith('我的常用图卡', expect.objectContaining({ id: expect.any(String), guard: expect.any(Function) }));
     expect(wrapper.text()).toContain('已创建个人板“我的常用图卡”');
   });
 
-  test('removes only a curated public pictogram from its personal board', () => {
+  test('removes only a curated public pictogram from its personal board', async () => {
     const curatedBoard = {
       ...personalBoard,
       grid: {
@@ -293,17 +346,18 @@ describe('PersonalImageManager', () => {
       />
     );
 
-    wrapper
+    await act(async () => wrapper
       .find(Button)
       .filterWhere(node => node.text() === '从个人板移除')
       .first()
-      .simulate('click');
+      .prop('onClick')());
+    wrapper.update();
 
     expect(onBoardSave).toHaveBeenCalledWith(
       expect.objectContaining({
         id: personalBoard.id,
         tiles: []
-      })
+      }), expect.objectContaining({ expectedBoard: curatedBoard, guard: expect.any(Function) })
     );
     expect(wrapper.text()).toContain('已从个人板移除“苹果”');
   });

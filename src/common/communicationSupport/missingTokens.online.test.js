@@ -147,15 +147,18 @@ describe('online missing-token resolution', () => {
         onlinePictogram,
         {
           ...alternativeOnlinePictogram,
-          id: 'runtime_arasaac_789'
+          id: 'runtime_arasaac_789',
+          source: { ...alternativeOnlinePictogram.source, originalId: '789' }
         },
         {
           ...alternativeOnlinePictogram,
-          id: 'runtime_arasaac_999'
+          id: 'runtime_arasaac_999',
+          source: { ...alternativeOnlinePictogram.source, originalId: '999' }
         },
         {
           ...alternativeOnlinePictogram,
-          id: 'runtime_arasaac_overflow'
+          id: 'runtime_arasaac_overflow',
+          source: { ...alternativeOnlinePictogram.source, originalId: '1000' }
         }
       ],
       source: 'online:arasaac'

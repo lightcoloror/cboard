@@ -11,6 +11,7 @@ import {
 import { getStore } from '../../store';
 import { ElevenLabsEngine, validateApiKeyFormat } from './engine/elevenlabs';
 import { ELEVEN_LABS } from './SpeechProvider.constants';
+import { createBrowserExpressionAudio } from '../../common/communicationSupport/browserExpressionAudio';
 
 // this is the local synthesizer
 let synth = window.speechSynthesis;
@@ -28,6 +29,48 @@ const audioElement = new Audio();
 let appleFirstCloudPlay = IS_BROWSING_FROM_APPLE;
 var speakQueue = [];
 var platformVoices = [];
+let speechGeneration = 0;
+let activeCloudEntry = null;
+const pendingSpeechRequests = new Set();
+const cloudAudio = createBrowserExpressionAudio(() => audioElement);
+
+// CBoard's callbacks remain the completion contract. Keep cancellation valid
+// across voice discovery, provider retries and delayed synthesis responses.
+const createSpeechRequest = onend => {
+  const generation = speechGeneration;
+  let active = true;
+  let alertTimer;
+  let timer;
+  const request = {
+    isCurrent: () => active && generation === speechGeneration,
+    startAlert(start) {
+      clearTimeout(alertTimer);
+      alertTimer = start();
+      return alertTimer;
+    },
+    finish(event) {
+      if (!active || request.canceling) return;
+      active = false;
+      clearTimeout(timer);
+      clearTimeout(alertTimer);
+      pendingSpeechRequests.delete(request);
+      try {
+        if (onend) onend(event);
+      } catch (_) {
+        // A caller failure must not leave other canceled speech requests alive.
+        console.error('Speech completion callback failed');
+      }
+    }
+  };
+  pendingSpeechRequests.add(request);
+  // Native speech cancellation is global. If it hangs, stop the entire pending
+  // queue, rather than claim completion while the device might still speak.
+  timer = setTimeout(
+    () => tts.cancel({ error: true, reason: 'timeout' }),
+    60000
+  );
+  return request;
+};
 
 const getStateVoices = () => {
   const store = getStore();
@@ -95,24 +138,44 @@ const initAppleUserAgent = () => {
   }
 };
 
-const playQueue = () => {
-  if (speakQueue.length) {
-    const blob = new Blob([speakQueue[0].audioData], { type: 'audio/wav' });
-    audioElement.src = window.URL.createObjectURL(blob);
-    audioElement.play().catch(err => {
-      console.error(err);
-    });
-    audioElement.onended = () => {
-      window.URL.revokeObjectURL(audioElement.src);
-      if (speakQueue.length) {
-        speakQueue[0].endCallback();
-        speakQueue.shift();
-        if (speakQueue.length) {
-          playQueue();
-        }
-      }
-    };
+const playQueue = async () => {
+  if (activeCloudEntry || !speakQueue.length) return;
+  const entry = speakQueue[0];
+  if (!entry.request.isCurrent()) {
+    speakQueue.shift();
+    playQueue();
+    return;
   }
+  activeCloudEntry = entry;
+  let objectUrl;
+  let result;
+  try {
+    const blob =
+      entry.audioData instanceof Blob
+        ? entry.audioData
+        : new Blob([entry.audioData], { type: 'audio/wav' });
+    objectUrl = window.URL.createObjectURL(blob);
+    // Reuse the recording adapter's play rejection, media error and timeout
+    // handling. Its once-only completion cannot finish a replacement clip.
+    result = await cloudAudio.play(objectUrl);
+  } catch (_) {
+    result = { ok: false, reason: 'playback' };
+  } finally {
+    if (objectUrl) window.URL.revokeObjectURL(objectUrl);
+  }
+  if (activeCloudEntry !== entry) return;
+  activeCloudEntry = null;
+  speakQueue.shift();
+  entry.request.finish(
+    result.ok ? undefined : { error: true, reason: result.reason }
+  );
+  playQueue();
+};
+
+const enqueueSpeech = (audioData, request) => {
+  if (!request.isCurrent()) return;
+  speakQueue.push({ audioData, request });
+  playQueue();
 };
 
 initAzureSynthesizer();
@@ -326,16 +389,53 @@ const tts = {
     }
   },
 
-  cancel() {
-    audioElement.pause();
+  cancel(event = { error: true, reason: 'stopped' }) {
+    speechGeneration++;
+    const canceled = [...pendingSpeechRequests];
+    // Some speech engines emit onend synchronously from cancel(). Settle only
+    // after the device has stopped, and report cancellation rather than success.
+    canceled.forEach(request => {
+      request.canceling = true;
+    });
     speakQueue = [];
-    synth.cancel();
+    activeCloudEntry = null;
+    cloudAudio.stop();
+    try {
+      audioElement.pause();
+    } catch (_) {
+      /* Still stop native speech if the media device fails. */
+    }
+    try {
+      synth?.cancel();
+    } catch (_) {
+      // A broken native device must still release callbacks and timers.
+    } finally {
+      canceled.forEach(request => {
+        request.canceling = false;
+        request.finish(event);
+      });
+    }
   },
 
-  async speak(
+  async speak(text, options, setCloudSpeakAlertTimeout = () => undefined) {
+    const request = createSpeechRequest(options.onend);
+    try {
+      await this._speak(
+        text,
+        { ...options, onend: request.finish },
+        () => request.startAlert(setCloudSpeakAlertTimeout),
+        request
+      );
+    } catch (_) {
+      request.finish({ error: true, reason: 'synthesis' });
+    }
+  },
+
+  async _speak(
     text,
     { voiceURI, pitch = 1, rate = 1, volume = 1, onend },
-    setCloudSpeakAlertTimeout
+    setCloudSpeakAlertTimeout,
+    request
   ) {
     const voice = this.getVoiceByVoiceURI(voiceURI);
 
@@ -390,6 +490,7 @@ const tts = {
             const backoffMs = Math.pow(2, attempt) * 300;
             await delay(backoffMs);
           }
+          if (!request.isCurrent()) return;
 
           const audioBlob = await elevenLabsSynthesizer.synthesizeSpeechElevenLabs(
             text,
@@ -397,19 +498,12 @@ const tts = {
             elevenLabsSettings
           );
           clearTimeout(speakAlertTimeoutId);
-
-          const result = {
-            audioData: audioBlob,
-            endCallback: onend
-          };
-
-          speakQueue.push(result);
-          if (audioElement.paused) {
-            playQueue();
-          }
+          if (!request.isCurrent()) return;
+          enqueueSpeech(audioBlob, request);
           success = true;
           break;
         } catch (err) {
+          if (!request.isCurrent()) return;
           if (attempt === MAX_RETRIES || !isRetryableError(err)) {
             break;
           }
@@ -421,7 +515,7 @@ const tts = {
 
         if (!platformVoices.length) {
           try {
-            await this.getVoices();
+            await this.getPlatformVoicesAsync();
           } catch (voiceErr) {
             console.error(
               'Failed to get voices for fallback:',
@@ -429,6 +523,7 @@ const tts = {
             );
           }
         }
+        if (!request.isCurrent()) return;
 
         if (platformVoices.length && voice.lang) {
           const fallbackVoice = platformVoices.find(
@@ -446,6 +541,7 @@ const tts = {
             msg.rate = rate;
             msg.volume = volume;
             msg.onend = onend;
+            msg.onerror = () => onend({ error: true, reason: 'playback' });
             if (IS_BROWSING_FROM_SAFARI || IS_BROWSING_FROM_APPLE_TOUCH)
               synth.cancel();
             synth.speak(msg);
@@ -462,6 +558,14 @@ const tts = {
       }
       initAppleUserAgent();
       const speakAlertTimeoutId = setCloudSpeakAlertTimeout();
+      const synthesizer = azureSynthesizer;
+      const resetSynthesizer = () => {
+        if (azureSynthesizer === synthesizer) {
+          synthesizer.close();
+          azureSynthesizer = undefined;
+          initAzureSynthesizer();
+        }
+      };
       // set voice to speak
       azureSynthesizer.properties.setProperty(
         'SpeechServiceConnection_SynthVoice',
@@ -470,44 +574,32 @@ const tts = {
       azureSynthesizer.speakTextAsync(
         text,
         function(result) {
-          result.endCallback = onend;
+          if (!request.isCurrent()) return;
           clearTimeout(speakAlertTimeoutId);
           if (
-            result.reason === azureSdk.ResultReason.SynthesizingAudioCompleted
+            result?.reason === azureSdk.ResultReason.SynthesizingAudioCompleted
           ) {
-            speakQueue.push(result);
-            // if not playing, play the queue
-            if (audioElement.paused) {
-              playQueue();
-            }
-          } else if (result.reason === azureSdk.ResultReason.Canceled) {
-            console.error(
-              'Speech synthesis canceled, ' +
-                result.errorDetails +
-                '\nDid you update the subscription info?'
-            );
+            enqueueSpeech(result.audioData, request);
+          } else {
+            resetSynthesizer();
             onend({ error: true });
-            azureSynthesizer.close();
-            azureSynthesizer = undefined;
-            initAzureSynthesizer();
           }
         },
-        function(err) {
-          console.error(err);
+        function() {
+          if (!request.isCurrent()) return;
+          resetSynthesizer();
           onend({ error: true });
-          azureSynthesizer.close();
-          azureSynthesizer = undefined;
-          initAzureSynthesizer();
         }
       );
     } else {
       if (!platformVoices.length) {
         try {
-          await this.getVoices();
+          await this.getPlatformVoicesAsync();
         } catch (err) {
           console.error(err.message);
         }
       }
+      if (!request.isCurrent()) return;
       if (platformVoices.length) {
         const localVoice = this.getLocalVoiceByVoiceURI(voiceURI);
         if (localVoice) {
@@ -521,11 +613,14 @@ const tts = {
           msg.rate = rate;
           msg.volume = volume;
           msg.onend = onend;
+          msg.onerror = () => onend({ error: true, reason: 'playback' });
           if (IS_BROWSING_FROM_SAFARI || IS_BROWSING_FROM_APPLE_TOUCH)
             synth.cancel();
           synth.speak(msg);
+          return;
         }
       }
+      onend({ error: true, reason: 'voice-unavailable' });
     }
   }
 };

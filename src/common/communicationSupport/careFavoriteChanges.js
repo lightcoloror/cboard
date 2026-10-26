@@ -1,7 +1,7 @@
 // Reusing a favorite changes local usage metadata, not shared content.
 export function sameCareFavoriteContent(left, right) {
   const content = item => {
-    const { usageCount, lastUsedAt, updatedAt, ...value } = item;
+    const { usageCount, lastUsedAt, updatedAt, lifeContext, ...value } = item;
     return JSON.stringify(value);
   };
   return content(left) === content(right);

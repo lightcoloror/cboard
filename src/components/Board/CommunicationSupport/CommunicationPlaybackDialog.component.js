@@ -1,8 +1,16 @@
-import React from 'react';
+import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import Button from '@material-ui/core/Button';
 import Dialog from '@material-ui/core/Dialog';
 import DialogContent from '@material-ui/core/DialogContent';
+
+function PlaybackImage({ item }) {
+  const [failed, setFailed] = useState(false);
+  return item.image && !failed
+    ? <img className="CommunicationSupportPanel__playbackImage" src={item.image}
+        alt="" onError={() => setFailed(true)} />
+    : <div className="CommunicationSupportPanel__playbackMissing">图片不可用，保留文字</div>;
+}
 
 export default function CommunicationPlaybackDialog({
   open,
@@ -33,20 +41,7 @@ export default function CommunicationPlaybackDialog({
                   className="CommunicationSupportPanel__playbackFigure"
                   key={`${outputItem.id || outputItem.label}-${index}`}
                 >
-                  {outputItem.image ? (
-                    <img
-                      className="CommunicationSupportPanel__playbackImage"
-                      src={outputItem.image}
-                      alt=""
-                    />
-                  ) : (
-                    <div
-                      className="CommunicationSupportPanel__playbackMissing"
-                      aria-hidden="true"
-                    >
-                      ?
-                    </div>
-                  )}
+                  <PlaybackImage key={outputItem.image || 'missing'} item={outputItem} />
                   <figcaption className="CommunicationSupportPanel__playbackLabel">
                     {outputItem.label}
                   </figcaption>

@@ -8,6 +8,27 @@ import {
 } from './candidateFeedback';
 
 describe('candidate feedback contract', () => {
+  test('explicit rejection survives changed candidate wording, but not another sequence or session', () => {
+    const draft = buildExpressionCandidateFeedbackDraft({
+      sessionId: 'family-1', outputSignature: 'person-b|pain', rejected: true,
+      candidates: [{ sentence: '林知岚痛。', feedback: null }]
+    }, { now: () => 100, createId: () => 'rejection-1' });
+    expect(draft.rejected).toBe(true);
+    const options = { sessionId: 'family-1', outputSignature: 'person-b|pain', candidateSentences: ['我的意思是：林知岚痛。'] };
+    expect(findExpressionCandidateFeedbackDraft([draft], options).rejected).toBe(true);
+    expect(findExpressionCandidateFeedbackDraft([draft], { ...options, outputSignature: 'person-a|pain' })).toBeNull();
+    expect(findExpressionCandidateFeedbackDraft([draft], { ...options, sessionId: 'family-2' })).toBeNull();
+    expect(normalizeExpressionCandidateFeedbackDraft({ ...draft, rejected: 'true' })).toBeNull();
+    expect(normalizeExpressionCandidateFeedbackDraft({ ...draft, candidates: [] })).toBeNull();
+  });
+
+  test('negative ratings do not silently become whole-expression rejection', () => {
+    const draft = buildExpressionCandidateFeedbackDraft({
+      sessionId: 'family-1', outputSignature: 'pain',
+      candidates: [{ sentence: '我痛。', feedback: 'down' }]
+    }, { now: () => 100 });
+    expect(draft).not.toHaveProperty('rejected');
+  });
   test('normalizes legacy sentences and toggles or replaces feedback', () => {
     const initial = normalizeExpressionCandidates(
       [],

@@ -3,7 +3,8 @@ import {
   activate,
   blockRemoteHttpRequests,
   completeCommunicationOnboarding,
-  dismissBoardTour
+  dismissBoardTour,
+  openPatientExpression
 } from './helpers/communicationSupport';
 
 const HISTORY_KEY = 'cboard_communication_history';
@@ -40,18 +41,17 @@ test.describe('Production expression history recovery', () => {
     await expect(tiles.first()).toBeVisible();
     expect(await tiles.count()).toBeGreaterThanOrEqual(2);
     await activate(tiles.nth(0), useTouch);
+    // Selecting the first picture now opens expression and its first-use guide.
+    await completeCommunicationOnboarding(page, useTouch);
     await activate(tiles.nth(1), useTouch);
 
     const panel = page.locator('.CommunicationSupportPanel');
-    await activate(panel.getByRole('button', { name: '患者表达' }), useTouch);
-    await completeCommunicationOnboarding(page, useTouch);
+    await openPatientExpression(panel, useTouch);
     const currentOutput = panel.getByText(/^当前输出：/);
     await expect(currentOutput).not.toHaveText('当前输出：');
-    await activate(panel.getByRole('button', { name: '生成并播报' }), useTouch);
     await expect(
       panel.locator('.CommunicationSupportPanel__candidate').first()
     ).toBeVisible();
-    await activate(panel.getByRole('button', { name: '停止播报' }), useTouch);
 
     const outputBeforeFailure = await currentOutput.textContent();
     const candidates = panel.locator(

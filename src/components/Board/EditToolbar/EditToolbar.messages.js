@@ -29,6 +29,14 @@ export default defineMessages({
     id: 'cboard.components.EditToolbar.Board.deleteTileOk',
     defaultMessage: 'Delete'
   },
+  deleteSaving: {
+    id: 'cboard.components.Board.EditToolbar.deleteSaving',
+    defaultMessage: '正在确认本机保存…'
+  },
+  deleteFailed: {
+    id: 'cboard.components.Board.EditToolbar.deleteFailed',
+    defaultMessage: '删除尚未确认。可点击“删除”重试。'
+  },
   editTiles: {
     id: 'cboard.components.Board.EditToolbar.editTiles',
     defaultMessage: 'Edit selected tiles'

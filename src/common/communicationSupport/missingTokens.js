@@ -7,6 +7,8 @@ import {
   findChineseCommunicationEntry,
   isAutomaticCommunicationCandidateAllowed
 } from './chineseLexicon';
+import { rankPictogramCandidates } from './pictogramSemantics';
+import { applyCommunicationContextGuards } from './symbolMatching';
 
 export const MISSING_TOKEN_STATUSES = {
   new: 'new',
@@ -25,24 +27,31 @@ export function normalizeMissingTokenText(value) {
     .toLocaleLowerCase();
 }
 
-export function normalizeMissingTokenSuggestions(value, legacyValue = null) {
+export function normalizeMissingTokenSuggestions(
+  value,
+  legacyValue = null,
+  token = null
+) {
   const seen = new Set();
   const values = [...(Array.isArray(value) ? value : []), legacyValue];
 
-  return values
-    .map(normalizeRuntimePictogram)
-    .filter(pictogram => {
-      if (!pictogram || seen.has(pictogram.id)) return false;
-      seen.add(pictogram.id);
-      return true;
-    })
-    .slice(0, MAX_MISSING_TOKEN_SUGGESTIONS);
+  const normalized = values.map(normalizeRuntimePictogram).filter(pictogram => {
+    if (!pictogram || (!token && seen.has(pictogram.id))) return false;
+    seen.add(pictogram.id);
+    return true;
+  });
+  return token
+    ? rankPictogramCandidates(token, normalized, {
+        limit: MAX_MISSING_TOKEN_SUGGESTIONS
+      })
+    : normalized.slice(0, MAX_MISSING_TOKEN_SUGGESTIONS);
 }
 
 export function getMissingTokenSuggestions(record) {
   return normalizeMissingTokenSuggestions(
     record && record.suggestedPictograms,
-    record && record.suggestedPictogram
+    record && record.suggestedPictogram,
+    record && record.normalizedToken
   );
 }
 
@@ -295,12 +304,13 @@ export function reviewMissingTokenRecord(
 
   const suggestedPictograms = normalizeMissingTokenSuggestions(
     review && review.suggestedPictograms,
-    review && review.suggestedPictogram
+    review && review.suggestedPictogram,
+    target.normalizedToken
   );
   const suggestedPictogram = suggestedPictograms[0] || null;
   const suggestedPictogramId = String(
-    (review && review.suggestedPictogramId) ||
-      (suggestedPictogram && suggestedPictogram.id) ||
+    (suggestedPictogram && suggestedPictogram.id) ||
+      (review && review.suggestedPictogramId) ||
       ''
   ).trim();
   const requestedResolvedPictogramId = String(
@@ -350,8 +360,11 @@ export function reviewMissingTokenRecord(
         : true;
     // The caregiver confirms a mapping for this source phrase. Keep its spoken
     // Chinese text, without turning that choice into provider-label evidence.
-    if (updated.reviewedByCaregiver && updated.resolvedPictogram &&
-        updated.resolvedPictogram.semantics) {
+    if (
+      updated.reviewedByCaregiver &&
+      updated.resolvedPictogram &&
+      updated.resolvedPictogram.semantics
+    ) {
       updated.resolvedPictogram = {
         ...updated.resolvedPictogram,
         label: target.normalizedToken,
@@ -453,8 +466,20 @@ export function applyMissingTokenResolutions(reviewItems, records, catalog) {
     }
   });
 
-  return (Array.isArray(reviewItems) ? reviewItems : []).map(item => {
-    if (!item || item.tile) {
+  const original = Array.isArray(reviewItems) ? reviewItems : [];
+  const resolved = original.map(item => {
+    // Personal identities are resolved in the current conversation, never by
+    // a public or previous speaker's cached token-to-picture resolution.
+    if (item && item.personalReference) return item;
+    // A legacy automatic substring guess must not block a confirmed mapping.
+    // Preserve exact matches and every explicit manual/text choice.
+    const replaceablePartial =
+      item &&
+      item.matchType === 'partial' &&
+      item.source !== 'manual' &&
+      item.source !== 'corrected' &&
+      !(item.tile && item.tile.textOnly);
+    if (!item || (item.tile && !replaceablePartial)) {
       return item;
     }
 
@@ -502,4 +527,17 @@ export function applyMissingTokenResolutions(reviewItems, records, catalog) {
         }
       : item;
   });
+  // Web and mini-program both refresh reviewed backfill directly through here.
+  // A token-level confirmation is not consent to reuse that meaning in every
+  // sentence. Guard only new replacements; preserve existing per-item choices
+  // and object identity when a rejected replacement leaves the state unchanged.
+  if (resolved.every((item, index) => item === original[index]))
+    return resolved;
+  const guarded = applyCommunicationContextGuards(
+    resolved.map(item => item || { token: '', tile: null }),
+    catalog || []
+  );
+  return resolved.map((item, index) =>
+    item === original[index] || !guarded[index].tile ? original[index] : item
+  );
 }

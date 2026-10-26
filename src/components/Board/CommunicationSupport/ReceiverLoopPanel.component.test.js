@@ -3,6 +3,7 @@ import { mount } from 'enzyme';
 import { act } from 'react-dom/test-utils';
 import ReceiverLoopPanel from './ReceiverLoopPanel.component';
 import * as symbolMatching from '../../../common/communicationSupport/symbolMatching';
+import { createCommunicationRepository } from '../../../common/communicationSupport/repository';
 
 const mockedMatches = [
   {
@@ -51,6 +52,9 @@ const mockedMatches = [
 ];
 
 jest.mock('../../../common/communicationSupport/symbolMatching', () => ({
+  applyCommunicationContextGuards: jest.requireActual(
+    '../../../common/communicationSupport/symbolMatching'
+  ).applyCommunicationContextGuards,
   createTextCommunicationCatalogItem: jest.requireActual(
     '../../../common/communicationSupport/symbolMatching'
   ).createTextCommunicationCatalogItem,
@@ -109,61 +113,117 @@ async function setInput(wrapper, value) {
 }
 
 describe('ReceiverLoopPanel', () => {
-  test('blocks incomplete output until the caregiver explicitly retains a missing word as text', async () => {
-    symbolMatching.matchTextToCommunicationTiles.mockReturnValue({
-      matches: [{ token: '不要', tile: null, matchType: 'none' }],
-      matchRate: 0
+  test('saved label follows current content; silent failure keeps UI text and retry saves without matching', async () => {
+    const values = new Map(); let fail = false;
+    const repo = createCommunicationRepository({ storage: {
+      getItem: key => values.get(key) || null,
+      setItem: (key, value) => {
+        if (!(fail && key === 'cboard_communication_receiver_records')) values.set(key, value);
+      }
+    } });
+    const wrapper = mount(<ReceiverLoopPanel boards={[]} onApplyOutput={jest.fn()} onJumpBoard={jest.fn()}
+      onCreateDraft={repo.createReceiverDraft} onUpdateDraft={repo.updateReceiverDraft}
+      onDiscardResumableRecord={repo.discardResumableReceiverRecord} />);
+    await setInput(wrapper, '我今晚不回家吃饭');
+    expect(wrapper.find('[data-testid="receiver-draft-save-status"]').text()).toBe('已保存到本机');
+    fail = true;
+    await setInput(wrapper, '明早七点半回家');
+    expect(wrapper.find('[data-testid="receiver-draft-save-status"]').text()).not.toContain('已保存到本机');
+    expect(repo.loadResumableReceiverRecord().inputText).toBe('我今晚不回家吃饭');
+    fail = false;
+    await act(async () => wrapper.find('button').filterWhere(node => node.text() === '重试保存').simulate('click'));
+    wrapper.update();
+    expect(wrapper.find('[data-testid="receiver-draft-save-status"]').text()).toBe('已保存到本机');
+    expect(repo.loadResumableReceiverRecord().inputText).toBe('明早七点半回家');
+    expect(repo.loadCommunicationHistory()).toHaveLength(0);
+    wrapper.unmount();
+  });
+  test('persists unfinished input through unmount and idle reopen without matching or uploading', async () => {
+    const values = new Map();
+    let timestamp = 100;
+    const storage = {
+      getItem: key => values.get(key) || null,
+      setItem: (key, value) => values.set(key, value)
+    };
+    const repo = createCommunicationRepository({
+      storage,
+      now: () => timestamp
     });
-    const wrapper = mount(
+    const props = {
+      boards: [],
+      onApplyOutput: jest.fn(),
+      onJumpBoard: jest.fn(),
+      onCreateDraft: repo.createReceiverDraft,
+      onUpdateDraft: repo.updateReceiverDraft,
+      onDiscardResumableRecord: repo.discardResumableReceiverRecord
+    };
+    let wrapper = mount(<ReceiverLoopPanel {...props} />);
+    await setInput(wrapper, '我今晚不回家吃饭');
+    expect(repo.loadCommunicationHistory()).toEqual([]);
+    wrapper.unmount();
+    timestamp += 31 * 60 * 1000;
+    wrapper = mount(
       <ReceiverLoopPanel
-        boards={[]}
-        intl={null}
-        onApplyOutput={onApplyOutput}
-        onJumpBoard={jest.fn()}
-        historyItems={[]}
-        onAppendHistory={onAppendHistory}
+        {...props}
+        initialRecord={repo.loadResumableReceiverRecord()}
       />
     );
+    expect(
+      wrapper
+        .find('ForwardRef(TextField)')
+        .at(0)
+        .prop('value')
+    ).toBe('我今晚不回家吃饭');
+    await setInput(wrapper, '');
+    expect(repo.loadResumableReceiverRecord()).toBeNull();
+    wrapper.unmount();
+  });
+  test('partner consent is content-bound, cancellable and distinct from understanding; failed save retries once', async () => {
+    symbolMatching.matchTextToCommunicationTiles.mockReturnValue({ matches: [{ token: '不要', tile: null, matchType: 'none' }], matchRate: 0 });
+    const values = new Map(); let fail = false;
+    const repo = createCommunicationRepository({ storage: {
+      getItem: key => values.get(key) || null,
+      setItem: (key, value) => { if (!fail) values.set(key, value); }
+    } });
+    const speak = jest.fn();
+    const props = { boards: [], intl: null, onApplyOutput, onJumpBoard: jest.fn(),
+      onSpeak: speak, onCreateDraft: repo.createReceiverDraft, onUpdateDraft: repo.updateReceiverDraft,
+      onConfirmDraft: repo.confirmReceiverDraft, onAppendHistory };
+    let wrapper = mount(<ReceiverLoopPanel {...props} />);
+    const click = async label => {
+      await act(async () => wrapper.find('ForwardRef(Button)').filterWhere(n => n.text() === label).first().prop('onClick')());
+      wrapper.update();
+    };
     await setInput(wrapper, '不要');
-    wrapper
-      .find('ForwardRef(Button)')
-      .filterWhere(node => node.text() === '生成图片序列')
-      .first()
-      .simulate('click');
-    await act(async () => {
-      jest.runAllTimers();
-    });
-    wrapper.update();
-    expect(
-      wrapper
-        .find('ForwardRef(Button)')
-        .filterWhere(node => node.text() === '全屏展示')
-        .first()
-        .prop('disabled')
-    ).toBe(true);
+    await click('生成图片序列');
+    await act(async () => jest.runAllTimers()); wrapper.update();
+    await click('全屏展示');
+    expect(wrapper.find('ForwardRef(Dialog)').filterWhere(n => n.prop('aria-labelledby') === 'receiver-assistance-title').prop('open')).toBe(true);
     expect(onApplyOutput).not.toHaveBeenCalled();
-    wrapper
-      .find('ForwardRef(Button)')
-      .filterWhere(node => node.text() === '保留文字')
-      .first()
-      .simulate('click');
-    wrapper.update();
-    expect(
-      wrapper
-        .find('ForwardRef(Button)')
-        .filterWhere(node => node.text() === '全屏展示')
-        .first()
-        .prop('disabled')
-    ).toBe(false);
-    wrapper
-      .find('ForwardRef(Button)')
-      .filterWhere(node => node.text() === '全屏展示')
-      .first()
-      .simulate('click');
-    expect(onApplyOutput.mock.calls[0][0][0].label).toBe('不要');
-    expect(onAppendHistory.mock.calls[0][0].pictogramSequence[0]).toMatchObject(
-      { originalToken: '不要', textOnly: true, pictogramId: null }
-    );
+    await click('返回复核');
+    expect(wrapper.find('ForwardRef(Dialog)').filterWhere(n => n.prop('aria-labelledby') === 'receiver-assistance-title').prop('open')).toBe(false);
+    await click('保留文字');
+    expect(wrapper.text()).toContain('尚有意思未图示');
+    expect(wrapper.text()).not.toContain('本机图片暂不可用');
+    await click('全屏展示');
+    fail = true;
+    await click('我会辅助解释，继续展示');
+    expect(onApplyOutput).not.toHaveBeenCalled();
+    expect(wrapper.text()).toContain('尚未保存');
+    fail = false;
+    await click('全屏展示');
+    const confirm = wrapper.find('ForwardRef(Button)').filterWhere(n => n.text() === '我会辅助解释，继续展示').prop('onClick');
+    await act(async () => { confirm(); confirm(); }); wrapper.update();
+    expect(onApplyOutput).toHaveBeenCalledTimes(1);
+    expect(onApplyOutput.mock.calls[0][0][0]).toMatchObject({label: '不要', textOnly: true});
+    expect(speak).not.toHaveBeenCalled();
+    const records = repo.loadCommunicationHistory();
+    expect(records).toHaveLength(1);
+    expect(JSON.stringify(records)).not.toContain('"patientFeedback":"understood"');
+    wrapper.unmount();
+    wrapper = mount(<ReceiverLoopPanel {...props} initialRecord={repo.loadReceiverRecords()[0]} />);
+    expect(wrapper.find('.MockReceiverDisplay')).toHaveLength(0);
+    expect(speak).not.toHaveBeenCalled();
     wrapper.unmount();
   });
   const onApplyOutput = jest.fn();
@@ -198,7 +258,8 @@ describe('ReceiverLoopPanel', () => {
           .map(item => ({
             id: item.tile.tile.id,
             label: item.tile.displayLabel || item.tile.tile.label,
-            image: item.tile.tile.image
+            image: item.tile.tile.image,
+            ...(item.tile.textOnly ? { textOnly: true } : {})
           }))
     );
   });
@@ -220,7 +281,7 @@ describe('ReceiverLoopPanel', () => {
       />
     );
 
-    await setInput(wrapper, '我想喝水');
+    await setInput(wrapper, '想喝水');
 
     wrapper
       .find('ForwardRef(Button)')
@@ -233,8 +294,8 @@ describe('ReceiverLoopPanel', () => {
     });
     wrapper.update();
 
-    expect(wrapper.text()).toContain('匹配结果：3/3');
-    expect(wrapper.text()).toContain('已全部匹配，发送前请确认');
+    expect(wrapper.text()).toContain('图片匹配：3/3');
+    expect(wrapper.text()).toContain('已全部配图，发送前请确认');
     expect(wrapper.text()).toContain('精确匹配');
     expect(wrapper.text()).toContain('预览图片：想 / 喝 / 水');
     expect(
@@ -255,6 +316,9 @@ describe('ReceiverLoopPanel', () => {
     wrapper.update();
 
     expect(wrapper.text()).toContain('预览图片：喝 / 想 / 水');
+    expect(wrapper.text()).toContain('完整原句');
+    wrapper.find('ForwardRef(Button)').filterWhere(n => n.text() === '左移').at(1).simulate('click');
+    wrapper.update();
 
     wrapper
       .find('ForwardRef(Button)')
@@ -275,7 +339,7 @@ describe('ReceiverLoopPanel', () => {
       .simulate('click');
     wrapper.update();
 
-    expect(wrapper.text()).toContain('预览图片：喝 / 想 / 饮料');
+    expect(wrapper.text()).toContain('预览图片：想 / 喝 / 饮料');
 
     wrapper
       .find('ForwardRef(Button)')
@@ -283,23 +347,7 @@ describe('ReceiverLoopPanel', () => {
       .first()
       .simulate('click');
 
-    expect(onApplyOutput).toHaveBeenCalledWith([
-      {
-        id: 'drink-verb',
-        label: '喝',
-        image: '/drink-verb.png'
-      },
-      {
-        id: 'want',
-        label: '想',
-        image: '/want.png'
-      },
-      {
-        id: 'drink',
-        label: '饮料',
-        image: '/drink.png'
-      }
-    ]);
+    expect(onApplyOutput.mock.calls[0][0].map(item => item.label)).toEqual(['想', '喝', '饮料']);
     expect(onAppendHistory).not.toHaveBeenCalled();
 
     wrapper
@@ -311,8 +359,8 @@ describe('ReceiverLoopPanel', () => {
       expect.objectContaining({
         contractVersion: 2,
         direction: 'receive',
-        inputText: '我想喝水',
-        labels: ['喝', '想', '饮料'],
+        inputText: '想喝水',
+        labels: ['想', '喝', '饮料'],
         output: expect.any(Array),
         pictogramSequence: expect.arrayContaining([
           expect.objectContaining({
@@ -378,7 +426,7 @@ describe('ReceiverLoopPanel', () => {
         correctionMemory: null
       })
     );
-    expect(wrapper.text()).toContain('匹配结果：3/3');
+    expect(wrapper.text()).toContain('图片匹配：3/3');
 
     await setInput(wrapper, '我想喝苹果');
     expect(
@@ -892,7 +940,7 @@ describe('ReceiverLoopPanel', () => {
       />
     );
 
-    await setInput(wrapper, '我想喝水');
+    await setInput(wrapper, '想喝水');
     wrapper
       .find('ForwardRef(Button)')
       .filterWhere(node => node.text() === '生成图片序列')
@@ -910,7 +958,7 @@ describe('ReceiverLoopPanel', () => {
     wrapper.update();
 
     expect(onConfirmDraft).toHaveBeenCalled();
-    expect(onSpeak).toHaveBeenCalledWith('我想喝水', expect.any(Function));
+    expect(onSpeak).toHaveBeenCalledWith('想喝水', expect.any(Function));
 
     onSpeak.mockClear();
     wrapper.find('button.MockReceiverFeedbackRepeat').simulate('click');
@@ -920,7 +968,7 @@ describe('ReceiverLoopPanel', () => {
       'receiver-1',
       'repeat_requested'
     );
-    expect(onSpeak).toHaveBeenCalledWith('我想喝水', expect.any(Function));
+    expect(onSpeak).toHaveBeenCalledWith('想喝水', expect.any(Function));
     expect(wrapper.find('.MockReceiverDisplay')).toHaveLength(1);
 
     onRecordPatientFeedback.mockReturnValueOnce(null);
@@ -995,7 +1043,7 @@ describe('ReceiverLoopPanel', () => {
         .prop('value')
     ).toBe('想喝水');
     expect(wrapper.text()).toContain('已恢复上次未完成的图片复核。');
-    expect(wrapper.text()).toContain('匹配结果：1/1');
+    expect(wrapper.text()).toContain('图片匹配：1/1');
 
     wrapper
       .find('ForwardRef(Button)')
@@ -1004,7 +1052,7 @@ describe('ReceiverLoopPanel', () => {
       .simulate('click');
     wrapper.update();
 
-    expect(onDiscardResumableRecord).toHaveBeenCalledWith('receiver-restored');
+    expect(onDiscardResumableRecord).toHaveBeenCalledWith('receiver-restored', { expected: initialRecord });
     expect(
       wrapper
         .find('ForwardRef(TextField)')
@@ -1084,7 +1132,7 @@ describe('ReceiverLoopPanel', () => {
         isUsedForLearning: true
       })
     );
-    expect(onUpdateDraft.mock.calls[0][1].pictogramSequence[1]).toEqual(
+    expect(onUpdateDraft.mock.calls[onUpdateDraft.mock.calls.length - 1][1].pictogramSequence[1]).toEqual(
       expect.objectContaining({
         pictogramId: 'drink',
         source: 'manual'
@@ -1262,6 +1310,115 @@ describe('ReceiverLoopPanel', () => {
     expect(wrapper.find('[aria-label="AI 分词建议"]')).toHaveLength(0);
   });
 
+  test.each(['during', 'after', 'changed'])(
+    'preserves a restored-draft AI result across an equivalent board refresh: %s',
+    async mode => {
+      const values = new Map();
+      const repo = createCommunicationRepository({
+        storage: {
+          getItem: key => values.get(key) || null,
+          setItem: (key, value) => values.set(key, value)
+        },
+        now: () => 100
+      });
+      const boards = [
+        {
+          id: 'home',
+          name: '首页',
+          tiles: [{ id: 'water', label: '水', image: '/water.png' }]
+        }
+      ];
+      let resolveSuggestion;
+      const onAiResegment = jest.fn(
+        () =>
+          new Promise(resolve => {
+            resolveSuggestion = resolve;
+          })
+      );
+      const props = {
+        boards,
+        intl: null,
+        onApplyOutput,
+        onJumpBoard: jest.fn(),
+        onCreateDraft: repo.createReceiverDraft,
+        onUpdateDraft: repo.updateReceiverDraft,
+        aiAvailable: true,
+        onAiResegment
+      };
+      let wrapper = mount(<ReceiverLoopPanel {...props} />);
+      await setInput(wrapper, '想喝水');
+      wrapper
+        .find('ForwardRef(Button)')
+        .filterWhere(node => node.text() === '生成图片序列')
+        .first()
+        .simulate('click');
+      await act(async () => {
+        jest.runAllTimers();
+      });
+      wrapper.update();
+      const draft = repo.loadResumableReceiverRecord();
+      expect(draft).toBeTruthy();
+      wrapper.unmount();
+      wrapper = mount(<ReceiverLoopPanel {...props} initialRecord={draft} />);
+      const before = wrapper
+        .find('ForwardRef(TextField)')
+        .at(1)
+        .prop('value');
+      await act(async () => {
+        wrapper
+          .find('ForwardRef(Button)')
+          .filterWhere(node => node.text() === 'AI 优化分词')
+          .first()
+          .simulate('click');
+      });
+      const refreshedBoards = JSON.parse(JSON.stringify(boards));
+      if (mode === 'changed') refreshedBoards[0].tiles[0].label = '药';
+      if (mode !== 'after') {
+        await act(async () => {
+          wrapper.setProps({ boards: refreshedBoards });
+        });
+      }
+      await act(async () => {
+        resolveSuggestion({ tokens: ['想', '喝', '水'] });
+        await Promise.resolve();
+      });
+      if (mode === 'after') {
+        await act(async () => {
+          wrapper.setProps({ boards: refreshedBoards });
+        });
+      }
+      wrapper.update();
+      expect(onAiResegment).toHaveBeenCalledTimes(1);
+      expect(
+        wrapper
+          .find('ForwardRef(TextField)')
+          .at(1)
+          .prop('value')
+      ).toBe(before);
+      expect(wrapper.find('[aria-label="AI 分词建议"]')).toHaveLength(
+        mode === 'changed' ? 0 : 1
+      );
+      expect(onApplyOutput).not.toHaveBeenCalled();
+      if (mode !== 'changed') {
+        await act(async () => {
+          wrapper
+            .find('ForwardRef(Button)')
+            .filterWhere(node => node.text() === '采用分词建议')
+            .first()
+            .simulate('click');
+        });
+        wrapper.update();
+        expect(
+          wrapper
+            .find('ForwardRef(TextField)')
+            .at(1)
+            .prop('value')
+        ).toBe('想 / 喝 / 水');
+      }
+      wrapper.unmount();
+    }
+  );
+
   test.each(['dismiss', 'edit', 'late', 'lossy'])(
     'does not replace the current draft for an AI suggestion that is %s',
     async mode => {
@@ -1364,7 +1521,7 @@ describe('ReceiverLoopPanel', () => {
         .find('ForwardRef(Button)')
         .filterWhere(node => node.text() === label)
         .first();
-      expect(button.prop('disabled')).toBe(true);
+      expect(button.prop('disabled')).toBe(label === '发送到输出栏');
       await act(async () => {
         button.prop('onClick')();
       });

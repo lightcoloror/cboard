@@ -1,63 +1,52 @@
-const SUBJECT_PRONOUNS = [
-  '我们',
-  '你们',
-  '他们',
-  '她们',
-  '我',
-  '你',
-  '他',
-  '她',
-  '它'
-];
-const DESIRE_VERBS = ['想要', '需要', '希望', '想', '要'];
-const POLITE_PREFIX = '请';
+// Shared by Web/Taro and the standalone API (via the existing contract sync).
+// These introduce the selected expression, not a new fact or speech act.
+const EXPRESSION_FRAMES = ['我的意思是：', '我想表达的是：'];
 
-function startsWithAny(text, patterns) {
-  return patterns.some(pattern => text.startsWith(pattern));
+function normalizeExpressionText(value) {
+  return String(value || '')
+    .trim()
+    .replace(/\s+/g, '')
+    .replace(/[。.]$/, '');
 }
 
-function containsAny(text, patterns) {
-  return patterns.some(pattern => text.includes(pattern));
+export function preservesExpressionMeaning(labels, candidate) {
+  if (!Array.isArray(labels) || !labels.length || typeof candidate !== 'string')
+    return false;
+  const source = normalizeExpressionText(labels.join(''));
+  const text = normalizeExpressionText(candidate);
+  if (!source || !text) return false;
+  // Deliberately conservative: unordered keywords/negation counts cannot
+  // prove who did what, or the scope of a negation. Unknown paraphrases stay
+  // out of automatic playback; do not ask a second paid model to judge them.
+  return (
+    text === source || EXPRESSION_FRAMES.some(frame => text === frame + source)
+  );
+}
+
+export function filterFaithfulExpressionCandidates(labels, candidates) {
+  const seen = new Set();
+  return (Array.isArray(candidates) ? candidates : []).filter(candidate => {
+    if (!preservesExpressionMeaning(labels, candidate)) return false;
+    const key = normalizeExpressionText(candidate);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 }
 
 export function generateCommunicationCandidateSentences(
   labels,
-  candidateCount = 4
+  candidateCount = 3
 ) {
   if (!labels || !labels.length) {
     return ['（请先选择图片）'];
   }
 
-  const base = labels.join('');
-  const hasSubject = startsWithAny(base, SUBJECT_PRONOUNS);
-  const hasDesire = containsAny(base, DESIRE_VERBS);
-  const isPoliteAlready = base.startsWith(POLITE_PREFIX);
-  const raw = [];
-
-  raw.push(base + '。');
-
-  if (!hasSubject) {
-    raw.push('我' + base + '。');
-  }
-
-  if (!hasSubject && !hasDesire) {
-    raw.push('我想要' + base + '。');
-  }
-
-  if (!isPoliteAlready && !hasSubject) {
-    raw.push(POLITE_PREFIX + base + '。');
-  }
-
-  raw.push(base + '，好吗？');
-
-  const seen = new Set();
-  return raw
-    .filter(candidate => {
-      if (seen.has(candidate)) {
-        return false;
-      }
-      seen.add(candidate);
-      return true;
-    })
-    .slice(0, candidateCount);
+  const base = labels.join('').trim();
+  const sentence = /[。.!！?？]$/.test(base) ? base : base + '。';
+  // Never invent a subject, desire, degree, time or question to fill slots.
+  return filterFaithfulExpressionCandidates(labels, [
+    sentence,
+    ...EXPRESSION_FRAMES.map(frame => frame + sentence)
+  ]).slice(0, candidateCount);
 }

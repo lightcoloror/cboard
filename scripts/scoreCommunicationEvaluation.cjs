@@ -13,7 +13,29 @@ function occurrences(text, needle) {
     if(chars.slice(start,start+term.length).join('')===needle)result.push({start,end:start+term.length});
   return result;
 }
+function validateReference(ref) {
+  const fail=()=>{throw Error('INVALID_EVALUATION_REFERENCE');};
+  if(!ref||typeof ref.text!=='string'||!ref.text.length)fail();
+  for(const field of ['constraints','pictureRules'])if(ref[field]!==undefined&&!Array.isArray(ref[field]))fail();
+  for(const rule of ref.constraints||[]){
+    if(!rule||typeof rule.text!=='string'||!rule.text.length||!ref.text.includes(rule.text)||
+      !Array.isArray(rule.alternatives)||!rule.alternatives.length||rule.alternatives.some(a=>
+        !Array.isArray(a)||!a.length||a.some(t=>typeof t!=='string'||!t.length)||a.join('')!==rule.text))fail();
+  }
+  for(const rule of ref.pictureRules||[]){
+    if(!rule||typeof rule.text!=='string'||!rule.text.length||!ref.text.includes(rule.text)||
+      !['exact','contained'].includes(rule.scope))fail();
+    let count=0;
+    for(const field of ['forbiddenLabels','forbiddenTileIds'])if(rule[field]!==undefined){
+      if(!Array.isArray(rule[field])||rule[field].some(s=>typeof s!=='string'||!s.length))fail();
+      count+=rule[field].length;
+    }
+    if(!count)fail();
+  }
+  return ref;
+}
 function scoreConstraints(ref,tokens) {
+  validateReference(ref);
   const valid=Array.isArray(tokens)&&tokens.length>0&&tokens.every(t=>typeof t==='string'&&t.length>0);
   const sourcePreserved=valid&&tokens.join('')===ref.text;
   // Reuse the earlier structured-adaptation diagnostic; punctuation loss is
@@ -50,6 +72,7 @@ function median(values) {
   const middle=Math.floor(a.length/2);return a.length%2?a[middle]:(a[middle-1]+a[middle])/2;
 }
 function scorePictureEvidence(ref, items, sourcePreserved) {
+  validateReference(ref);
   const meaningful=s=>Array.from(s.replace(/[\s\p{P}]/gu,'')).length;
   const actual=spans(items.map(i=>i.token)).map((s,n)=>({...s,...items[n]}));
   const layoutSourcePreserved=!!sourcePreserved&&actual.map(i=>i.token).join('')===ref.text;
@@ -57,11 +80,18 @@ function scorePictureEvidence(ref, items, sourcePreserved) {
   // confused with the separate 眼镜 later in the same sentence.
   const compounds={开心果:['开心','水果','苹果'],眼镜盒:['眼镜'],助听器:['耳朵']};
   const errors=actual.filter(i=>i.imageDecision==='mismatch').map(i=>({token:i.token,start:i.start,end:i.end,reason:i.reason}));
-  for(const [term,forbidden] of Object.entries(compounds))for(const unit of occurrences(ref.text,term)){
-    for(const i of actual)if(i.image&&i.start>=unit.start&&i.end<=unit.end&&forbidden.includes(i.label))
-      if(!errors.some(e=>e.start===i.start&&e.end===i.end))errors.push({token:i.token,start:i.start,end:i.end,reason:term+'被局部词义图片替代'});
+  const pictureRules=[...Object.entries(compounds).map(([text,forbiddenLabels])=>
+    ({text,forbiddenLabels,scope:'contained',reason:text+'被局部词义图片替代'})),...(ref.pictureRules||[])];
+  // These are audited negative checks at source occurrences, not a model's
+  // confidence or a new automatic approval rule. Unlisted pictures stay unknown.
+  for(const rule of pictureRules)for(const unit of occurrences(ref.text,rule.text)){
+    for(const i of actual)if(layoutSourcePreserved&&i.image&&
+      (rule.scope==='exact'?i.start===unit.start&&i.end===unit.end:i.start>=unit.start&&i.end<=unit.end)&&
+      ((rule.forbiddenLabels||[]).includes(i.label)||(rule.forbiddenTileIds||[]).includes(i.tileId)))
+      if(!errors.some(e=>e.start===i.start&&e.end===i.end))errors.push({token:i.token,start:i.start,end:i.end,
+        ruleText:rule.text,reason:rule.reason||'图片与该片段的已标注词义冲突'});
   }
-  const verified=i=>layoutSourcePreserved&&i.verifiedPictureCandidate&&!errors.some(e=>e.start===i.start&&e.end===i.end);
+  const verified=i=>layoutSourcePreserved&&Boolean(i.image)&&i.verifiedPictureCandidate===true&&!errors.some(e=>e.start===i.start&&e.end===i.end);
   const uncertain=actual.filter(i=>i.image&&!verified(i)&&!errors.some(e=>e.start===i.start&&e.end===i.end));
   const allTextFallback=actual.length>0&&actual.every(i=>!i.image);
   const totalCharacters=meaningful(ref.text),verifiedCharacters=actual.reduce((n,i)=>n+(verified(i)?meaningful(i.token):0),0);
@@ -87,4 +117,4 @@ function summarize(rows) {
     costPerGranularityPassCny:known.length===rows.length&&rows.some(r=>r.granularityPass)?known.reduce((s,r)=>s+r.estimatedCny,0)/rows.filter(r=>r.granularityPass).length:null,
     p95Scope:'empirical observed sample only; includes failures when elapsed time recorded, not a population SLA'};
 }
-module.exports={spans,occurrences,scoreConstraints,scorePictureEvidence,estimateCost,quantile,median,summarize};
+module.exports={spans,occurrences,validateReference,scoreConstraints,scorePictureEvidence,estimateCost,quantile,median,summarize};

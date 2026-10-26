@@ -49,12 +49,24 @@ function withoutIntlSegmenter(run) {
 describe('communication symbol matching with cboard defaults', () => {
   test('keeps negation separate and eating intact through local picture matching on both engines', () => {
     const verify = () => {
-      const result = matchTextToCommunicationTiles('我今晚不回家吃饭', boards, { intl });
-      expect(result.segmentation.segments).toEqual(['我', '今晚', '不', '回家', '吃饭']);
-      expect(result.matches.map(item => item.token).join('')).toBe('我今晚不回家吃饭');
+      const result = matchTextToCommunicationTiles('我今晚不回家吃饭', boards, {
+        intl
+      });
+      expect(result.segmentation.segments).toEqual([
+        '我',
+        '今晚',
+        '不',
+        '回家',
+        '吃饭'
+      ]);
+      expect(result.matches.map(item => item.token).join('')).toBe(
+        '我今晚不回家吃饭'
+      );
       expect(findMatch(result, '吃饭').tile).toBeNull();
       expect(findMatch(result, '吃饭').sourceSpan).toEqual({
-        start: 6, end: 8, offsetUnit: 'unicode-code-point'
+        start: 6,
+        end: 8,
+        offsetUnit: 'unicode-code-point'
       });
     };
     verify();
@@ -62,14 +74,16 @@ describe('communication symbol matching with cboard defaults', () => {
   });
 
   test('an available negated picture cannot absorb a separate unmatched negation', () => {
-    const result = matchTextToCommunicationTiles('不回家吃饭', [{
-      id: 'meal',
-      tiles: [
-        { id: 'negative', label: '不回家', image: '/negative.png' },
-        { id: 'home', label: '回家', image: '/home.png' },
-        { id: 'meal', label: '吃饭', image: '/meal.png' }
-      ]
-    }]);
+    const result = matchTextToCommunicationTiles('不回家吃饭', [
+      {
+        id: 'meal',
+        tiles: [
+          { id: 'negative', label: '不回家', image: '/negative.png' },
+          { id: 'home', label: '回家', image: '/home.png' },
+          { id: 'meal', label: '吃饭', image: '/meal.png' }
+        ]
+      }
+    ]);
     expect(result.segmentation.segments).toEqual(['不', '回家', '吃饭']);
     expect(findMatch(result, '不').tile).toBeNull();
     expect(findMatch(result, '回家').tile.displayLabel).toBe('回家');
@@ -77,12 +91,15 @@ describe('communication symbol matching with cboard defaults', () => {
   });
 
   test('never substitutes rice or a generic eating action for the eating-meal unit', () => {
-    const result = matchTextToCommunicationTiles('吃饭', [{
-      id: 'food', tiles: [
-        { id: 'rice', label: '米饭', image: '/rice.png' },
-        { id: 'eat', label: '吃', image: '/eat.png' }
-      ]
-    }]);
+    const result = matchTextToCommunicationTiles('吃饭', [
+      {
+        id: 'food',
+        tiles: [
+          { id: 'rice', label: '米饭', image: '/rice.png' },
+          { id: 'eat', label: '吃', image: '/eat.png' }
+        ]
+      }
+    ]);
     expect(result.segmentation.segments).toEqual(['吃饭']);
     expect(findMatch(result, '吃饭').tile).toBeNull();
   });
@@ -258,7 +275,13 @@ describe('communication symbol matching with cboard defaults', () => {
       '我不是不想吃饭'
     );
     expect(findMatch(result, '不是').tile).toBeNull();
-    expect(result.segmentation.segments).toEqual(['我', '不是', '不', '想', '吃饭']);
+    expect(result.segmentation.segments).toEqual([
+      '我',
+      '不是',
+      '不',
+      '想',
+      '吃饭'
+    ]);
     expect(findMatch(result, '不').tile).not.toBeNull();
   });
 
@@ -364,7 +387,9 @@ describe('communication symbol matching with cboard defaults', () => {
     expect(phone.displayLabel).toBe('手机');
     expect(vomit.displayLabel).toBe('想吐');
     expect(fork.displayLabel).toBe('叉子');
-    expect(fork.synonyms).toEqual(expect.arrayContaining(['分叉', '餐叉']));
+    expect(fork.synonyms).toEqual(expect.arrayContaining(['餐叉']));
+    expect(fork.synonyms).not.toContain('分叉');
+    expect(fork.excludeTokens).toContain('分叉');
     expect(knife.displayLabel).toBe('刀');
     expect(knife.synonyms).toContain('刀具');
     expect(spoon.displayLabel).toBe('勺子');

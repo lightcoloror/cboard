@@ -67,6 +67,14 @@ export async function openCaregiverTools(panel, useTouch) {
   await expect(panel.locator('#communication-caregiver-tools')).toBeVisible();
 }
 
+export async function openPatientExpression(panel, useTouch) {
+  const toggle = panel.locator('button[data-patient-action="express"]');
+  if ((await toggle.getAttribute('aria-expanded')) !== 'true') {
+    await activate(toggle, useTouch);
+  }
+  await expect(panel.locator('#communication-expression-panel')).toBeVisible();
+}
+
 export async function installBrowserSpeechHarness(page) {
   await page.addInitScript(() => {
     const harness = {

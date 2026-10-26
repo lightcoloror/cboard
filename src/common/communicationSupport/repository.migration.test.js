@@ -80,7 +80,7 @@ describe('communication repository schema migration', () => {
     expect(storage.snapshot()).toEqual(firstSnapshot);
   });
 
-  test('merges unversioned neutral and Tuyujia values without losing receiver data', () => {
+  test('migrates primary favorites without reviving a stale legacy mirror', () => {
     const storage = createMemoryStorage({
       cboard_communication_saved_phrases: JSON.stringify([
         {
@@ -133,7 +133,7 @@ describe('communication repository schema migration', () => {
 
     expect(
       repository.loadCommunicationSavedPhrases().map(item => item.sentence)
-    ).toEqual(['中性常用语', '旧常用语']);
+    ).toEqual(['中性常用语']);
     expect(repository.loadCommunicationHistory()[0].sentence).toBe('旧历史');
     expect(repository.loadReceiverRecords()[0]).toEqual(
       expect.objectContaining({ id: receiverDraft.id, recordStatus: 'draft' })
@@ -154,15 +154,15 @@ describe('communication repository schema migration', () => {
     });
     expect(repository.loadAnonymousUserIdentity()).toBe('user-migrated');
     expect(
-      JSON.parse(storage.getItem('cboard_communication_saved_phrases'))
-    ).toHaveLength(2);
+      JSON.parse(storage.getItem(COMMUNICATION_STORAGE_KEYS.favoriteState)).phrases
+    ).toHaveLength(1);
     expect(
       JSON.parse(storage.getItem(COMMUNICATION_STORAGE_KEYS.schema))
         .schemaVersion
     ).toBe(COMMUNICATION_REPOSITORY_SCHEMA_VERSION);
   });
 
-  test('repairs corrupted current values without copying private raw data', () => {
+  test('preserves corrupt favorites while retaining unrelated legacy migration', () => {
     const storage = createMemoryStorage({
       cboard_communication_repository_schema: JSON.stringify({
         schemaVersion: COMMUNICATION_REPOSITORY_SCHEMA_VERSION,
@@ -188,10 +188,9 @@ describe('communication repository schema migration', () => {
       createId: prefix => `${prefix}-repaired`
     });
 
-    expect(repository.loadCommunicationSavedPhrases()[0].sentence).toBe(
-      '旧常用语'
-    );
-    expect(repository.loadCommunicationSavedPhraseTombstones()).toEqual([]);
+    expect(() => repository.loadCommunicationSavedPhrases()).toThrow();
+    expect(() => repository.loadCommunicationSavedPhraseTombstones()).toThrow();
+    expect(storage.getItem(COMMUNICATION_STORAGE_KEYS.savedPhrases)).toBe('{broken-json');
     expect(repository.loadReceiverRecords()).toEqual([
       expect.objectContaining({ id: receiverDraft.id })
     ]);
@@ -211,8 +210,6 @@ describe('communication repository schema migration', () => {
         migratedAt: 1,
         lastRepairAt: 900,
         repairedKeys: expect.arrayContaining([
-          COMMUNICATION_STORAGE_KEYS.savedPhrases,
-          COMMUNICATION_STORAGE_KEYS.savedPhraseTombstones,
           COMMUNICATION_STORAGE_KEYS.receiverRecords,
           COMMUNICATION_STORAGE_KEYS.receiverCorrections,
           COMMUNICATION_STORAGE_KEYS.missingTokens,
@@ -239,9 +236,7 @@ describe('communication repository schema migration', () => {
     const repository = createCommunicationRepository({ storage });
 
     expect(storage.snapshot()).toEqual(initialSnapshot);
-    expect(repository.loadCommunicationSavedPhrases()[0].sentence).toBe(
-      '旧常用语'
-    );
+    expect(() => repository.loadCommunicationSavedPhrases()).toThrow('newer schema version');
     expect(() =>
       repository.appendCommunicationHistory({
         direction: 'express',

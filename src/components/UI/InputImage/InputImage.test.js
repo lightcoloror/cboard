@@ -71,4 +71,20 @@ describe('InputImage tests', () => {
     expect(readAndCompressImage).not.toHaveBeenCalled();
     expect(onChange).toHaveBeenCalledWith(gif, 'drink.gif', gif);
   });
+
+  test.each(['scope','unmount','newer'])('ignores delayed compressed image and loading result after %s', async mode => {
+    let finish;
+    readAndCompressImage.mockImplementationOnce(()=>new Promise(resolve=>{finish=resolve;}));
+    let current=true;
+    const onChange=jest.fn(),setIsLoadingImage=jest.fn();
+    const input=new InputImageComponent({onChange,setIsLoadingImage,createChangeGuard:()=>()=>current});
+    const file=new File(['geometry'],'synthetic.png',{type:'image/png'});
+    const pending=input.handleChange({target:{files:[file]}});
+    if(mode==='scope') current=false;
+    if(mode==='unmount') input.componentWillUnmount();
+    if(mode==='newer') input.beginChange();
+    finish(file); await pending;
+    expect(onChange).not.toHaveBeenCalled();
+    expect(setIsLoadingImage.mock.calls).toEqual([[true]]);
+  });
 });

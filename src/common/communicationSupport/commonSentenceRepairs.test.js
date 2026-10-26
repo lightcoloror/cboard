@@ -40,55 +40,110 @@ const cases = [
 function bothEngines(run) {
   run();
   const descriptor = Object.getOwnPropertyDescriptor(Intl, 'Segmenter');
-  Object.defineProperty(Intl, 'Segmenter', { configurable: true, value: undefined });
-  try { run(); } finally { Object.defineProperty(Intl, 'Segmenter', descriptor); }
+  Object.defineProperty(Intl, 'Segmenter', {
+    configurable: true,
+    value: undefined
+  });
+  try {
+    run();
+  } finally {
+    Object.defineProperty(Intl, 'Segmenter', descriptor);
+  }
 }
 
 // Realistic distractor catalog: a partial object/action image must not defeat
 // a protected whole word, regardless of whether a whole-word picture exists.
-const boards = [{ id: 'distractors', tiles: [
-  '好', '听', '水', '头', '指甲', '眼镜', '你是', '不是', '小'
-].map((label, index) => ({ id: `d-${index}`, label, image: '/synthetic.png' })) }];
+const boards = [
+  {
+    id: 'distractors',
+    tiles: ['好', '听', '水', '头', '指甲', '眼镜', '你是', '不是', '小'].map(
+      (label, index) => ({ id: `d-${index}`, label, image: '/synthetic.png' })
+    )
+  }
+];
 
-test.each(cases)('keeps reviewed common sentence boundaries: %s', (text, expected) => {
-  bothEngines(() => {
-    expect(segmentChineseCommunicationText(text).segments).toEqual(expected);
-    const result = matchTextToCommunicationTiles(text, boards);
-    expect(result.segmentation.segments).toEqual(expected);
-    expect(result.matches.map(item => item.token).join('')).toBe(text);
-    expect(result.matches[result.matches.length - 1].sourceSpan.end).toBe(Array.from(text).length);
-  });
-});
+test.each(cases)(
+  'keeps reviewed common sentence boundaries: %s',
+  (text, expected) => {
+    bothEngines(() => {
+      expect(segmentChineseCommunicationText(text).segments).toEqual(expected);
+      const result = matchTextToCommunicationTiles(text, boards);
+      expect(result.segmentation.segments).toEqual(expected);
+      expect(result.matches.map(item => item.token).join('')).toBe(text);
+      expect(result.matches[result.matches.length - 1].sourceSpan.end).toBe(
+        Array.from(text).length
+      );
+    });
+  }
+);
 
-test.each(['助行器', '助听器', '洗发水', '指甲油', '眼镜盒', '保温杯', '是不是', '要不要', '可不可以'])('does not substitute an embedded concept for %s', word => {
+test.each([
+  '助行器',
+  '助听器',
+  '洗发水',
+  '指甲油',
+  '眼镜盒',
+  '保温杯',
+  '是不是',
+  '要不要',
+  '可不可以'
+])('does not substitute an embedded concept for %s', word => {
   bothEngines(() => {
     const missing = matchTextToCommunicationTiles(word, boards);
     expect(missing.matches).toHaveLength(1);
     expect(missing.matches[0].tile).toBeNull();
-    const exact = matchTextToCommunicationTiles(word, boards.concat({
-      id: 'whole', tiles: [{ id: 'whole-word', label: word, image: '/whole.png' }]
-    }));
+    const exact = matchTextToCommunicationTiles(
+      word,
+      boards.concat({
+        id: 'whole',
+        tiles: [{ id: 'whole-word', label: word, image: '/whole.png' }]
+      })
+    );
     expect(exact.matches[0].tile.id).toBe('whole-word');
   });
 });
 
 test('reuses scoped person labels without hard-coding names or changing accepted boundaries', () => {
-  const people = [{ id: 'personal', tiles: [
-    { id: 'name-1', label: '阿澈', communicationCategory: 'people', image: '/person.png' },
-    { id: 'name-2', label: '小岚', communication: { category: 'people' }, image: '/person.png' }
-  ] }];
+  const people = [
+    {
+      id: 'personal',
+      tiles: [
+        {
+          id: 'name-1',
+          label: '阿澈',
+          communicationCategory: 'people',
+          image: '/person.png'
+        },
+        {
+          id: 'name-2',
+          label: '小岚',
+          communication: { category: 'people' },
+          image: '/person.png'
+        }
+      ]
+    }
+  ];
   bothEngines(() => {
     for (const [text, expected] of [
       ['我要阿澈来', ['我', '要', '阿澈', '来']],
       ['请帮我找小岚', ['请帮我', '找', '小岚']]
     ]) {
-      expect(matchTextToCommunicationTiles(text, people).segmentation.segments).toEqual(expected);
-      expect(matchTextToCommunicationTiles(text, boards).matches.some(m => m.tile && /^name-/.test(m.tile.id))).toBe(false);
+      expect(
+        matchTextToCommunicationTiles(text, people).segmentation.segments
+      ).toEqual(expected);
+      expect(
+        matchTextToCommunicationTiles(text, boards).matches.some(
+          m => m.tile && /^name-/.test(m.tile.id)
+        )
+      ).toBe(false);
     }
     const kept = ['请', '帮', '我', '找', '小', '岚'];
-    expect(matchTextToCommunicationTiles('请帮我找小岚', people, {
-      preSegmented: kept, preserveSegments: true
-    }).segmentation.segments).toEqual(kept);
+    expect(
+      matchTextToCommunicationTiles('请帮我找小岚', people, {
+        preSegmented: kept,
+        preserveSegments: true
+      }).segmentation.segments
+    ).toEqual(kept);
   });
 });
 
@@ -96,9 +151,20 @@ test('quantity disambiguation preserves genuine saliva and conditional expressio
   expect(segmentChineseCommunicationText('只要').segments).toEqual(['只要']);
   bothEngines(() => {
     expect(segmentChineseCommunicationText('口水').segments).toEqual(['口水']);
-    expect(matchTextToCommunicationTiles('口水', boards).matches[0].tile).toBeNull();
-    for (const text of ['只要你来', '喝两口水', '喝3口水', '37.5℃', '去B07，不是B17', '🙂不不不\n喝水']) {
-      expect(segmentChineseCommunicationText(text).segments.join('')).toBe(text);
+    expect(
+      matchTextToCommunicationTiles('口水', boards).matches[0].tile
+    ).toBeNull();
+    for (const text of [
+      '只要你来',
+      '喝两口水',
+      '喝3口水',
+      '37.5℃',
+      '去B07，不是B17',
+      '🙂不不不\n喝水'
+    ]) {
+      expect(segmentChineseCommunicationText(text).segments.join('')).toBe(
+        text
+      );
     }
   });
 });

@@ -31,6 +31,22 @@ const props = {
 };
 
 describe('FullScreenDialog tests', () => {
+  test('opt-in managed save does not close before its caller confirms persistence', () => {
+    const onClose = jest.fn();
+    const onSubmit = jest.fn();
+    const wrapper = shallow(<FullScreenDialog {...props} closeOnSubmit={false} onClose={onClose} onSubmit={onSubmit} />).dive();
+    wrapper.find('#save-button').simulate('click');
+    expect(onSubmit).toHaveBeenCalledTimes(1);
+    expect(onClose).not.toHaveBeenCalled();
+  });
+  test('legacy dialogs retain their submit then close behavior', () => {
+    const onClose = jest.fn();
+    const onSubmit = jest.fn();
+    const wrapper = shallow(<FullScreenDialog {...props} onClose={onClose} onSubmit={onSubmit} />).dive();
+    wrapper.find('#save-button').simulate('click');
+    expect(onSubmit).toHaveBeenCalledTimes(1);
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
   test('default renderer', () => {
     shallowMatchSnapshot(<FullScreenDialog {...props} />);
   });

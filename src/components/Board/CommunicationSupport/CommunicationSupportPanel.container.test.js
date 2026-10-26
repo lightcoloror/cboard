@@ -1,10 +1,7 @@
 import {
   CHANGE_OUTPUT,
-  CREATE_BOARD,
   SWITCH_BOARD,
-  UPDATE_BOARD
 } from '../Board.constants';
-import { ADD_BOARD_COMMUNICATOR } from '../../Communicator/Communicator.constants';
 import { UPDATE_DISPLAY_SETTINGS } from '../../App/App.constants';
 import { CHANGE_RATE } from '../../../providers/SpeechProvider/SpeechProvider.constants';
 import {
@@ -13,6 +10,18 @@ import {
 } from './CommunicationSupportPanel.container';
 
 describe('CommunicationSupportPanel container', () => {
+  test('excludes tombstoned personal boards from new matching without touching existing snapshots', () => {
+    const person = { id: 'private-person', personId: 'synthetic-person-a', label: '合成林安', image: 'data:image/png;base64,c3ludGhldGlj' };
+    const boards = [{ id: 'home', tiles: [] }, { id: 'device_private_board_deleted', tiles: [person] }];
+    const output = [{ ...person }];
+    const state = { board: { boards, output, syncMeta: { device_private_board_deleted: { isDeleted: true } } }, app: {}, speech: {} };
+    const before = JSON.stringify(state);
+    const props = mapStateToProps(state, {});
+    expect(props.boards).toEqual([boards[0]]);
+    expect(props.output).toEqual(output);
+    expect(JSON.stringify(state)).toBe(before);
+  });
+
   test('maps cboard board and auth state into communication support props', () => {
     const state = {
       board: {
@@ -49,6 +58,7 @@ describe('CommunicationSupportPanel container', () => {
       activeBoardId: 'home',
       intl: ownProps.intl,
       isLogged: true,
+      accountId: '',
       displaySettings: state.app.displaySettings,
       speechSettings: {
         voiceURI: 'voice',
@@ -121,8 +131,10 @@ describe('CommunicationSupportPanel container', () => {
     });
   });
 
-  test('creates, attaches, and updates a caregiver personal board through CBoard actions', () => {
-    const dispatch = jest.fn(action => action);
+  test('awaits the bound persistence service for caregiver board creation and updates', async () => {
+    const save = jest.fn(async (board, options) => options.create ? board.id : true);
+    const dispatch = jest.fn(action => typeof action === 'function'
+      ? action(dispatch, jest.fn(), { verifiedBoardPersistence: { save } }) : action);
     const props = mapDispatchToProps(dispatch);
     const board = {
       id: 'device_private_board_family',
@@ -130,16 +142,14 @@ describe('CommunicationSupportPanel container', () => {
       tiles: []
     };
 
-    expect(props.onCreateCommunicationBoard(board)).toBe(board.id);
-    expect(props.onUpdateCommunicationBoard(board)).toBe(true);
-
-    expect(dispatch.mock.calls.map(([action]) => action)).toEqual([
-      expect.objectContaining({ type: CREATE_BOARD, boardData: board }),
-      expect.objectContaining({
-        type: ADD_BOARD_COMMUNICATOR,
-        boardId: board.id
-      }),
-      expect.objectContaining({ type: UPDATE_BOARD, boardData: board })
+    const guard = jest.fn(() => true);
+    await expect(props.onCreateCommunicationBoard(board, { guard })).resolves.toBe(board.id);
+    await expect(props.onUpdateCommunicationBoard(board, { expectedBoard: board, guard })).resolves.toBe(true);
+    expect(save.mock.calls).toEqual([
+      [board, { create: true, expectedBoard: null, guard }],
+      [board, { expectedBoard: board, guard }]
     ]);
+    save.mockRejectedValueOnce(new Error('synthetic write failure'));
+    await expect(props.onUpdateCommunicationBoard(board, { expectedBoard: board })).rejects.toThrow('synthetic write failure');
   });
 });

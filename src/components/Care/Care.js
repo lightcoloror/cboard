@@ -10,8 +10,19 @@ import { configureCareLocalAccount } from '../../common/communicationSupport/loc
 import { chooseCareBrowserFile } from '../../common/communicationSupport/careBrowserFile';
 import { createCareBuiltinImages } from '../../common/communicationSupport/careBuiltinImages';
 import boardsFixture from '../../api/boards.json';
+import { careTextAiEnabled } from '../../common/communicationSupport/careAiAvailability';
+import {
+  speak,
+  cancelSpeech,
+  changeRate
+} from '../../providers/SpeechProvider/SpeechProvider.actions';
+import { playExpressionSentence } from '../../common/communicationSupport/expressionPlaybackCoordinator';
+import { createBrowserExpressionAudio } from '../../common/communicationSupport/browserExpressionAudio';
 
 const builtinImages = createCareBuiltinImages(boardsFixture.advanced || []);
+let pendingSpeech = null;
+const tileAudio = createBrowserExpressionAudio();
+let expressionGeneration = 0;
 
 const identity = () => {
   const u = getStore().getState().app.userData;
@@ -28,7 +39,7 @@ configureCareLocalAccount(() => identity()?.id);
 export const runtime = {
   enabled: process.env.REACT_APP_CARE_COLLABORATION === 'true',
   trialEnabled: process.env.REACT_APP_CARE_PUBLIC_TRIAL === 'true',
-  fundingEnabled: process.env.REACT_APP_TUYUJIA_CLOUD_TRIAL !== 'true',
+  fundingEnabled: careTextAiEnabled(),
   identity,
   resolveBuiltinImage: reference => builtinImages.resolve(reference),
   openAccount: () => history.replace('/login-signup'),
@@ -242,14 +253,89 @@ export const runtime = {
       throw new Error('请选择不超过20 MiB的图库备份');
     return new Uint8Array(await file.arrayBuffer());
   },
-  speak: async (text, rate) => {
-    if (!window.speechSynthesis)
-      throw new Error('此设备未提供语音，请使用文字与图片表达。');
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'zh-CN';
-    utterance.rate = rate;
-    window.speechSynthesis.cancel();
-    window.speechSynthesis.speak(utterance);
+  speechSettings: () => ({
+    ...(getStore().getState().speech?.options || {}),
+    rate: getStore().getState().speech?.options?.rate || 1
+  }),
+  changeSpeechRate: rate => getStore().dispatch(changeRate(rate)),
+  cancelSpeech: () => {
+    expressionGeneration += 1;
+    tileAudio.stop();
+    if (pendingSpeech)
+      pendingSpeech(
+        Object.assign(new Error('播报已取消'), { name: 'AbortError' })
+      );
+    getStore().dispatch(cancelSpeech());
+  },
+  speak: (text, rate) => {
+    if (pendingSpeech) runtime.cancelSpeech();
+    return new Promise((resolve, reject) => {
+      let settled = false;
+      const finish = error => {
+        if (settled) return;
+        settled = true;
+        if (pendingSpeech === finish) pendingSpeech = null;
+        if (error) reject(error);
+        else resolve();
+      };
+      pendingSpeech = finish;
+      try {
+        getStore().dispatch(
+          speak(
+            text,
+            event => {
+              finish(
+                event?.error
+                  ? new Error('播报失败，请使用文字与图片表达。')
+                  : null
+              );
+            },
+            Number.isFinite(rate) ? { rate } : {}
+          )
+        );
+      } catch (error) {
+        finish(error);
+      }
+    });
+  },
+  async speakExpression(text, output, rate) {
+    runtime.cancelSpeech();
+    const generation = expressionGeneration;
+    const stopped = () => ({
+      ok: false,
+      reason: 'stopped',
+      message: '朗读已停止。'
+    });
+    const result = await playExpressionSentence({
+      sentence: text,
+      output,
+      rate,
+      speechPort: {
+        stop: runtime.cancelSpeech,
+        speak: async (value, options) => {
+          if (generation !== expressionGeneration) return stopped();
+          try {
+            await runtime.speak(value, options?.rate);
+            return { ok: true, message: '播报完成' };
+          } catch (error) {
+            return error.name === 'AbortError'
+              ? stopped()
+              : { ok: false, reason: 'provider', message: error.message };
+          }
+        }
+      },
+      audioPort: {
+        stop: tileAudio.stop,
+        play: (source, options) =>
+          generation !== expressionGeneration
+            ? Promise.resolve(stopped())
+            : tileAudio.play(source, options)
+      }
+    });
+    if (!result.ok)
+      throw Object.assign(new Error(result.message), {
+        name: result.reason === 'stopped' ? 'AbortError' : 'Error'
+      });
   },
   confirm: message => Promise.resolve(window.confirm(message)),
   copy: text => navigator.clipboard.writeText(text),

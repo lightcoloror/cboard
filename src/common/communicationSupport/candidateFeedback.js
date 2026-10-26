@@ -93,7 +93,8 @@ export function normalizeExpressionCandidateFeedbackDraft(value) {
     !id ||
     !sessionId ||
     !outputSignature ||
-    !candidates.some(candidate => candidate.feedback) ||
+    (!candidates.some(candidate => candidate.feedback) && value.rejected !== true) ||
+    !candidates.length ||
     !Number.isFinite(createdAt) ||
     !Number.isFinite(updatedAt)
   ) {
@@ -106,6 +107,7 @@ export function normalizeExpressionCandidateFeedbackDraft(value) {
     sessionId,
     outputSignature,
     candidates,
+    ...(value.rejected === true ? { rejected: true } : {}),
     createdAt,
     updatedAt
   };
@@ -152,7 +154,10 @@ export function findExpressionCandidateFeedbackDraft(
     };
   });
 
-  return candidates.some(candidate => candidate.feedback)
+  // An explicit rejection belongs to this picture sequence/session, even when
+  // a reload replaces AI wording with local candidates. Ratings alone are not
+  // a rejection and retain their existing non-interrupting behaviour.
+  return draft.rejected || candidates.some(candidate => candidate.feedback)
     ? { ...draft, candidates }
     : null;
 }

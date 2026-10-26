@@ -111,7 +111,9 @@ function requireText(value, fieldName) {
 export function buildPersonalPictogramTileDTO(value = {}) {
   const id = requireText(value.id, 'Personal pictogram id');
   const boardId = requireText(value.boardId, 'Personal pictogram boardId');
-  const image = requireText(value.image, 'Personal pictogram image');
+  // A local data URL is a whole image, not a short metadata field.
+  const image = String(value.image || '').trim();
+  if (!image) throw new TypeError('Personal pictogram image is required');
   const suggestion = normalizePictogramMetadataSuggestion({
     label: value.label,
     synonyms: value.synonyms,

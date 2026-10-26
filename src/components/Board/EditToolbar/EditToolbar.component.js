@@ -1,4 +1,4 @@
-import React, { Fragment, useState } from 'react';
+import React, { Fragment, useLayoutEffect, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 import { injectIntl, intlShape } from 'react-intl';
 import classNames from 'classnames';
@@ -60,6 +60,9 @@ EditToolbar.propTypes = {
    * Callback fired when clicking on delete button
    */
   onDeleteClick: PropTypes.func,
+  // Native CBoard requires an explicit verified local receipt. Other callers
+  // keep their existing synchronous, no-argument delete callback contract.
+  deleteContextKey: PropTypes.string,
   /**
    * Callback fired when clicking on edit button
    */
@@ -91,6 +94,7 @@ function EditToolbar({
   selectedItemsCount,
   onSelectClick,
   onDeleteClick,
+  deleteContextKey,
   onEditClick,
   onSelectAllToggle,
   onBoardTitleClick,
@@ -104,18 +108,71 @@ function EditToolbar({
   const isFixed = !!isFixedBoard;
 
   const [openDeleteTilesDialog, setOpenDeleteTilesDialog] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteFailed, setDeleteFailed] = useState(false);
+  const mounted = useRef(true);
+  const dialogOpen = useRef(false);
+  const activeDelete = useRef(null);
+  const liveContext = useRef(null);
+  const context = JSON.stringify([deleteContextKey, board?.id]);
+  liveContext.current = { context, isSelecting };
+
+  useLayoutEffect(() => () => {
+    mounted.current = false;
+    dialogOpen.current = false;
+    activeDelete.current = null;
+  }, []);
+
+  useLayoutEffect(() => {
+    activeDelete.current = null;
+    dialogOpen.current = false;
+    setOpenDeleteTilesDialog(false);
+    setIsDeleting(false);
+    setDeleteFailed(false);
+  }, [context, isSelecting]);
 
   const handleOpenDeleteTilesDialog = () => {
+    if (activeDelete.current) return;
+    dialogOpen.current = true;
+    setDeleteFailed(false);
     setOpenDeleteTilesDialog(true);
   };
 
   const handleCloseDeleteTilesDialog = () => {
+    activeDelete.current = null;
+    dialogOpen.current = false;
+    setIsDeleting(false);
+    setDeleteFailed(false);
     setOpenDeleteTilesDialog(false);
   };
 
-  const handleDeleteTilesAccepted = () => {
-    onDeleteClick();
-    handleCloseDeleteTilesDialog();
+  const handleDeleteTilesAccepted = async () => {
+    if (activeDelete.current || !dialogOpen.current) return false;
+    const attempt = {};
+    activeDelete.current = attempt;
+    const guard = () => mounted.current && dialogOpen.current &&
+      activeDelete.current === attempt && liveContext.current.context === context &&
+      liveContext.current.isSelecting;
+    setIsDeleting(true);
+    setDeleteFailed(false);
+    try {
+      const result = await (deleteContextKey == null ? onDeleteClick() : onDeleteClick({ guard }));
+      if (!guard()) return false;
+      if (result !== true && !(deleteContextKey == null && result === undefined)) {
+        setDeleteFailed(true);
+        return false;
+      }
+      handleCloseDeleteTilesDialog();
+      return true;
+    } catch (_) {
+      if (guard()) setDeleteFailed(true);
+      return false;
+    } finally {
+      if (activeDelete.current === attempt) {
+        activeDelete.current = null;
+        if (mounted.current) setIsDeleting(false);
+      }
+    }
   };
 
   return (
@@ -200,6 +257,8 @@ function EditToolbar({
               </DialogTitle>
               <DialogContent>
                 {intl.formatMessage(messages.deleteTileDescription)}
+                {isDeleting && <p role="status">{intl.formatMessage(messages.deleteSaving)}</p>}
+                {deleteFailed && <p role="alert">{intl.formatMessage(messages.deleteFailed)}</p>}
               </DialogContent>
               <DialogActions>
                 <Button onClick={handleCloseDeleteTilesDialog} color="primary">
@@ -210,6 +269,7 @@ function EditToolbar({
                   variant="contained"
                   color="primary"
                   autoFocus
+                  disabled={isDeleting}
                 >
                   {intl.formatMessage(messages.deleteTileOk)}
                 </Button>

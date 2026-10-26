@@ -7,6 +7,19 @@ import BackspaceButton from './BackspaceButton';
 import Scroll from './Scroll';
 import Symbol from '../../Symbol';
 
+// Exercise the translated control labels; the global auto-mock drops
+// defineMessages entirely, so it cannot represent this render path.
+jest.mock('react-intl', () => {
+  const React = require('react');
+  return {
+    ...jest.requireActual('react-intl'),
+    defineMessages: messages => messages,
+    injectIntl: Component => props => React.createElement(Component, {
+      ...props, intl: { formatMessage: message => message.defaultMessage }
+    })
+  };
+});
+
 const symbol = { image: 'http://test.com/image.jpg', label: 'dummy label' };
 const props = {
   symbols: [symbol],

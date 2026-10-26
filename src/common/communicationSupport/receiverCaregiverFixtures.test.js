@@ -37,11 +37,11 @@ const HIGH_RISK_CAREGIVER_FIXTURES = [
   {
     id: 5,
     text: '先喝水，再吃药。',
-    expectedLabelKeys: [
-      'symbol.drinkType.water',
-      'symbol.healthcareMedicalItems.medicine'
-    ],
-    preservedTokens: ['先', '再']
+    expectedLabelKeys: ['symbol.drinkType.water'],
+    // Taking medicine is an action; the medicine object is not an equivalent image.
+    forbiddenLabelKeys: ['symbol.healthcareMedicalItems.medicine'],
+    unmatchedTokens: ['吃药'],
+    preservedTokens: ['先', '再', '吃药']
   },
   {
     id: 6,
@@ -156,17 +156,19 @@ const HIGH_RISK_CAREGIVER_FIXTURES = [
   {
     id: 25,
     text: '你冷不冷？',
-    preservedTokens: ['冷', '不冷']
+    preservedTokens: ['冷', '不']
   },
   {
     id: 26,
     text: '你热不热？',
-    preservedTokens: ['热', '不热']
+    preservedTokens: ['热', '不']
   },
   {
     id: 27,
     text: '现在该吃药了。',
-    expectedLabelKeys: ['symbol.healthcareMedicalItems.medicine']
+    forbiddenLabelKeys: ['symbol.healthcareMedicalItems.medicine'],
+    unmatchedTokens: ['吃药'],
+    preservedTokens: ['吃药']
   },
   {
     id: 28,
@@ -444,6 +446,8 @@ describe('evidence-tagged caregiver receiver fixtures', () => {
     ({
       text,
       expectedLabelKeys = [],
+      forbiddenLabelKeys = [],
+      unmatchedTokens = [],
       expectedTileIds = [],
       preservedTokens = [],
       expectedTokenCounts = {}
@@ -458,6 +462,14 @@ describe('evidence-tagged caregiver receiver fixtures', () => {
 
       expectedLabelKeys.forEach(labelKey => {
         expect(labelKeys).toContain(labelKey);
+      });
+      forbiddenLabelKeys.forEach(labelKey => {
+        expect(labelKeys).not.toContain(labelKey);
+      });
+      unmatchedTokens.forEach(token => {
+        expect(
+          result.matches.some(match => match.token === token && !match.tile)
+        ).toBe(true);
       });
       expectedTileIds.forEach(tileId => {
         expect(tileIds).toContain(tileId);

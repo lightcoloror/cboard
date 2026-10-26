@@ -9,6 +9,7 @@ import { LABEL_POSITION_BELOW } from '../../Settings/Display/Display.constants';
 import './Symbol.css';
 import { Typography } from '@material-ui/core';
 import { getArasaacDB } from '../../../idb/arasaac/arasaacdb';
+import LocalSnapshotImage from '../CommunicationSupport/LocalSnapshotImage.component';
 
 const propTypes = {
   /**
@@ -49,10 +50,12 @@ function Symbol(props) {
     videoAutoPlay,
     videoControls,
     videoLoop,
+    localOnly = false,
     ...other
   } = props;
 
   const [src, setSrc] = useState(image ? formatSrc(image) : '');
+  const [failedSource, setFailedSource] = useState('');
   const objectUrlRef = useRef(null);
 
   const fetchArasaacImagefromIndexedDB = useCallback(async id => {
@@ -72,9 +75,9 @@ function Symbol(props) {
       let cancelled = false;
 
       async function getSrc() {
-        const imageFromIndexedDb = await fetchArasaacImagefromIndexedDB(
-          keyPath
-        );
+        // A captured private/embedded image wins over a mutable library key.
+        const imageFromIndexedDb = /^data:image\//.test(image || '')
+          ? null : await fetchArasaacImagefromIndexedDB(keyPath);
 
         if (cancelled) return;
 
@@ -165,9 +168,16 @@ function Symbol(props) {
             poster={src}
             src={videoSrc}
           />
+        ) : localOnly ? (
+          <LocalSnapshotImage className="Symbol__image" src={image} alt="" />
         ) : (
-          src && <img className="Symbol__image" src={src} alt="" />
+          src && <img className="Symbol__image" src={src} alt=""
+            style={failedSource === src ? { display: 'none' } : undefined}
+            onLoad={() => setFailedSource('')}
+            onError={() => setFailedSource(src)} />
         )}
+        {!shouldRenderVideo && (!src || failedSource === src) &&
+          <span role="status">{label} · 图片暂不可用，可在编辑中重新选择或保留文字</span>}
       </div>
 
       {props.type !== 'live' &&

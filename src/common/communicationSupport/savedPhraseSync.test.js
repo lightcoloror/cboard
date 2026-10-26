@@ -18,6 +18,39 @@ function phrase(overrides = {}) {
 }
 
 describe('versioned saved phrase sync', () => {
+  const syntheticPhrases = count => Array.from({ length: count }, (_, index) => phrase({
+    id: `synthetic-${index}`, sentence: `合成常用语${index}`, createdAt: 100 + index
+  }));
+
+  test.each([99, 100])('uploads all %i synthetic phrases without truncation', count => {
+    const entries = syntheticPhrases(count);
+    const payload = buildCommunicationSavedPhraseSyncPayload(entries);
+    expect(payload.map(item => item.id)).toEqual(entries.map(item => item.id));
+    expect(mergeVersionedCommunicationSavedPhrases(entries, entries).items).toHaveLength(count);
+  });
+
+  test('rejects an existing 101-item upload without mutating the local snapshots', () => {
+    const entries = syntheticPhrases(101);
+    const before = JSON.stringify(entries);
+    expect(() => buildCommunicationSavedPhraseSyncPayload(entries)).toThrow(/100|容量/);
+    expect(JSON.stringify(entries)).toBe(before);
+  });
+
+  test('rejects a 99 plus 2 merged overflow, retains inputs, and permits a safe retry', () => {
+    const local = syntheticPhrases(99);
+    const remote = syntheticPhrases(101).slice(99);
+    const before = JSON.stringify({ local, remote });
+    expect(() => mergeVersionedCommunicationSavedPhrases(local, remote)).toThrow(/100|容量/);
+    expect(JSON.stringify({ local, remote })).toBe(before);
+    const retry = mergeVersionedCommunicationSavedPhrases(local, remote, [
+      { id: 'synthetic-0', deletedAt: 500, serverVersion: 1 }
+    ]);
+    expect(retry.items).toHaveLength(100);
+    expect(retry.items.some(item => item.id === 'synthetic-0')).toBe(false);
+    expect(retry.items.slice(-2).map(item => item.id)).toEqual(remote.map(item => item.id));
+    expect(mergeVersionedCommunicationSavedPhrases(local, [...local, remote[0]]).items).toHaveLength(100);
+  });
+
   test('builds a base-version payload and removes device-private image data', () => {
     const payload = buildCommunicationSavedPhraseSyncPayload([
       phrase({

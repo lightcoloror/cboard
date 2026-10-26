@@ -31,6 +31,16 @@
   color: #000;
 }
 
+.SymbolOutput .MuiIconButton-label {
+  flex-direction: column;
+}
+
+.SymbolOutput__actionLabel {
+  font-size: 12px;
+  line-height: 1.2;
+  white-space: normal;
+}
+
 .SymbolOutput__value__IconButton {
   position: absolute;
   --close-button-top: -10px;

@@ -1,21 +1,86 @@
 import API from './api';
+import { API_URL } from '../constants';
 import { buildCommunicationAiSentenceRequest } from '../common/communicationSupport/communicationAi';
+import { buildPersonalPictogramTileDTO } from '../common/communicationSupport/pictogramMetadataSuggestion';
 
 jest.mock('../store');
 
 describe('communication API calls', () => {
+  test('sends anonymous ordered identities and restores their names only after HTTP returns', async () => {
+    const output = ['a', 'b', 'a'].map(id =>
+      buildPersonalPictogramTileDTO({
+        id,
+        boardId: 'synthetic',
+        category: 'people',
+        label: '林知岚',
+        image: `synthetic-private://${id}`
+      })
+    );
+    const post = jest
+      .spyOn(API.axiosInstance, 'post')
+      .mockResolvedValue({ data: { candidates: ['⟦P1⟧叫⟦P2⟧找⟦P1⟧。'] } });
+    const request = buildCommunicationAiSentenceRequest({ output });
+    const result = await API.generateCommunicationSentences(request);
+    expect(result.candidates).toEqual(['林知岚叫林知岚找林知岚。']);
+    expect(post.mock.calls[0][1].pictogramLabels).toEqual([
+      '⟦P1⟧',
+      '⟦P2⟧',
+      '⟦P1⟧'
+    ]);
+    expect(JSON.stringify(post.mock.calls[0])).not.toMatch(
+      /林知岚|synthetic-private|personId|entries/
+    );
+    post.mockClear();
+    await expect(
+      API.generateCommunicationSentences(JSON.parse(JSON.stringify(request)))
+    ).rejects.toMatchObject({ code: 'AI_PERSON_REFERENCE_MISMATCH' });
+    expect(post).not.toHaveBeenCalled();
+  });
+  const originalCollaboration = process.env.REACT_APP_CARE_COLLABORATION;
+  beforeEach(() => {
+    // These legacy API-shape fixtures mock post() before its interceptor.
+    // Explicit funding/journal behavior is tested by the real transport suite.
+    process.env.REACT_APP_CARE_COLLABORATION = 'false';
+  });
   test('downloads bounded public pictograms and rejects other media routes', async () => {
-    const get = jest.spyOn(API.axiosInstance, 'get').mockResolvedValue({ data: new Blob(['png'], { type: 'image/png' }) });
-    await expect(API.downloadCommunicationPictogram({ image: '/pictograms/arasaac/2392/image' })).resolves.toBeInstanceOf(Blob);
-    for (const image of ['https://untrusted.invalid/pictograms/arasaac/2392/image', '/communication/private-library/download']) {
-      await expect(API.downloadCommunicationPictogram({ image })).rejects.toThrow('Invalid public');
+    const get = jest
+      .spyOn(API.axiosInstance, 'get')
+      .mockResolvedValue({ data: new Blob(['png'], { type: 'image/png' }) });
+    await expect(
+      API.downloadCommunicationPictogram({
+        image: '/pictograms/arasaac/2392/image'
+      })
+    ).resolves.toBeInstanceOf(Blob);
+    for (const image of [
+      'https://untrusted.invalid/pictograms/arasaac/2392/image',
+      '/communication/private-library/download'
+    ]) {
+      await expect(
+        API.downloadCommunicationPictogram({ image })
+      ).rejects.toThrow('Invalid public');
     }
     expect(get).toHaveBeenCalledTimes(1);
-    await expect(API.downloadCommunicationPictogram({ image: `/pictograms/opensymbols/aGVsbG8.${'a'.repeat(32)}/image` })).resolves.toBeInstanceOf(Blob);
-    get.mockResolvedValue({ data: new Blob(['<svg/>'], { type: 'image/svg+xml' }) });
-    await expect(API.downloadCommunicationPictogram({ image: '/pictograms/arasaac/2392/image' })).rejects.toThrow('Invalid pictogram');
-    get.mockResolvedValue({ data: { size: 1024 * 1024 + 1, type: 'image/png' } });
-    await expect(API.downloadCommunicationPictogram({ image: '/pictograms/arasaac/2392/image' })).rejects.toThrow('exceeds');
+    await expect(
+      API.downloadCommunicationPictogram({
+        image: `/pictograms/opensymbols/aGVsbG8.${'a'.repeat(32)}/image`
+      })
+    ).resolves.toBeInstanceOf(Blob);
+    get.mockResolvedValue({
+      data: new Blob(['<svg/>'], { type: 'image/svg+xml' })
+    });
+    await expect(
+      API.downloadCommunicationPictogram({
+        image: '/pictograms/arasaac/2392/image'
+      })
+    ).rejects.toThrow('Invalid pictogram');
+    get.mockResolvedValue({
+      data: { size: 1024 * 1024 + 1, type: 'image/png' }
+    });
+    await expect(
+      API.downloadCommunicationPictogram({
+        image: '/pictograms/arasaac/2392/image'
+      })
+    ).rejects.toThrow('exceeds');
   });
   test('sends current expression without stored history at the API boundary', async () => {
     const post = jest.spyOn(API.axiosInstance, 'post').mockResolvedValue({
@@ -48,6 +113,9 @@ describe('communication API calls', () => {
 
   afterEach(() => {
     jest.restoreAllMocks();
+    if (originalCollaboration === undefined)
+      delete process.env.REACT_APP_CARE_COLLABORATION;
+    else process.env.REACT_APP_CARE_COLLABORATION = originalCollaboration;
   });
 
   test('posts sentence requests with the CBoard bearer token', async () => {
@@ -157,11 +225,15 @@ describe('communication API calls', () => {
     });
     expect(post.mock.calls[0][1].tokens).toHaveLength(12);
     expect(result).toHaveLength(2);
-    expect(result[0].pictogram.image).toMatch(
-      /^https?:\/\/[^/]+\/pictograms\/arasaac\/123\/image$/
+    const apiBase = new URL(API_URL, window.location.href);
+    expect(result[0].pictogram.image).toBe(
+      new URL('pictograms/arasaac/123/image', apiBase).href
     );
-    expect(result[1].pictogram.image).toMatch(
-      /^https?:\/\/[^/]+\/pictograms\/opensymbols\/signed-candidate\.a{32}\/image$/
+    expect(result[1].pictogram.image).toBe(
+      new URL(
+        `pictograms/opensymbols/signed-candidate.${'a'.repeat(32)}/image`,
+        apiBase
+      ).href
     );
     expect(result[1].pictogram.source).toEqual(
       expect.objectContaining({

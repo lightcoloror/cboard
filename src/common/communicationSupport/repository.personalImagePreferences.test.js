@@ -3,6 +3,7 @@ import {
   COMMUNICATION_STORAGE_KEYS,
   createCommunicationRepository
 } from './repository';
+import { createScopedCommunicationStorage } from './scopedCommunicationStorage';
 
 function createStorage(initial = {}) {
   const values = new Map(Object.entries(initial));
@@ -16,6 +17,102 @@ function createStorage(initial = {}) {
 }
 
 describe('communication repository personal image preferences', () => {
+  test.each(['{broken', '', '{}', 'null', '[null]'])('preserves unreadable preference list %s through construction and save', raw => {
+    const key = COMMUNICATION_STORAGE_KEYS.personalImagePreferences;
+    const storage = createStorage({ [key]: raw });
+    const repository = createCommunicationRepository({ storage });
+    expect(storage.getItem(key)).toBe(raw);
+    expect(() => repository.savePersonalImagePreference({ tileId: 'water', image: 'local://new' })).toThrow();
+    expect(storage.getItem(key)).toBe(raw);
+  });
+
+  test('failed pre-read cannot replace the existing preferences', () => {
+    const storage = createStorage();
+    const repository = createCommunicationRepository({ storage });
+    repository.savePersonalImagePreference({ tileId: 'old', image: 'local://old' });
+    const key = COMMUNICATION_STORAGE_KEYS.personalImagePreferences;
+    const before = storage.getItem(key), read = storage.getItem;
+    storage.getItem = name => { if (name === key) throw new Error('denied'); return read(name); };
+    expect(() => repository.savePersonalImagePreference({ tileId: 'new', image: 'local://new' })).toThrow('denied');
+    expect(read(key)).toBe(before);
+  });
+
+  test('failed write receipt keeps a retry safe without duplicate preferences', () => {
+    const storage = createStorage();
+    const repository = createCommunicationRepository({ storage, now: () => 100 });
+    const key = COMMUNICATION_STORAGE_KEYS.personalImagePreferences;
+    const entry = { tileId: 'water', boardId: 'home', image: 'local://new' };
+    const read = storage.getItem;
+    let reads = 0;
+    storage.getItem = name => {
+      if (name === key && ++reads === 2) throw new Error('receipt unavailable');
+      return read(name);
+    };
+    expect(() => repository.savePersonalImagePreference(entry)).toThrow('receipt unavailable');
+    storage.getItem = read;
+    expect(repository.savePersonalImagePreference(entry).image).toBe('local://new');
+    expect(JSON.parse(read(key))).toHaveLength(1);
+  });
+
+  test.each(['false', 'drop'])('a %s write never confirms success and can retry the same input', failure => {
+    const storage = createStorage();
+    const repository = createCommunicationRepository({ storage });
+    repository.savePersonalImagePreference({ tileId: 'other', image: 'local://other' });
+    const key = COMMUNICATION_STORAGE_KEYS.personalImagePreferences, before = storage.getItem(key);
+    const write = storage.setItem;
+    storage.setItem = (name, value) => name === key ? failure === 'false' ? false : undefined : write(name, value);
+    const entry = { tileId: 'water', image: 'local://new' };
+    expect(() => repository.savePersonalImagePreference(entry)).toThrow();
+    expect(storage.getItem(key)).toBe(before);
+    storage.setItem = write;
+    expect(repository.savePersonalImagePreference(entry).image).toBe('local://new');
+    expect(repository.loadPersonalImagePreferences()).toHaveLength(2);
+  });
+
+  test('retry never overwrites a later modification after a failed receipt', () => {
+    const storage = createStorage();
+    const repository = createCommunicationRepository({ storage, now: () => 100 });
+    const key = COMMUNICATION_STORAGE_KEYS.personalImagePreferences;
+    const entry = { tileId: 'water', image: 'local://attempt' };
+    const read = storage.getItem;
+    let reads = 0;
+    storage.getItem = name => { if (name === key && ++reads === 2) throw new Error('receipt'); return read(name); };
+    expect(() => repository.savePersonalImagePreference(entry)).toThrow('receipt');
+    storage.getItem = read;
+    repository.savePersonalImagePreference({ tileId: 'water', image: 'local://later' });
+    const latest = read(key);
+    expect(() => repository.savePersonalImagePreference(entry)).toThrow('后续修改');
+    expect(read(key)).toBe(latest);
+  });
+
+  test('a scope switch during pre-read cannot write into the next profile', () => {
+    const base = createStorage();
+    let context = { accountId: 'account-a', familyId: 'family-a', profileId: 'patient-a' };
+    const storage = createScopedCommunicationStorage(base, () => context);
+    const repository = createCommunicationRepository({ storage });
+    const read = storage.getItem;
+    storage.getItem = name => {
+      const value = read(name);
+      if (name === COMMUNICATION_STORAGE_KEYS.personalImagePreferences) context = { accountId: 'account-b', familyId: 'family-b', profileId: 'patient-b' };
+      return value;
+    };
+    expect(() => repository.savePersonalImagePreference({ tileId: 'water', image: 'local://a' })).toThrow('对象已切换');
+    expect(Object.keys(base.snapshot()).filter(key => key.endsWith(COMMUNICATION_STORAGE_KEYS.personalImagePreferences))).toEqual([]);
+  });
+
+  test('an unconfirmed retry cannot be transferred to another identity', () => {
+    const storage = createStorage();
+    const repository = createCommunicationRepository({ storage });
+    const write = storage.setItem;
+    storage.setItem = (name, value) => name === COMMUNICATION_STORAGE_KEYS.personalImagePreferences ? false : write(name, value);
+    const entry = { tileId: 'water', image: 'local://a' };
+    expect(() => repository.savePersonalImagePreference(entry)).toThrow();
+    storage.setItem = write;
+    storage.setItem(COMMUNICATION_STORAGE_KEYS.patientId, 'patient-b');
+    expect(() => repository.savePersonalImagePreference(entry)).toThrow('未覆盖');
+    expect(repository.loadPersonalImagePreferences()).toEqual([]);
+  });
+
   test('persists private image overrides under a dedicated local key', () => {
     const storage = createStorage();
     const repository = createCommunicationRepository({

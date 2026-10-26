@@ -1,4 +1,40 @@
 const CBOARD_COMMUNICATION_CONCEPT_PROFILES = {
+  'symbol.descriptivePosition.open': {
+    label: '敞开',
+    synonyms: [],
+    excludeTokens: ['打开'],
+    category: 'description'
+  },
+  'symbol.peopleActions.toOpen': {
+    label: '拧开盖子',
+    synonyms: ['拧开瓶盖'],
+    excludeTokens: ['打开', '开门', '打开门', '开罐头', '打开罐头'],
+    category: 'actions'
+  },
+  'symbol.peopleActions.toOpenDoor': {
+    label: '开门',
+    synonyms: ['打开门'],
+    excludeTokens: [],
+    category: 'actions'
+  },
+  'symbol.peopleActions.toOpenTin': {
+    label: '开罐头',
+    synonyms: ['打开罐头'],
+    excludeTokens: [],
+    category: 'actions'
+  },
+  'symbol.healthcareGroomingItems.liquidSoap': {
+    label: '洗手液',
+    synonyms: ['液体皂', '液体肥皂'],
+    excludeTokens: ['肥皂块', '沐浴露', '洗衣液', '洗碗液'],
+    category: 'objects'
+  },
+  'symbol.healthcareGroomingItems.soap': {
+    label: '肥皂',
+    synonyms: ['肥皂块', '固体皂'],
+    excludeTokens: ['洗手液', '液体皂', '沐浴露', '洗衣液', '洗碗液'],
+    category: 'objects'
+  },
   'symbol.healthcareGroomingActivities.toBathe': {
     label: '洗澡',
     synonyms: [],
@@ -115,8 +151,8 @@ const CBOARD_COMMUNICATION_CONCEPT_PROFILES = {
   },
   'symbol.foodKitchenItems.fork': {
     label: '叉子',
-    synonyms: ['分叉', '餐叉', '叉'],
-    excludeTokens: [],
+    synonyms: ['餐叉', '叉'],
+    excludeTokens: ['分叉'],
     category: 'food'
   },
   'symbol.foodKitchenItems.knife': {
@@ -199,7 +235,9 @@ const CBOARD_COMMUNICATION_CONCEPT_PROFILES = {
   },
   'symbol.electricalPhone.iphone': {
     label: '手机',
-    synonyms: ['电话', 'iPhone'],
+    // This existing tile explicitly depicts an iPhone; do not rely on the
+    // substring 手机 to reuse it for 苹果手机 (or unrelated 手机壳).
+    synonyms: ['电话', 'iPhone', '苹果手机'],
     excludeTokens: [],
     category: 'objects'
   },

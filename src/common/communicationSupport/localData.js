@@ -1,4 +1,8 @@
 import { createCommunicationLocalDataStore } from './localDataStore';
+import { createSavedPhrasePreparationService } from './savedPhrasePreparation';
+import { createExpressionDraftService } from './expressionDraft';
+import { createSavedPhraseImportService } from './savedPhraseManagement';
+import { createSavedPhraseUndoService, clearSavedPhraseUndoSession } from './savedPhraseUse';
 import { createBrowserStoragePort } from './storagePorts';
 import { createCommunicationPreferencesStore } from './communicationPreferencesStore';
 import { createPictogramOrderingStore } from './pictogramOrderingStore';
@@ -20,6 +24,7 @@ export function configureCareLocalAccount(resolve) {
 const demoCommunicationStorage = createMemoryKeyValueStorage();
 
 export function resetDemoCommunicationStorage() {
+  clearSavedPhraseUndoSession();
   demoCommunicationStorage.clear();
 }
 
@@ -60,6 +65,42 @@ function createDefaultStore() {
 export function getCommunicationStorageScopeKey() {
   const storage = createDefaultStoragePort();
   return storage.getScopeKey ? storage.getScopeKey() : 'local';
+}
+
+export function createLocalExpressionDraft() {
+  return createExpressionDraftService({ repository: createDefaultStore(), getScopeKey: getCommunicationStorageScopeKey });
+}
+
+export function createLocalSavedPhrasePreparation() {
+  return createSavedPhrasePreparationService({
+    repository: createDefaultStore(), getScopeKey: getCommunicationStorageScopeKey
+  });
+}
+
+export function createLocalSavedPhraseImport(options = {}) {
+  return createSavedPhraseImportService({ ...options, repository: createDefaultStore(), getScopeKey: getCommunicationStorageScopeKey });
+}
+
+export function createLocalSavedPhraseUndo() {
+  return createSavedPhraseUndoService({
+    repository: createDefaultStore(), getScopeKey: getCommunicationStorageScopeKey,
+    canManage: canManageCommunicationLibrary
+  });
+}
+
+export function canManageCommunicationLibrary() {
+      if (process.env.REACT_APP_CARE_COLLABORATION !== 'true' || !resolveCareAccount()) return true;
+      const storage = createBrowserStoragePort();
+      try {
+        const selection = JSON.parse(storage.getItem(`care-selection-v1:${resolveCareAccount()}`) || 'null');
+        return Boolean(selection && !selection.locked && Array.isArray(selection.permissions) &&
+          selection.permissions.includes('library.edit'));
+      } catch (_) { return false; }
+}
+
+export function getCommunicationGalleryIdentity() {
+  const identity = createDefaultStore().loadCommunicationIdentity();
+  return [getCommunicationStorageScopeKey(), identity.workspaceId, identity.patientId, canManageCommunicationLibrary()];
 }
 
 function createDefaultPreferencesStore() {
@@ -131,11 +172,14 @@ export function recordPictogramUsage(boardId, tileId, now) {
 
 export function loadPersonalImageRuntime() {
   const store = createDefaultStore();
-
-  return {
-    identity: store.loadCommunicationIdentity(),
-    preferences: store.loadPersonalImagePreferences()
-  };
+  const identity = store.loadCommunicationIdentity();
+  try {
+    return { identity, preferences: store.loadPersonalImagePreferences() };
+  } catch (error) {
+    // Rendering may use the original board images; mutations still use the
+    // strict repository read and cannot treat unavailable data as an empty list.
+    return { identity, preferences: [], error: '熟悉图片暂时无法读取，原数据已保留；修复存储后可重试保存。' };
+  }
 }
 
 export function loadPersonalImagePreferences() {
@@ -170,6 +214,16 @@ export function loadCommunicationSavedPhraseTombstones() {
   return createDefaultStore().loadCommunicationSavedPhraseTombstones();
 }
 
+// Sync uses the same verified aggregate transaction as local favorites, so a
+// failed write cannot acknowledge deletion while leaving an older phrase list.
+export function readCommunicationFavoriteState() {
+  return createDefaultStore().readFavoriteState();
+}
+
+export function commitCommunicationFavoriteState(expected, changes) {
+  return createDefaultStore().commitFavoriteState(expected, changes);
+}
+
 export function getAnonymousAccountMergeState(accountUserId) {
   return createDefaultStore().getAnonymousAccountMergeState(accountUserId);
 }
@@ -178,8 +232,8 @@ export function retireAnonymousUserIdentity(accountUserId) {
   return createDefaultStore().retireAnonymousUserIdentity(accountUserId);
 }
 
-export function overwriteCommunicationSavedPhrases(entries) {
-  return createDefaultStore().overwriteCommunicationSavedPhrases(entries);
+export function overwriteCommunicationSavedPhrases(entries, options) {
+  return createDefaultStore().overwriteCommunicationSavedPhrases(entries, options);
 }
 
 export function saveCommunicationPhrase(entry) {
@@ -311,7 +365,9 @@ export function overwriteCommunicationSettings(value) {
 }
 
 export function clearPrivatePictograms(now = Date.now()) {
+  clearSavedPhraseUndoSession();
   const store = createDefaultStore();
+  store.clearExpressionDrafts();
   const plan = buildPrivatePictogramClearPlan({
     personalImagePreferences: store.loadAllPersonalImagePreferences(),
     missingTokens: store.loadMissingTokens(),

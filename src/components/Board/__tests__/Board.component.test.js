@@ -6,6 +6,7 @@ import Symbol from '../Symbol';
 import Tile from '../Tile';
 import FixedGrid from '../../FixedGrid';
 import Navbar from '../Navbar';
+import EditToolbar from '../EditToolbar';
 import { COMMUNICATION_PREFERENCES_CHANGED_EVENT } from '../../../common/communicationSupport/localData';
 import { PICTOGRAM_ORDERING_STORAGE_KEY } from '../../../common/communicationSupport/pictogramOrderingStore';
 jest.mock('../CommunicationSupport', () => 'CommunicationSupportFeature');
@@ -84,6 +85,12 @@ it('forwards isolated demo mode to the communication flow and navbar', () => {
     true
   );
   expect(wrapper.find(Navbar).prop('demoMode')).toBe(true);
+});
+
+it('forwards the native delete scope to its confirmation toolbar', () => {
+  const wrapper = shallow(<Board intl={intlMock} board={{ id: 'root', name: 'home', tiles: [] }}
+    deleteContextKey="native-scope" onAddRemoveColumn={() => {}} onAddRemoveRow={() => {}} disableTour={() => {}} />);
+  expect(wrapper.find(EditToolbar).prop('deleteContextKey')).toBe('native-scope');
 });
 
 it('renders a private image overlay but clicks the unchanged CBoard tile', () => {

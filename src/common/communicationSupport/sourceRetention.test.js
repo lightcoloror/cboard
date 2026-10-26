@@ -62,9 +62,7 @@ describe('source-preserving text fallback through persistence', () => {
       },
       createId: () => `negation-${index++}`
     });
-    expect(state.missingTokens).toEqual(
-      expect.arrayContaining(['不是'])
-    );
+    expect(state.missingTokens).toEqual(expect.arrayContaining(['不是']));
     let review = state.reviewItems;
     review
       .filter(item => !item.tile)
