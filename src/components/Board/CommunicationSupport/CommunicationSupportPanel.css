@@ -665,6 +665,56 @@
   min-width: 0;
 }
 
+/* A spanning status row keeps auto-fit's empty tracks alive. The expression
+   workspace has exactly two sections, so give those sections explicit tracks. */
+.CommunicationSupportPanel__content--expression {
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: 10px 16px;
+  margin-top: 8px;
+}
+
+.CommunicationSupportPanel__content--expression > .CommunicationSupportPanel__draftStatus {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.CommunicationSupportPanel__content--expression #expression-draft-save-status {
+  margin: 0;
+}
+
+.CommunicationSupportPanel__content--expression > .CommunicationSupportPanel__section,
+.CommunicationSupportPanel__expressionEditor,
+.CommunicationSupportPanel__expressionCandidates {
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+.CommunicationSupportPanel__expressionCandidates > .CommunicationSupportPanel__actions:first-child {
+  margin-top: 8px;
+}
+
+@media (min-width: 900px) {
+  .CommunicationSupportPanel__content--expression {
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  }
+}
+
+@media (min-width: 1440px) {
+  .CommunicationSupportPanel__expressionSection {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: start;
+    gap: 16px;
+  }
+
+  .CommunicationSupportPanel__expressionCandidates > .CommunicationSupportPanel__actions:first-child {
+    margin-top: 0;
+  }
+}
+
 .CommunicationSupportPanel__imageRepair {
   flex: 1 1 100%;
   min-width: 0;

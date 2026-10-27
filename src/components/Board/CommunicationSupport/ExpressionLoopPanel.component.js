@@ -1331,7 +1331,7 @@ export default function ExpressionLoopPanel({
 
   return (
     <div
-      className="CommunicationSupportPanel__content"
+      className="CommunicationSupportPanel__content CommunicationSupportPanel__content--expression"
       onMouseDownCapture={handlePatientInteraction}
       onTouchStartCapture={handlePatientInteraction}
       onWheelCapture={handlePatientInteraction}
@@ -1341,7 +1341,8 @@ export default function ExpressionLoopPanel({
         <p id="expression-draft-save-status" role={draftSaveFailed ? 'alert' : 'status'}>{draftNotice}</p>
         {draftSaveFailed && <Button onClick={() => persistDraft()}>重试保存表达</Button>}
       </div>}
-      <div className="CommunicationSupportPanel__section">
+      <div className="CommunicationSupportPanel__section CommunicationSupportPanel__expressionSection">
+        <div className="CommunicationSupportPanel__expressionEditor">
         <div className="CommunicationSupportPanel__sectionHeader">
           <h4>{copy.expressSectionTitle}</h4>
           <span className="CommunicationSupportPanel__hint">
@@ -1455,6 +1456,8 @@ export default function ExpressionLoopPanel({
             ))}
           </div>
         )}
+        </div>
+        <div className="CommunicationSupportPanel__expressionCandidates">
         <div className="CommunicationSupportPanel__actions">
           <PatientActionButton
             action={PATIENT_ACTION_IDS.improve}
@@ -1667,6 +1670,7 @@ export default function ExpressionLoopPanel({
             {expressionShareNotice}
           </div>
         )}
+        </div>
       </div>
 
       <div className="CommunicationSupportPanel__section">
