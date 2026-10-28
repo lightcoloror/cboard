@@ -55,7 +55,6 @@ import {
   resetConversationSession,
   setConversationScene,
   reviewMissingToken,
-  saveCommunicationPhrase,
   saveExpressionCandidateFeedbackDraft,
   savePersonalImagePreference,
   saveCommunicationPreferences,
@@ -90,7 +89,7 @@ import {
   resolveCommunicationBoardName,
   resolveCommunicationTileLabel
 } from '../../../common/communicationSupport/resolvers';
-import { markCommunicationSavedPhraseUsed } from '../../../common/communicationSupport/savedPhraseManagement';
+import { addCommunicationSavedPhrase, markCommunicationSavedPhraseUsed } from '../../../common/communicationSupport/savedPhraseManagement';
 import { isCareSharedPhrase } from '../../../common/communicationSupport/careSharedPhrases';
 import { PATIENT_ACTION_IDS } from '../../../common/communicationSupport/patientActionLanguage';
 import ExpressionLoopPanel from './ExpressionLoopPanel.component';
@@ -616,8 +615,15 @@ function CommunicationSupportWorkspace({
   }
 
   function handleSavePhrase(entry) {
-    saveCommunicationPhrase(entry);
+    // Read the authoritative collection on each attempt. The prior write may
+    // have succeeded even if its receipt or UI refresh failed. A duplicate
+    // sentence keeps the already reviewed image/person snapshot unchanged.
+    const current = loadCommunicationSavedPhrases();
+    const result = addCommunicationSavedPhrase(current, entry);
+    if (!result.item) throw new Error('这条记录没有可收藏的内容');
+    if (result.changed) overwriteCommunicationSavedPhrases(result.items, { expectedPhrases: current });
     refreshSavedPhrases();
+    return result.item;
   }
 
   function handleAppendExpressionHistory(entry) {
@@ -1358,7 +1364,7 @@ function CommunicationSupportWorkspace({
               onDiscardResumableRecord={discardResumableReceiverRecord}
               onRecordPatientFeedback={handleReceiverPatientFeedback}
               onRecordCorrection={handleReceiverCorrection}
-              onRecordMissingTokens={handleMissingTokens}
+              onRecordMissingTokens={entry => handleMissingTokens(entry, false)}
               onAppendHistory={handleAppendReceiveHistory}
               onReviewMissingToken={handleReviewMissingToken}
               onlineSearchAvailable
@@ -1426,6 +1432,7 @@ function CommunicationSupportWorkspace({
           receiverCorrections={receiverCorrections}
           candidateFeedbackSyncAvailable={isLogged}
           onSavedPhrasesChange={handleManagedSavedPhrasesChange}
+          onSaveHistoryPhrase={handleSavePhrase}
           onSavedPhrasesCommitted={handleCommittedSavedPhrases}
         onSavedPhraseContextChange={handleSavedPhraseContextChange}
           onHistoryChange={handleManagedHistoryChange}

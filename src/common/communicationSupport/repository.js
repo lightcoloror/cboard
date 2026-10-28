@@ -638,7 +638,7 @@ export function createCommunicationRepository({
     );
   }
 
-  const favoriteStore = createFavoriteStateStore(storage);
+  const favoriteStore = createFavoriteStateStore(storage, { capacity: itemLimit });
   let observedFavorites = null;
   function readFavoriteState() {
     if (repositorySchema.status === 'future') throw new Error('Communication repository data uses a newer schema version');

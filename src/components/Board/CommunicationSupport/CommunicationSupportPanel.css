@@ -1979,3 +1979,11 @@
   white-space: pre-wrap;
 }
 
+.CommunicationSupportPanel__textReference {
+  display: block;
+  overflow-wrap: anywhere;
+  white-space: normal;
+  font-size: inherit;
+  line-height: 1.5;
+}
+

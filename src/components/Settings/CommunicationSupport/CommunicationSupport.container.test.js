@@ -2,6 +2,7 @@ import React from 'react';
 import { shallow } from 'enzyme';
 import API from '../../../api';
 import * as localData from '../../../common/communicationSupport/localData';
+import { createCommunicationRepository, COMMUNICATION_STORAGE_KEYS } from '../../../common/communicationSupport/repository';
 import { CommunicationSupportContainer } from './CommunicationSupport.container';
 
 jest.mock('../../../api', () => ({
@@ -25,6 +26,8 @@ jest.mock('../../../common/communicationSupport/localData', () => ({
   loadCommunicationHistory: jest.fn(),
   loadCommunicationSavedPhraseTombstones: jest.fn(),
   loadCommunicationSavedPhrases: jest.fn(),
+  readCommunicationFavoriteState: jest.fn(),
+  commitCommunicationFavoriteState: jest.fn(),
   loadReceiverRecords: jest.fn(),
   mergeCommunicationSettings: jest.fn(),
   normalizeCommunicationSettings: jest.fn(),
@@ -206,6 +209,16 @@ describe('CommunicationSupportContainer', () => {
       }
     ]);
     localData.loadCommunicationSavedPhraseTombstones.mockReturnValue([]);
+    localData.readCommunicationFavoriteState.mockImplementation(() => ({
+      version: 1, scope: 'synthetic', generation: 'g1', revision: 0,
+      phrases: localData.loadCommunicationSavedPhrases(),
+      tombstones: localData.loadCommunicationSavedPhraseTombstones(), pending: null
+    }));
+    localData.commitCommunicationFavoriteState.mockImplementation((expected, changes) => {
+      localData.loadCommunicationSavedPhrases.mockReturnValue(changes.phrases);
+      localData.loadCommunicationSavedPhraseTombstones.mockReturnValue(changes.tombstones);
+      return { ...expected, ...changes, revision: expected.revision + 1 };
+    });
     localData.clearCommunicationSavedPhrases.mockImplementation(() => {
       localData.loadCommunicationSavedPhrases.mockReturnValue([]);
       return [];
@@ -284,6 +297,85 @@ describe('CommunicationSupportContainer', () => {
     });
   });
 
+  const capacityPhrases = count => Array.from({ length: count }, (_, index) => ({
+    id: `capacity-${index}`, sentence: `合成容量${index}`, output: [],
+    usageCount: 0, createdAt: 100 + index, lastUsedAt: 100 + index, updatedAt: 100 + index
+  }));
+
+  test('full legacy local data stops before sync and tombstone acknowledgement', async () => {
+    const local = capacityPhrases(101);
+    localData.loadCommunicationSavedPhrases.mockReturnValue(local);
+    localData.loadCommunicationSavedPhraseTombstones.mockReturnValue([
+      { id: 'previously-deleted', pending: true, deletedAt: 100 }
+    ]);
+    const wrapper = shallow(<CommunicationSupportContainer {...props} />);
+    const result = await wrapper.instance().syncSavedPhrases();
+    expect(result.ok).toBe(false);
+    expect(result.message).toMatch(/100|容量/);
+    expect(API.syncCommunicationSavedPhrases).not.toHaveBeenCalled();
+    expect(API.deleteCommunicationSavedPhrases).not.toHaveBeenCalled();
+    expect(localData.overwriteCommunicationSavedPhrases).not.toHaveBeenCalled();
+    expect(localData.overwriteCommunicationSavedPhraseTombstones).not.toHaveBeenCalled();
+    expect(localData.loadCommunicationSavedPhrases()).toEqual(local);
+  });
+
+  test('99 plus 2 remote phrases reject local overwrite and can retry after capacity is available', async () => {
+    const local = capacityPhrases(99);
+    const remote = capacityPhrases(101).slice(99);
+    localData.loadCommunicationSavedPhrases.mockReturnValue(local);
+    API.syncCommunicationSavedPhrases.mockResolvedValue({ phrases: remote, deletedPhrases: [], conflictCount: 0 });
+    const wrapper = shallow(<CommunicationSupportContainer {...props} />);
+    const failed = await wrapper.instance().syncSavedPhrases();
+    expect(failed.ok).toBe(false);
+    expect(failed.message).toMatch(/100|容量/);
+    expect(localData.overwriteCommunicationSavedPhrases).not.toHaveBeenCalled();
+    expect(localData.overwriteCommunicationSavedPhraseTombstones).not.toHaveBeenCalled();
+    expect(localData.loadCommunicationSavedPhrases()).toEqual(local);
+    localData.loadCommunicationSavedPhrases.mockReturnValue(local.slice(1));
+    expect((await wrapper.instance().syncSavedPhrases()).ok).toBe(true);
+    expect(localData.commitCommunicationFavoriteState.mock.calls[0][1].phrases).toHaveLength(100);
+  });
+
+  test('sync UI exposes capacity failure without writing compatibility settings', async () => {
+    localData.loadCommunicationSavedPhrases.mockReturnValue(capacityPhrases(101));
+    const wrapper = shallow(<CommunicationSupportContainer {...props} />);
+    await wrapper.instance().uploadLocalToRemote();
+    expect(wrapper.state('syncMessage')).toMatch(/容量/);
+    expect(API.updateSettings).not.toHaveBeenCalled();
+    expect(API.syncConfirmedReceiverRecords).not.toHaveBeenCalled();
+    expect(localData.commitCommunicationFavoriteState).not.toHaveBeenCalled();
+  });
+
+  test('sync commits phrases and deletion acknowledgements atomically and retries a silent storage failure', async () => {
+    const local = capacityPhrases(99);
+    const pending = [{ id: 'deleted-before', deletedAt: 300, pending: true, serverVersion: 0 }];
+    const values = new Map([
+      [COMMUNICATION_STORAGE_KEYS.savedPhrases, JSON.stringify(local)],
+      [COMMUNICATION_STORAGE_KEYS.savedPhraseTombstones, JSON.stringify(pending)]
+    ]);
+    let fail = false;
+    const repository = createCommunicationRepository({ storage: {
+      getItem: key => values.get(key) || null,
+      setItem: (key, value) => { if (!fail) values.set(key, value); }
+    }, now: () => 1000 });
+    localData.readCommunicationFavoriteState.mockImplementation(() => repository.readFavoriteState());
+    localData.commitCommunicationFavoriteState.mockImplementation((before, changes) => repository.commitFavoriteState(before, changes));
+    localData.loadCommunicationSavedPhrases.mockImplementation(() => repository.loadCommunicationSavedPhrases());
+    localData.loadCommunicationSavedPhraseTombstones.mockImplementation(() => repository.loadCommunicationSavedPhraseTombstones());
+    API.deleteCommunicationSavedPhrases.mockResolvedValue({ deletedPhrases: [{ ...pending[0], pending: false, serverVersion: 1 }] });
+    API.syncCommunicationSavedPhrases.mockResolvedValue({ phrases: capacityPhrases(100), deletedPhrases: [], conflictCount: 0 });
+    const wrapper = shallow(<CommunicationSupportContainer {...props} />);
+    const before = repository.readFavoriteState();
+    fail = true;
+    expect((await wrapper.instance().syncSavedPhrases()).ok).toBe(false);
+    expect(repository.readFavoriteState()).toEqual(before);
+    fail = false;
+    expect((await wrapper.instance().syncSavedPhrases()).ok).toBe(true);
+    expect(repository.loadCommunicationSavedPhrases()).toHaveLength(100);
+    expect(repository.loadCommunicationSavedPhraseTombstones()[0].pending).not.toBe(true);
+    expect(localData.overwriteCommunicationSavedPhraseTombstones).not.toHaveBeenCalled();
+  });
+
   test('syncRemote merges local and remote settings and uploads the merged value', async () => {
     const remoteSettings = {
       communicationSupport: {
@@ -329,7 +421,7 @@ describe('CommunicationSupportContainer', () => {
       expect.objectContaining({ sentence: '我想喝水' }),
       expect.objectContaining({ sentence: '我要去厕所' })
     ]);
-    expect(localData.overwriteCommunicationSavedPhrases).toHaveBeenCalledWith([
+    expect(localData.commitCommunicationFavoriteState).toHaveBeenCalledWith(expect.any(Object), expect.objectContaining({ phrases: [
       expect.objectContaining({
         id: expect.any(String),
         sentence: '我想喝水'
@@ -339,7 +431,7 @@ describe('CommunicationSupportContainer', () => {
         sentence: '我要去厕所',
         usageCount: 0
       })
-    ]);
+    ] }));
     expect(API.updateSettings).toHaveBeenCalledTimes(1);
     expect(API.syncConfirmedReceiverRecords).toHaveBeenCalledWith([]);
     expect(localData.overwriteReceiverRecords).toHaveBeenCalledWith([]);

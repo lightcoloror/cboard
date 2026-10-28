@@ -3,6 +3,16 @@ export const COMMUNICATION_SAVED_PHRASE_EXPORT_VERSION = 1;
 export const COMMUNICATION_SAVED_PHRASE_EXPORT_FORMAT =
   'cboard-communication-saved-phrases';
 export const DEFAULT_COMMUNICATION_QUICK_PHRASE_LIMIT = 6;
+export const DEFAULT_SAVED_PHRASE_CAPACITY = 100;
+
+// Share the existing limit across local commits and sync; never make room by
+// dropping an older phrase. Imported historical over-limit lists remain readable.
+export function assertSavedPhraseCapacity(entries, capacity = DEFAULT_SAVED_PHRASE_CAPACITY, message) {
+  if (entries.length <= capacity) return;
+  throw Object.assign(new Error(message || `常用语已达到容量上限（${capacity}条），请先整理已有收藏；当前内容已保留。`), {
+    code: 'SAVED_PHRASE_CAPACITY', capacity, count: entries.length
+  });
+}
 
 // Local organization of reviewed favorites, never a model prompt or location.
 export const DEFAULT_LIFE_CONTEXTS = Object.freeze(['吃饭', '洗漱', '出门', '休息', '就医', '聊天']);

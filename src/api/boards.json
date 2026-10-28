@@ -592,7 +592,9 @@
           "labelKey": "symbol.foodEggs.boiledEgg",
           "image": "/symbols/mulberry/boiled_egg.svg",
           "id": "BkmIzC5aX9tZ",
-          "backgroundColor": "rgb(255, 241, 118)"
+          "backgroundColor": "rgb(255, 241, 118)",
+          "pictogramProvider": "mulberry",
+          "pictogramOriginalId": "boiled_egg.svg"
         },
         {
           "labelKey": "symbol.foodEggs.friedEgg",
@@ -783,7 +785,9 @@
           "labelKey": "symbol.foodPastasAndRice.rice",
           "image": "/symbols/mulberry/rice.svg",
           "id": "r1g_f0cT75Kb",
-          "backgroundColor": "rgb(255, 241, 118)"
+          "backgroundColor": "rgb(255, 241, 118)",
+          "pictogramProvider": "mulberry",
+          "pictogramOriginalId": "rice.svg"
         },
         {
           "labelKey": "symbol.foodVegetablesAndSalads.bakedBeans",
@@ -916,6 +920,15 @@
           "image": "/symbols/mulberry/brussel_sprouts.svg",
           "id": "rJIFfCqa7qFb",
           "backgroundColor": "rgb(255, 241, 118)"
+        },
+        {
+          "id": "tuyujia-builtin-egg",
+          "label": "鸡蛋",
+          "vocalization": "鸡蛋",
+          "image": "/symbols/mulberry/egg.svg",
+          "communicationCategory": "food",
+          "pictogramProvider": "mulberry",
+          "pictogramOriginalId": "egg.svg"
         }
       ],
       "caption": "https://cboardgroupdiag483.blob.core.windows.net/cblob/1536763474_9b1b336c1684_vegetables.png"
@@ -1992,6 +2005,15 @@
           "image": "/symbols/mulberry/second.svg",
           "id": "BkWN7R5aQqtW",
           "backgroundColor": "rgb(255, 241, 118)"
+        },
+        {
+          "id": "tuyujia-builtin-night-candidate",
+          "label": "夜晚",
+          "vocalization": "夜晚",
+          "image": "/symbols/mulberry/night.svg",
+          "communicationCategory": "time",
+          "pictogramProvider": "mulberry",
+          "pictogramOriginalId": "night.svg"
         }
       ]
     },
@@ -2556,6 +2578,24 @@
           "image": "/symbols/mulberry/photographs.svg",
           "communicationSynonyms": "",
           "communicationCategory": "objects"
+        },
+        {
+          "id": "tuyujia-builtin-heat-food",
+          "label": "锅内加热",
+          "vocalization": "锅内加热",
+          "image": "/symbols/mulberry/heat_,_to.svg",
+          "communicationCategory": "actions",
+          "pictogramProvider": "mulberry",
+          "pictogramOriginalId": "heat_,_to.svg"
+        },
+        {
+          "id": "tuyujia-builtin-stir-fry",
+          "label": "炒菜",
+          "vocalization": "炒菜",
+          "image": "/symbols/mulberry/stir_fry_,_to.svg",
+          "communicationCategory": "actions",
+          "pictogramProvider": "mulberry",
+          "pictogramOriginalId": "stir_fry_,_to.svg"
         }
       ],
       "caption": "https://cboardgroupdiag483.blob.core.windows.net/cblob/1536763522_9b1b336c1684_activities.png"

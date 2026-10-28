@@ -214,6 +214,16 @@ export function loadCommunicationSavedPhraseTombstones() {
   return createDefaultStore().loadCommunicationSavedPhraseTombstones();
 }
 
+// Sync uses the same verified aggregate transaction as local favorites, so a
+// failed write cannot acknowledge deletion while leaving an older phrase list.
+export function readCommunicationFavoriteState() {
+  return createDefaultStore().readFavoriteState();
+}
+
+export function commitCommunicationFavoriteState(expected, changes) {
+  return createDefaultStore().commitFavoriteState(expected, changes);
+}
+
 export function getAnonymousAccountMergeState(accountUserId) {
   return createDefaultStore().getAnonymousAccountMergeState(accountUserId);
 }

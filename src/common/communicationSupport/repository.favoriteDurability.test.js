@@ -24,9 +24,11 @@ test('silent favorite write failure never reports a saved phrase', () => {
   expect(f.open().loadCommunicationSavedPhrases()).toEqual([]);
 });
 test('more than one hundred deletion marks survive reopen and block stale content', () => {
-  const f = fixture(); const r = f.open();
   const all = Array.from({ length: 103 }, (_, i) => phrase(String(i)));
-  r.overwriteCommunicationSavedPhrases(all); r.clearCommunicationSavedPhrases();
+  // Existing over-limit data must remain recoverable; new additions cannot
+  // bypass the capacity boundary merely to seed this migration regression.
+  const f = fixture({ [K.savedPhrases]: JSON.stringify(all) }); const r = f.open();
+  r.clearCommunicationSavedPhrases();
   const reopened = f.open();
   expect(reopened.loadCommunicationSavedPhraseTombstones()).toHaveLength(103);
   reopened.overwriteCommunicationSavedPhrases(all);

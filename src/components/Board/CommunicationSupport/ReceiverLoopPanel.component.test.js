@@ -178,65 +178,57 @@ describe('ReceiverLoopPanel', () => {
     expect(repo.loadResumableReceiverRecord()).toBeNull();
     wrapper.unmount();
   });
-  test('blocks incomplete output until the caregiver explicitly retains a missing word as text', async () => {
-    symbolMatching.matchTextToCommunicationTiles.mockReturnValue({
-      matches: [{ token: '不要', tile: null, matchType: 'none' }],
-      matchRate: 0
-    });
-    const wrapper = mount(
-      <ReceiverLoopPanel
-        boards={[]}
-        intl={null}
-        onApplyOutput={onApplyOutput}
-        onJumpBoard={jest.fn()}
-        historyItems={[]}
-        onAppendHistory={onAppendHistory}
-      />
-    );
+  test('partner consent is content-bound, cancellable and distinct from understanding; failed save retries once', async () => {
+    symbolMatching.matchTextToCommunicationTiles.mockReturnValue({ matches: [{ token: '不要', tile: null, matchType: 'none' }], matchRate: 0 });
+    const values = new Map(); let fail = false;
+    const repo = createCommunicationRepository({ storage: {
+      getItem: key => values.get(key) || null,
+      setItem: (key, value) => { if (!fail) values.set(key, value); }
+    } });
+    const speak = jest.fn();
+    const props = { boards: [], intl: null, onApplyOutput, onJumpBoard: jest.fn(),
+      onSpeak: speak, onCreateDraft: repo.createReceiverDraft, onUpdateDraft: repo.updateReceiverDraft,
+      onConfirmDraft: repo.confirmReceiverDraft, onAppendHistory };
+    let wrapper = mount(<ReceiverLoopPanel {...props} />);
+    const click = async label => {
+      await act(async () => wrapper.find('ForwardRef(Button)').filterWhere(n => n.text() === label).first().prop('onClick')());
+      wrapper.update();
+    };
     await setInput(wrapper, '不要');
-    wrapper
-      .find('ForwardRef(Button)')
-      .filterWhere(node => node.text() === '生成图片序列')
-      .first()
-      .simulate('click');
-    await act(async () => {
-      jest.runAllTimers();
-    });
-    wrapper.update();
-    expect(
-      wrapper
-        .find('ForwardRef(Button)')
-        .filterWhere(node => node.text() === '全屏展示')
-        .first()
-        .prop('disabled')
-    ).toBe(true);
+    await click('生成图片序列');
+    await act(async () => jest.runAllTimers()); wrapper.update();
+    await click('全屏展示');
+    expect(wrapper.find('ForwardRef(Dialog)').filterWhere(n => n.prop('aria-labelledby') === 'receiver-assistance-title').prop('open')).toBe(true);
     expect(onApplyOutput).not.toHaveBeenCalled();
-    wrapper
-      .find('ForwardRef(Button)')
-      .filterWhere(node => node.text() === '保留文字')
-      .first()
-      .simulate('click');
-    wrapper.update();
-    expect(wrapper.text()).toContain('图片匹配：0/1');
-    expect(wrapper.text()).toContain('保留文字 1 项');
-    expect(wrapper.text()).toContain('含保留文字，可以展示');
-    expect(wrapper.text()).not.toContain('已全部配图');
-    expect(
-      wrapper
-        .find('ForwardRef(Button)')
-        .filterWhere(node => node.text() === '全屏展示')
-        .first()
-        .prop('disabled')
-    ).toBe(false);
-    wrapper
-      .find('ForwardRef(Button)')
-      .filterWhere(node => node.text() === '全屏展示')
-      .first()
-      .simulate('click');
-    expect(onApplyOutput.mock.calls[0][0][0].label).toBe('不要');
-    expect(onAppendHistory.mock.calls[0][0].pictogramSequence[0]).toMatchObject(
-      { originalToken: '不要', textOnly: true, pictogramId: null }
-    );
+    await click('返回复核');
+    expect(wrapper.find('ForwardRef(Dialog)').filterWhere(n => n.prop('aria-labelledby') === 'receiver-assistance-title').prop('open')).toBe(false);
+    await click('保留文字');
+    expect(wrapper.text()).toContain('尚有意思未图示');
+    expect(wrapper.text()).not.toContain('本机图片暂不可用');
+    await click('全屏展示');
+    fail = true;
+    await click('我会辅助解释，继续展示');
+    expect(onApplyOutput).not.toHaveBeenCalled();
+    expect(wrapper.text()).toContain('尚未保存');
+    fail = false;
+    await click('全屏展示');
+    const confirm = wrapper.find('ForwardRef(Button)').filterWhere(n => n.text() === '我会辅助解释，继续展示').prop('onClick');
+    await act(async () => { confirm(); confirm(); }); wrapper.update();
+    expect(onApplyOutput).toHaveBeenCalledTimes(1);
+    expect(onApplyOutput.mock.calls[0][0][0]).toMatchObject({label: '不要', textOnly: true});
+    expect(speak).not.toHaveBeenCalled();
+    const records = repo.loadCommunicationHistory();
+    expect(records).toHaveLength(1);
+    expect(JSON.stringify(records)).not.toContain('"patientFeedback":"understood"');
+    wrapper.unmount();
+    wrapper = mount(<ReceiverLoopPanel {...props} initialRecord={repo.loadReceiverRecords()[0]} />);
+    expect(wrapper.find('.MockReceiverDisplay')).toHaveLength(0);
+    expect(speak).not.toHaveBeenCalled();
+    await click('全屏展示');
+    await click('我会辅助解释，继续展示');
+    expect(repo.loadCommunicationHistory()).toEqual(records);
+    expect(repo.loadReceiverRecords()).toHaveLength(1);
+    expect(speak).not.toHaveBeenCalled();
     wrapper.unmount();
   });
   const onApplyOutput = jest.fn();
@@ -271,7 +263,8 @@ describe('ReceiverLoopPanel', () => {
           .map(item => ({
             id: item.tile.tile.id,
             label: item.tile.displayLabel || item.tile.tile.label,
-            image: item.tile.tile.image
+            image: item.tile.tile.image,
+            ...(item.tile.textOnly ? { textOnly: true } : {})
           }))
     );
   });
@@ -293,7 +286,7 @@ describe('ReceiverLoopPanel', () => {
       />
     );
 
-    await setInput(wrapper, '我想喝水');
+    await setInput(wrapper, '想喝水');
 
     wrapper
       .find('ForwardRef(Button)')
@@ -328,6 +321,9 @@ describe('ReceiverLoopPanel', () => {
     wrapper.update();
 
     expect(wrapper.text()).toContain('预览图片：喝 / 想 / 水');
+    expect(wrapper.text()).toContain('完整原句');
+    wrapper.find('ForwardRef(Button)').filterWhere(n => n.text() === '左移').at(1).simulate('click');
+    wrapper.update();
 
     wrapper
       .find('ForwardRef(Button)')
@@ -348,7 +344,7 @@ describe('ReceiverLoopPanel', () => {
       .simulate('click');
     wrapper.update();
 
-    expect(wrapper.text()).toContain('预览图片：喝 / 想 / 饮料');
+    expect(wrapper.text()).toContain('预览图片：想 / 喝 / 饮料');
 
     wrapper
       .find('ForwardRef(Button)')
@@ -356,23 +352,7 @@ describe('ReceiverLoopPanel', () => {
       .first()
       .simulate('click');
 
-    expect(onApplyOutput).toHaveBeenCalledWith([
-      {
-        id: 'drink-verb',
-        label: '喝',
-        image: '/drink-verb.png'
-      },
-      {
-        id: 'want',
-        label: '想',
-        image: '/want.png'
-      },
-      {
-        id: 'drink',
-        label: '饮料',
-        image: '/drink.png'
-      }
-    ]);
+    expect(onApplyOutput.mock.calls[0][0].map(item => item.label)).toEqual(['想', '喝', '饮料']);
     expect(onAppendHistory).not.toHaveBeenCalled();
 
     wrapper
@@ -384,8 +364,8 @@ describe('ReceiverLoopPanel', () => {
       expect.objectContaining({
         contractVersion: 2,
         direction: 'receive',
-        inputText: '我想喝水',
-        labels: ['喝', '想', '饮料'],
+        inputText: '想喝水',
+        labels: ['想', '喝', '饮料'],
         output: expect.any(Array),
         pictogramSequence: expect.arrayContaining([
           expect.objectContaining({
@@ -965,7 +945,7 @@ describe('ReceiverLoopPanel', () => {
       />
     );
 
-    await setInput(wrapper, '我想喝水');
+    await setInput(wrapper, '想喝水');
     wrapper
       .find('ForwardRef(Button)')
       .filterWhere(node => node.text() === '生成图片序列')
@@ -983,7 +963,7 @@ describe('ReceiverLoopPanel', () => {
     wrapper.update();
 
     expect(onConfirmDraft).toHaveBeenCalled();
-    expect(onSpeak).toHaveBeenCalledWith('我想喝水', expect.any(Function));
+    expect(onSpeak).toHaveBeenCalledWith('想喝水', expect.any(Function));
 
     onSpeak.mockClear();
     wrapper.find('button.MockReceiverFeedbackRepeat').simulate('click');
@@ -993,7 +973,7 @@ describe('ReceiverLoopPanel', () => {
       'receiver-1',
       'repeat_requested'
     );
-    expect(onSpeak).toHaveBeenCalledWith('我想喝水', expect.any(Function));
+    expect(onSpeak).toHaveBeenCalledWith('想喝水', expect.any(Function));
     expect(wrapper.find('.MockReceiverDisplay')).toHaveLength(1);
 
     onRecordPatientFeedback.mockReturnValueOnce(null);
@@ -1546,7 +1526,7 @@ describe('ReceiverLoopPanel', () => {
         .find('ForwardRef(Button)')
         .filterWhere(node => node.text() === label)
         .first();
-      expect(button.prop('disabled')).toBe(true);
+      expect(button.prop('disabled')).toBe(label === '发送到输出栏');
       await act(async () => {
         button.prop('onClick')();
       });

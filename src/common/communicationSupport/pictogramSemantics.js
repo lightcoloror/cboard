@@ -1,4 +1,35 @@
 import reviewedArasaac from './picinterpreterReviewedArasaac.json';
+import { getPictogramAttribution, DEVICE_PRIVATE_PICTOGRAM_PROVIDER } from './pictogramAttribution';
+
+// Local retrieval links reuse the same catalog and source identities. None of
+// these links grants automatic adoption or creates a global learned synonym.
+// Visual inspection: tuyujia-meaning-candidates-20261025/existing-assets-audit.png.
+const LOCAL_CANDIDATE_LINKS = [
+  { tokens: ['饭', '一餐'], source: 'rice.svg', label: '米饭', relation: 'narrower', hint: '具体是米饭；原句也可能指一餐，请确认' },
+  { tokens: ['鸡蛋'], source: 'egg.svg', label: '鸡蛋', relation: 'equivalent', hint: '鸡蛋食材；仍请核对图片' },
+  { tokens: ['鸡蛋'], source: 'boiled_egg.svg', label: '煮鸡蛋', relation: 'narrower', hint: '这是煮鸡蛋，不代表所有鸡蛋做法' },
+  { tokens: ['热一下', '热一热', '加热'], source: 'heat_,_to.svg', label: '锅内加热', relation: 'narrower', hint: '锅内食物加热；具体器具与动作请确认' },
+  { tokens: ['炒'], source: 'stir_fry_,_to.svg', label: '炒菜', relation: 'equivalent', hint: '锅中翻炒动作；不代表特定菜品' },
+  { tokens: ['西红柿炒鸡蛋', '番茄炒蛋'], source: 'stir_fry_,_to.svg', label: '炒菜', relation: 'related', hint: '只表达炒制，未表达食材或整道菜' },
+  { tokens: ['今晚'], source: 'night.svg', label: '夜晚', relation: 'broader', hint: '只表示夜晚，没有表示今天' }
+];
+
+export function getLocalPictogramCandidates(token, catalog = [], fallbackCatalog = []) {
+  const links = LOCAL_CANDIDATE_LINKS.filter(row => row.tokens.includes(token));
+  const seen = new Set();
+  return [...catalog, ...fallbackCatalog].flatMap(item => {
+    const tile = item.tile || {};
+    if (tile.personId || item.personalReference || item.semanticDomain === 'people') return [];
+    const attribution = getPictogramAttribution(item);
+    if (attribution && attribution.provider === DEVICE_PRIVATE_PICTOGRAM_PROVIDER) return [];
+    const row = links.find(link => (
+      String(tile.image || '') === '/symbols/mulberry/' + link.source ||
+      (attribution && attribution.provider === 'mulberry' && attribution.originalId === link.source)));
+    if (!row || seen.has(row.source) || !tile.image) return [];
+    seen.add(row.source);
+    return [{ item: { ...item, displayLabel: row.label }, relation: row.relation, hint: row.hint, sourceId: `mulberry:${row.source}` }];
+  }).sort((a, b) => ({equivalent: 0, narrower: 1, broader: 1, related: 2}[a.relation] - {equivalent: 0, narrower: 1, broader: 1, related: 2}[b.relation]));
+}
 
 // One portable contract for API retrieval, Web and the direct WeChat adapter.
 // These senses qualify existing reviewed mappings; they do not merge all

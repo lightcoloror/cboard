@@ -95,6 +95,7 @@ export default function CommunicationManagementDialog({
   receiverCorrections,
   candidateFeedbackSyncAvailable,
   onSavedPhrasesChange,
+  onSaveHistoryPhrase,
   onSavedPhrasesCommitted,
   onSavedPhraseContextChange,
   onHistoryChange,
@@ -338,13 +339,18 @@ export default function CommunicationManagementDialog({
             entry,
             receiverCorrections
           );
-          const favorite = addCommunicationSavedPhrase(savedPhrases, {
+          const draft = {
             sentence: getCommunicationHistoryReplayText(effective),
             output: JSON.parse(JSON.stringify(effective.output || [])),
             sourceHistoryId: id
-          });
-          if (!favorite.item) throw new Error('这条记录没有可收藏的内容');
-          if (favorite.changed) onSavedPhrasesChange(favorite.items);
+          };
+          if (onSaveHistoryPhrase) {
+            onSaveHistoryPhrase(draft);
+          } else {
+            const favorite = addCommunicationSavedPhrase(savedPhrases, draft);
+            if (!favorite.item) throw new Error('这条记录没有可收藏的内容');
+            if (favorite.changed) onSavedPhrasesChange(favorite.items);
+          }
           setNotice('已独立保存到常用语，删除或淘汰这条历史不会删除收藏。');
         } else {
           setNotice('已取消历史标记；独立收藏仍保留，可在常用语管理中删除。');
@@ -1338,6 +1344,7 @@ CommunicationManagementDialog.propTypes = {
   candidateFeedbackSyncAvailable: PropTypes.bool,
   onSavedPhraseAction: PropTypes.func,
   onSavedPhrasesChange: PropTypes.func.isRequired,
+  onSaveHistoryPhrase: PropTypes.func,
   onSavedPhrasesCommitted: PropTypes.func,
   onSavedPhraseContextChange: PropTypes.func,
   onHistoryChange: PropTypes.func.isRequired,

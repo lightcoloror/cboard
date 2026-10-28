@@ -71,6 +71,61 @@ describe('ExpressionLoopPanel', () => {
     candidateAutoplayDelaySeconds: 0
   };
 
+  test('favorite capacity and persistence errors stay visible without losing the expression, then retry succeeds', () => {
+    const save = jest.fn().mockImplementationOnce(() => {
+      const error = new Error('常用语已达到容量上限（100条），请先整理已有收藏。');
+      error.code = 'SAVED_PHRASE_CAPACITY';
+      throw error;
+    }).mockImplementationOnce(() => { throw new Error('合成读回失败'); }).mockReturnValue(true);
+    const wrapper = mount(<ExpressionLoopPanel {...props} onSavePhrase={save} />);
+    const click = () => act(() => findPatientAction(wrapper, PATIENT_ACTION_IDS.save).prop('onClick')());
+    expect(click).not.toThrow(); wrapper.update();
+    expect(wrapper.find('[role="alert"]').text()).toContain('容量上限');
+    expect(findPatientAction(wrapper, PATIENT_ACTION_IDS.save).prop('disabled')).toBe(false);
+    expect(wrapper.text()).toContain('想水。');
+    click(); wrapper.update();
+    expect(wrapper.find('[role="alert"]').text()).toContain('合成读回失败');
+    click(); wrapper.update();
+    expect(findPatientAction(wrapper, PATIENT_ACTION_IDS.save).prop('label')).toBe('已收藏');
+    expect(wrapper.text()).not.toContain('合成读回失败');
+    expect(save).toHaveBeenCalledTimes(3);
+    expect(save.mock.calls[0][0]).toEqual(save.mock.calls[2][0]);
+    expect(onAppendHistory).not.toHaveBeenCalled();
+    expect(onSpeak).not.toHaveBeenCalled();
+    expect(onApplyOutput).not.toHaveBeenCalled();
+    wrapper.unmount();
+  });
+
+  test.each([99, 100, 101])('direct favorite with %i existing items keeps old snapshots and permits a safe retry', count => {
+    const values = new Map([['cboard_communication_saved_phrases', JSON.stringify(Array.from({ length: count }, (_, index) => ({
+      id: `old-${index}`, sentence: `合成原句${index}`, createdAt: index + 1,
+      output: [{ id: 'same', label: '合成林安', personId: `person-${index}`, image: '/synthetic.png' }]
+    })))]]);
+    const repository = createCommunicationRepository({ storage: { getItem: key => values.get(key) ?? null, setItem: (key, value) => values.set(key, value) } });
+    const before = repository.loadCommunicationSavedPhrases();
+    const save = jest.fn(repository.saveCommunicationPhrase);
+    const wrapper = mount(<ExpressionLoopPanel {...props} onSavePhrase={save} />);
+    const click = () => { act(() => findPatientAction(wrapper, PATIENT_ACTION_IDS.save).prop('onClick')()); wrapper.update(); };
+    click();
+    if (count >= 100) {
+      expect(wrapper.find('[role="alert"]').text()).toContain('容量上限');
+      expect(repository.loadCommunicationSavedPhrases()).toEqual(before);
+      expect(wrapper.text()).toContain('想水。');
+      while (repository.loadCommunicationSavedPhrases().length >= 100)
+        repository.deleteCommunicationSavedPhrase(repository.loadCommunicationSavedPhrases().slice(-1)[0].id);
+      click();
+    }
+    expect(repository.loadCommunicationSavedPhrases()).toHaveLength(100);
+    expect(repository.loadCommunicationSavedPhrases().filter(item => item.sentence === '想水。')).toHaveLength(1);
+    expect(repository.loadCommunicationSavedPhrases().find(item => item.sentence === '想水。').output).toEqual(output);
+    repository.loadCommunicationSavedPhrases().filter(item => item.id.startsWith('old-')).forEach(item => expect(item).toEqual(before.find(old => old.id === item.id)));
+    expect(findPatientAction(wrapper, PATIENT_ACTION_IDS.save).prop('disabled')).toBe(true);
+    expect(onAppendHistory).not.toHaveBeenCalled();
+    expect(onSpeak).not.toHaveBeenCalled();
+    expect(onApplyOutput).not.toHaveBeenCalled();
+    wrapper.unmount();
+  });
+
   test('silent view preserves identities; replay counts once; late completion after close does not count', async () => {
     const item = { id:'synthetic-view', sentence:'我今晚不回家吃饭', output:[
       {id:'same',label:'合成林安',personId:'a',image:'/synthetic-a.png'},

@@ -25,6 +25,8 @@ export {
   RECEIVER_LOW_CONFIDENCE_THRESHOLD,
   RECEIVER_PIPELINE_CONTRACT_VERSION,
   buildReceiverMatchQuality,
+  buildReceiverMeaningAssessment,
+  isReceiverPunctuation,
   getReceiverMatchConfidence,
   normalizeReceiverMatchType
 } from './receiverContract';
@@ -345,6 +347,13 @@ export function retainReceiverReviewItemAsText(reviewItems, itemId) {
     itemId,
     createTextCommunicationCatalogItem(item.token, `text-${itemId}`)
   );
+}
+
+// Called only after explicit partner confirmation. No correction learning,
+// picture substitution, or inferred patient feedback is produced here.
+export function prepareReceiverAssistedItems(reviewItems) {
+  return reviewItems.reduce((items, item) => !item.tile
+    ? retainReceiverReviewItemAsText(items, item.id) : items, reviewItems);
 }
 
 export function buildReceiverOutputPreview(reviewItems) {

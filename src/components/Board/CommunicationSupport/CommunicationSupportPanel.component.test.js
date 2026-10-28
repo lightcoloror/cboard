@@ -294,6 +294,88 @@ describe('CommunicationSupportPanel receiver flow', () => {
     }
   });
 
+  test.each([100, 101])('direct duplicate favorite at %i keeps the original person, images and normalized sentence', count => {
+    const { createCommunicationRepository, COMMUNICATION_STORAGE_KEYS: K } = jest.requireActual('../../../common/communicationSupport/repository');
+    const entries = Array.from({ length: count }, (_, index) => ({
+      id: `duplicate-old-${index}`, sentence: index ? `合成原句${index}` : '合成林安不回家', createdAt: index + 1,
+      lifeContext: '聊天', output: [{ id: 'same', label: '合成林安', personId: 'synthetic-a', image: '/synthetic-a.png' }]
+    }));
+    const values = new Map([[K.savedPhrases, JSON.stringify(entries)]]);
+    const repository = createCommunicationRepository({ storage: { getItem: key => values.get(key) ?? null, setItem: (key, value) => values.set(key, value) } });
+    localData.loadCommunicationSavedPhrases.mockImplementation(repository.loadCommunicationSavedPhrases);
+    localData.saveCommunicationPhrase.mockImplementation(repository.saveCommunicationPhrase);
+    localData.overwriteCommunicationSavedPhrases.mockImplementation(repository.overwriteCommunicationSavedPhrases);
+    const before = repository.loadCommunicationSavedPhrases();
+    const wrapper = mount(<CommunicationSupportPanel {...props} />);
+    try {
+      for (const sentence of ['合成林安不回家', '  合成林安不回家  ']) {
+        expect(() => act(() => { wrapper.find('ExpressionLoopPanel').prop('onSavePhrase')({
+          sentence, output: [{ id: 'same', label: '合成林安', personId: 'synthetic-b', image: '/synthetic-b.png' }]
+        }); })).not.toThrow();
+        wrapper.update();
+        expect(repository.loadCommunicationSavedPhrases()).toEqual(before);
+      }
+      expect(localData.overwriteCommunicationSavedPhrases).not.toHaveBeenCalled();
+      expect(props.onSpeak).not.toHaveBeenCalled();
+    } finally { wrapper.unmount(); localData.saveCommunicationPhrase.mockReset(); }
+  });
+
+  test.each([99, 100, 101])('history favorite preserves %i old items and retries against the authoritative store', count => {
+    const { createCommunicationRepository, COMMUNICATION_STORAGE_KEYS: K } = jest.requireActual('../../../common/communicationSupport/repository');
+    const values = new Map([[K.savedPhrases, JSON.stringify(Array.from({ length: count }, (_, index) => ({
+      id: `synthetic-old-${index}`, sentence: `合成原句${index}`, createdAt: index + 1, lifeContext: '吃饭',
+      output: [{ id: 'same', label: '合成林安', personId: `synthetic-${index}`, image: '/synthetic.png' }]
+    })))]]);
+    const repository = createCommunicationRepository({ storage: {
+      getItem: key => values.get(key) ?? null, setItem: (key, value) => values.set(key, value)
+    } });
+    repository.overwriteCommunicationHistory([{
+      id: 'synthetic-history', direction: 'express', sentence: '我今晚不回家吃饭', createdAt: 10,
+      output: [{ id: 'same', label: '合成林安', personId: 'synthetic-a' }, { id: 'same', label: '合成林安', personId: 'synthetic-b' }]
+    }]);
+    const before = repository.loadCommunicationSavedPhrases(), historyBefore = repository.loadCommunicationHistory();
+    localData.loadCommunicationSavedPhrases.mockImplementation(repository.loadCommunicationSavedPhrases);
+    localData.loadCommunicationHistory.mockImplementation(repository.loadCommunicationHistory);
+    localData.overwriteCommunicationHistory.mockImplementation(repository.overwriteCommunicationHistory);
+    let loseReceipt = count === 99;
+    localData.overwriteCommunicationSavedPhrases.mockImplementation((items, options) => {
+      const result = repository.overwriteCommunicationSavedPhrases(items, options);
+      if (loseReceipt) { loseReceipt = false; throw new Error('合成收藏已写入但回执丢失'); }
+      return result;
+    });
+    const wrapper = mount(<CommunicationSupportPanel {...props} />);
+    const click = label => {
+      act(() => wrapper.find('ForwardRef(Button)').filterWhere(node => node.text() === label).first().prop('onClick')());
+      wrapper.update();
+    };
+    try {
+      click('常用语与历史');
+      act(() => wrapper.find('ForwardRef(Button)').filterWhere(node => node.text().startsWith('沟通历史')).first().prop('onClick')()); wrapper.update();
+      click('收藏');
+      expect(repository.loadCommunicationHistory()).toEqual(historyBefore);
+      expect(wrapper.find('CommunicationManagementDialog').find('div[role="status"]').map(node => node.text()).join(' ')).toContain(count >= 100 ? '容量上限' : '合成收藏已写入但回执丢失');
+      if (count >= 100) {
+        expect(repository.loadCommunicationSavedPhrases()).toEqual(before);
+        while (repository.loadCommunicationSavedPhrases().length >= 100)
+          repository.deleteCommunicationSavedPhrase(repository.loadCommunicationSavedPhrases().slice(-1)[0].id);
+      }
+      click('收藏');
+      const after = repository.loadCommunicationSavedPhrases();
+      expect(after).toHaveLength(100);
+      expect(after.filter(item => item.sentence === historyBefore[0].sentence)).toHaveLength(1);
+      expect(after.find(item => item.sentence === historyBefore[0].sentence).output).toEqual(historyBefore[0].output);
+      expect(repository.loadCommunicationHistory()[0].isFavorite).toBe(true);
+      expect(repository.loadCommunicationHistory()[0].output).toEqual(historyBefore[0].output);
+      after.filter(item => item.id.startsWith('synthetic-old-')).forEach(item => {
+        expect(item).toEqual(before.find(old => old.id === item.id));
+      });
+      // An acknowledged-loss retry reads the already committed favorite. It does
+      // not issue a new write with the previous React list or a fresh identity.
+      if (count === 99) expect(localData.overwriteCommunicationSavedPhrases).toHaveBeenCalledTimes(1);
+      expect(props.onSpeak).not.toHaveBeenCalled();
+    } finally { wrapper.unmount(); }
+  });
+
   test('committed refresh reads canonical data and preserves the current UI on read failure', () => {
     const initial = [{ id: 'before', sentence: '保存前', output: [] }];
     const canonical = [{ id: 'verified', sentence: '规范仓储', output: [] }];
@@ -682,7 +764,7 @@ describe('CommunicationSupportPanel receiver flow', () => {
 
   test('supports a closed receiver loop from text input to output apply', async () => {
     const wrapper = mount(<CommunicationSupportPanel {...props} />);
-    await openReceiveReview(wrapper, '我想喝水');
+    await openReceiveReview(wrapper, '想水');
 
     expect(
       wrapper
@@ -723,12 +805,12 @@ describe('CommunicationSupportPanel receiver flow', () => {
       expect.objectContaining({ id: 'receiver-draft', recordStatus: 'draft' }),
       expect.objectContaining({
         direction: 'receive',
-        inputText: '我想喝水',
+        inputText: '想水',
         labels: ['想', '水']
       })
     );
     expect(props.onSpeak).toHaveBeenCalledWith(
-      '我想喝水',
+      '想水',
       expect.any(Function)
     );
 
@@ -781,7 +863,7 @@ describe('CommunicationSupportPanel receiver flow', () => {
     });
 
     const wrapper = mount(<CommunicationSupportPanel {...props} />);
-    await openReceiveReview(wrapper, '我想喝水');
+    await openReceiveReview(wrapper, '想喝水');
 
     expect(
       wrapper
@@ -829,6 +911,17 @@ describe('CommunicationSupportPanel receiver flow', () => {
       .first();
     sendButton.simulate('click');
 
+    expect(sendButton.prop('disabled')).toBe(true);
+    expect(onApplyOutput).not.toHaveBeenCalled();
+    wrapper
+      .find('ForwardRef(Button)')
+      .filterWhere(node => node.text() === '全屏展示')
+      .first()
+      .simulate('click');
+
+    wrapper.update();
+    wrapper.find('ForwardRef(Button)').filterWhere(n => n.text() === '我会辅助解释，继续展示').first().simulate('click');
+    wrapper.update();
     expect(onApplyOutput).toHaveBeenCalledWith([
       {
         id: 'drink',
@@ -847,17 +940,11 @@ describe('CommunicationSupportPanel receiver flow', () => {
       }
     ]);
 
-    wrapper
-      .find('ForwardRef(Button)')
-      .filterWhere(node => node.text() === '全屏展示')
-      .first()
-      .simulate('click');
-
     expect(localData.confirmReceiverDraft).toHaveBeenCalledWith(
       expect.objectContaining({ id: 'receiver-draft', recordStatus: 'draft' }),
       expect.objectContaining({
         direction: 'receive',
-        inputText: '我想喝水',
+        inputText: '想喝水',
         labels: ['喝', '想', '饮料']
       })
     );
@@ -882,7 +969,7 @@ describe('CommunicationSupportPanel receiver flow', () => {
     });
     const receiver = wrapper.find('ReceiverLoopPanel').first();
     expect(receiver.text()).toContain('缺词提示：头晕');
-    expect(receiver.text()).toContain('请重点复核未匹配或部分匹配项');
+    expect(receiver.text()).toContain('尚有意思未图示，需要伙伴解释');
   });
 
   test('exposes the local missing-token queue only in caregiver receive mode', () => {
@@ -1215,7 +1302,7 @@ describe('CommunicationSupportPanel receiver flow', () => {
     wrapper.unmount();
   });
 
-  test('automatically searches newly recorded gaps once without adopting candidates', async () => {
+  test('keeps receiver gaps local until the partner explicitly searches', async () => {
     const missing = {
       id: 'auto-gap',
       normalizedToken: '家里人',
@@ -1240,6 +1327,11 @@ describe('CommunicationSupportPanel receiver flow', () => {
     await act(async () => {
       record({ tokens: ['家里人'] });
       record({ tokens: ['家里人'] });
+    });
+    expect(API.searchCommunicationPictograms).not.toHaveBeenCalled();
+    await act(async () => {
+      await wrapper.find('ReceiverLoopPanel').first()
+        .prop('onSearchMissingTokensOnline')([missing.id]);
     });
     expect(API.searchCommunicationPictograms).toHaveBeenCalledTimes(1);
     expect(API.searchCommunicationPictograms).toHaveBeenCalledWith(['家里人']);

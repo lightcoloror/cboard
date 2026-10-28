@@ -4,6 +4,7 @@ import { act } from 'react-dom/test-utils';
 import CareHome from './CareHome';
 import { runtime } from './Care';
 import CommunicationSupportPanel from '../Board/CommunicationSupport/CommunicationSupportPanel.component';
+import { createCommunicationRepository, COMMUNICATION_STORAGE_KEYS } from '../../common/communicationSupport/repository';
 
 jest.mock('react-intl', () => ({ injectIntl: component => component }));
 jest.mock(
@@ -96,7 +97,7 @@ describe('patient collaboration home', () => {
       pitch: 0.9
     });
   });
-  async function render(role, intl = {}) {
+  async function render(role, intl = {}, initialResources) {
     const relationship = {
       role,
       defaultMode: role === 'patient' ? 'expression' : 'receiver'
@@ -111,7 +112,7 @@ describe('patient collaboration home', () => {
         ...profile,
         cursor: 1,
         permissions: ['read'],
-        resources: [
+        resources: initialResources || [
           {
             id: 'favorite',
             kind: 'favorite',
@@ -412,6 +413,65 @@ describe('patient collaboration home', () => {
     expect(wrapper.find(CommunicationSupportPanel).text()).toContain(
       '首次同步收藏'
     );
+    wrapper.unmount();
+  });
+
+  test('care projection capacity overflow preserves 99 local phrases, displays its reason and allows retry', async () => {
+    const phrases = Array.from({ length: 101 }, (_, index) => ({
+      id: `care-capacity-${index}`, sentence: `合成同步${index}`, createdAt: index + 1,
+      output: [{ id: 'shape', label: '几何图', personId: `synthetic-${index}` }]
+    }));
+    const values = new Map([[COMMUNICATION_STORAGE_KEYS.savedPhrases, JSON.stringify(phrases.slice(0, 99))]]);
+    const repository = createCommunicationRepository({ storage: {
+      getItem: key => values.get(key) || null,
+      setItem: (key, value) => values.set(key, value)
+    }, now: () => 1000 });
+    const local = require('../../common/communicationSupport/localData');
+    local.loadCommunicationSavedPhrases.mockImplementation(() => repository.loadCommunicationSavedPhrases());
+    local.overwriteCommunicationSavedPhrases.mockImplementation(items => repository.overwriteCommunicationSavedPhrases(items));
+    const before = repository.readFavoriteState();
+    const resources = phrases.map(item => ({ id: item.id, kind: 'favorite', version: 1, seq: 1, value: item }));
+    const wrapper = await render('patient', {}, resources.slice(0, 99));
+    const baselineRequest = runtime.request.getMockImplementation();
+    runtime.request.mockImplementation(async (...args) => {
+      const result = await baselineRequest(...args);
+      return result.resources ? { ...result, cursor: 2, resources: resources.map(item => ({ ...item, seq: 2, version: 2 })) } : result;
+    });
+    const current = repository.readFavoriteState();
+    await act(async () => { tick(); await flush(); });
+    wrapper.update();
+    expect(wrapper.text()).toContain('容量上限');
+    expect(repository.readFavoriteState()).toEqual(current);
+    const previous = runtime.request.getMockImplementation();
+    runtime.request.mockImplementation(async (...args) => {
+      const result = await previous(...args);
+      return result.resources ? { ...result, cursor: 3, resources: result.resources.map(item =>
+        item.id === 'care-capacity-100' ? { ...item, deleted: true, version: 3, seq: 3 } : item
+      ) } : result;
+    });
+    await act(async () => { tick(); await flush(); });
+    wrapper.update();
+    expect(wrapper.text()).not.toContain('容量上限');
+    const saved = repository.loadCommunicationSavedPhrases();
+    expect(saved).toHaveLength(100);
+    for (const item of before.phrases) expect(saved.find(value => value.id === item.id)).toEqual(item);
+    wrapper.unmount();
+  });
+
+  test.each(['local', 'pending'])('care rejects a 101-item %s batch before cloud mutation and preserves its retry state', async source => {
+    const phrases = Array.from({ length: 101 }, (_, index) => ({ id: `full-${index}`, sentence: `合成满额${index}`, output: [], createdAt: index + 1 }));
+    const local = require('../../common/communicationSupport/localData');
+    const current = source === 'local' ? phrases : phrases.slice(0, 100);
+    local.loadCommunicationSavedPhrases.mockReturnValue(current);
+    const key = 'care-projection-v1:account:family:patient';
+    const pending = JSON.stringify({ favorites: phrases, favoritesBase: [] });
+    if (source === 'pending') localStorage.setItem(key, pending);
+    const wrapper = await render('patient');
+    expect(wrapper.text()).toContain('容量上限');
+    expect(local.loadCommunicationSavedPhrases()).toEqual(current);
+    expect(local.overwriteCommunicationSavedPhrases).not.toHaveBeenCalled();
+    expect(runtime.request.mock.calls.map(call => call[0])).toEqual(['/care/profiles', '/care/context']);
+    if (source === 'pending') expect(localStorage.getItem(key)).toBe(pending);
     wrapper.unmount();
   });
   test('restored offline profile never requests cloud synchronization on open or refresh', async () => {

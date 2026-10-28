@@ -1,0 +1,4 @@
+# Generated mini-program board manifests hash these source inputs byte for byte.
+/src/api/boards.json text eol=lf
+/src/translations/zh-CN.json text eol=lf
+/src/translations/zh-CN.aac-review.json text eol=lf

@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { buildReceiverReading } from '../../../common/communicationSupport/receiverReading';
+import { buildReceiverMeaningAssessment, isReceiverPunctuation } from '../../../common/communicationSupport/receiverContract';
 import PropTypes from 'prop-types';
 import FullScreenDialog, {
   FullScreenDialogContent
@@ -31,6 +32,7 @@ export default function ReceiverDisplay({
   onShare
 }) {
   const reading = buildReceiverReading(speechText, sequence, items);
+  const meaning = buildReceiverMeaningAssessment(speechText, items.map(item => ({ token: item.label, tile: item.textOnly ? { textOnly: true } : { tile: item } })));
   const [segmentIndex, setSegmentIndex] = useState(null);
   const segment = segmentIndex === null ? null : reading.segments[segmentIndex];
   const visibleItems = segment ? segment.itemIndices.map(index => items[index]) : items;
@@ -152,6 +154,7 @@ export default function ReceiverDisplay({
       <FullScreenDialogContent className="CommunicationSupportPanel__displayScreen">
         <section className="CommunicationSupportPanel__reading" aria-label="原句与分段阅读">
           <p className="CommunicationSupportPanel__originalText">{speechText}</p>
+          {meaning.requiresAssistance && <p role="status">请伙伴辅助解释：{meaning.unresolvedMeaningItems.map(item => item.token).join('、')}。文字是原话参照，不表示已经理解。</p>}
           <PatientActionButton action={PATIENT_ACTION_IDS.fullscreen}
             label={segment ? '看整句' : '一段一段看'}
             ariaLabel={segment ? '返回完整原句和图片' : '按原文分段阅读'}
@@ -178,7 +181,7 @@ export default function ReceiverDisplay({
               role="listitem"
               key={(item.id || item.label) + '-' + index}
             >
-              <Symbol localOnly
+              {item.textOnly ? <div className="CommunicationSupportPanel__textReference"><strong>{item.label}</strong>{!isReceiverPunctuation(item.label) && <p>尚未图示，请伙伴解释</p>}</div> : <Symbol localOnly
                 className="CommunicationSupportPanel__symbol CommunicationSupportPanel__symbol--display"
                 image={item.image}
                 mediaType={item.mediaType}
@@ -187,7 +190,7 @@ export default function ReceiverDisplay({
                 keyPath={item.keyPath}
                 label={item.label}
                 labelpos="Below"
-              />
+              />}
             </div>
           ))}
         </div>

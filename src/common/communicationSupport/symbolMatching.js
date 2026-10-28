@@ -424,7 +424,7 @@ export function applyCommunicationContextGuards(
   // Occurrence spans also cover AI/manual token boundaries such as 热 / 一下
   // and 加 / 热. A learned 热 picture must not erase the heating action.
   const heatingActions = [],
-    heatingPattern = /加热|热一下|热一热/g;
+    heatingPattern = /加热|热一下|热一热|(?:再|重新|不用|不要|别)热/g;
   let heatingMatch;
   while ((heatingMatch = heatingPattern.exec(source))) {
     heatingActions.push({

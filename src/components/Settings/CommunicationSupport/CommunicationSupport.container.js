@@ -15,12 +15,13 @@ import {
   loadCommunicationHistory,
   loadCommunicationSavedPhraseTombstones,
   loadCommunicationSavedPhrases,
+  readCommunicationFavoriteState,
+  commitCommunicationFavoriteState,
   loadReceiverRecords,
   mergeCommunicationSettings,
   normalizeCommunicationSettings,
   overwriteCommunicationHistory,
   overwriteCommunicationSavedPhraseTombstones,
-  overwriteCommunicationSavedPhrases,
   overwriteCommunicationSettings,
   overwriteReceiverRecords,
   retireAnonymousUserIdentity
@@ -33,6 +34,7 @@ import {
   mergeVersionedCommunicationSavedPhrases,
   normalizeSavedPhraseTombstones
 } from '../../../common/communicationSupport/savedPhraseSync';
+import { assertSavedPhraseCapacity, normalizeCommunicationSavedPhraseList } from '../../../common/communicationSupport/savedPhraseManagement';
 import { normalizeCommunicationServiceReadiness } from '../../../common/communicationSupport/serviceReadiness';
 import {
   COMMUNICATION_ENHANCEMENT_LIMIT_SCOPES,
@@ -112,22 +114,15 @@ export class CommunicationSupportContainer extends PureComponent {
 
   syncSavedPhrases = async (legacySavedPhrases = []) => {
     try {
-      let tombstones = loadCommunicationSavedPhraseTombstones();
+      // Check the complete local/legacy batch before any network mutation or
+      // deletion acknowledgement. Existing over-limit data remains recoverable.
+      const expected = readCommunicationFavoriteState();
+      assertSavedPhraseCapacity(expected.phrases);
+      let tombstones = expected.tombstones;
       const pendingTombstones = tombstones.filter(
         item => item.pending === true
       );
-      if (pendingTombstones.length) {
-        const deletion = await API.deleteCommunicationSavedPhrases(
-          pendingTombstones.map(item => item.id)
-        );
-        tombstones = normalizeSavedPhraseTombstones([
-          ...tombstones,
-          ...(deletion.deletedPhrases || [])
-        ]);
-        overwriteCommunicationSavedPhraseTombstones(tombstones);
-      }
-
-      const localPhrases = loadCommunicationSavedPhrases();
+      const localPhrases = expected.phrases;
       const localIds = new Set(localPhrases.map(item => item.id));
       const localSentences = new Set(
         localPhrases.map(item =>
@@ -151,10 +146,20 @@ export class CommunicationSupportContainer extends PureComponent {
           !localSentences.has(sentence)
         );
       });
-      const seededPhrases = mergeCommunicationSettings(
-        { savedPhrases: localPhrases, history: [] },
-        { savedPhrases: legacyAdditions, history: [] }
-      ).savedPhrases;
+      const seededPhrases = normalizeCommunicationSavedPhraseList([
+        ...localPhrases, ...legacyAdditions
+      ]);
+      assertSavedPhraseCapacity(seededPhrases);
+      if (pendingTombstones.length) {
+        const deletion = await API.deleteCommunicationSavedPhrases(
+          pendingTombstones.map(item => item.id)
+        );
+        tombstones = normalizeSavedPhraseTombstones([
+          ...tombstones,
+          ...(deletion.deletedPhrases || [])
+        ]);
+        // Commit acknowledgements only after the whole favorite merge succeeds.
+      }
       const response = await API.syncCommunicationSavedPhrases(seededPhrases);
       const merged = mergeVersionedCommunicationSavedPhrases(
         seededPhrases,
@@ -162,8 +167,9 @@ export class CommunicationSupportContainer extends PureComponent {
         [...tombstones, ...(response.deletedPhrases || [])]
       );
 
-      overwriteCommunicationSavedPhraseTombstones(merged.tombstones);
-      overwriteCommunicationSavedPhrases(merged.items);
+      commitCommunicationFavoriteState(expected, {
+        tombstones: merged.tombstones, phrases: merged.items
+      });
       this.refreshCounts();
       return {
         ok: true,
@@ -173,7 +179,8 @@ export class CommunicationSupportContainer extends PureComponent {
         )
       };
     } catch (error) {
-      return { ok: false, conflictCount: 0 };
+      return { ok: false, conflictCount: 0,
+        message: error && error.code === 'SAVED_PHRASE_CAPACITY' ? error.message : '' };
     }
   };
 
@@ -406,6 +413,11 @@ export class CommunicationSupportContainer extends PureComponent {
       const savedPhraseSync = await this.syncSavedPhrases(
         remoteSettings.savedPhrases
       );
+      if (!savedPhraseSync.ok) {
+        if (savedPhraseSync.message) this.setState({ syncMessage: savedPhraseSync.message });
+        else this.setSyncMessage(messages.syncPartial);
+        return;
+      }
       await API.updateSettings(
         createCommunicationSupportSettingsPatch(
           this.getCloudSettings({
@@ -443,7 +455,8 @@ export class CommunicationSupportContainer extends PureComponent {
     try {
       const savedPhraseSync = await this.syncSavedPhrases();
       if (!savedPhraseSync.ok) {
-        this.setSyncMessage(messages.syncPartial);
+        if (savedPhraseSync.message) this.setState({ syncMessage: savedPhraseSync.message });
+        else this.setSyncMessage(messages.syncPartial);
         return;
       }
       await API.updateSettings(

@@ -283,6 +283,7 @@ export default function ExpressionLoopPanel({
   const [speechAvailable, setSpeechAvailable] = useState(true);
   const [pendingAutoplayDelayMs, setPendingAutoplayDelayMs] = useState(0);
   const [isSaved, setIsSaved] = useState(false);
+  const [favoriteSaveError, setFavoriteSaveError] = useState('');
   const [isConfirmed, setIsConfirmed] = useState(false);
   const [expressionConfirmError, setExpressionConfirmError] = useState('');
   const [isSharingExpression, setIsSharingExpression] = useState(false);
@@ -467,6 +468,7 @@ export default function ExpressionLoopPanel({
         );
         setSpeechAvailable(true);
         setIsSaved(false);
+        setFavoriteSaveError('');
         setIsConfirmed(false);
         setExpressionConfirmError('');
         setIsSharingExpression(false);
@@ -793,7 +795,7 @@ export default function ExpressionLoopPanel({
     previousOutputSnapshotRef.current = JSON.stringify(nextOutput);
     previousOutputSignatureRef.current = nextState.outputSignature;
     loopStateRef.current = nextState; setLoopState(nextState);
-    setIsConfirmed(false); setIsSaved(false);
+    setIsConfirmed(false); setIsSaved(false); setFavoriteSaveError('');
     onApplyOutput(nextOutput);
     return true;
   }
@@ -828,6 +830,7 @@ export default function ExpressionLoopPanel({
     setIsConfirmed(false);
     draftCompletedRef.current = false;
     setIsSaved(false);
+    setFavoriteSaveError('');
     setAiNotice('');
     setExpressionConfirmError('');
     setExpressionShareNotice('');
@@ -875,6 +878,7 @@ export default function ExpressionLoopPanel({
     cancelPendingAi();
     autoplayControllerRef.current.cancel();
     setIsSaved(false);
+    setFavoriteSaveError('');
     setExpressionConfirmError('');
     // Playback consumes the current set, including AI and restored favorites.
     // It must never regenerate templates or issue another AI request.
@@ -897,6 +901,7 @@ export default function ExpressionLoopPanel({
     setCandidatePhase('playing');
     setSpeechAvailable(true);
     setIsSaved(false);
+    setFavoriteSaveError('');
     if (index !== loopState.selectedIndex) {
       setIsConfirmed(false);
       draftCompletedRef.current = false;
@@ -922,8 +927,13 @@ export default function ExpressionLoopPanel({
       return;
     }
 
-    onSavePhrase(entry);
-    setIsSaved(true);
+    try {
+      if (onSavePhrase(entry) === false) throw new Error('本次收藏尚未保存。');
+      setFavoriteSaveError('');
+      setIsSaved(true);
+    } catch (error) {
+      setFavoriteSaveError(`${error.message || '常用语保存失败。'} 当前表达已保留，请整理后或稍后重试收藏。`);
+    }
   }
 
   function handleConfirmExpression() {
@@ -1216,6 +1226,7 @@ export default function ExpressionLoopPanel({
       resetCandidateFeedback(nextState);
       setCandidatePhase('ready');
       setIsSaved(false);
+      setFavoriteSaveError('');
       setIsConfirmed(false);
       setExpressionConfirmError('');
       setAiNotice(copy.localApplied);
@@ -1272,6 +1283,7 @@ export default function ExpressionLoopPanel({
       });
       setCandidatePhase('ready');
       setIsSaved(false);
+      setFavoriteSaveError('');
       setIsConfirmed(false);
       setExpressionConfirmError('');
       setAiNotice(copy.aiApplied);
@@ -1652,6 +1664,11 @@ export default function ExpressionLoopPanel({
                 isConfirmed ? copy.expressionConfirmed : copy.confirmExpression
               }
             />
+          </div>
+        )}
+        {favoriteSaveError && (
+          <div className="CommunicationSupportPanel__candidateFeedbackStatus" role="alert">
+            {favoriteSaveError}
           </div>
         )}
         {expressionConfirmError && (

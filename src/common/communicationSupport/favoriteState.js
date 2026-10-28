@@ -1,6 +1,7 @@
 import { normalizeCommunicationSavedPhrases } from './storage';
 import { normalizeSavedPhraseTombstone, normalizeSavedPhraseTombstones } from './savedPhraseSync';
 import { LEGACY_COMMUNICATION_STORAGE_KEYS } from './legacy';
+import { assertSavedPhraseCapacity, DEFAULT_SAVED_PHRASE_CAPACITY } from './savedPhraseManagement';
 
 export const FAVORITE_STATE_KEY = 'cboard_communication_favorite_state_v1';
 const PHRASES = 'cboard_communication_saved_phrases';
@@ -41,7 +42,7 @@ function checkPending(value) {
 
 // One canonical commit replaces three independently written values. Legacy data
 // is read only on first migration; an explicitly empty list always wins.
-export function createFavoriteStateStore(storage) {
+export function createFavoriteStateStore(storage, { capacity = DEFAULT_SAVED_PHRASE_CAPACITY } = {}) {
   const scope = () => storage.getScopeKey ? storage.getScopeKey() : 'local';
   const capturedScope = scope();
   const assertScope = () => {
@@ -97,6 +98,12 @@ export function createFavoriteStateStore(storage) {
     const next = { ...expected, ...changes, version: 1, scope: capturedScope,
       revision: expected.revision + 1, tombstones,
       phrases: checkedPhrases(changes.phrases === undefined ? expected.phrases : changes.phrases).filter(p => !removed.has(p.id)) };
+    // Enforce additions at the atomic boundary, including history favorites and
+    // direct list callers. Existing over-limit data may still be edited/deleted.
+    const previousIds = new Set(expected.phrases.map(item => item.id));
+    if (next.phrases.some(item => !previousIds.has(item.id))) {
+      assertSavedPhraseCapacity(next.phrases, capacity);
+    }
     if (storage.prepareFavoriteCommit) next.pending = storage.prepareFavoriteCommit(expected, next);
     // Includes write-success/readback-failure retries, without replaying a stale
     // mutation over a later update or a newly selected profile.

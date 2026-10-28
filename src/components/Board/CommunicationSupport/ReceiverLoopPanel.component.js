@@ -14,7 +14,7 @@ import TextField from '@material-ui/core/TextField';
 import Symbol from '../Symbol';
 import ImageRepairControls from './ImageRepairControls.component';
 import { repairCatalogImage } from '../../../common/communicationSupport/imageRepair';
-import { prepareSelectedPackagedImages } from '../../../common/communicationSupport/browserImageVerification';
+import { prepareSelectedPackagedImages, verifyBrowserLocalImage } from '../../../common/communicationSupport/browserImageVerification';
 import { currentImageOperationEpoch } from '../../../common/communicationSupport/imageOperationEpoch';
 import {
   applyCommunicationAiResegmentation,
@@ -32,6 +32,8 @@ import ReceiverDisplay from './ReceiverDisplay.component';
 import MissingTokenQueue from './MissingTokenQueue.component';
 import { CBOARD_COMMUNICATION_EXAMPLE_PHRASES } from '../../../common/communicationSupport/cboardConceptProfiles';
 import { buildCommunicationTileCatalog } from '../../../common/communicationSupport/symbolMatching';
+import { getLocalPictogramCandidates } from '../../../common/communicationSupport/pictogramSemantics';
+import defaultBoards from '../../../api/boards.json';
 import {
   applyMissingTokenResolutions,
   filterMissingTokenResolutionsByCorrectionMemory
@@ -40,6 +42,9 @@ import {
   buildReceiverHistoryEntry,
   buildReceiverLoopState,
   buildReceiverMatchQuality,
+  buildReceiverMeaningAssessment,
+  prepareReceiverAssistedItems,
+  isReceiverPunctuation,
   buildReceiverOutputPreview,
   createReceiverReviewId,
   deleteReceiverReviewItem,
@@ -174,7 +179,7 @@ const DEFAULT_COPY = {
   matchSummaryLabel: '图片匹配',
   reviewRecommended: '请重点复核未匹配或部分匹配项',
   reviewReady: '已全部配图，发送前请确认',
-  textReady: '含保留文字，可以展示；发送前请确认',
+  textReady: '文字仅供伙伴核对，仍需解释未图示的意思',
   voiceUnavailable: '当前环境不支持浏览器语音输入，请使用文字输入。',
   matchTypeExact: '精确匹配',
   matchTypeSynonym: '同义词匹配',
@@ -346,6 +351,8 @@ function MatchRow({
   onKeepText,
   onPersonPick,
   operationKey,
+  candidates = [],
+  onCandidatePick,
   copy
 }) {
   const hasMatch = Boolean(match.tile);
@@ -355,7 +362,7 @@ function MatchRow({
     <div className="CommunicationSupportPanel__matchRow">
       <div className="CommunicationSupportPanel__matchMain">
         <div className="CommunicationSupportPanel__matchPreview">
-          {hasMatch ? (
+          {hasMatch && match.tile.textOnly ? <span className="CommunicationSupportPanel__textReference">{match.token}</span> : hasMatch ? (
             <Symbol localOnly
               className="CommunicationSupportPanel__symbol CommunicationSupportPanel__symbol--preview"
               image={match.tile.tile.image}
@@ -380,7 +387,7 @@ function MatchRow({
           >
             {hasMatch
               ? match.tile.textOnly
-                ? '保留文字'
+                ? isReceiverPunctuation(match.token) ? '原文标点' : '文字参照，仍需伙伴解释'
                 : matchedLabel
               : copy.unmatched}
           </span>
@@ -393,6 +400,12 @@ function MatchRow({
         </div>
       </div>
       <div className="CommunicationSupportPanel__matchActions">
+        {candidates.length > 0 && <div role="group" aria-label={`${match.token}的已有图卡候选`}>
+          {candidates.map(candidate => <Button key={candidate.sourceId} onClick={() => onCandidatePick(match.id, candidate.item)}>
+            <Symbol localOnly image={candidate.item.tile.image} label={candidate.item.displayLabel} labelpos="Below" className="CommunicationSupportPanel__symbol CommunicationSupportPanel__symbol--preview" />
+            {candidate.item.displayLabel} · {({ equivalent: '等义候选', narrower: '更具体', broader: '较宽泛', related: '相关' })[candidate.relation]} · {candidate.hint}
+          </Button>)}
+        </div>}
         {hasMatch && !match.tile.textOnly && <ImageRepairControls
           tile={match.tile.tile} operationKey={operationKey}
           onChoose={() => onSwap(match.id)} onKeepText={() => onKeepText(match.id)}
@@ -542,6 +555,9 @@ export default function ReceiverLoopPanel({
   const [showInsertAfterId, setShowInsertAfterId] = useState(null);
   const [swapQuery, setSwapQuery] = useState('');
   const [showDisplay, setShowDisplay] = useState(false);
+  const [assistanceRequest, setAssistanceRequest] = useState(null);
+  const assistanceRef = useRef(null);
+  const candidatePendingRef = useRef(false);
   const [displayRecordId, setDisplayRecordId] = useState(null);
   const [activeDraft, setActiveDraftState] = useState(() =>
     restoredReceiverState ? initialRecord : null
@@ -653,6 +669,8 @@ export default function ReceiverLoopPanel({
       const previous = aiContextRef.current;
       if (previous && !equals(previous.boards, boards)) {
         matchGenerationRef.current += 1;
+        assistanceRef.current = null;
+        setAssistanceRequest(null);
         setReceivePhase(phase => phase === 'matching' ? 'idle' : phase);
       }
       aiContextRef.current = {
@@ -681,6 +699,7 @@ export default function ReceiverLoopPanel({
 
   useEffect(() => {
     return () => {
+      assistanceRef.current = null;
       if (preparationMode && onCancelSpeech) onCancelSpeech();
       matchGenerationRef.current += 1;
       aiGenerationRef.current += 1;
@@ -924,47 +943,94 @@ export default function ReceiverLoopPanel({
     onApplyOutput(outputItems);
   }
 
-  function handleOpenDisplay() {
+  const meaning = buildReceiverMeaningAssessment(inputText, reviewItems);
+  const fallbackCatalog = useMemo(() => buildCommunicationTileCatalog(defaultBoards.advanced, intl), [intl]);
+  const meaningKey = JSON.stringify([inputText, reviewItems, currentImageOperationEpoch()]);
+  const meaningKeyRef = useRef(meaningKey);
+  meaningKeyRef.current = meaningKey;
+  useEffect(() => { assistanceRef.current = null; setAssistanceRequest(null); }, [meaningKey]);
+
+  function cancelAssistance() {
+    assistanceRef.current = null;
+    setAssistanceRequest(null);
+  }
+
+  function confirmAssistance() {
+    if (assistanceRef.current !== meaningKeyRef.current || displayOpeningRef.current) return;
+    const nextItems = prepareReceiverAssistedItems(reviewItems);
+    try {
+      const entry = withReceiverRepair(buildReceiverHistoryEntry(inputText, nextItems), repairSource);
+      const current = activeDraftRef.current;
+      // Redisplay must preserve the existing confirmation and its snapshots.
+      const sameConfirmed = current && current.recordStatus === 'confirmed' &&
+        (current.repairOfRecordId || '') === (entry.repairOfRecordId || '') &&
+        receiverDraftContentSignature(current) === receiverDraftContentSignature(entry);
+      const saved = sameConfirmed ? current : current && current.recordStatus === 'draft'
+        ? onUpdateDraft && onUpdateDraft(current, entry) : onCreateDraft && onCreateDraft(entry);
+      if (!saved) throw new Error('draft unavailable');
+      setActiveDraft(saved);
+      setReviewItems(nextItems);
+      cancelAssistance();
+      handleOpenDisplay(nextItems, true);
+    } catch (_) { setDraftSaveError('辅助展示草稿未保存，请重试；原内容仍保留。'); }
+  }
+
+  function handleOpenDisplay(displayItems = reviewItems, assisted = false) {
     if (displayOpeningRef.current) return;
+    if (!preparationMode && !assisted && buildReceiverMeaningAssessment(inputText, displayItems).requiresAssistance) {
+      assistanceRef.current = meaningKey;
+      setAssistanceRequest(meaningKey);
+      if (onCancelSpeech) onCancelSpeech();
+      return;
+    }
     setStartSegmented(false);
-    if (reviewItems.some(item => !item.tile)) {
+    if (displayItems.some(item => !item.tile)) {
       setReviewNotice('请先处理未匹配词，避免输出时遗漏原意。');
       return;
     }
-    const outputItems = buildReceiverOutputPreview(reviewItems);
+    const outputItems = buildReceiverOutputPreview(displayItems);
 
     if (!outputItems.length) {
       return;
     }
 
     displayOpeningRef.current = true;
-    const historyEntry = withReceiverRepair(buildReceiverHistoryEntry(inputText, reviewItems), repairSource);
+    const historyEntry = withReceiverRepair(buildReceiverHistoryEntry(inputText, displayItems), repairSource);
     if (preparationMode) {
       try { if (onConfirmPreparedPhrase) onConfirmPreparedPhrase(historyEntry); }
       finally { displayOpeningRef.current = false; }
       return;
     }
-    onApplyOutput(outputItems);
     let confirmedRecord = null;
 
-    if (activeDraft && activeDraft.recordStatus === 'draft' && onConfirmDraft) {
+    const currentDraft = activeDraftRef.current;
+    if (currentDraft && currentDraft.recordStatus === 'draft' && onConfirmDraft) {
       try {
-        confirmedRecord = onConfirmDraft(activeDraft, historyEntry);
+        confirmedRecord = onConfirmDraft(currentDraft, historyEntry);
+        if (!confirmedRecord) throw new Error('confirmation unavailable');
         setActiveDraft(confirmedRecord);
       } catch (error) {
-        // Display remains available even when local persistence is unavailable.
+        displayOpeningRef.current = false;
+        setDraftSaveError('确认记录尚未保存，请重试；原内容仍保留。');
+        return;
       }
-    } else if (activeDraft && activeDraft.recordStatus === 'confirmed') {
-      confirmedRecord = activeDraft;
+    } else if (currentDraft && currentDraft.recordStatus === 'confirmed') {
+      confirmedRecord = currentDraft;
     } else if (onAppendHistory) {
-      onAppendHistory(historyEntry);
+      try { onAppendHistory(historyEntry); }
+      catch (_) {
+        displayOpeningRef.current = false;
+        setDraftSaveError('确认记录尚未保存，请重试；原内容仍保留。');
+        return;
+      }
     }
 
+    onApplyOutput(outputItems);
     setDisplayRecordId(
       confirmedRecord && confirmedRecord.id ? confirmedRecord.id : null
     );
     setShowDisplay(true);
-    handleReplayDisplay();
+    if (!assisted) handleReplayDisplay();
   }
 
   function handleCloseDisplay() {
@@ -1091,7 +1157,7 @@ export default function ReceiverLoopPanel({
     setShowDisplay(true);
   }
 
-  function persistReceiverEdit(action, itemId, nextItems, holdOnFailure = false) {
+  function persistReceiverEdit(action, itemId, nextItems, holdOnFailure = false, learn = learnFromCorrections) {
     if (repairRequested) setRepairEditing(true);
     aiGenerationRef.current += 1;
     setIsAiResegmenting(false);
@@ -1125,7 +1191,7 @@ export default function ReceiverLoopPanel({
             reviewItems,
             nextItems,
             itemId,
-            { isUsedForLearning: learnFromCorrections }
+            { isUsedForLearning: learn }
           )
         );
       } catch (error) {
@@ -1578,6 +1644,18 @@ export default function ReceiverLoopPanel({
   };
   return (
     <div className="CommunicationSupportPanel__content">
+      <Dialog open={Boolean(assistanceRequest)} onClose={cancelAssistance} aria-labelledby="receiver-assistance-title">
+        <DialogTitle id="receiver-assistance-title">由伙伴辅助展示</DialogTitle>
+        <DialogContent>
+          <p>原句：{inputText}</p>
+          <p>以下意思尚需解释，保留文字不代表对方已理解：</p>
+          <ul>{meaning.unresolvedMeaningItems.map((item, index) => <li key={index}>{item.token} · {item.role}</li>)}</ul>
+          <p>{RECEIVER_PARTNER_GUIDANCE}</p>
+          {draftSaveError && <p role="alert">{draftSaveError}</p>}
+        </DialogContent>
+        <DialogActions><Button onClick={cancelAssistance}>返回复核</Button>
+          <Button onClick={confirmAssistance}>我会辅助解释，继续展示</Button></DialogActions>
+      </Dialog>
       <div className="CommunicationSupportPanel__section">
         <div className="CommunicationSupportPanel__sectionHeader">
           <h4>{copy.receiveSectionTitle}</h4>
@@ -1931,7 +2009,7 @@ export default function ReceiverLoopPanel({
             {preparationMode && <p aria-label="待收藏完整句子">{inputText}</p>}
             <div
               className={
-                matchQuality.needsReview
+                matchQuality.needsReview || meaning.requiresAssistance
                   ? 'CommunicationSupportPanel__quality CommunicationSupportPanel__quality--review'
                   : 'CommunicationSupportPanel__quality CommunicationSupportPanel__quality--ready'
               }
@@ -1939,19 +2017,37 @@ export default function ReceiverLoopPanel({
               aria-live="polite"
             >
               <strong>{copy.matchSummaryLabel}：</strong>
-              {matchQuality.imageCount}/{matchQuality.totalCount}
+              {meaning.pictureCount}/{meaning.meaningfulCount}（不含标点；不是理解程度）
               {matchQuality.textOnlyCount > 0 && (
                 <span> · 保留文字 {matchQuality.textOnlyCount} 项</span>
               )}
               <span>
                 {' · '}
-                {matchQuality.needsReview
+                {meaning.requiresAssistance ? '尚有意思未图示，需要伙伴解释' : matchQuality.needsReview
                   ? copy.reviewRecommended
                   : matchQuality.textOnlyCount > 0
                   ? copy.textReady
                   : copy.reviewReady}
               </span>
             </div>
+            {meaning.requiresAssistance && <section aria-label="尚需伙伴解释" role="status">
+              <p>尚需解释：{meaning.unresolvedMeaningItems.map(item => `${item.token}（${item.explanation || item.role}）`).join('、')}</p>
+              <p>文字仅供伙伴核对原话。图片是否合适、对方是否理解仍需分别确认。</p>
+              <Button onClick={() => {
+                const item = reviewItems.find(row => !row.tile || row.tile.textOnly);
+                if (item) { setShowSwapId(item.id); setSwapQuery(item.token); }
+              }}>选图或补图</Button>
+              <Button onClick={() => {
+                if (activeDraftRef.current && activeDraftRef.current.recordStatus === 'confirmed') {
+                  setRepairSource(activeDraftRef.current); setRepairRequested(true);
+                }
+                setReviewNotice(`原句参照：${inputText}。请在上方手动改说，一次说一个意思。`);
+                if (onCancelSpeech) onCancelSpeech();
+              }}>我换个说法</Button>
+              {!preparationMode && <Button onClick={() => handleOpenDisplay()}>由伙伴辅助展示</Button>}
+              <Button onClick={() => setShowPartnerGuidance(!showPartnerGuidance)}>{showPartnerGuidance ? '收起伙伴提示' : '伙伴提示'}</Button>
+              {showPartnerGuidance && <p>{RECEIVER_PARTNER_GUIDANCE}</p>}
+            </section>}
             <div className="CommunicationSupportPanel__segmentationEditor">
               <TextField
                 id="receiver-segmentation-draft"
@@ -2042,6 +2138,23 @@ export default function ReceiverLoopPanel({
                 <MatchRow
                   key={match.id}
                   match={match}
+                  candidates={match.personalReference ? [] : getLocalPictogramCandidates(match.token, tileCatalog, fallbackCatalog)}
+                  onCandidatePick={async (id, candidate) => {
+                    if (candidatePendingRef.current) return;
+                    candidatePendingRef.current = true;
+                    const key = meaningKeyRef.current;
+                    const generation = matchGenerationRef.current;
+                    const epoch = currentImageOperationEpoch();
+                    const isCurrent = () => meaningKeyRef.current === key && generation === matchGenerationRef.current && epoch === currentImageOperationEpoch();
+                    const next = replaceReceiverReviewItem(reviewItems, id, candidate);
+                    try {
+                      await prepareSelectedPackagedImages(next.filter(item => item.id === id), { isCurrent });
+                      const image = await verifyBrowserLocalImage(candidate.tile.image);
+                      if (!isCurrent()) return;
+                      if (image.status !== 'available') { setReviewNotice('候选图片尚未核验可用，请重试或使用已有图片修复入口。'); return; }
+                      persistReceiverEdit(RECEIVER_CORRECTION_ACTIONS.replace, id, next, true, false);
+                    } finally { candidatePendingRef.current = false; }
+                  }}
                   operationKey={JSON.stringify([activeDraft && activeDraft.id, inputText, reviewItems])}
                   onPersonPick={(id, candidate) =>
                     persistReceiverEdit(
@@ -2086,19 +2199,19 @@ export default function ReceiverLoopPanel({
                 variant="contained"
                 onClick={handleApplyReceiveOutput}
                 disabled={
-                  !receiveOutputPreview.length || missingTokens.length > 0
+                  !receiveOutputPreview.length || missingTokens.length > 0 || meaning.requiresAssistance
                 }
               >
                 {copy.sendToOutput}
               </Button>}
               {preparationMode ? <PatientActionButton action={PATIENT_ACTION_IDS.save}
-                label={(copyOverrides && copyOverrides.fullscreen) || '确认存为常用语'} ariaLabel={(copyOverrides && copyOverrides.fullscreen) || '确认存为常用语'} onClick={handleOpenDisplay}
+                label={(copyOverrides && copyOverrides.fullscreen) || '确认存为常用语'} ariaLabel={(copyOverrides && copyOverrides.fullscreen) || '确认存为常用语'} onClick={() => handleOpenDisplay()}
                 disabled={!receiveOutputPreview.length || missingTokens.length > 0} /> : <Button
                 color="primary"
                 variant="outlined"
-                onClick={handleOpenDisplay}
+                onClick={() => handleOpenDisplay()}
                 disabled={
-                  !receiveOutputPreview.length || missingTokens.length > 0
+                  !reviewItems.length
                 }
               >
                 {copy.fullscreen}

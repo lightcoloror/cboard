@@ -22,6 +22,7 @@ import { sha256 } from '@noble/hashes/sha256';
 import { bytesToHex } from '@noble/hashes/utils';
 import { careErrorMessage } from '../../common/communicationSupport/careErrors';
 import { sameCareFavoriteContent } from '../../common/communicationSupport/careFavoriteChanges';
+import { assertSavedPhraseCapacity } from '../../common/communicationSupport/savedPhraseManagement';
 import { createCareBuiltinImages } from '../../common/communicationSupport/careBuiltinImages';
 import { createCareBuiltinBoards } from './careBuiltinBoards';
 import { createPictogramOrderingStore } from '../../common/communicationSupport/pictogramOrderingStore';
@@ -174,9 +175,11 @@ function CareHome({ intl }) {
     const instance = engine.current;
     if (!instance) return;
     try {
+      assertSavedPhraseCapacity(loadCommunicationSavedPhrases());
       const raw = localStorage.getItem(instance.localKey);
       if (raw) {
         const pending = JSON.parse(raw);
+        if (pending.favorites) assertSavedPhraseCapacity(pending.favorites);
         if (pending.boards) {
           const withLocalMedia = await rememberLocalMedia(
             instance,
@@ -239,6 +242,7 @@ function CareHome({ intl }) {
       }
     } catch (e) {
       setNotice(careErrorMessage(e));
+      if (e.code === 'SAVED_PHRASE_CAPACITY') return;
     }
     if (
       instance !== engine.current ||
@@ -254,7 +258,8 @@ function CareHome({ intl }) {
       data.relationship?.role === 'patient' ? 'favorite' : 'personalFavorite';
     const pending = JSON.parse(localStorage.getItem(instance.localKey) || '{}');
     if (!pending.favorites) {
-      overwriteCommunicationSavedPhrases(
+      try {
+        overwriteCommunicationSavedPhrases(
         preserveCareLocalFavoriteMedia(
           Object.values(data.resources)
             .filter(r => !r.deleted && r.kind === kind)
@@ -268,7 +273,11 @@ function CareHome({ intl }) {
           instance.scope
         )
       );
-      instance.projectedFavorites = loadCommunicationSavedPhrases();
+        instance.projectedFavorites = loadCommunicationSavedPhrases();
+      } catch (e) {
+        setNotice(careErrorMessage(e));
+        return;
+      }
     }
     const pref = data.resources['preference:personalImagePreferences'];
     if (pref && !pref.deleted && !pending.personalImages)

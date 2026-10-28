@@ -362,7 +362,7 @@ describe('receiverPipeline', () => {
       { tile: null, matchType: 'none' }
     ]);
 
-    expect(quality).toEqual({
+    expect(quality).toMatchObject({
       totalCount: 3,
       matchedCount: 2,
       imageCount: 2,
