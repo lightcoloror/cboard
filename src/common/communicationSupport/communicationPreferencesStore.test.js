@@ -13,6 +13,25 @@ function createMemoryStorage() {
 }
 
 describe('communication preferences store', () => {
+  test.each(['false', 'silent', 'readback', 'receipt'])(
+    'does not acknowledge %s failure and permits retry without losing input', mode => {
+      const storage = createMemoryStorage();
+      const store = createCommunicationPreferencesStore(storage);
+      store.save({ fontSize: 'large' });
+      const write = storage.setItem.getMockImplementation();
+      const read = storage.getItem.getMockImplementation();
+      if (mode === 'false') storage.setItem.mockImplementationOnce(() => false);
+      if (mode === 'silent') storage.setItem.mockImplementationOnce(() => undefined);
+      if (mode === 'receipt') storage.setItem.mockImplementationOnce((...args) => { write(...args); throw new Error('receipt lost'); });
+      const next = { ...store.load(), fontSize: 'extra-large' };
+      // Install read failure after constructing the desired value.
+      if (mode === 'readback') storage.getItem.mockReset().mockImplementationOnce(() => { throw new Error('unreadable'); }).mockImplementation(read);
+      expect(() => store.save(next)).toThrow();
+      expect(next.fontSize).toBe('extra-large');
+      expect(store.save(next).fontSize).toBe('extra-large');
+      expect(createCommunicationPreferencesStore(storage).load().fontSize).toBe('extra-large');
+    }
+  );
   test('normalizes saved preferences and restores them', () => {
     const storage = createMemoryStorage();
     const store = createCommunicationPreferencesStore(storage);

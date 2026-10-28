@@ -824,7 +824,7 @@ describe('CommunicationSupportPanel receiver flow', () => {
     expect(wrapper.find('.MockReceiverDisplay')).toHaveLength(0);
   });
 
-  test('shows the first-use guide only after entering communication and persists completion', () => {
+  test('shows the first-use guide only after entering communication and persists completion', async () => {
     const wrapper = mount(
       <CommunicationSupportPanel {...props} initiallyExpanded={false} />
     );
@@ -843,8 +843,9 @@ describe('CommunicationSupportPanel receiver flow', () => {
 
     const onboarding = wrapper.find('CommunicationOnboardingDialog').first();
     expect(onboarding.prop('open')).toBe(true);
-    act(() => {
+    await act(async () => {
       onboarding.prop('onComplete')();
+      await Promise.resolve();
     });
     wrapper.update();
 

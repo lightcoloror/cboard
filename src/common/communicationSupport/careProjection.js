@@ -18,6 +18,7 @@ export function projectCareBoards(
       createBoardDTO({
         id: board.id,
         name: board.value.name || '患者图板',
+        ...(board.value.layout ? { layout: board.value.layout } : {}),
         tiles: (board.value.tileIds || [])
           .map(id => tiles.get(id))
           .filter(Boolean)
@@ -99,7 +100,7 @@ export async function queueCareBoards(engine, boards, readImage) {
       board.layout?.tileIds ||
       board.orderedTileIds ||
       board.tiles.map(t => t.id);
-    const value = { name: board.name || '患者图板', tileIds };
+    const value = { name: board.name || '患者图板', tileIds, layout: board.layout };
     if (!current || JSON.stringify(current.value) !== JSON.stringify(value))
       await engine.edit('board', board.id, value);
   }

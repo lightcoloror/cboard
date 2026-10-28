@@ -1070,16 +1070,19 @@ function CommunicationSupportWorkspace({
           }
         });
       } catch (error) {
-        // Redux and local preferences remain available offline.
+        return { syncFailed: true };
       }
     }
+    return { syncFailed: false };
   }
 
   function handleCompleteOnboarding() {
-    setShowOnboarding(false);
     handlePreferencesChange({
       ...preferences,
       onboardingComplete: true
+    }).then(() => setShowOnboarding(false)).catch(() => {
+      setShowOnboarding(false);
+      setShowAccessibility(true);
     });
   }
 
@@ -1466,6 +1469,7 @@ function CommunicationSupportWorkspace({
           setShowPreparation(false); setShowManagement(true);
         }} />}
       <CommunicationAccessibilityDialog
+        key={getCommunicationStorageScopeKey()}
         open={showAccessibility}
         onClose={() => setShowAccessibility(false)}
         onReplayOnboarding={handleReplayOnboarding}

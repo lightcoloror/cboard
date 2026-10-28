@@ -205,7 +205,8 @@ function normalizeBoardGrid(board) {
       : null;
   const rows = Number(layout && layout.rows);
   const columns = Number(layout && layout.columns);
-  const tileIds = Array.isArray(layout && layout.tileIds) ? layout.tileIds : [];
+  const tileIds = Array.isArray(layout && layout.cells) ? layout.cells
+    : Array.isArray(layout && layout.tileIds) ? layout.tileIds : [];
   if (
     !Number.isInteger(rows) ||
     rows <= 0 ||
@@ -871,7 +872,8 @@ function restoreBoard(board, assetLocations) {
     layout: {
       columns: grid ? grid.columns : Math.max(1, board.tiles.length),
       rows: grid ? grid.rows : 1,
-      tileIds
+      tileIds,
+      ...(grid ? { cells: grid.order.reduce((cells, row) => cells.concat(row), []) } : {})
     },
     communicationSynonyms: board.communicationSynonyms,
     communicationRelatedTerms: board.communicationRelatedTerms,

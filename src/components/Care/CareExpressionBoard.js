@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import Button from '@material-ui/core/Button';
 import { sortPictogramsForDisplay } from '../../common/communicationSupport/pictogramOrdering';
+import { getBoardDTOGridSlots } from '../../common/communicationSupport/dto';
 
 export default function CareExpressionBoard({
   boards,
@@ -13,18 +14,19 @@ export default function CareExpressionBoard({
   onPictogramUsed = () => {}
 }) {
   const [notice, setNotice] = useState('');
-  const columns = [2, 3, 4].includes(preferences.gridColumns)
+  const board = boards.find(item => item.id === activeBoardId) || boards[0];
+  const fixed = Array.isArray(board?.layout?.cells);
+  const columns = fixed ? board.layout.columns : [2, 3, 4].includes(preferences.gridColumns)
     ? preferences.gridColumns
     : 3;
   const fontSize =
     { normal: 18, large: 24, 'extra-large': 32 }[preferences.fontSize] || 18;
-  const board = boards.find(item => item.id === activeBoardId) || boards[0];
   const order =
     board?.layout?.tileIds || board?.tiles.map(tile => tile.id) || [];
   const manualTiles = order
     .map(id => board.tiles.find(tile => tile.id === id))
     .filter(Boolean);
-  const tiles = sortPictogramsForDisplay(
+  const tiles = fixed ? getBoardDTOGridSlots(board) : sortPictogramsForDisplay(
     manualTiles,
     preferences.pictogramSortMode,
     {
@@ -74,7 +76,7 @@ export default function CareExpressionBoard({
           gap: 12
         }}
       >
-        {tiles.map(tile => (
+        {tiles.map((tile, index) => tile ? (
           <Button
             key={tile.id}
             variant="outlined"
@@ -103,7 +105,7 @@ export default function CareExpressionBoard({
             )}
             <span>{tile.label}</span>
           </Button>
-        ))}
+        ) : <span key={`empty-${index}`} aria-hidden="true" data-fixed-grid-empty={index} />)}
       </div>
       {!tiles.length && (
         <p>此图板还没有图卡，请由有编辑权限的成员从设置添加。</p>

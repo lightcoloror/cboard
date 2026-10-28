@@ -767,6 +767,21 @@ export default function ExpressionLoopPanel({
     }
   }
 
+  useEffect(() => {
+    const interrupt = () => {
+      if (!document.hidden) return;
+      cancelPendingAi();
+      cancelExpressionShare();
+      restoredAutoplayPausedRef.current = true;
+      handlePatientInteraction();
+      onCancelSpeech();
+    };
+    document.addEventListener('visibilitychange', interrupt);
+    return () => document.removeEventListener('visibilitychange', interrupt);
+    // The callback uses the same generation refs as explicit patient cancellation.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [onCancelSpeech]);
+
   function handleEditedOutput(nextOutput) {
     if (nextOutput === output) return;
     cancelExpressionShare();

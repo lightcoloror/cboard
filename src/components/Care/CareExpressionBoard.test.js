@@ -2,6 +2,24 @@ import React from 'react';
 import { mount } from 'enzyme';
 import CareExpressionBoard from './CareExpressionBoard';
 import { recordPictogramUsage } from '../../common/communicationSupport/pictogramOrdering';
+import { createBoardDTO } from '../../common/communicationSupport/dto';
+
+test('fixed board keeps its column count, blank cells and specific people despite popularity or density changes', () => {
+  const board = createBoardDTO({ id: 'fixed', name: '合成固定板',
+    grid: { rows: 2, columns: 3, order: [['a', null, 'b'], [null, 'c', null]] },
+    tiles: [{ id: 'a', label: '合成人甲' }, { id: 'b', label: '合成人甲' }, { id: 'c', label: '水' }] });
+  const apply = jest.fn();
+  const wrapper = mount(<CareExpressionBoard boards={[board]} output={[]} onApplyOutput={apply}
+    onJumpBoard={jest.fn()} preferences={{ gridColumns: 2, pictogramSortMode: 'popularity' }} />);
+  const group = wrapper.find('div[role="group"]');
+  expect(group.prop('style').gridTemplateColumns).toContain('repeat(3,');
+  expect(group.children().map(node => node.prop('data-fixed-grid-empty') ?? node.prop('aria-label'))).toEqual([
+    '选择图卡：合成人甲', 1, '选择图卡：合成人甲', 3, '选择图卡：水', 5
+  ]);
+  wrapper.find('button[aria-label="选择图卡：合成人甲"]').at(1).simulate('click');
+  expect(apply.mock.calls[0][0][0].id).toBe('b');
+  wrapper.unmount();
+});
 
 test('folder cards navigate without becoming words; ordinary cards record usage and respect popularity', () => {
   const use = jest.fn();

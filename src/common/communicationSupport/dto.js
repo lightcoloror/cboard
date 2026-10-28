@@ -115,6 +115,44 @@ function buildOrderedTileIds(source, tiles) {
   return orderedIds;
 }
 
+// Keep sparse native grid positions separate from the compact matching order.
+// Deleted cards leave holes; newly inserted cards use a free cell without moving
+// existing cards. DTO v1 readers without fixed cells retain their old behavior.
+function buildFixedCells(board, columns, rows, orderedTileIds) {
+  const layout = board.layout || {};
+  const grid = board.grid || {};
+  let input;
+  if (Object.prototype.hasOwnProperty.call(layout, 'cells')) {
+    if (!Array.isArray(layout.cells)) throw new TypeError('Invalid fixed grid cells');
+    input = layout.cells;
+  } else if (Array.isArray(grid.order)) {
+    input = grid.order.reduce((flat, row) => {
+      if (!Array.isArray(row) || row.length > columns) throw new TypeError('Invalid fixed grid row');
+      return flat.concat(Array.from({ length: columns }, (_, index) => row[index] || null));
+    }, []);
+  } else return null;
+  const validIds = new Set(orderedTileIds);
+  const seen = new Set();
+  const cells = input.map(value => {
+    if (value !== null && value !== undefined && typeof value !== 'string') throw new TypeError('Invalid fixed grid cell');
+    const id = normalizeText(value);
+    if (!id || !validIds.has(id)) return null;
+    if (seen.has(id)) throw new TypeError('Duplicate fixed grid identity');
+    seen.add(id);
+    return id;
+  });
+  while (cells.length < rows * columns) cells.push(null);
+  orderedTileIds.forEach(id => {
+    if (seen.has(id)) return;
+    const free = cells.indexOf(null);
+    if (free < 0) cells.push(id);
+    else cells[free] = id;
+    seen.add(id);
+  });
+  while (cells.length % columns) cells.push(null);
+  return cells;
+}
+
 export function createTileDTO(source, options = {}) {
   const tile = source || {};
   const metadata = getCommunicationTileMetadata(tile);
@@ -207,6 +245,7 @@ export function createBoardDTO(source, options = {}) {
     minimumRows,
     normalizePositiveInteger(sourceLayout.rows || board.rows, minimumRows)
   );
+  const cells = buildFixedCells(board, columns, rows, orderedTileIds);
   const metadata = getCommunicationTileMetadata(board);
   const name = resolveText(board, options.resolveName, [
     'name',
@@ -223,8 +262,9 @@ export function createBoardDTO(source, options = {}) {
     category: normalizeText(metadata.category),
     layout: {
       columns,
-      rows,
-      tileIds: orderedTileIds
+      rows: cells ? cells.length / columns : rows,
+      tileIds: orderedTileIds,
+      ...(cells ? { cells } : {})
     },
     tiles
   };
@@ -279,7 +319,17 @@ function hasCoherentBoardLayout(value) {
   const uniqueTileIds = new Set(tileIds);
   const uniqueOrderedIds = new Set(orderedTileIds);
 
+  const cells = value.layout.cells;
+  const occupied = Array.isArray(cells) ? cells.filter(id => id !== null) : [];
+  const coherentCells = cells === undefined || (
+    Array.isArray(cells) &&
+    cells.length === value.layout.rows * value.layout.columns &&
+    occupied.length === tileIds.length &&
+    new Set(occupied).size === occupied.length &&
+    occupied.every(id => typeof id === 'string' && uniqueTileIds.has(id))
+  );
   return (
+    coherentCells &&
     uniqueTileIds.size === tileIds.length &&
     orderedTileIds.length === tileIds.length &&
     uniqueOrderedIds.size === orderedTileIds.length &&
@@ -322,4 +372,10 @@ export function getBoardDTOTilesInDisplayOrder(board) {
   const byId = new Map(dto.tiles.map(tile => [tile.id, tile]));
 
   return dto.layout.tileIds.map(id => byId.get(id)).filter(Boolean);
+}
+
+export function getBoardDTOGridSlots(board) {
+  const dto = assertBoardDTO(board);
+  const byId = new Map(dto.tiles.map(tile => [tile.id, tile]));
+  return (dto.layout.cells || dto.layout.tileIds).map(id => byId.get(id) || null);
 }

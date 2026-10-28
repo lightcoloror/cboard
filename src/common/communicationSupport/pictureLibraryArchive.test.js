@@ -229,7 +229,8 @@ describe('picture library archive', () => {
         layout: {
           columns: 2,
           rows: 1,
-          tileIds: ['water', 'cup']
+          tileIds: ['water', 'cup'],
+          cells: ['water', 'cup']
         },
         tiles: [
           {
@@ -290,7 +291,8 @@ describe('picture library archive', () => {
         layout: {
           columns: 2,
           rows: 1,
-          tileIds: ['water', 'cup']
+          tileIds: ['water', 'cup'],
+          cells: ['water', 'cup']
         }
       })
     );

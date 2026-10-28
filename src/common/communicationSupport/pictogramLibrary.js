@@ -214,7 +214,8 @@ export function createPictogramLibraryDTO(boards, options = {}) {
       layout: {
         columns: board.layout.columns,
         rows: board.layout.rows,
-        tileIds: board.layout.tileIds.slice()
+        tileIds: board.layout.tileIds.slice(),
+        ...(board.layout.cells ? { cells: board.layout.cells.slice() } : {})
       }
     };
   });
@@ -326,6 +327,15 @@ function validatePictogramLibraryDTO(value) {
       throw new TypeError('Board metadata or layout is invalid');
     }
     assertStringArray(board.layout.tileIds, 'Board.layout.tileIds');
+    if (board.layout.cells !== undefined) {
+      const cells = board.layout.cells;
+      const occupied = Array.isArray(cells) ? cells.filter(id => id !== null) : [];
+      if (!Array.isArray(cells) || cells.length !== board.layout.rows * board.layout.columns ||
+          occupied.length !== board.layout.tileIds.length || new Set(occupied).size !== occupied.length ||
+          occupied.some(id => typeof id !== 'string' || !board.layout.tileIds.includes(id))) {
+        throw new TypeError('Board fixed cells do not match the board layout');
+      }
+    }
   });
 
   value.boardItems.forEach(item => {
@@ -431,7 +441,8 @@ export function pictogramLibraryDTOToBoards(value) {
       layout: {
         columns: board.layout.columns,
         rows: board.layout.rows,
-        tileIds: board.layout.tileIds.slice()
+        tileIds: board.layout.tileIds.slice(),
+        ...(board.layout.cells ? { cells: board.layout.cells.slice() } : {})
       },
       tiles
     });

@@ -34,10 +34,13 @@ export function createCommunicationPreferencesStore(storage) {
 
   function save(value) {
     const normalized = normalizeCommunicationPreferences(value);
-    storage.setItem(
-      COMMUNICATION_PREFERENCES_STORAGE_KEY,
-      JSON.stringify(normalized)
-    );
+    const serialized = JSON.stringify(normalized);
+    if (storage.setItem(COMMUNICATION_PREFERENCES_STORAGE_KEY, serialized) === false) {
+      throw new Error('设置未保存到本机，请保留修改并重试。');
+    }
+    if (storage.getItem(COMMUNICATION_PREFERENCES_STORAGE_KEY) !== serialized) {
+      throw new Error('无法核对本机设置，请保留修改并重试。');
+    }
     return normalized;
   }
 

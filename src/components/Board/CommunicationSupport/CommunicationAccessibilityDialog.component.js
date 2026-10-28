@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 import Button from '@material-ui/core/Button';
 import Dialog from '@material-ui/core/Dialog';
@@ -43,16 +43,57 @@ export default function CommunicationAccessibilityDialog({
   onReplayOnboarding,
   boards,
   intl,
-  value,
+  value: savedValue,
   onChange
 }) {
+  const [pendingValue, setPendingValue] = useState(null);
+  const [saveNotice, setSaveNotice] = useState('');
+  const [saveFailed, setSaveFailed] = useState(false);
+  const saveRun = useRef(0);
+  const noticeRef = useRef(null);
+  const value = pendingValue || savedValue;
+  useEffect(() => {
+    if (!open) {
+      saveRun.current += 1;
+      setPendingValue(null);
+      setSaveNotice('');
+      setSaveFailed(false);
+    }
+    return () => { saveRun.current += 1; };
+  }, [open]);
+  useEffect(() => {
+    if (saveFailed && noticeRef.current && noticeRef.current.scrollIntoView) {
+      noticeRef.current.scrollIntoView({ block: 'nearest' });
+    }
+  }, [saveFailed]);
+
+  async function save(next) {
+    const run = ++saveRun.current;
+    setPendingValue(next);
+    setSaveFailed(false);
+    setSaveNotice('正在核对本机保存…');
+    try {
+      const pending = onChange(next);
+      const result = pending && typeof pending.then === 'function' ? await pending : pending;
+      if (run !== saveRun.current) return;
+      if (result === false) throw new Error('本机写入未完成');
+      setPendingValue(null);
+      setSaveNotice(result && result.syncFailed
+        ? '已保存到本机；账号同步失败，请稍后重试同步。'
+        : '已保存到本机。');
+    } catch (error) {
+      if (run !== saveRun.current) return;
+      setSaveFailed(true);
+      setSaveNotice('设置尚未核对保存，修改已保留在此页面，请重试；离开后可能仍为上次设置。');
+    }
+  }
   const hiddenBoardIds = new Set(value.hiddenBoardIds || []);
   const visibleBoardCount = boards.filter(
     board => !hiddenBoardIds.has(board.id)
   ).length;
 
   function patch(changes) {
-    onChange(updateCommunicationPreferences(value, changes));
+    void save(updateCommunicationPreferences(value, changes));
   }
 
   return (
@@ -66,6 +107,10 @@ export default function CommunicationAccessibilityDialog({
         显示与易用性
       </DialogTitle>
       <DialogContent className="CommunicationSupportPanel__accessibilityScreen">
+        <div ref={noticeRef} role={saveFailed ? 'alert' : 'status'} aria-live="polite">
+          {saveNotice}
+          {saveFailed && <Button onClick={() => save(pendingValue)} color="primary">重试保存设置</Button>}
+        </div>
         <section className="CommunicationSupportPanel__preferenceSection">
           <h4>视觉显示</h4>
           <p className="CommunicationSupportPanel__hint">
@@ -214,7 +259,7 @@ export default function CommunicationAccessibilityDialog({
                     variant={hidden ? 'outlined' : 'contained'}
                     disabled={!hidden && visibleBoardCount <= 1}
                     onClick={() =>
-                      onChange(
+                      save(
                         toggleCommunicationBoardVisibility(value, board.id)
                       )
                     }

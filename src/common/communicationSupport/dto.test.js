@@ -57,7 +57,8 @@ describe('communication support DTO v1', () => {
     expect(board.layout).toEqual({
       rows: 2,
       columns: 2,
-      tileIds: ['water', 'want']
+      tileIds: ['water', 'want'],
+      cells: ['water', 'want', null, null]
     });
     expect(board.tiles[0]).toEqual(
       expect.objectContaining({

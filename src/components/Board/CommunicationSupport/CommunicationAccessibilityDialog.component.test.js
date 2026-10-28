@@ -1,11 +1,39 @@
 import React from 'react';
 import { mount } from 'enzyme';
+import { act } from 'react-dom/test-utils';
 import { DEFAULT_COMMUNICATION_PREFERENCES } from '../../../common/communicationSupport/communicationPreferences';
 import CommunicationAccessibilityDialog from './CommunicationAccessibilityDialog.component';
 
 const boards = [{ id: 'home', name: '首页' }, { id: 'food', name: '食物' }];
 
 describe('CommunicationAccessibilityDialog', () => {
+  test('keeps failed changes for explicit retry and ignores a completion after close', async () => {
+    const onChange = jest.fn().mockRejectedValueOnce(new Error('disk'))
+      .mockResolvedValueOnce({ syncFailed: false });
+    const wrapper = mount(<CommunicationAccessibilityDialog open onClose={jest.fn()}
+      value={DEFAULT_COMMUNICATION_PREFERENCES} onChange={onChange} />);
+    await act(async () => {
+      wrapper.find('button').filterWhere(n => n.text() === '超大').simulate('click');
+      await Promise.resolve();
+    });
+    wrapper.update();
+    expect(wrapper.find('[role="alert"]').text()).toContain('尚未核对保存');
+    await act(async () => {
+      wrapper.find('button').filterWhere(n => n.text() === '重试保存设置').simulate('click');
+      await Promise.resolve();
+    });
+    wrapper.update();
+    expect(onChange.mock.calls[1][0].fontSize).toBe('extra-large');
+    expect(wrapper.find('[role="status"]').text()).toContain('已保存到本机');
+    let finish;
+    onChange.mockImplementationOnce(() => new Promise(resolve => { finish = resolve; }));
+    act(() => { wrapper.find('button').filterWhere(n => n.text() === '大').simulate('click'); });
+    act(() => { wrapper.setProps({ open: false }); });
+    await act(async () => { finish({ syncFailed: true }); await Promise.resolve(); });
+    act(() => { wrapper.setProps({ open: true }); });
+    expect(wrapper.find('[role="status"]').text()).toBe('');
+    wrapper.unmount();
+  });
   test('updates high contrast through the shared preferences contract', () => {
     const onChange = jest.fn();
     const wrapper = mount(

@@ -3,7 +3,7 @@ import { assertBoardDTO } from './dto';
 export function createCboardGridOrder(layout) {
   return Array.from({ length: layout.rows }, (_, rowIndex) =>
     Array.from({ length: layout.columns }, (_, columnIndex) => {
-      const tileId = layout.tileIds[rowIndex * layout.columns + columnIndex];
+      const tileId = (layout.cells || layout.tileIds)[rowIndex * layout.columns + columnIndex];
       return tileId || null;
     })
   );
