@@ -2,3 +2,6 @@
 /src/api/boards.json text eol=lf
 /src/translations/zh-CN.json text eol=lf
 /src/translations/zh-CN.aac-review.json text eol=lf
+# The retained help-card identity hashes the legacy SVG bytes. Keep the
+# already-reviewed CRLF source stable on fresh Windows and Unix checkouts.
+/public/symbols/mulberry/help_,_to.svg text eol=crlf
