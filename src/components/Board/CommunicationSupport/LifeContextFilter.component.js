@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import Button from '@material-ui/core/Button';
+import { CboardScanButton as Button } from '../../UI/CboardScan';
 import { getSavedPhraseLifeContexts } from '../../../common/communicationSupport/savedPhraseManagement';
 
 export default function LifeContextFilter({ items, value, onChange }) {

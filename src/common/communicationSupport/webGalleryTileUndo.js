@@ -1,5 +1,5 @@
 import { createGalleryTileUndoService } from './galleryTileUndo';
-import { getCommunicationGalleryIdentity, canManageCommunicationLibrary } from './localData';
+import { getCommunicationGalleryIdentity, canManageCommunicationLibrary, getCommunicationRepositoryReadError, getCommunicationStorageScopeKey } from './localData';
 import { currentImageOperationEpoch } from './imageOperationEpoch';
 import isEqual from 'lodash/isEqual';
 import { CREATE_API_BOARD_SUCCESS } from '../../components/Board/Board.constants';
@@ -11,7 +11,13 @@ export function createWebGalleryTileUndo({ store, persistence }) {
   const scopeKey = (communicatorId = store.getState().communicator?.activeCommunicatorId) => {
     const state = store.getState();
     const user = state.app && state.app.userData || {};
-    return JSON.stringify([getCommunicationGalleryIdentity(), currentImageOperationEpoch(),
+    const unavailable = getCommunicationRepositoryReadError();
+    // Redux observes the undo service before the page can show its version
+    // warning. Do not ask an unsupported repository to create an identity.
+    const galleryIdentity = unavailable
+      ? ['unavailable', getCommunicationStorageScopeKey()]
+      : getCommunicationGalleryIdentity();
+    return JSON.stringify([galleryIdentity, currentImageOperationEpoch(),
       user.id || user._id || user.email, user.authToken, communicatorId]);
   };
   const service = createGalleryTileUndoService({
@@ -20,7 +26,7 @@ export function createWebGalleryTileUndo({ store, persistence }) {
       const state = store.getState().board || {};
       return (state.boards || []).filter(board => !(state.syncMeta && state.syncMeta[board.id] && state.syncMeta[board.id].isDeleted));
     },
-    canManage: board => canManageCommunicationLibrary() && !board.careSharedReadOnly,
+    canManage: board => !getCommunicationRepositoryReadError() && canManageCommunicationLibrary() && !board.careSharedReadOnly,
     saveBoard: (board, options) => persistence.save(board, options)
   });
   service.createSyncMigration = (operationId, boardId) => {

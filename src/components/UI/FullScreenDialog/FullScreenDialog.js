@@ -3,8 +3,7 @@ import PropTypes from 'prop-types';
 import { FormattedMessage } from 'react-intl';
 import { withStyles, useTheme } from '@material-ui/core/styles';
 import AppBar from '@material-ui/core/AppBar';
-import Button from '@material-ui/core/Button';
-import Dialog from '@material-ui/core/Dialog';
+import { CboardScanButton as Button, CboardScanDialog as Dialog } from '../CboardScan';
 import Toolbar from '@material-ui/core/Toolbar';
 import Typography from '@material-ui/core/Typography';
 import Slide from '@material-ui/core/Slide';
@@ -114,7 +113,7 @@ function FullScreenDialog(props) {
     >
       <AppBar className={classes.appBar}>
         <Toolbar disableGutters>
-          <BackButton onClick={onClose} />
+          <BackButton scan onClick={onClose} />
 
           {title && (
             <div className="FullScreenDialog__title">

@@ -2,6 +2,7 @@ import React, { Fragment } from 'react';
 import PropTypes from 'prop-types';
 import Tooltip from '@material-ui/core/Tooltip';
 import MUIIconButton from '@material-ui/core/IconButton';
+import { CboardScanItem } from '../CboardScan';
 
 const propTypes = {
   /**
@@ -34,7 +35,7 @@ const propTypes = {
   to: PropTypes.string
 };
 
-function IconButton({ children, component, to, label, disabled, onClick }) {
+function IconButton({ children, component, to, label, disabled, onClick, scan = false }) {
   const child = React.Children.only(children);
 
   const iconButtonProps = {
@@ -50,19 +51,9 @@ function IconButton({ children, component, to, label, disabled, onClick }) {
     color: 'rgba(255, 255, 255, 0.26)'
   };
 
-  return (
-    <Fragment>
-      {disabled ? (
-        <MUIIconButton {...iconButtonProps} style={disableIconButtondStyle}>
-          {child}
-        </MUIIconButton>
-      ) : (
-        <Tooltip placement="bottom" title={label}>
-          <MUIIconButton {...iconButtonProps}>{child}</MUIIconButton>
-        </Tooltip>
-      )}
-    </Fragment>
-  );
+  const button = <MUIIconButton {...iconButtonProps} {...(disabled ? { style: disableIconButtondStyle } : {})}>{child}</MUIIconButton>;
+  const action = scan ? <CboardScanItem disabled={disabled}>{button}</CboardScanItem> : button;
+  return <Fragment>{disabled ? action : <Tooltip placement="bottom" title={label}>{action}</Tooltip>}</Fragment>;
 }
 
 IconButton.propTypes = propTypes;

@@ -145,6 +145,71 @@ describe('patient collaboration home', () => {
     wrapper.update();
     return wrapper;
   }
+  test('Care display callback rejects a silent failed write before applying the new display', async () => {
+    const wrapper = await render('patient');
+    const before = wrapper.find(CommunicationSupportPanel).prop('displaySettings');
+    const set = jest.spyOn(Storage.prototype, 'setItem').mockImplementation(() => false);
+    try {
+      await act(async () => {
+        await expect(Promise.resolve().then(() => wrapper.find(CommunicationSupportPanel).prop('onChangeDisplaySettings')({ ...before, fontSize: 'ExtraLarge' }))).rejects.toThrow();
+      });
+      wrapper.update();
+      expect(wrapper.find(CommunicationSupportPanel).prop('displaySettings').fontSize).toBe(before.fontSize);
+    } finally { set.mockRestore(); wrapper.unmount(); }
+  });
+  test('does not publish a new workspace before profile sync and scoped settings finish', async () => {
+    let finish;
+    const pending = new Promise(resolve => { finish = resolve; });
+    const profile = { id: 'patient', familyId: 'family', relationship: { role: 'patient', defaultMode: 'expression' } };
+    runtime.request.mockImplementation(async path => {
+      if(path==='/care/profiles')return [profile];
+      if(path==='/care/context')return {selectedProfileId:profile.id};
+      if(path.endsWith('/favorites'))return {items:[]};
+      return pending;
+    });
+    let wrapper;
+    await act(async()=>{wrapper=mount(<CareHome intl={{}}/>);await flush();});wrapper.update();
+    expect(wrapper.find(CommunicationSupportPanel)).toHaveLength(0);
+    await act(async()=>{finish({...profile,cursor:1,permissions:['read'],resources:[{id:'fontSize',kind:'preference',version:1,seq:1,value:{value:'large'}}]});await flush();});wrapper.update();
+    expect(wrapper.find(CommunicationSupportPanel)).toHaveLength(1);
+    expect(wrapper.find(CommunicationSupportPanel).prop('displaySettings').fontSize).toBe('Large');
+    wrapper.unmount();
+  });
+  test('Care speech override survives reopening this profile without changing the global speech setting', async () => {
+    const wrapper = await render('patient');
+    await act(async () => { await wrapper.find(CommunicationSupportPanel).prop('onChangeSpeechRate')(1.3); });
+    wrapper.update();
+    expect(runtime.changeSpeechRate).not.toHaveBeenCalled();
+    expect(wrapper.find(CommunicationSupportPanel).prop('speechSettings').rate).toBe(1.3);
+    wrapper.unmount();
+    const reopened = await render('patient');
+    expect(reopened.find(CommunicationSupportPanel).prop('speechSettings').rate).toBe(1.3);
+    reopened.unmount();
+  });
+  test('background refresh does not reopen the previous profile after the user requests the picker', async () => {
+    const wrapper=await render('patient');
+    const stale=wrapper.find(CommunicationSupportPanel).prop('onSaveCareDevicePreferences');
+    await act(async()=>{wrapper.find('button').filterWhere(n=>n.text()==='切换患者档案').simulate('click');await flush();});wrapper.update();
+    expect(wrapper.find(CommunicationSupportPanel)).toHaveLength(0);
+    await act(async()=>{tick();await flush();});wrapper.update();
+    expect(wrapper.find(CommunicationSupportPanel)).toHaveLength(0);
+    expect(()=>stale({fontSize:'extra-large'})).toThrow('档案已切换');
+    wrapper.unmount();
+  });
+  test('combined Care preferences are saved in one scoped flow and stale profile callbacks are refused', async () => {
+    const wrapper = await render('patient');
+    const save = wrapper.find(CommunicationSupportPanel).prop('onSaveCareDevicePreferences');
+    await act(async () => { save({ fontSize: 'extra-large', gridColumns: 2, speechRate: 0.7 }); });
+    wrapper.update();
+    expect(wrapper.find(CommunicationSupportPanel).prop('displaySettings')).toMatchObject({ fontSize: 'ExtraLarge', uiSize: 'ExtraLarge' });
+    expect(wrapper.find(CommunicationSupportPanel).prop('speechSettings').rate).toBe(0.7);
+    const before = { ...localStorage };
+    who = { id: 'synthetic-other-account' };
+    expect(() => save({ fontSize: 'normal', speechRate: 1 })).toThrow('档案已切换');
+    expect({ ...localStorage }).toEqual(before);
+    expect(runtime.changeSpeechRate).not.toHaveBeenCalled();
+    wrapper.unmount();
+  });
   test('an existing patient keeps its own library while seeing the 15 updated bundled words', async () => {
     const messages = require('../../translations/zh-CN.communication').default;
     const intl = { messages, formatMessage: ({ id }) => messages[id] || id };
@@ -680,6 +745,27 @@ describe('patient collaboration home', () => {
     ).toBeNull();
     wrapper.unmount();
   });
+  test('a later family default refresh applies only where this device has no override', async () => {
+    const wrapper = await render('patient');
+    const original = runtime.request.getMockImplementation();
+    let rate = 0.7, version = 2;
+    runtime.request.mockImplementation(async (...args) => {
+      const result = await original(...args);
+      return result.resources ? { ...result, cursor: version, resources: [...result.resources,
+        { id: 'speechRate', kind: 'preference', version, seq: version, value: { value: rate } }
+      ] } : result;
+    });
+    await act(async () => { tick(); await flush(); });
+    wrapper.update();
+    expect(wrapper.find(CommunicationSupportPanel).prop('speechSettings').rate).toBe(0.7);
+    await act(async () => { wrapper.find(CommunicationSupportPanel).prop('onChangeSpeechRate')(1.3); });
+    rate = 1; version = 3;
+    await act(async () => { tick(); await flush(); });
+    wrapper.update();
+    expect(wrapper.find(CommunicationSupportPanel).prop('speechSettings').rate).toBe(1.3);
+    expect(runtime.changeSpeechRate).not.toHaveBeenCalled();
+    wrapper.unmount();
+  });
   test('Care uses device speech settings and passes the saved phrase audio output to the original playback chain', async () => {
     const wrapper = await render('patient');
     const panel = wrapper.find(CommunicationSupportPanel);
@@ -705,7 +791,9 @@ describe('patient collaboration home', () => {
     await act(async () => {
       panel.prop('onChangeSpeechRate')(0.8);
     });
-    expect(runtime.changeSpeechRate).toHaveBeenCalledWith(0.8);
+    wrapper.update();
+    expect(runtime.changeSpeechRate).not.toHaveBeenCalled();
+    expect(wrapper.find(CommunicationSupportPanel).prop('speechSettings').rate).toBe(0.8);
     expect(runtime.request).not.toHaveBeenCalled();
     wrapper.unmount();
   });

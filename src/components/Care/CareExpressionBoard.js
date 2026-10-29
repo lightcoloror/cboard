@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import Button from '@material-ui/core/Button';
+import { CboardScanButton as Button } from '../UI/CboardScan';
 import { sortPictogramsForDisplay } from '../../common/communicationSupport/pictogramOrdering';
 import { getBoardDTOGridSlots } from '../../common/communicationSupport/dto';
 

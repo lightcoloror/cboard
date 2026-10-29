@@ -76,6 +76,23 @@ export const COMMUNICATION_STORAGE_KEYS = {
   schema: 'cboard_communication_repository_schema'
 };
 
+export function createFutureCommunicationSchemaError() {
+  return Object.assign(new Error(
+    '本机资料由更新版本保存（newer schema version）。请使用更新版本打开；原资料已保留，本版本不会迁移或改写。'
+  ), { code: 'COMMUNICATION_SCHEMA_FUTURE' });
+}
+
+// For platform flows which may initialize caches before opening a repository.
+// This preflight only reads schema metadata; it never migrates any collection.
+export function assertCommunicationRepositorySchemaReadable(storage) {
+  const schema = readStoredJson(storage, COMMUNICATION_STORAGE_KEYS.schema);
+  if (schema.valid && isPlainRecord(schema.value) &&
+      Number.isInteger(schema.value.schemaVersion) &&
+      schema.value.schemaVersion > COMMUNICATION_REPOSITORY_SCHEMA_VERSION) {
+    throw createFutureCommunicationSchemaError();
+  }
+}
+
 export const COMMUNICATION_REPOSITORY_SCHEMA_VERSION = 7;
 export const DEFAULT_COMMUNICATION_ITEM_LIMIT = 100;
 export const DEFAULT_MISSING_TOKEN_LIMIT = 200;
@@ -463,6 +480,14 @@ export function createCommunicationRepository({
 } = {}) {
   assertKeyValueStore(storage);
 
+  // Read the version before *any* write, including the recovery-copy policy.
+  // Normal/legacy repositories still receive their pre-migration backup below.
+  const initialSchema = readStoredJson(storage, COMMUNICATION_STORAGE_KEYS.schema);
+  const initialVersion = initialSchema.valid && isPlainRecord(initialSchema.value)
+    ? initialSchema.value.schemaVersion : 0;
+  const futureSchema = Number.isInteger(initialVersion) &&
+    initialVersion > COMMUNICATION_REPOSITORY_SCHEMA_VERSION;
+
   // Preserve the original collection before the new 50-item policy can cause a
   // migration/write. This recovery copy is local and is never a sync payload.
   for (const historyKey of [
@@ -470,6 +495,7 @@ export function createCommunicationRepository({
     LEGACY_COMMUNICATION_STORAGE_KEYS.history,
     COMMUNICATION_STORAGE_KEYS.receiverRecords
   ]) {
+    if (futureSchema) break;
     const raw = historyKey && storage.getItem(historyKey);
     if (raw && !storage.getItem(`${historyKey}:before-history-50`)) {
       const entries = safeParse(raw, []);
@@ -520,9 +546,7 @@ export function createCommunicationRepository({
 
   function writeStorageValue(key, value) {
     if (repositorySchema.status === 'future') {
-      throw new Error(
-        'Communication repository data uses a newer schema version'
-      );
+      throw createFutureCommunicationSchemaError();
     }
 
     if (storage.setItem(key, value) === false) {
@@ -641,12 +665,12 @@ export function createCommunicationRepository({
   const favoriteStore = createFavoriteStateStore(storage, { capacity: itemLimit });
   let observedFavorites = null;
   function readFavoriteState() {
-    if (repositorySchema.status === 'future') throw new Error('Communication repository data uses a newer schema version');
+    if (repositorySchema.status === 'future') throw createFutureCommunicationSchemaError();
     observedFavorites = favoriteStore.read();
     return observedFavorites;
   }
   function commitFavoriteState(expected, changes) {
-    if (repositorySchema.status === 'future') throw new Error('Communication repository data uses a newer schema version');
+    if (repositorySchema.status === 'future') throw createFutureCommunicationSchemaError();
     const saved = favoriteStore.commit(expected, changes);
     observedFavorites = saved;
     return saved;
@@ -1474,7 +1498,7 @@ export function createCommunicationRepository({
     return draft;
   }
 
-  return {
+  const repository = {
     loadExpressionDraft,
     writeExpressionDraft,
     clearExpressionDrafts,
@@ -1530,4 +1554,12 @@ export function createCommunicationRepository({
     reviewMissingToken,
     updateReceiverDraft
   };
+  // Guard before platform reads: some adapters perform their one-time file
+  // migration on read. A future schema must not enter those adapters at all.
+  if (repositorySchema.status === 'future') {
+    return Object.fromEntries(Object.entries(repository).map(([key, value]) => [
+      key, typeof value === 'function' ? () => { throw createFutureCommunicationSchemaError(); } : value
+    ]));
+  }
+  return repository;
 }

@@ -4,6 +4,8 @@ import { API_URL } from '../../constants';
 import { getStore } from '../../store';
 import history from '../../history';
 import { logout } from '../Account/Login/Login.actions';
+import { deactivateScanner } from '../../providers/ScannerProvider/ScannerProvider.actions';
+import { CboardScanItem } from '../UI/CboardScan';
 import { careBrowserStorage } from '../../common/communicationSupport/careBrowserStorage';
 import { createCareSync } from '../../common/communicationSupport/careSync';
 import { configureCareLocalAccount } from '../../common/communicationSupport/localData';
@@ -37,6 +39,15 @@ export const localCareIdentity = () =>
     : null);
 configureCareLocalAccount(() => identity()?.id);
 export const runtime = {
+  scannerSettings: () => getStore()?.getState().scanner,
+  deactivateScanner: () => getStore().dispatch(deactivateScanner()),
+  watchScanner: callback => {
+    let previous = getStore().getState().scanner;
+    return getStore().subscribe(() => {
+      const next = getStore().getState().scanner;
+      if (next !== previous) { previous = next; callback(next); }
+    });
+  },
   enabled: process.env.REACT_APP_CARE_COLLABORATION === 'true',
   trialEnabled: process.env.REACT_APP_CARE_PUBLIC_TRIAL === 'true',
   fundingEnabled: careTextAiEnabled(),
@@ -355,10 +366,10 @@ const ui = {
   ),
   Text: props => <p {...props} />,
   Button: props => (
-    <button
+    <CboardScanItem disabled={Boolean(props.disabled)}><button
       style={{ minHeight: 44, margin: 4, padding: '8px 14px', fontSize: 16 }}
       {...props}
-    />
+    /></CboardScanItem>
   ),
   Input: ({ onValue, ...props }) => (
     <input

@@ -59,3 +59,22 @@ test('library serialization and archive conversion both retain sparse positions'
   expect(restoredArchive.layout.cells).toEqual(dto.layout.cells);
   expect(boardDTOToCboardBoard(createBoardDTO(restoredArchive)).grid).toEqual(source().grid);
 });
+
+
+test('personal-library add/delete/move reuse fixed cells without losing identity or holes', () => {
+  const { appendPersonalPictogramToBoard, removePersonalPictogramFromBoard,
+    movePersonalPictogramInBoard, buildPersonalPictogramTileDTO } = require('./pictogramMetadataSuggestion');
+  const dto = createBoardDTO(source());
+  const original = JSON.stringify(dto);
+  const person = buildPersonalPictogramTileDTO({ id: 'person-four', boardId: dto.id,
+    label: '合成人乙', image: 'data:image/png;base64,c3ludGhldGlj', category: 'people' });
+  const added = appendPersonalPictogramToBoard([dto], dto.id, person)[0];
+  expect(added.layout.cells).toEqual(['one', 'person-four', 'two', null, 'three', null]);
+  const moved = movePersonalPictogramInBoard([added], dto.id, person.id, 'earlier')[0];
+  expect(moved.layout.cells).toEqual(['one', 'three', 'two', null, 'person-four', null]);
+  const removed = removePersonalPictogramFromBoard([moved], dto.id, person.id)[0];
+  expect(removed.layout.cells).toEqual(['one', 'three', 'two', null, null, null]);
+  expect(removed.layout.rows).toBe(2);
+  expect(JSON.stringify(dto)).toBe(original);
+  expect(assertBoardDTO(removed)).toBe(removed);
+});

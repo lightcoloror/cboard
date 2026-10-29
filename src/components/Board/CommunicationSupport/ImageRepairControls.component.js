@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import Button from '@material-ui/core/Button';
+import { CboardScanButton as Button } from '../../UI/CboardScan';
 import InputImage from '../../UI/InputImage';
 import API from '../../../api';
 import { verifyBrowserLocalImage } from '../../../common/communicationSupport/browserImageVerification';

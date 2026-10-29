@@ -36,6 +36,7 @@ export function createBrowserKeyValueStore(browserWindow) {
           const value = storage.getItem(key);
           return value === undefined ? null : value;
         } catch (error) {
+          if (/cboard_communication_repository_schema$/.test(key)) throw new Error('本机资料版本暂时无法读取；原数据已保留，未进行迁移。');
           if (personalImagesKey.test(key)) throw new Error('熟悉图片存储暂时不可读取，原数据已保留。');
           if (/(?:cboard_communication_favorite_state_v1|cboard_communication_saved_phrases|cboard_communication_saved_phrase_tombstones|cboard_tuyujia_saved_phrases|care-pending-favorites)$/.test(key)) {
             throw new Error('常用语存储暂时不可读取，未使用旧副本覆盖。');

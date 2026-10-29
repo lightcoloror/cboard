@@ -5,7 +5,7 @@ import { requireAvailableImage } from '../../../common/communicationSupport/imag
 import PropTypes from 'prop-types';
 import shortid from 'shortid';
 import isEqual from 'lodash/isEqual';
-import Button from '@material-ui/core/Button';
+import { CboardScanButton as Button } from '../../UI/CboardScan';
 import TextField from '@material-ui/core/TextField';
 import InputImage from '../../UI/InputImage';
 import { getPersonalPeople } from '../../../common/communicationSupport/personalPeople';

@@ -2,7 +2,7 @@ import {
   getCommunicationTileMetadata,
   setCommunicationTileMetadata
 } from './tileMetadata';
-import { assertBoardDTO, createTileDTO } from './dto';
+import { assertBoardDTO, createBoardDTO, createTileDTO } from './dto';
 import {
   createDevicePrivatePictogramAttribution,
   DEVICE_PRIVATE_PICTOGRAM_PROVIDER,
@@ -163,16 +163,11 @@ export function appendPersonalPictogramToBoard(boards, boardId, tile) {
     const nextTile = createTileDTO(tile, {
       boardId: normalizedBoardId
     });
-    const tileIds = [...board.layout.tileIds, nextTile.id];
-    return assertBoardDTO({
-      ...board,
-      layout: {
-        ...board.layout,
-        rows: Math.max(1, Math.ceil(tileIds.length / board.layout.columns)),
-        tileIds
-      },
-      tiles: [...board.tiles, nextTile]
-    });
+    // Reuse the DTO's fixed-cell reconciliation: fill a free cell while
+    // retaining every existing card's position and the original dimensions.
+    return createBoardDTO({ ...board,
+      layout: board.layout.cells ? board.layout : { ...board.layout, rows: Math.max(1, Math.ceil((board.tiles.length + 1) / board.layout.columns)) },
+      tiles: [...board.tiles, nextTile] });
   });
   if (!found) throw new TypeError('Target board was not found');
   return nextBoards;
@@ -222,6 +217,10 @@ export function movePersonalPictogramInBoard(
   const tileIds = [...board.layout.tileIds];
   tileIds[sourceIndex] = tileIds[targetIndex];
   tileIds[targetIndex] = normalizedTileId;
+  const cells = board.layout.cells && board.layout.cells.map(id =>
+    id === normalizedTileId ? board.layout.tileIds[targetIndex]
+      : id === board.layout.tileIds[targetIndex] ? normalizedTileId : id
+  );
 
   return sourceBoards.map(item =>
     item.id === normalizedBoardId
@@ -229,7 +228,8 @@ export function movePersonalPictogramInBoard(
           ...item,
           layout: {
             ...item.layout,
-            tileIds
+            tileIds,
+            ...(cells ? { cells } : {})
           }
         })
       : item
@@ -373,16 +373,11 @@ export function removePersonalPictogramFromBoard(boards, boardId, tileId) {
     const tiles = board.tiles.filter(tile => tile.id !== normalizedTileId);
     if (tiles.length === board.tiles.length) return board;
     removed = true;
-    const tileIds = board.layout.tileIds.filter(id => id !== normalizedTileId);
-    return assertBoardDTO({
-      ...board,
-      layout: {
-        ...board.layout,
-        rows: Math.max(1, Math.ceil(tileIds.length / board.layout.columns)),
-        tileIds
-      },
-      tiles
-    });
+    // Deletion leaves a fixed-grid hole; it must not shrink or repack a
+    // familiar board, and the source DTO remains an immutable snapshot.
+    return createBoardDTO({ ...board,
+      layout: board.layout.cells ? board.layout : { ...board.layout, rows: Math.max(1, Math.ceil(tiles.length / board.layout.columns)) },
+      tiles });
   });
   return removed ? nextBoards : boards;
 }

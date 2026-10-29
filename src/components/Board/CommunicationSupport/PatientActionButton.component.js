@@ -1,6 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import Button from '@material-ui/core/Button';
+import { CboardScanItem } from '../../UI/CboardScan';
 import ArrowBackIcon from '@material-ui/icons/ArrowBack';
 import ChatBubbleOutlineIcon from '@material-ui/icons/ChatBubbleOutline';
 import CheckCircleOutlineIcon from '@material-ui/icons/CheckCircleOutline';
@@ -64,7 +65,7 @@ export default function PatientActionButton({
 
   const Icon = ICON_BY_NAME[definition.icon];
   return (
-    <Button
+    <CboardScanItem disabled={Boolean(buttonProps.disabled)}><Button
       {...buttonProps}
       className={`PatientActionButton-root ${className}`.trim()}
       aria-label={definition.ariaLabel}
@@ -72,7 +73,7 @@ export default function PatientActionButton({
     >
       {Icon && <Icon className="PatientActionButton-icon" aria-hidden="true" />}
       <span className="PatientActionButton-label">{definition.label}</span>
-    </Button>
+    </Button></CboardScanItem>
   );
 }
 

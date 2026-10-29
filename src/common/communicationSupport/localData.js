@@ -1,4 +1,5 @@
 import { createCommunicationLocalDataStore } from './localDataStore';
+import { assertCommunicationRepositorySchemaReadable } from './repository';
 import { createSavedPhrasePreparationService } from './savedPhrasePreparation';
 import { createExpressionDraftService } from './expressionDraft';
 import { createSavedPhraseImportService } from './savedPhraseManagement';
@@ -59,6 +60,11 @@ function createDefaultStore() {
   return createCommunicationLocalDataStore({
     storage: createDefaultStoragePort()
   });
+}
+
+export function getCommunicationRepositoryReadError() {
+  try { assertCommunicationRepositorySchemaReadable(createDefaultStoragePort()); return ''; }
+  catch (error) { return error.message || '本机资料版本暂时无法读取，原数据已保留。'; }
 }
 
 // Async searches/downloads must not write into a newly selected account/profile.

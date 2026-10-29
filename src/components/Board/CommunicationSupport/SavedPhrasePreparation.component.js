@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import Button from '@material-ui/core/Button';
+import { CboardScanButton as Button } from '../../UI/CboardScan';
 import TextField from '@material-ui/core/TextField';
 import { SAVED_PHRASE_STARTERS } from '../../../common/communicationSupport/savedPhrasePreparation';
 import { DEFAULT_LIFE_CONTEXTS } from '../../../common/communicationSupport/savedPhraseManagement';

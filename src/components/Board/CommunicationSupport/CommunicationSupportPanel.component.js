@@ -5,7 +5,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { currentImageOperationEpoch } from '../../../common/communicationSupport/imageOperationEpoch';
 import CareExpressionBoard from '../../Care/CareExpressionBoard';
 import PropTypes from 'prop-types';
-import Button from '@material-ui/core/Button';
+import { CboardScanButton as Button } from '../../UI/CboardScan';
 import shortid from 'shortid';
 import API from '../../../api';
 import {
@@ -244,7 +244,7 @@ function mergeCboardPreferences(
 export default function CommunicationSupportPanel(props) {
   const readError = () => {
     try { loadReceiverRecords(); loadReceiverCorrections(); return ''; }
-    catch (_) { return '本机接收草稿暂时无法读取，原数据已保留；不会用旧内容覆盖。'; }
+    catch (error) { return error.code === 'COMMUNICATION_SCHEMA_FUTURE' ? error.message : '本机接收草稿暂时无法读取，原数据已保留；不会用旧内容覆盖。'; }
   };
   const [error, setError] = useState(readError);
   if (error) return <div role="alert">{error}<Button onClick={() => setError(readError())}>重试读取草稿</Button></div>;
@@ -272,6 +272,7 @@ function CommunicationSupportWorkspace({
   getGalleryTileUndo,
   onChangeSpeechRate,
   onChangeDisplaySettings,
+    onSaveCareDevicePreferences,
   copyOverrides,
   initialMode,
   initiallyExpanded,
@@ -1044,7 +1045,8 @@ function CommunicationSupportWorkspace({
   }
 
   async function handlePreferencesChange(nextPreferences) {
-    const savedPreferences = saveCommunicationPreferences(nextPreferences);
+    const careSave = careMode && typeof onSaveCareDevicePreferences === 'function';
+    const savedPreferences = careSave ? await onSaveCareDevicePreferences(nextPreferences) : saveCommunicationPreferences(nextPreferences);
     const nextDisplaySettings = {
       ...displaySettings,
       fontSize: COMMUNICATION_FONT_TO_CBOARD[savedPreferences.fontSize],
@@ -1056,9 +1058,9 @@ function CommunicationSupportWorkspace({
       displaySettings.fontSize !== nextDisplaySettings.fontSize ||
       displaySettings.uiSize !== nextDisplaySettings.uiSize;
 
+    if (!careSave && speechChanged) await onChangeSpeechRate(savedPreferences.speechRate);
+    if (!careSave && displayChanged) await onChangeDisplaySettings(nextDisplaySettings);
     setPreferences(savedPreferences);
-    if (speechChanged) onChangeSpeechRate(savedPreferences.speechRate);
-    if (displayChanged) onChangeDisplaySettings(nextDisplaySettings);
 
     if (isLogged && !careMode && (speechChanged || displayChanged)) {
       try {
@@ -1502,6 +1504,7 @@ CommunicationSupportPanel.propTypes = {
   onUpdateCommunicationBoard: PropTypes.func,
   onChangeSpeechRate: PropTypes.func.isRequired,
   onChangeDisplaySettings: PropTypes.func.isRequired,
+    onSaveCareDevicePreferences: PropTypes.func,
   onApplyOutput: PropTypes.func.isRequired,
   onJumpBoard: PropTypes.func.isRequired,
   onSpeak: PropTypes.func.isRequired,

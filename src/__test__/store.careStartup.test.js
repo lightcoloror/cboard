@@ -57,3 +57,31 @@ test.each([false, true])('first store configuration works with the actual enable
     localStorage.clear();
   }
 });
+
+test('actual Care/Redux startup tolerates a future schema without an undo identity migration', async () => {
+  const previous = process.env.REACT_APP_CARE_COLLABORATION;
+  process.env.REACT_APP_CARE_COLLABORATION = 'true'; localStorage.clear();
+  localStorage.setItem('cboard_communication_repository_schema', JSON.stringify({ schemaVersion: 999 }));
+  localStorage.setItem('cboard_communication_history', JSON.stringify(Array.from({ length: 80 }, (_, i) => ({ id: `synthetic-${i}` }))));
+  const before = { ...localStorage }; let modules, configured;
+  try {
+    jest.isolateModules(() => {
+      require('../components/Care/Care');
+      const { default: configureStore } = require('../store');
+      const { getGalleryTileUndo } = require('../common/communicationSupport/webGalleryTileUndo');
+      const { getCommunicationRepositoryReadError } = require('../common/communicationSupport/localData');
+      modules = { configureStore, getGalleryTileUndo, getCommunicationRepositoryReadError };
+    });
+    const storage = backend();configured = modules.configureStore({}, { storage, legacyStorage: storage });
+    await bootstrapped(configured.persistor);
+    configured.store.dispatch({ type: 'SYNTHETIC_FUTURE_SCHEMA_STARTUP' });
+    expect(configured.store.dispatch(modules.getGalleryTileUndo()).state().count).toBe(0);
+    expect(modules.getCommunicationRepositoryReadError()).toContain('请使用更新版本打开');
+    expect({ ...localStorage }).toEqual(before);
+  } finally {
+    if (configured) { await configured.persistor.flush(); configured.persistor.pause(); }
+    if (previous === undefined) delete process.env.REACT_APP_CARE_COLLABORATION;
+    else process.env.REACT_APP_CARE_COLLABORATION = previous;
+    localStorage.clear();
+  }
+});

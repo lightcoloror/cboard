@@ -23,6 +23,16 @@ import WelcomeScreen from '../WelcomeScreen';
 import Analytics from '../Analytics';
 import './App.css';
 import LoginRequiredModal from '../LoggedInFeature/LoginRequiredModal';
+import { getCommunicationRepositoryReadError } from '../../common/communicationSupport/localData';
+
+export function CommunicationDataGate({ children }) {
+  const [, retry] = React.useReducer(value => value + 1, 0);
+  const error = getCommunicationRepositoryReadError();
+  if (error) return <main role="alert"><p>{error}</p><button type="button" onClick={retry}>重试读取资料</button></main>;
+  return children;
+}
+const SafeBoard = props => <CommunicationDataGate><BoardContainer {...props} /></CommunicationDataGate>;
+const SafeCareHome = props => <CommunicationDataGate><CareHome {...props} /></CommunicationDataGate>;
 
 export class App extends Component {
   static propTypes = {
@@ -123,9 +133,9 @@ export class App extends Component {
               render={props =>
                 isLogged &&
                 process.env.REACT_APP_CARE_COLLABORATION === 'true' ? (
-                  <CareHome {...props} />
+                  <SafeCareHome {...props} />
                 ) : (
-                  <BoardContainer {...props} />
+                  <SafeBoard {...props} />
                 )
               }
             />
@@ -146,9 +156,9 @@ export class App extends Component {
                     localStorage.getItem('care-offline-selection-v1')) &&
                   process.env.REACT_APP_CARE_COLLABORATION === 'true'
                 )
-                  return <CareHome {...routeProps} />;
+                  return <SafeCareHome {...routeProps} />;
                 const RootComponent =
-                  isFirstVisit && !isLogged ? WelcomeScreen : BoardContainer;
+                  isFirstVisit && !isLogged ? WelcomeScreen : SafeBoard;
                 return <RootComponent {...routeProps} />;
               }}
             />

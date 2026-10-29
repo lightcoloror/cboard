@@ -82,6 +82,8 @@ test('manual rewrite persists across unmount, cancel restores original, reconfir
   expect(f.repo.loadResumableReceiverRecord().id).toBe(f.original.id);
   await click(w, '调整图片');
   await click(w, '全屏展示');
+  expect(f.repo.loadCommunicationHistory()).toHaveLength(1);
+  await click(w, '我会辅助解释，继续展示');
   expect(f.repo.loadCommunicationHistory()).toHaveLength(2);
   expect(f.repo.loadCommunicationHistory().find(record => record.id !== f.original.id).repairOfRecordId).toBe(f.original.id);
   const before = f.repo.loadReceiverRecords().find(record => record.id === f.original.id);

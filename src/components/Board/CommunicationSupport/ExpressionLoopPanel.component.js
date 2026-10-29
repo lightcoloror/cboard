@@ -10,7 +10,7 @@ import PropTypes from 'prop-types';
 import ImageRepairControls from './ImageRepairControls.component';
 import { careErrorMessage } from '../../../common/communicationSupport/careErrors';
 import { attachExpressionDraftRequest } from '../../../common/communicationSupport/expressionDraft';
-import Button from '@material-ui/core/Button';
+import { CboardScanButton as Button } from '../../UI/CboardScan';
 import { createCandidateAutoplayController } from '../../../common/communicationSupport/candidateAutoplay';
 import {
   CANDIDATE_FEEDBACK,

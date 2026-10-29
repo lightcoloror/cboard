@@ -1747,7 +1747,7 @@ describe('CommunicationSupportPanel receiver flow', () => {
     );
   });
 
-  test('reuses CBoard display and speech settings and filters receiver boards', () => {
+  test('reuses CBoard display and speech settings and filters receiver boards', async () => {
     const boards = [
       {
         id: 'home',
@@ -1811,8 +1811,8 @@ describe('CommunicationSupportPanel receiver flow', () => {
       .first();
 
     expect(accessibility.prop('open')).toBe(true);
-    act(() => {
-      accessibility.prop('onChange')({
+    await act(async () => {
+      await accessibility.prop('onChange')({
         ...accessibility.prop('value'),
         fontSize: 'extra-large',
         gridColumns: 2,

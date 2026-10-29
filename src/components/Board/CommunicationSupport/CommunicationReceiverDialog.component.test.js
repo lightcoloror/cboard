@@ -1,7 +1,6 @@
 import React from 'react';
 import { shallow } from 'enzyme';
-import Button from '@material-ui/core/Button';
-import Dialog from '@material-ui/core/Dialog';
+import { CboardScanButton as Button, CboardScanDialog as Dialog } from '../../UI/CboardScan';
 import CommunicationReceiverDialog from './CommunicationReceiverDialog.component';
 
 describe('CommunicationReceiverDialog', () => {
