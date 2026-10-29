@@ -119,8 +119,8 @@ function CareHomeWorkspace({ intl }) {
     setSnapshot(null);
     setDisplay({});
     setOutput([]);
-    await runtime.selectProfile(profile);
-    if (!current()) return;
+    const selected = await runtime.selectProfile(profile, current);
+    if (selected === false || !current()) return;
     setActive({ ...profile, accountId: identity.id });
     setSnapshot(null);
     setOutput([]);

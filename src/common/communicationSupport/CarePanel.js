@@ -205,8 +205,10 @@ export default function CarePanel({ runtime, ui }) {
     setBoardId('default');
     const who = runtime.identity();
     if (!who) throw new Error('请先登录');
-    if (runtime.selectProfile) await runtime.selectProfile(profile);
-    if (!current()) return;
+    const selected = runtime.selectProfile
+      ? await runtime.selectProfile(profile, current)
+      : undefined;
+    if (selected === false || !current()) return;
     let instance;
     instance = createCareSync({
       accountId: who.id,
@@ -311,8 +313,10 @@ export default function CarePanel({ runtime, ui }) {
     );
     if (!current()) return false;
     const nextProfile = { ...profile, relationship: result.relationship };
-    if (runtime.selectProfile) await runtime.selectProfile(nextProfile);
-    if (!current()) return false;
+    const selected = runtime.selectProfile
+      ? await runtime.selectProfile(nextProfile, current)
+      : undefined;
+    if (selected === false || !current()) return false;
     await target.sync();
     if (!current()) return false;
     setActive(nextProfile);

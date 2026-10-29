@@ -207,3 +207,60 @@ test('a replaced session cannot publish its old profile relationship', async () 
   expect(localStorage.getItem('care-selection-v1:first')).toBeNull();
   expect(event).not.toHaveBeenCalled();
 });
+
+test('a late profile selection cannot overwrite a newer selection under the same session', async () => {
+  const pending = {};
+  let generation = 1;
+  const event = jest.spyOn(window, 'dispatchEvent');
+  jest.spyOn(runtime, 'request').mockImplementation(
+    (...request) =>
+      new Promise(resolve => {
+        const body = request[2];
+        pending[body.profileId] = resolve;
+      })
+  );
+  const a = runtime.selectProfile(
+    { id: 'patient-a', familyId: 'family-a' },
+    () => generation === 1
+  );
+  generation = 2;
+  const b = runtime.selectProfile(
+    { id: 'patient-b', familyId: 'family-b' },
+    () => generation === 2
+  );
+  pending['patient-b']({});
+  await expect(b).resolves.toBe(true);
+  expect(JSON.parse(localStorage.getItem('care-selection-v1:first'))).toEqual({
+    id: 'patient-b',
+    familyId: 'family-b'
+  });
+  expect(event).toHaveBeenCalledTimes(1);
+  pending['patient-a']({});
+  await expect(a).resolves.toBe(false);
+  expect(JSON.parse(localStorage.getItem('care-selection-v1:first'))).toEqual({
+    id: 'patient-b',
+    familyId: 'family-b'
+  });
+  expect(event).toHaveBeenCalledTimes(1);
+});
+
+test('a stale offline fallback cannot publish its old profile selection', async () => {
+  let fail;
+  let generation = 1;
+  const event = jest.spyOn(window, 'dispatchEvent');
+  jest.spyOn(runtime, 'request').mockImplementation(
+    () =>
+      new Promise((_, reject) => {
+        fail = reject;
+      })
+  );
+  const selection = runtime.selectProfile(
+    { id: 'patient-a', familyId: 'family-a' },
+    () => generation === 1
+  );
+  generation = 2;
+  fail(new Error('offline'));
+  await expect(selection).resolves.toBe(false);
+  expect(localStorage.getItem('care-selection-v1:first')).toBeNull();
+  expect(event).not.toHaveBeenCalled();
+});

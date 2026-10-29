@@ -440,6 +440,102 @@ describe('shared patient collaboration UI', () => {
     ).not.toBe('login_required');
     expect(host.textContent).not.toContain('OLD-AUTH-FAILURE');
   });
+  it('does not open a profile when selection finishes after unmount', async () => {
+    let finishSelection;
+    let selectionCurrent;
+    runtime.selectProfile = jest.fn(
+      (profile, current) =>
+        new Promise(resolve => {
+          expect(profile.id).toBe('patient');
+          selectionCurrent = current;
+          finishSelection = () => resolve(current() ? undefined : false);
+        })
+    );
+    await act(async () => {
+      ReactDOM.render(<CarePanel runtime={runtime} ui={ui} />, host);
+      await flush();
+    });
+    await act(async () => {
+      Simulate.click(button('合成患者'));
+      await flush();
+    });
+    expect(selectionCurrent()).toBe(true);
+    act(() => {
+      ReactDOM.unmountComponentAtNode(host);
+    });
+    expect(selectionCurrent()).toBe(false);
+    await act(async () => {
+      finishSelection();
+      await flush();
+    });
+    expect(
+      runtime.request.mock.calls.some(
+        ([path, method]) =>
+          path.startsWith('/care/profiles/patient') && method === 'GET'
+      )
+    ).toBe(false);
+  });
+  it('does not publish an old relationship after a new session takes over', async () => {
+    let finishSelection;
+    let selectionCurrent;
+    let selectionCalls = 0;
+    runtime.selectProfile = jest.fn((profile, current) => {
+      expect(profile.id).toBe('patient');
+      selectionCalls += 1;
+      if (selectionCalls === 1) return undefined;
+      return new Promise(resolve => {
+        selectionCurrent = current;
+        finishSelection = () => resolve(current() ? undefined : false);
+      });
+    });
+    runtime.request.mockImplementation(async (path, method, body) => {
+      if (path === '/care/profiles')
+        return [{
+          id: 'patient', familyId: 'family', name: '合成患者',
+          relationship: { role: 'relative', defaultMode: 'receiver' }
+        }];
+      if (path === '/care/families') return [];
+      if (path === '/care/profiles/patient/commands')
+        return {
+          relationship: {
+            role: body.value.role,
+            defaultMode: body.value.role === 'patient' ? 'expression' : 'receiver'
+          }
+        };
+      if (method === 'GET')
+        return {
+          id: 'patient', familyId: 'family', cursor: 0,
+          permissions: ['read'], resources: [],
+          relationship: { role: 'relative', defaultMode: 'receiver' }
+        };
+      return {};
+    });
+    await act(async () => {
+      ReactDOM.render(<CarePanel runtime={runtime} ui={ui} />, host);
+      await flush();
+    });
+    await act(async () => {
+      Simulate.click(button('合成患者'));
+      await flush();
+    });
+    await act(async () => {
+      Simulate.click(button('改为患者，进入表达'));
+      await flush();
+    });
+    expect(selectionCurrent()).toBe(true);
+    await act(async () => {
+      who = { id: 'owner', token: 'replacement' };
+      tick();
+      await flush();
+    });
+    expect(selectionCurrent()).toBe(false);
+    await act(async () => {
+      finishSelection();
+      await flush();
+    });
+    expect(host.textContent).not.toContain('当前本人身份：患者 · 表达');
+    expect(host.textContent).not.toContain('已保存；本地待同步修改会保留。');
+  });
   it.each([
     ['patient', '改为患者，进入表达', 'expression'],
     ['relative', '改为家属或照护者，进入接收', 'receiver'],
@@ -504,7 +600,8 @@ describe('shared patient collaboration UI', () => {
         expect.objectContaining({
           id: 'patient',
           relationship: { role, defaultMode }
-        })
+        }),
+        expect.any(Function)
       );
       expect(host.textContent).toContain(
         role === 'patient'

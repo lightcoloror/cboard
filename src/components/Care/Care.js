@@ -71,8 +71,9 @@ export const runtime = {
     if (who)
       localStorage.setItem(`care-funding-v1:${who.id}:${profileId}`, fundingId);
   },
-  async selectProfile(profile) {
+  async selectProfile(profile, isCurrent = () => true) {
     const who = identity();
+    if (!isCurrent()) return false;
     if (!who) {
       const selected = JSON.parse(
         localStorage.getItem('care-offline-selection-v1') || 'null'
@@ -83,7 +84,7 @@ export const runtime = {
         selected.familyId !== profile.familyId
       )
         throw new Error('请先登录');
-      return;
+      return isCurrent();
     }
     try {
       await runtime.request('/care/context', 'PUT', { profileId: profile.id });
@@ -94,11 +95,13 @@ export const runtime = {
       throw Object.assign(new Error('账号已切换，请重新选择档案'), {
         status: 401
       });
+    if (!isCurrent()) return false;
     localStorage.setItem(
       `care-selection-v1:${who.id}`,
       JSON.stringify(profile)
     );
     window.dispatchEvent(new Event('care-profile-selected'));
+    return true;
   },
   async restoreOffline(preview) {
     const old = JSON.parse(

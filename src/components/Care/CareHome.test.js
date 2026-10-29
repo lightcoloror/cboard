@@ -196,6 +196,65 @@ describe('patient collaboration home', () => {
     expect(()=>stale({fontSize:'extra-large'})).toThrow('档案已切换');
     wrapper.unmount();
   });
+  test('passes the opening generation guard to profile selection when B overtakes A', async () => {
+    const profiles = ['a', 'b'].map(id => ({
+      id: `patient-${id}`,
+      familyId: `family-${id}`,
+      relationship: { role: 'patient', defaultMode: 'expression' }
+    }));
+    const pending = {};
+    runtime.selectProfile.mockImplementation(
+      (profile, isCurrent) =>
+        new Promise(resolve => {
+          pending[profile.id] = { resolve, isCurrent };
+        })
+    );
+    runtime.request.mockImplementation(async path => {
+      if (path === '/care/profiles') return profiles;
+      if (path === '/care/context') return { selectedProfileId: null };
+      if (path.endsWith('/favorites')) return { items: [] };
+      const profile = profiles.find(item => path.includes(item.id));
+      return {
+        ...profile,
+        cursor: 1,
+        permissions: ['read'],
+        resources: [{
+          id: 'favorite', kind: 'favorite', version: 1, seq: 1,
+          value: { sentence: `当前工作区 ${profile.id}` }
+        }]
+      };
+    });
+    let wrapper;
+    await act(async () => {
+      wrapper = mount(<CareHome intl={{}} />);
+      await flush();
+    });
+    wrapper.update();
+    const choices = wrapper
+      .find('button')
+      .filterWhere(node => node.text() === '进入');
+    await act(async () => {
+      choices.at(0).simulate('click');
+      choices.at(1).simulate('click');
+      await flush();
+    });
+    expect(pending['patient-a'].isCurrent()).toBe(false);
+    expect(pending['patient-b'].isCurrent()).toBe(true);
+    await act(async () => {
+      pending['patient-b'].resolve(true);
+      await flush();
+    });
+    wrapper.update();
+    expect(wrapper.text()).toContain('当前工作区 patient-b');
+    await act(async () => {
+      pending['patient-a'].resolve(false);
+      await flush();
+    });
+    wrapper.update();
+    expect(wrapper.text()).toContain('当前工作区 patient-b');
+    expect(wrapper.text()).not.toContain('当前工作区 patient-a');
+    wrapper.unmount();
+  });
   test('a delayed initial role choice cannot replace a newer account workspace', async () => {
     let finishChoice;
     const oldProfile = { id: 'old-patient', familyId: 'old-family' };
@@ -242,7 +301,10 @@ describe('patient collaboration home', () => {
       await flush();
     });
     wrapper.update();
-    expect(runtime.selectProfile).not.toHaveBeenCalledWith(expect.objectContaining({ id: oldProfile.id }));
+    expect(runtime.selectProfile).not.toHaveBeenCalledWith(
+      expect.objectContaining({ id: oldProfile.id }),
+      expect.any(Function)
+    );
     expect(wrapper.text()).toContain('新账号工作区');
     expect(wrapper.text()).not.toContain('过期工作区');
     wrapper.unmount();
@@ -380,10 +442,12 @@ describe('patient collaboration home', () => {
       }
       wrapper.update();
       expect(runtime.selectProfile).toHaveBeenCalledWith(
-        expect.objectContaining({ id: 'patient-b' })
+        expect.objectContaining({ id: 'patient-b' }),
+        expect.any(Function)
       );
       expect(runtime.selectProfile).not.toHaveBeenCalledWith(
-        expect.objectContaining({ id: 'patient-a' })
+        expect.objectContaining({ id: 'patient-a' }),
+        expect.any(Function)
       );
       expect(wrapper.text()).toContain('当前工作区 patient-b');
       expect(wrapper.text()).not.toContain('过期 A 身份选择失败');
@@ -838,7 +902,7 @@ describe('patient collaboration home', () => {
     wrapper.update();
     expect(wrapper.text()).toContain('only-b');
     expect(wrapper.text()).not.toContain('only-a');
-    expect(runtime.selectProfile).toHaveBeenLastCalledWith(profiles[1]);
+    expect(runtime.selectProfile).toHaveBeenLastCalledWith(profiles[1], expect.any(Function));
     wrapper.unmount();
   });
 
