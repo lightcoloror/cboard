@@ -107,7 +107,7 @@ export default function CommunicationAccessibilityDialog({
         显示与易用性
       </DialogTitle>
       <DialogContent className="CommunicationSupportPanel__accessibilityScreen">
-        <div ref={noticeRef} role={saveFailed ? 'alert' : 'status'} aria-live="polite">
+        <div ref={noticeRef} role={saveFailed ? 'alert' : 'status'} aria-live={saveFailed ? 'assertive' : 'polite'} aria-atomic="true">
           {saveNotice}
           {saveFailed && <Button onClick={() => save(pendingValue)} color="primary">重试保存设置</Button>}
         </div>
@@ -121,18 +121,21 @@ export default function CommunicationAccessibilityDialog({
             <Button
               color="primary"
               variant={value.highContrast ? 'contained' : 'outlined'}
+              aria-label="高对比度"
+              aria-pressed={Boolean(value.highContrast)}
               onClick={() => patch({ highContrast: !value.highContrast })}
             >
               {value.highContrast ? '已开启' : '未开启'}
             </Button>
           </div>
           <div className="CommunicationSupportPanel__preferenceGroup">
-            <strong>字体大小</strong>
-            <div className="CommunicationSupportPanel__preferenceOptions">
+            <strong id="communication-font-size-label">字体大小</strong>
+            <div className="CommunicationSupportPanel__preferenceOptions" role="group" aria-labelledby="communication-font-size-label">
               {FONT_OPTIONS.map(option => (
                 <Button
                   key={option.value}
                   color="primary"
+                  aria-pressed={value.fontSize === option.value}
                   variant={
                     value.fontSize === option.value ? 'contained' : 'outlined'
                   }
@@ -144,12 +147,13 @@ export default function CommunicationAccessibilityDialog({
             </div>
           </div>
           <div className="CommunicationSupportPanel__preferenceGroup">
-            <strong>图卡大小</strong>
-            <div className="CommunicationSupportPanel__preferenceOptions">
+            <strong id="communication-grid-size-label">图卡大小</strong>
+            <div className="CommunicationSupportPanel__preferenceOptions" role="group" aria-labelledby="communication-grid-size-label">
               {GRID_OPTIONS.map(option => (
                 <Button
                   key={option.value}
                   color="primary"
+                  aria-pressed={value.gridColumns === option.value}
                   variant={
                     value.gridColumns === option.value
                       ? 'contained'
@@ -163,12 +167,12 @@ export default function CommunicationAccessibilityDialog({
             </div>
           </div>
           <div className="CommunicationSupportPanel__preferenceGroup">
-            <strong>图卡顺序</strong>
+            <strong id="communication-sort-mode-label">图卡顺序</strong>
             <p className="CommunicationSupportPanel__hint">
               固定顺序沿用 CBoard
               图板布局；解锁图板后可用原生编辑功能调整。常用优先只改变当前设备的显示顺序，不修改图板。
             </p>
-            <div className="CommunicationSupportPanel__preferenceOptions">
+            <div className="CommunicationSupportPanel__preferenceOptions" role="group" aria-labelledby="communication-sort-mode-label">
               {[
                 { value: 'manual', label: '固定顺序' },
                 { value: 'popularity', label: '常用优先' }
@@ -176,6 +180,7 @@ export default function CommunicationAccessibilityDialog({
                 <Button
                   key={option.value}
                   color="primary"
+                  aria-pressed={value.pictogramSortMode === option.value}
                   variant={
                     value.pictogramSortMode === option.value
                       ? 'contained'
@@ -195,11 +200,13 @@ export default function CommunicationAccessibilityDialog({
           <p className="CommunicationSupportPanel__hint">
             语速直接使用 CBoard 当前语音引擎。
           </p>
-          <div className="CommunicationSupportPanel__preferenceOptions">
+          <strong id="communication-speech-rate-label">语速</strong>
+          <div className="CommunicationSupportPanel__preferenceOptions" role="group" aria-labelledby="communication-speech-rate-label">
             {SPEECH_RATE_OPTIONS.map(option => (
               <Button
                 key={option.value}
                 color="primary"
+                aria-pressed={value.speechRate === option.value}
                 variant={
                   value.speechRate === option.value ? 'contained' : 'outlined'
                 }
@@ -210,15 +217,16 @@ export default function CommunicationAccessibilityDialog({
             ))}
           </div>
           <div className="CommunicationSupportPanel__preferenceGroup">
-            <strong>候选句自动播报</strong>
+            <strong id="communication-autoplay-label">候选句自动播报</strong>
             <p className="CommunicationSupportPanel__hint">
               候选句出现后开始计时；患者触摸、滚动、单句朗读或停止都会取消。
             </p>
-            <div className="CommunicationSupportPanel__preferenceOptions">
+            <div className="CommunicationSupportPanel__preferenceOptions" role="group" aria-labelledby="communication-autoplay-label">
               {CANDIDATE_AUTOPLAY_OPTIONS.map(option => (
                 <Button
                   key={option.value}
                   color="primary"
+                  aria-pressed={value.candidateAutoplayDelaySeconds === option.value}
                   variant={
                     value.candidateAutoplayDelaySeconds === option.value
                       ? 'contained'
@@ -238,11 +246,11 @@ export default function CommunicationAccessibilityDialog({
         </section>
 
         <section className="CommunicationSupportPanel__preferenceSection">
-          <h4>接收匹配板块</h4>
+          <h4 id="communication-board-visibility-label">接收匹配板块</h4>
           <p className="CommunicationSupportPanel__hint">
             隐藏只影响图语家双向沟通的文字匹配，不删除 CBoard 板块。
           </p>
-          <div className="CommunicationSupportPanel__boardVisibilityList">
+          <div className="CommunicationSupportPanel__boardVisibilityList" role="group" aria-labelledby="communication-board-visibility-label">
             {boards.map(board => {
               const hidden = hiddenBoardIds.has(board.id);
               const boardName =
@@ -257,6 +265,7 @@ export default function CommunicationAccessibilityDialog({
                     color="primary"
                     size="small"
                     variant={hidden ? 'outlined' : 'contained'}
+                    aria-label={`${boardName}：${hidden ? '恢复接收匹配' : '隐藏接收匹配'}`}
                     disabled={!hidden && visibleBoardCount <= 1}
                     onClick={() =>
                       save(

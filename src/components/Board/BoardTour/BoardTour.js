@@ -7,6 +7,7 @@ import messages from './../Board.messages';
 import './../Board.css';
 
 import DefaultBoardsGallery from '../../Communicator/CommunicatorToolbar/DefaultBoardSelector/DefaultBoardsGallery';
+import useTourFocus from '../../UI/useTourFocus';
 
 const propTypes = {
   isRootBoardTourEnabled: PropTypes.bool,
@@ -50,6 +51,9 @@ function BoardTour({
   intl,
   onDefaultBoardOptionClick
 }) {
+  const restoreFocus = useTourFocus(
+    isLocked ? isRootBoardTourEnabled : isUnlockedTourEnabled
+  );
   const unlockedHelpSteps = [
     {
       target: 'body',
@@ -136,6 +140,7 @@ function BoardTour({
             if ([STATUS.FINISHED, STATUS.SKIPPED].includes(status)) {
               if (isRootBoardTourEnabled) {
                 disableTour({ isRootBoardTourEnabled: false });
+                restoreFocus();
               }
             }
           }}
@@ -161,6 +166,7 @@ function BoardTour({
             if ([STATUS.FINISHED, STATUS.SKIPPED].includes(status)) {
               if (isUnlockedTourEnabled) {
                 disableTour({ isUnlockedTourEnabled: false });
+                restoreFocus();
               }
             }
           }}

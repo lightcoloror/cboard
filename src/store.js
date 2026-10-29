@@ -5,6 +5,7 @@ import googleAnalytics from './analytics';
 import createReducer, { createPersistenceContext } from './reducers';
 import { createVerifiedBoardPersistence } from './common/communicationSupport/verifiedBoardPersistence';
 import { createWebGalleryTileUndo } from './common/communicationSupport/webGalleryTileUndo';
+import { createVerifiedScannerSettings } from './providers/ScannerProvider/ScannerProvider.persistence';
 let store;
 
 export default function configureStore(initialState = {}, options = {}) {
@@ -35,6 +36,7 @@ export default function configureStore(initialState = {}, options = {}) {
   const persistor = persistStore(configuredStore);
   services.verifiedBoardPersistence = createVerifiedBoardPersistence({ store: configuredStore, persistor, persistence });
   services.galleryTileUndo = createWebGalleryTileUndo({ store: configuredStore, persistence: services.verifiedBoardPersistence });
+  services.verifiedScannerSettings = createVerifiedScannerSettings({ store: configuredStore, persistor, persistence });
 
   return { persistor, store: configuredStore };
 }

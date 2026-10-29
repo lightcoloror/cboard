@@ -4,15 +4,16 @@ import Joyride, { STATUS } from 'react-joyride';
 import messages from './Settings.messages';
 import { FormattedMessage, intlShape } from 'react-intl';
 import { Swiper, SwiperSlide } from 'swiper/react';
-import SwiperCore, { Navigation, Pagination, Autoplay } from 'swiper/core';
+import SwiperCore, { Navigation, Pagination } from 'swiper/core';
 import 'swiper/swiper.min.css';
 import 'swiper/components/navigation/navigation.min.css';
 import 'swiper/components/pagination/pagination.min.css';
 
 import './Settings.css';
 import { isCordova } from '../../cordova-util';
+import useTourFocus from '../UI/useTourFocus';
 
-SwiperCore.use([Navigation, Pagination, Autoplay]);
+SwiperCore.use([Navigation, Pagination]);
 
 const propTypes = {
   isSettingsTourEnabled: PropTypes.bool.isRequired,
@@ -95,6 +96,10 @@ let settingsTourImages = {
 };
 
 function SettingsTour({ intl, disableTour, isSettingsTourEnabled }) {
+  const restoreFocus = useTourFocus(isSettingsTourEnabled, '.Settings_EnableTour_Button button');
+  const readingHint = intl.locale && intl.locale.startsWith('zh')
+    ? '说明图片不会自动翻页，可用前后按钮按自己的节奏查看。'
+    : 'These instructions do not advance automatically. Use the previous and next controls at your own pace.';
   const [tooltipSwiperText, setTooltipSwiperText] = useState({
     title: '',
     description: ''
@@ -176,16 +181,14 @@ function SettingsTour({ intl, disableTour, isSettingsTourEnabled }) {
       target: '#Display',
       content: (
         <div className="Settings__Tour__Step__Swiper__Container">
+          <p>{readingHint}</p>
           <h2 className="Settings_Tour_Tooltip_Swiper_Title">
             {tooltipSwiperText.title}
           </h2>
           <Swiper
             navigation={true}
             pagination={true}
-            autoplay={{
-              delay: 4000,
-              disableOnInteraction: true
-            }}
+            autoplay={false}
             className="mySwiper"
             onSlideChange={swiper => {
               handleOnSlideChange('display', swiper.realIndex);
@@ -251,16 +254,14 @@ function SettingsTour({ intl, disableTour, isSettingsTourEnabled }) {
       target: '#Navigation',
       content: (
         <div className="Settings__Tour__Step__Swiper__Container">
+          <p>{readingHint}</p>
           <h2 className="Settings_Tour_Tooltip_Swiper_Title">
             {tooltipSwiperText.title}
           </h2>
           <Swiper
             navigation={true}
             pagination={true}
-            autoplay={{
-              delay: 2500,
-              disableOnInteraction: true
-            }}
+            autoplay={false}
             className="mySwiper"
             onSlideChange={swiper => {
               handleOnSlideChange('navigation', swiper.realIndex);
@@ -310,6 +311,7 @@ function SettingsTour({ intl, disableTour, isSettingsTourEnabled }) {
           const { status } = data;
           if ([STATUS.FINISHED, STATUS.SKIPPED].includes(status)) {
             disableTour({ isSettingsTourEnabled: false });
+            restoreFocus();
           }
         }}
         steps={settingsTourSteps}

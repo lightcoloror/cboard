@@ -102,12 +102,16 @@ function CareHomeWorkspace({ intl }) {
   const who = localCareIdentity();
   const valid = who?.id === accountId;
 
-  async function open(profile) {
+  async function open(profile, expectedGeneration) {
     const identity = localCareIdentity();
     if (!identity) return;
-    const generation = ++openingGeneration.current;
+    const generation =
+      expectedGeneration === undefined
+        ? ++openingGeneration.current
+        : expectedGeneration;
     const current = () => mounted.current && generation === openingGeneration.current &&
       localCareIdentity()?.id === identity.id && localCareIdentity()?.token === identity.token;
+    if (!current()) return;
     runtime.cancelSpeech();
     // Retire the old workspace before selectProfile changes the storage scope.
     engine.current = null;
@@ -453,6 +457,14 @@ function CareHomeWorkspace({ intl }) {
   }, []);
 
   async function choose(profile, role) {
+    const identity = localCareIdentity();
+    if (!identity) return;
+    const generation = ++openingGeneration.current;
+    const current = () =>
+      mounted.current &&
+      generation === openingGeneration.current &&
+      localCareIdentity()?.id === identity.id &&
+      localCareIdentity()?.token === identity.token;
     try {
       choosingProfile.current = false;
       if (role) {
@@ -465,11 +477,13 @@ function CareHomeWorkspace({ intl }) {
             value: { role }
           }
         );
+        if (!current()) return;
         profile = { ...profile, relationship: result.relationship };
       }
-      await open(profile);
+      if (!current()) return;
+      await open(profile, generation);
     } catch (e) {
-      setNotice(e.message);
+      if (current()) setNotice(e.message);
     }
   }
   async function favoritesChanged(items) {

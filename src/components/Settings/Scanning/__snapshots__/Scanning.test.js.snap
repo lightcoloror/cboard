@@ -5,6 +5,8 @@ exports[`Scanning tests default renderer 1`] = `
   className="Scanning"
 >
   <WithStyles(FullScreenDialog)
+    closeOnSubmit={false}
+    disableSubmit={false}
     onClose={[Function]}
     onSubmit={[Function]}
     open={true}
@@ -17,6 +19,12 @@ exports[`Scanning tests default renderer 1`] = `
     }
   >
     <WithStyles(ForwardRef(Paper))>
+      <p>
+        保存后先核对本机设置；账号同步不会阻止本机保存。
+      </p>
+      <div
+        className="Scanning__save-status"
+      />
       <WithStyles(ForwardRef(List))>
         <WithStyles(ForwardRef(ListItem))>
           <WithStyles(ForwardRef(ListItemText))
@@ -40,6 +48,7 @@ exports[`Scanning tests default renderer 1`] = `
             <WithStyles(ForwardRef(Switch))
               checked={false}
               color="secondary"
+              disabled={false}
               onChange={[Function]}
               value="active"
             />
@@ -65,6 +74,7 @@ exports[`Scanning tests default renderer 1`] = `
           />
           <WithStyles(ForwardRef(ListItemSecondaryAction))>
             <WithStyles(ForwardRef(Select))
+              disabled={false}
               inputProps={
                 Object {
                   "id": "scanning-delay",
@@ -162,6 +172,7 @@ exports[`Scanning tests default renderer 1`] = `
           />
           <WithStyles(ForwardRef(ListItemSecondaryAction))>
             <WithStyles(ForwardRef(Select))
+              disabled={false}
               inputProps={
                 Object {
                   "id": "scanning-strategy",
@@ -217,6 +228,8 @@ exports[`Scanning tests options behavior 1`] = `
   className="Scanning"
 >
   <WithStyles(FullScreenDialog)
+    closeOnSubmit={false}
+    disableSubmit={false}
     onClose={[Function]}
     onSubmit={[Function]}
     open={true}
@@ -229,6 +242,12 @@ exports[`Scanning tests options behavior 1`] = `
     }
   >
     <WithStyles(ForwardRef(Paper))>
+      <p>
+        保存后先核对本机设置；账号同步不会阻止本机保存。
+      </p>
+      <div
+        className="Scanning__save-status"
+      />
       <WithStyles(ForwardRef(List))>
         <WithStyles(ForwardRef(ListItem))>
           <WithStyles(ForwardRef(ListItemText))
@@ -252,6 +271,7 @@ exports[`Scanning tests options behavior 1`] = `
             <WithStyles(ForwardRef(Switch))
               checked={false}
               color="secondary"
+              disabled={false}
               onChange={[Function]}
               value="active"
             />
@@ -277,6 +297,7 @@ exports[`Scanning tests options behavior 1`] = `
           />
           <WithStyles(ForwardRef(ListItemSecondaryAction))>
             <WithStyles(ForwardRef(Select))
+              disabled={false}
               inputProps={
                 Object {
                   "id": "scanning-delay",
@@ -379,6 +400,7 @@ exports[`Scanning tests options behavior 1`] = `
           />
           <WithStyles(ForwardRef(ListItemSecondaryAction))>
             <WithStyles(ForwardRef(Select))
+              disabled={false}
               inputProps={
                 Object {
                   "id": "scanning-strategy",
@@ -434,6 +456,8 @@ exports[`Scanning tests options behavior 2`] = `
   className="Scanning"
 >
   <WithStyles(FullScreenDialog)
+    closeOnSubmit={false}
+    disableSubmit={false}
     onClose={[Function]}
     onSubmit={[Function]}
     open={true}
@@ -446,6 +470,12 @@ exports[`Scanning tests options behavior 2`] = `
     }
   >
     <WithStyles(ForwardRef(Paper))>
+      <p>
+        保存后先核对本机设置；账号同步不会阻止本机保存。
+      </p>
+      <div
+        className="Scanning__save-status"
+      />
       <WithStyles(ForwardRef(List))>
         <WithStyles(ForwardRef(ListItem))>
           <WithStyles(ForwardRef(ListItemText))
@@ -469,6 +499,7 @@ exports[`Scanning tests options behavior 2`] = `
             <WithStyles(ForwardRef(Switch))
               checked={true}
               color="secondary"
+              disabled={false}
               onChange={[Function]}
               value="active"
             />
@@ -494,6 +525,7 @@ exports[`Scanning tests options behavior 2`] = `
           />
           <WithStyles(ForwardRef(ListItemSecondaryAction))>
             <WithStyles(ForwardRef(Select))
+              disabled={false}
               inputProps={
                 Object {
                   "id": "scanning-delay",
@@ -596,6 +628,7 @@ exports[`Scanning tests options behavior 2`] = `
           />
           <WithStyles(ForwardRef(ListItemSecondaryAction))>
             <WithStyles(ForwardRef(Select))
+              disabled={false}
               inputProps={
                 Object {
                   "id": "scanning-strategy",

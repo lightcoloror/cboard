@@ -196,6 +196,200 @@ describe('patient collaboration home', () => {
     expect(()=>stale({fontSize:'extra-large'})).toThrow('档案已切换');
     wrapper.unmount();
   });
+  test('a delayed initial role choice cannot replace a newer account workspace', async () => {
+    let finishChoice;
+    const oldProfile = { id: 'old-patient', familyId: 'old-family' };
+    const newProfile = {
+      id: 'new-patient',
+      familyId: 'new-family',
+      relationship: { role: 'patient', defaultMode: 'expression' }
+    };
+    runtime.request.mockImplementation(async (path, method) => {
+      if (method === 'POST' && path.includes('/old-patient/commands'))
+        return new Promise(resolve => { finishChoice = resolve; });
+      if (path === '/care/profiles')
+        return who.id === 'account' ? [oldProfile] : [newProfile];
+      if (path === '/care/context')
+        return { selectedProfileId: who.id === 'account' ? null : newProfile.id };
+      if (path.endsWith('/favorites')) return { items: [] };
+      const profile = path.includes('new-patient') ? newProfile : oldProfile;
+      return {
+        ...profile,
+        cursor: 1,
+        permissions: ['read'],
+        resources: [{
+          id: 'favorite', kind: 'favorite', version: 1, seq: 1,
+          value: { sentence: profile.id === newProfile.id ? '新账号工作区' : '过期工作区' }
+        }]
+      };
+    });
+    let wrapper;
+    await act(async () => { wrapper = mount(<CareHome intl={{}} />); await flush(); });
+    wrapper.update();
+    await act(async () => {
+      wrapper.find('button').filterWhere(n => n.text() === '我是患者，进入表达').simulate('click');
+      await flush();
+    });
+    await act(async () => {
+      who = { id: 'new-account', token: 'new-token' };
+      tick();
+      await flush();
+    });
+    wrapper.update();
+    expect(wrapper.text()).toContain('新账号工作区');
+    await act(async () => {
+      finishChoice({ relationship: { role: 'patient', defaultMode: 'expression' } });
+      await flush();
+    });
+    wrapper.update();
+    expect(runtime.selectProfile).not.toHaveBeenCalledWith(expect.objectContaining({ id: oldProfile.id }));
+    expect(wrapper.text()).toContain('新账号工作区');
+    expect(wrapper.text()).not.toContain('过期工作区');
+    wrapper.unmount();
+  });
+  test('a delayed initial role error cannot overwrite the notice after a token and profile switch', async () => {
+    let failChoice;
+    const oldProfile = { id: 'old-patient', familyId: 'old-family' };
+    const newProfile = {
+      id: 'new-patient',
+      familyId: 'new-family',
+      relationship: { role: 'patient', defaultMode: 'expression' }
+    };
+    runtime.request.mockImplementation(async (path, method) => {
+      if (method === 'POST' && path.includes('/old-patient/commands'))
+        return new Promise((_, reject) => { failChoice = reject; });
+      if (path === '/care/profiles') return who.token === 'new-token' ? [newProfile] : [oldProfile];
+      if (path === '/care/context') return { selectedProfileId: who.token === 'new-token' ? newProfile.id : null };
+      if (path.endsWith('/favorites')) return { items: [] };
+      return { ...newProfile, cursor: 1, permissions: ['read'], resources: [] };
+    });
+    who = { id: 'account', token: 'old-token' };
+    let wrapper;
+    await act(async () => { wrapper = mount(<CareHome intl={{}} />); await flush(); });
+    wrapper.update();
+    await act(async () => {
+      wrapper.find('button').filterWhere(n => n.text() === '我是患者，进入表达').simulate('click');
+      await flush();
+    });
+    await act(async () => {
+      who = { id: 'account', token: 'new-token' };
+      tick();
+      await flush();
+    });
+    wrapper.update();
+    expect(wrapper.find(CommunicationSupportPanel)).toHaveLength(1);
+    await act(async () => { failChoice(new Error('过期身份选择失败')); await flush(); });
+    wrapper.update();
+    expect(wrapper.find(CommunicationSupportPanel)).toHaveLength(1);
+    expect(wrapper.text()).not.toContain('过期身份选择失败');
+    wrapper.unmount();
+  });
+  test('a delayed initial role response after unmount does not open a profile', async () => {
+    let finishChoice;
+    const profile = { id: 'old-patient', familyId: 'old-family' };
+    runtime.request.mockImplementation(async (path, method) => {
+      if (method === 'POST') return new Promise(resolve => { finishChoice = resolve; });
+      if (path === '/care/profiles') return [profile];
+      if (path === '/care/context') return { selectedProfileId: null };
+      return { items: [] };
+    });
+    let wrapper;
+    await act(async () => { wrapper = mount(<CareHome intl={{}} />); await flush(); });
+    wrapper.update();
+    await act(async () => {
+      wrapper.find('button').filterWhere(n => n.text() === '我是患者，进入表达').simulate('click');
+      await flush();
+    });
+    wrapper.unmount();
+    await act(async () => {
+      finishChoice({ relationship: { role: 'patient', defaultMode: 'expression' } });
+      await flush();
+    });
+    expect(runtime.selectProfile).not.toHaveBeenCalled();
+  });
+  test.each(['success', 'error'])(
+    'a delayed %s from profile A cannot replace profile B under the same identity',
+    async outcome => {
+      const profiles = ['a', 'b'].map(id => ({
+        id: `patient-${id}`,
+        familyId: `family-${id}`
+      }));
+      const pending = {};
+      runtime.request.mockImplementation(async (path, method) => {
+        if (method === 'POST' && path.endsWith('/commands')) {
+          const id = profiles.find(item => path.includes(item.id)).id;
+          return new Promise((resolve, reject) => {
+            pending[id] = { resolve, reject };
+          });
+        }
+        if (path === '/care/profiles') return profiles;
+        if (path === '/care/context') return { selectedProfileId: null };
+        if (path.endsWith('/favorites')) return { items: [] };
+        const profile = profiles.find(item => path.includes(item.id));
+        return {
+          ...profile,
+          relationship: { role: 'patient', defaultMode: 'expression' },
+          cursor: 1,
+          permissions: ['read'],
+          resources: [
+            {
+              id: 'favorite',
+              kind: 'favorite',
+              version: 1,
+              seq: 1,
+              value: { sentence: `当前工作区 ${profile.id}` }
+            }
+          ]
+        };
+      });
+      who = { id: 'account', token: 'same-token' };
+      let wrapper;
+      await act(async () => {
+        wrapper = mount(<CareHome intl={{}} />);
+        await flush();
+      });
+      wrapper.update();
+      const choices = wrapper
+        .find('button')
+        .filterWhere(node => node.text() === '我是患者，进入表达');
+      await act(async () => {
+        choices.at(0).simulate('click');
+        choices.at(1).simulate('click');
+        await flush();
+      });
+      await act(async () => {
+        pending['patient-b'].resolve({
+          relationship: { role: 'patient', defaultMode: 'expression' }
+        });
+        await flush();
+      });
+      wrapper.update();
+      expect(wrapper.text()).toContain('当前工作区 patient-b');
+      if (outcome === 'success') {
+        await act(async () => {
+          pending['patient-a'].resolve({
+            relationship: { role: 'patient', defaultMode: 'expression' }
+          });
+          await flush();
+        });
+      } else {
+        await act(async () => {
+          pending['patient-a'].reject(new Error('过期 A 身份选择失败'));
+          await flush();
+        });
+      }
+      wrapper.update();
+      expect(runtime.selectProfile).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 'patient-b' })
+      );
+      expect(runtime.selectProfile).not.toHaveBeenCalledWith(
+        expect.objectContaining({ id: 'patient-a' })
+      );
+      expect(wrapper.text()).toContain('当前工作区 patient-b');
+      expect(wrapper.text()).not.toContain('过期 A 身份选择失败');
+      wrapper.unmount();
+    }
+  );
   test('combined Care preferences are saved in one scoped flow and stale profile callbacks are refused', async () => {
     const wrapper = await render('patient');
     const save = wrapper.find(CommunicationSupportPanel).prop('onSaveCareDevicePreferences');

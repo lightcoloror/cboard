@@ -7,6 +7,41 @@ import CommunicationAccessibilityDialog from './CommunicationAccessibilityDialog
 const boards = [{ id: 'home', name: '首页' }, { id: 'food', name: '食物' }];
 
 describe('CommunicationAccessibilityDialog', () => {
+  test('names each choice group and exposes exactly one pressed option without changing button or scan semantics', () => {
+    const wrapper = mount(<CommunicationAccessibilityDialog open onClose={jest.fn()}
+      boards={boards} value={DEFAULT_COMMUNICATION_PREFERENCES} onChange={jest.fn()} />);
+    const names = ['字体大小', '图卡大小', '图卡顺序', '语速', '候选句自动播报'];
+    names.forEach(name => {
+      const label = wrapper.find('strong').filterWhere(node => node.text() === name);
+      const group = wrapper.find(`div[role="group"][aria-labelledby="${label.prop('id')}"]`);
+      expect(group.exists()).toBe(true);
+      const buttons = group.find('button');
+      expect(buttons.length).toBeGreaterThan(1);
+      expect(buttons.filterWhere(button => button.prop('aria-pressed') === true)).toHaveLength(1);
+      expect(buttons.everyWhere(button => typeof button.prop('aria-pressed') === 'boolean')).toBe(true);
+      expect(buttons.everyWhere(button => button.prop('role') === undefined)).toBe(true);
+    });
+    expect(wrapper.find('button[aria-label="高对比度"]').prop('aria-pressed')).toBe(false);
+    expect(wrapper.find('button[aria-label="首页：隐藏接收匹配"]').exists()).toBe(true);
+    expect(wrapper.find('div[role="status"]').prop('aria-atomic')).toBe('true');
+    wrapper.unmount();
+  });
+
+  test('updates pressed selection during failed saving and announces explicit retry with stable group names', async () => {
+    const onChange = jest.fn().mockRejectedValueOnce(new Error('disk')).mockResolvedValueOnce(false);
+    const wrapper = mount(<CommunicationAccessibilityDialog open onClose={jest.fn()}
+      value={DEFAULT_COMMUNICATION_PREFERENCES} onChange={onChange} />);
+    await act(async () => {
+      wrapper.find('button').filterWhere(node => node.text() === '超大').simulate('click');
+      await Promise.resolve();
+    });
+    wrapper.update();
+    expect(wrapper.find('button').filterWhere(node => node.text() === '超大').prop('aria-pressed')).toBe(true);
+    expect(wrapper.find('div[role="alert"]').prop('aria-live')).toBe('assertive');
+    expect(wrapper.find('button[aria-label="高对比度"]').prop('aria-label')).toBe('高对比度');
+    wrapper.unmount();
+  });
+
   test('keeps failed changes for explicit retry and ignores a completion after close', async () => {
     const onChange = jest.fn().mockRejectedValueOnce(new Error('disk'))
       .mockResolvedValueOnce({ syncFailed: false });
