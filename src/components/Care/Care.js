@@ -71,7 +71,7 @@ export const runtime = {
     if (who)
       localStorage.setItem(`care-funding-v1:${who.id}:${profileId}`, fundingId);
   },
-  async selectProfile(profile, isCurrent = () => true) {
+  async selectProfile(profile, isCurrent = () => true, options = {}) {
     const who = identity();
     if (!isCurrent()) return false;
     if (!who) {
@@ -86,16 +86,49 @@ export const runtime = {
         throw new Error('请先登录');
       return isCurrent();
     }
-    try {
-      await runtime.request('/care/context', 'PUT', { profileId: profile.id });
-    } catch (error) {
-      if (error.status) throw error;
+    const current = () => {
+      if (identity()?.id !== who.id || identity()?.token !== who.token)
+        throw Object.assign(new Error('账号已切换，请重新选择档案'), {
+          status: 401
+        });
+      return isCurrent();
+    };
+    // Restoring a GET result or an offline cache is not a new server selection.
+    if (options.persist !== false) {
+      for (let attempt = 0; attempt < 3; attempt += 1) {
+        if (!current()) return false;
+        try {
+          const context = await runtime.request('/care/context', 'GET');
+          if (!current()) return false;
+          if (
+            !Number.isSafeInteger(context?.selectionVersion) ||
+            context.selectionVersion < 0
+          )
+            throw Object.assign(
+              new Error('服务尚不支持档案选择版本核对，请升级服务后重试'),
+              { status: 503, code: 'CARE_CONTEXT_VERSION_UNAVAILABLE' }
+            );
+          if (!current()) return false;
+          await runtime.request('/care/context', 'PUT', {
+            profileId: profile.id,
+            expectedSelectionVersion: context.selectionVersion
+          });
+          if (!current()) return false;
+          break;
+        } catch (error) {
+          if (!current()) return false;
+          const conflict =
+            error.status === 409 &&
+            (error.code === 'CARE_CONTEXT_CHANGED' ||
+              error.data?.code === 'CARE_CONTEXT_CHANGED');
+          if (conflict && attempt < 2) continue;
+          if (error.status) throw error;
+          // Preserve the existing explicit offline choice, without a new PUT.
+          break;
+        }
+      }
     }
-    if (identity()?.id !== who.id || identity()?.token !== who.token)
-      throw Object.assign(new Error('账号已切换，请重新选择档案'), {
-        status: 401
-      });
-    if (!isCurrent()) return false;
+    if (!current()) return false;
     localStorage.setItem(
       `care-selection-v1:${who.id}`,
       JSON.stringify(profile)

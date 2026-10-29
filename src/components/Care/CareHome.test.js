@@ -145,6 +145,43 @@ describe('patient collaboration home', () => {
     wrapper.update();
     return wrapper;
   }
+  test('automatic online context restoration applies locally without submitting a fresh server selection', async () => {
+    const wrapper = await render('patient');
+    expect(runtime.selectProfile).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'patient' }),
+      expect.any(Function),
+      { persist: false }
+    );
+    expect(runtime.request.mock.calls.filter(call => call[0] === '/care/context'))
+      .toEqual([['/care/context', 'GET']]);
+    expect(wrapper.find(CommunicationSupportPanel)).toHaveLength(1);
+    wrapper.unmount();
+  });
+  test('a delayed automatic context GET from an old token cannot reopen or cache its profile', async () => {
+    who = { id: 'account', token: 'old-token' };
+    let resolveContext;
+    runtime.request.mockImplementation(path => {
+      if (path === '/care/profiles') return Promise.resolve([{
+        id: 'patient-a', familyId: 'family-a', relationship: { role: 'patient' }
+      }]);
+      return new Promise(resolve => { resolveContext = resolve; });
+    });
+    let wrapper;
+    await act(async () => {
+      wrapper = mount(<CareHome intl={{}} />);
+      await flush();
+    });
+    who = { id: 'account', token: 'replacement' };
+    await act(async () => {
+      resolveContext({ selectedProfileId: 'patient-a', selectionVersion: 1 });
+      await flush();
+    });
+    wrapper.update();
+    expect(runtime.selectProfile).not.toHaveBeenCalled();
+    expect(runtime.storage.set).not.toHaveBeenCalled();
+    expect(wrapper.find(CommunicationSupportPanel)).toHaveLength(0);
+    wrapper.unmount();
+  });
   test('Care display callback rejects a silent failed write before applying the new display', async () => {
     const wrapper = await render('patient');
     const before = wrapper.find(CommunicationSupportPanel).prop('displaySettings');
@@ -828,6 +865,11 @@ describe('patient collaboration home', () => {
     });
     wrapper.update();
     expect(runtime.request).not.toHaveBeenCalled();
+    expect(runtime.selectProfile).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'patient' }),
+      expect.any(Function),
+      { persist: false }
+    );
     expect(wrapper.text()).toContain('修改仅保存在本机');
     expect(wrapper.text()).not.toContain('登录已失效');
     expect(wrapper.find(CommunicationSupportPanel).prop('isLogged')).toBe(
@@ -879,6 +921,9 @@ describe('patient collaboration home', () => {
     });
     wrapper.update();
     expect(wrapper.text()).toContain('only-a');
+    expect(runtime.selectProfile).toHaveBeenLastCalledWith(
+      profiles[0], expect.any(Function), { persist: false }
+    );
     await act(async () => {
       wrapper
         .find('button')

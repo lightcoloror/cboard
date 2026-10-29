@@ -102,7 +102,7 @@ function CareHomeWorkspace({ intl }) {
   const who = localCareIdentity();
   const valid = who?.id === accountId;
 
-  async function open(profile, expectedGeneration) {
+  async function open(profile, expectedGeneration, options) {
     const identity = localCareIdentity();
     if (!identity) return;
     const generation =
@@ -119,7 +119,9 @@ function CareHomeWorkspace({ intl }) {
     setSnapshot(null);
     setDisplay({});
     setOutput([]);
-    const selected = await runtime.selectProfile(profile, current);
+    const selected = options
+      ? await runtime.selectProfile(profile, current, options)
+      : await runtime.selectProfile(profile, current);
     if (selected === false || !current()) return;
     setActive({ ...profile, accountId: identity.id });
     setSnapshot(null);
@@ -344,13 +346,19 @@ function CareHomeWorkspace({ intl }) {
     if (instance.ready) setSnapshot({ ...data });
   }
   async function load() {
-    const loadingAccount = localCareIdentity()?.id;
+    const loadingIdentity = localCareIdentity();
+    const loadingAccount = loadingIdentity?.id;
+    const loadingGeneration = openingGeneration.current;
+    const current = () => mounted.current &&
+      openingGeneration.current === loadingGeneration &&
+      localCareIdentity()?.id === loadingAccount &&
+      localCareIdentity()?.token === loadingIdentity?.token;
     if (localCareIdentity()?.offline) {
       const profile = JSON.parse(
         localStorage.getItem('care-offline-selection-v1')
       );
       setProfiles([profile]);
-      await open(profile);
+      await open(profile, loadingGeneration, { persist: false });
       return;
     }
     try {
@@ -358,12 +366,13 @@ function CareHomeWorkspace({ intl }) {
         runtime.request('/care/profiles', 'GET'),
         runtime.request('/care/context', 'GET')
       ]);
-      if (!mounted.current || runtime.identity()?.id !== loadingAccount) return;
+      if (!current()) return;
       const cacheKey = `care-list-v1:${loadingAccount}`;
       let cachedList = {};
       try {
         cachedList = JSON.parse((await runtime.storage.get(cacheKey)) || '{}');
       } catch (_) {}
+      if (!current()) return;
       await runtime.storage.set(
         cacheKey,
         JSON.stringify({
@@ -373,10 +382,11 @@ function CareHomeWorkspace({ intl }) {
             : []
         })
       );
-      if (!mounted.current || runtime.identity()?.id !== loadingAccount) return;
+      if (!current()) return;
       setProfiles(list);
       const selected = list.find(p => p.id === context.selectedProfileId);
-      if (selected?.relationship && !choosingProfile.current) await open(selected);
+      if (selected?.relationship && !choosingProfile.current)
+        await open(selected, loadingGeneration, { persist: false });
       else
         setNotice(
           list.length
@@ -386,8 +396,7 @@ function CareHomeWorkspace({ intl }) {
     } catch (e) {
       if (
         !e.status &&
-        mounted.current &&
-        runtime.identity()?.id === loadingAccount
+        current()
       ) {
         let cached = null;
         let list = [];
@@ -405,19 +414,18 @@ function CareHomeWorkspace({ intl }) {
           if (Array.isArray(saved.profiles))
             list = saved.profiles.filter(p => p?.id && p?.familyId);
         } catch (_) {}
-        if (!mounted.current || runtime.identity()?.id !== loadingAccount)
-          return;
+        if (!current()) return;
         if (!list.length && cached?.id && cached?.familyId) list = [cached];
         setProfiles(list);
         const selected = list.find(
           p => p.id === cached?.id && p.familyId === cached?.familyId
         );
         if (selected?.relationship && !choosingProfile.current) {
-          await open(selected);
+          await open(selected, loadingGeneration, { persist: false });
           return;
         }
       }
-      setNotice(careErrorMessage(e));
+      if (current()) setNotice(careErrorMessage(e));
     }
   }
   actions.current = { load, sync };

@@ -213,7 +213,9 @@ test('a late profile selection cannot overwrite a newer selection under the same
   let generation = 1;
   const event = jest.spyOn(window, 'dispatchEvent');
   jest.spyOn(runtime, 'request').mockImplementation(
-    (...request) =>
+    (...request) => request[1] === 'GET'
+      ? Promise.resolve({ selectionVersion: 0 })
+      :
       new Promise(resolve => {
         const body = request[2];
         pending[body.profileId] = resolve;
@@ -223,11 +225,13 @@ test('a late profile selection cannot overwrite a newer selection under the same
     { id: 'patient-a', familyId: 'family-a' },
     () => generation === 1
   );
+  await Promise.resolve();
   generation = 2;
   const b = runtime.selectProfile(
     { id: 'patient-b', familyId: 'family-b' },
     () => generation === 2
   );
+  await Promise.resolve();
   pending['patient-b']({});
   await expect(b).resolves.toBe(true);
   expect(JSON.parse(localStorage.getItem('care-selection-v1:first'))).toEqual({
@@ -263,4 +267,145 @@ test('a stale offline fallback cannot publish its old profile selection', async 
   await expect(selection).resolves.toBe(false);
   expect(localStorage.getItem('care-selection-v1:first')).toBeNull();
   expect(event).not.toHaveBeenCalled();
+});
+
+test('an explicit profile choice reads the selection version before its conditional write', async () => {
+  const request = jest.spyOn(runtime, 'request')
+    .mockResolvedValueOnce({ selectedProfileId: 'old', selectionVersion: 7 })
+    .mockResolvedValueOnce({ selectedProfileId: 'patient', selectionVersion: 8 });
+  const event = jest.spyOn(window, 'dispatchEvent');
+  const profile = { id: 'patient', familyId: 'family' };
+  await expect(runtime.selectProfile(profile)).resolves.toBe(true);
+  expect(request.mock.calls).toEqual([
+    ['/care/context', 'GET'],
+    ['/care/context', 'PUT', { profileId: 'patient', expectedSelectionVersion: 7 }]
+  ]);
+  expect(JSON.parse(localStorage.getItem('care-selection-v1:first'))).toEqual(profile);
+  expect(event).toHaveBeenCalledTimes(1);
+});
+
+test('automatic GET and offline-cache restoration never submits a new selection intent', async () => {
+  const request = jest.spyOn(runtime, 'request');
+  const profile = { id: 'patient', familyId: 'family' };
+  await expect(runtime.selectProfile(profile, () => true, { persist: false })).resolves.toBe(true);
+  expect(request).not.toHaveBeenCalled();
+  expect(JSON.parse(localStorage.getItem('care-selection-v1:first'))).toEqual(profile);
+  account = null;
+  localStorage.setItem('care-offline-selection-v1', JSON.stringify(profile));
+  await expect(runtime.selectProfile(profile, () => true, { persist: false })).resolves.toBe(true);
+  expect(request).not.toHaveBeenCalled();
+});
+
+test.each([undefined, null, -1, 1.5, '1', Number.MAX_SAFE_INTEGER + 1])(
+  'a server with unverifiable selection version %s is refused without an unconditional PUT',
+  async selectionVersion => {
+    const request = jest.spyOn(runtime, 'request').mockResolvedValue({ selectionVersion });
+    await expect(runtime.selectProfile({ id: 'patient', familyId: 'family' }))
+      .rejects.toMatchObject({ status: 503, code: 'CARE_CONTEXT_VERSION_UNAVAILABLE' });
+    expect(request.mock.calls).toEqual([['/care/context', 'GET']]);
+    expect(localStorage.getItem('care-selection-v1:first')).toBeNull();
+  }
+);
+
+const contextConflict = () => Object.assign(new Error('CARE_CONTEXT_CHANGED'), {
+  status: 409, data: { code: 'CARE_CONTEXT_CHANGED' }
+});
+
+test('a still-current selection refreshes a conflicting version for at most three total attempts', async () => {
+  let version = 4;
+  const request = jest.spyOn(runtime, 'request').mockImplementation(async (_, method) => {
+    if (method === 'GET') return { selectionVersion: version++ };
+    if (version < 7) throw contextConflict();
+    return { selectionVersion: version };
+  });
+  const event = jest.spyOn(window, 'dispatchEvent');
+  await expect(runtime.selectProfile({ id: 'patient', familyId: 'family' })).resolves.toBe(true);
+  expect(request.mock.calls.filter(call => call[1] === 'PUT').map(call => call[2])).toEqual(
+    [4, 5, 6].map(expectedSelectionVersion => ({ profileId: 'patient', expectedSelectionVersion }))
+  );
+  expect(event).toHaveBeenCalledTimes(1);
+});
+
+test('selection conflict exhaustion does not persist a local success or keep retrying', async () => {
+  const request = jest.spyOn(runtime, 'request').mockImplementation(async (_, method) => {
+    if (method === 'GET') return { selectionVersion: 3 };
+    throw contextConflict();
+  });
+  const event = jest.spyOn(window, 'dispatchEvent');
+  await expect(runtime.selectProfile({ id: 'patient', familyId: 'family' }))
+    .rejects.toMatchObject({ status: 409, data: { code: 'CARE_CONTEXT_CHANGED' } });
+  expect(request).toHaveBeenCalledTimes(6);
+  expect(localStorage.getItem('care-selection-v1:first')).toBeNull();
+  expect(event).not.toHaveBeenCalled();
+});
+
+test('a stale A conflict cannot refresh or republish after B became the current intent', async () => {
+  let rejectA;
+  let generation = 1;
+  const request = jest.spyOn(runtime, 'request').mockImplementation((_, method, body) => {
+    if (method === 'GET') return Promise.resolve({ selectionVersion: 1 });
+    if (body.profileId === 'patient-a') return new Promise((resolve, reject) => { rejectA = reject; });
+    return Promise.resolve({ selectionVersion: 2 });
+  });
+  const event = jest.spyOn(window, 'dispatchEvent');
+  const a = runtime.selectProfile({ id: 'patient-a', familyId: 'family' }, () => generation === 1);
+  await Promise.resolve();
+  generation = 2;
+  await expect(runtime.selectProfile({ id: 'patient-b', familyId: 'family' }, () => generation === 2))
+    .resolves.toBe(true);
+  rejectA(contextConflict());
+  await expect(a).resolves.toBe(false);
+  expect(request).toHaveBeenCalledTimes(4);
+  expect(JSON.parse(localStorage.getItem('care-selection-v1:first')).id).toBe('patient-b');
+  expect(event).toHaveBeenCalledTimes(1);
+});
+
+test('a stale GET response cannot start a selection write', async () => {
+  let resolve;
+  let current = true;
+  const request = jest.spyOn(runtime, 'request').mockImplementation(() => new Promise(done => { resolve = done; }));
+  const pending = runtime.selectProfile({ id: 'patient', familyId: 'family' }, () => current);
+  current = false;
+  resolve({ selectionVersion: 1 });
+  await expect(pending).resolves.toBe(false);
+  expect(request).toHaveBeenCalledTimes(1);
+  expect(localStorage.getItem('care-selection-v1:first')).toBeNull();
+});
+
+test.each(['account', 'token'])(
+  'a changed %s after a conflict cannot start the next version read',
+  async change => {
+    const request = jest.spyOn(runtime, 'request').mockImplementation(async (_, method) => {
+      if (method === 'GET') return { selectionVersion: 2 };
+      if (change === 'account') account = 'second';
+      else sessionToken = 'replacement';
+      throw contextConflict();
+    });
+    await expect(runtime.selectProfile({ id: 'patient', familyId: 'family' }))
+      .rejects.toMatchObject({ status: 401 });
+    expect(request).toHaveBeenCalledTimes(2);
+    expect(localStorage.getItem('care-selection-v1:first')).toBeNull();
+  }
+);
+
+test('unrelated access conflicts are not retried as selection conflicts', async () => {
+  const request = jest.spyOn(runtime, 'request')
+    .mockResolvedValueOnce({ selectionVersion: 2 })
+    .mockRejectedValueOnce(Object.assign(new Error('FAMILY_CLOSING'), {
+      status: 409, data: { code: 'FAMILY_CLOSING' }
+    }));
+  await expect(runtime.selectProfile({ id: 'patient', familyId: 'family' }))
+    .rejects.toMatchObject({ status: 409, data: { code: 'FAMILY_CLOSING' } });
+  expect(request).toHaveBeenCalledTimes(2);
+  expect(localStorage.getItem('care-selection-v1:first')).toBeNull();
+});
+
+test('an explicit choice still retains the existing local fallback after a network-only PUT failure', async () => {
+  const request = jest.spyOn(runtime, 'request')
+    .mockResolvedValueOnce({ selectionVersion: 2 })
+    .mockRejectedValueOnce(new Error('offline'));
+  const profile = { id: 'patient', familyId: 'family' };
+  await expect(runtime.selectProfile(profile)).resolves.toBe(true);
+  expect(request).toHaveBeenCalledTimes(2);
+  expect(JSON.parse(localStorage.getItem('care-selection-v1:first'))).toEqual(profile);
 });
