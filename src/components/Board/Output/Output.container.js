@@ -94,6 +94,8 @@ export class OutputContainer extends Component {
   };
 
   componentDidMount() {
+    this.outputBridgeMounted = true;
+    this.publishOutputActions();
     this.unsubscribeSpeech = subscribeSpeechInterruption(owner => {
       if (this.playbackActive && owner !== this.playbackOwner) {
         // The action already owns provider cancellation/start. Do not cancel
@@ -103,10 +105,13 @@ export class OutputContainer extends Component {
     });
     document.addEventListener('keydown', this.handleRepeatLastSpokenSentence);
   }
-  componentDidUpdate(previousProps) {
+  componentDidUpdate(previousProps, previousState) {
+    if (previousProps.outputScope !== this.props.outputScope ||
+        !equals(previousProps.output, this.props.output) ||
+        previousState.undoHistory !== this.state.undoHistory) this.publishOutputActions();
     if (
       this.playbackActive &&
-      (previousProps.outputScope !== this.props.outputScope ||
+      (this.props.active === false || previousProps.outputScope !== this.props.outputScope ||
         previousProps.isLiveMode !== this.props.isLiveMode ||
         previousProps.intl.messages !== this.props.intl.messages ||
         !equals(this.playbackExpectedOutput, this.props.output))
@@ -115,6 +120,7 @@ export class OutputContainer extends Component {
     }
   }
   componentWillUnmount() {
+    this.outputBridgeMounted = false;
     if (this.unsubscribeSpeech) this.unsubscribeSpeech();
     if (this.playbackActive) this.stopPlayback();
     document.removeEventListener(
@@ -122,6 +128,21 @@ export class OutputContainer extends Component {
       this.handleRepeatLastSpokenSentence
     );
   }
+
+  publishOutputActions = () => {
+    if (!this.props.onOutputActionsChange) return;
+    const expected = this.props.output, scope = this.props.outputScope;
+    const storageScope = getCommunicationStorageScopeKey();
+    const current = () => this.outputBridgeMounted && this.props.active !== false && scope === this.props.outputScope &&
+      storageScope === getCommunicationStorageScopeKey() && equals(expected, this.props.output);
+    this.props.onOutputActionsChange({
+      canUndo: this.state.undoHistory.length > 0,
+      remove: index => { if (current()) this.spliceOutput(index); },
+      backspace: () => { if (current()) this.popOutput(); },
+      clear: () => { if (current()) this.clearOutput(); },
+      undo: () => { if (current()) this.handleUndoDelete(); }
+    });
+  };
 
   clearOutput() {
     const { output, isLiveMode } = this.props;
@@ -303,6 +324,7 @@ export class OutputContainer extends Component {
   };
 
   handleRepeatLastSpokenSentence = event => {
+    if (this.props.active === false) return;
     const Z_KEY_CODE = 90;
     const Y_KEY_CODE = 89;
     const { output } = this.props;

@@ -148,6 +148,7 @@ export class Board extends Component {
       openTitleDialog: false,
       titleDialogValue: props.board && props.board.name ? props.board.name : '',
       pictogramSortMode: preferences.pictogramSortMode,
+      outputActions: null,
       pictogramOrdering: loadPictogramOrdering()
     };
 
@@ -183,6 +184,8 @@ export class Board extends Component {
     this.setState({ pictogramOrdering });
     return pictogramOrdering;
   };
+
+  handleOutputActionsChange = outputActions => this.setState({ outputActions });
 
   handleTileClick = tile => {
     const { board, onTileClick, isSelecting } = this.props;
@@ -478,7 +481,7 @@ export class Board extends Component {
                 hidden: this.props.displaySettings.hideOutputActive
               })}
             >
-              <OutputContainer />
+              <OutputContainer onOutputActionsChange={this.handleOutputActionsChange} />
             </div>
           </Scannable>
           <div className="Board__communicationSupport">
@@ -487,6 +490,7 @@ export class Board extends Component {
               demoMode={this.props.demoMode}
               pictogramOrdering={this.state.pictogramOrdering}
               onPictogramUsed={this.handlePictogramUsed}
+              outputActions={this.state.outputActions}
             />
           </div>
 
@@ -606,8 +610,9 @@ export class Board extends Component {
 
                 {board.isFixed && (
                   <FixedGrid
+                    preserveEmptySlots
                     order={
-                      activePictogramSortMode === 'popularity'
+                      !board.isFixed && activePictogramSortMode === 'popularity'
                         ? this.buildFixedGridOrder(
                             displayBoardTiles,
                             board.grid ? board.grid.rows : DEFAULT_ROWS_NUMBER,
@@ -620,7 +625,7 @@ export class Board extends Component {
                         : []
                     }
                     items={
-                      activePictogramSortMode === 'popularity'
+                      !board.isFixed && activePictogramSortMode === 'popularity'
                         ? displayBoardTiles
                         : board.tiles
                     }

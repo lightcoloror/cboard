@@ -157,6 +157,9 @@ export function projectVisibleCommunicationBoards(boards, hiddenBoardIds) {
       ) {
         nextBoard.layout = {
           ...board.layout,
+          ...(Array.isArray(board.layout.cells) ? {
+            cells: board.layout.cells.map(tileId => visibleTileIds.has(tileId) ? tileId : null)
+          } : {}),
           tileIds: board.layout.tileIds.filter(tileId =>
             visibleTileIds.has(String(tileId || '').trim())
           )
@@ -171,9 +174,9 @@ export function projectVisibleCommunicationBoards(boards, hiddenBoardIds) {
           ...board.grid,
           order: board.grid.order.map(row =>
             Array.isArray(row)
-              ? row.filter(tileId =>
-                  visibleTileIds.has(String(tileId || '').trim())
-                )
+              ? (board.isFixed || Array.isArray(board.layout && board.layout.cells)
+                ? row.map(tileId => visibleTileIds.has(String(tileId || '').trim()) ? tileId : null)
+                : row.filter(tileId => visibleTileIds.has(String(tileId || '').trim())))
               : row
           )
         };

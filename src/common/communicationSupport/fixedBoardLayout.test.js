@@ -3,6 +3,22 @@ import { boardDTOToCboardBoard } from './cboardBoardAdapter';
 import { projectCareBoards, queueCareBoards } from './careProjection';
 import { createPictogramLibraryDTO, pictogramLibraryDTOToBoards } from './pictogramLibrary';
 import { createPictureLibraryArchivePlan, restorePictureLibraryArchive } from './pictureLibraryArchive';
+import { createCareSync } from './careSync';
+
+test('offline fixed edits remain local and are retained if an old server cannot accept them', async () => {
+  const values=new Map([['care-v1:a:f:p',JSON.stringify({cursor:-1,resources:{},queue:[],conflicts:[],media:{},permissions:['read','library.edit'],localArchive:true,locked:false})]]);
+  const requests=[];
+  const engine=createCareSync({accountId:'a',familyId:'f',profileId:'p',currentAccount:()=> 'a',
+    storage:{get:async key=>values.get(key),set:async(key,value)=>{values.set(key,value);}},newId:async()=> 'synthetic-operation',
+    request:async(route,method)=>{requests.push({route,method});return {familyId:'f',cursor:0,permissions:['read','library.edit'],resources:[],media:[]};}});
+  await engine.init();
+  const board=createBoardDTO(source());
+  await engine.edit('board',board.id,{name:board.name,tileIds:board.layout.tileIds,layout:board.layout});
+  expect(engine.archive().queue).toHaveLength(1);
+  await expect(engine.sync()).rejects.toThrow('服务器尚不支持');
+  expect(requests.every(request=>request.method==='GET')).toBe(true);
+  expect(engine.archive().queue[0].value.layout.cells).toEqual(board.layout.cells);
+});
 
 const source = () => ({
   id: 'synthetic-fixed', name: '合成固定图板', isFixed: true,
@@ -21,7 +37,7 @@ test('native to DTO, JSON persistence and back preserve sparse coordinates and i
   expect(createBoardDTO(persisted)).toEqual(dto);
 });
 test('Care queue and projection preserve dimensions, empty positions and do not requeue unchanged state', async () => {
-  const snapshot = { resources: {}, media: {}, locked: false };
+  const snapshot = { resources: {}, media: {}, locked: false, capabilities: {fixedBoardLayout:1} };
   const edit = jest.fn(async (kind, id, value) => { snapshot.resources[`${kind}:${id}`] = { kind, id, value }; });
   const engine = { view: () => snapshot, edit };
   await queueCareBoards(engine, [source()]);
@@ -36,7 +52,7 @@ test('Care queue and projection preserve dimensions, empty positions and do not 
 test('deleting and adding a card preserve the positions of all other cards', () => {
   const dto = createBoardDTO(source());
   const next = createBoardDTO({ ...dto, tiles: [...dto.tiles.filter(tile => tile.id !== 'two'), { id: 'four', label: '饭' }] });
-  expect(next.layout.cells).toEqual(['one', 'four', null, null, 'three', null]);
+  expect(next.layout.cells).toEqual(['one', null, null, null, 'three', null, 'four', null, null]);
   expect(boardDTOToCboardBoard(next).grid.order[1][1]).toBe('three');
 });
 test('incoherent external snapshots are rejected instead of silently packing or confusing identities', () => {
@@ -69,12 +85,12 @@ test('personal-library add/delete/move reuse fixed cells without losing identity
   const person = buildPersonalPictogramTileDTO({ id: 'person-four', boardId: dto.id,
     label: '合成人乙', image: 'data:image/png;base64,c3ludGhldGlj', category: 'people' });
   const added = appendPersonalPictogramToBoard([dto], dto.id, person)[0];
-  expect(added.layout.cells).toEqual(['one', 'person-four', 'two', null, 'three', null]);
+  expect(added.layout.cells).toEqual(['one', null, 'two', null, 'three', null, 'person-four', null, null]);
   const moved = movePersonalPictogramInBoard([added], dto.id, person.id, 'earlier')[0];
-  expect(moved.layout.cells).toEqual(['one', 'three', 'two', null, 'person-four', null]);
+  expect(moved.layout.cells).toEqual(['one', null, 'two', null, 'person-four', null, 'three', null, null]);
   const removed = removePersonalPictogramFromBoard([moved], dto.id, person.id)[0];
-  expect(removed.layout.cells).toEqual(['one', 'three', 'two', null, null, null]);
-  expect(removed.layout.rows).toBe(2);
+  expect(removed.layout.cells).toEqual(['one', null, 'two', null, null, null, 'three', null, null]);
+  expect(removed.layout.rows).toBe(3);
   expect(JSON.stringify(dto)).toBe(original);
   expect(assertBoardDTO(removed)).toBe(removed);
 });

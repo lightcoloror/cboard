@@ -20,16 +20,18 @@ function GridBase(props) {
     renderItem,
     rows,
     page,
+    preserveEmptySlots = false,
     ...other
   } = props;
 
   const gridClassName = classNames(styles.root, className);
 
-  const grid = useMemo(() => utils.sortGrid({ columns, rows, order, items }), [
+  const grid = useMemo(() => utils.sortGrid({ columns, rows, order, items, preserveEmptySlots }), [
     columns,
     rows,
     order,
-    items
+    items,
+    preserveEmptySlots
   ]);
 
   let itemIndex = 0;

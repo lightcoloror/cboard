@@ -194,6 +194,7 @@ export default function ExpressionLoopPanel({
   pictogramOrdering,
   savedPhrases,
   onApplyOutput,
+  outputActions,
   onPictogramUsed,
   onSpeak,
   onCancelSpeech,
@@ -495,7 +496,7 @@ export default function ExpressionLoopPanel({
         aiPendingRef.current = false;
         onCancelSpeech();
       }
-      if (candidatesRejectedRef.current || !active ||
+      if (candidatesRejectedRef.current || !active || document.hidden ||
           restoredAutoplayPausedRef.current || sessionChanged) {
         autoplayControllerRef.current.cancel();
         return;
@@ -575,6 +576,7 @@ export default function ExpressionLoopPanel({
       if (expressionDraftService) setPendingAiRecovery(pending);
       return;
     }
+    const ownedPlayback = playbackActiveRef.current;
     autoplayControllerRef.current.cancel();
     playRunRef.current += 1;
     aiRunRef.current += 1;
@@ -588,11 +590,12 @@ export default function ExpressionLoopPanel({
     savedPlaybackPending.current = false;
     setPlaybackPhrase(null);
     if (expressionDraftService) setPendingAiRecovery(pending);
-    onCancelSpeech();
+    if (ownedPlayback) onCancelSpeech();
   }, [active, onCancelSpeech, invalidateExpressionShare, expressionDraftService]);
 
   useEffect(() => {
     if (previousAiContextRef.current === aiContextKey) return;
+    const ownedPlayback = playbackActiveRef.current;
     previousAiContextRef.current = aiContextKey;
     aiRunRef.current += 1;
     aiPendingRef.current = false;
@@ -606,7 +609,7 @@ export default function ExpressionLoopPanel({
     setCandidatePhase(loopStateRef.current.candidateSentences.length ? 'done' : 'idle');
     savedPlaybackPending.current = false;
     setPlaybackPhrase(null);
-    onCancelSpeech();
+    if (ownedPlayback) onCancelSpeech();
   }, [aiContextKey, invalidateExpressionShare, onCancelSpeech]);
 
   function continueDraft() {
@@ -663,6 +666,7 @@ export default function ExpressionLoopPanel({
       const speechTimeouts = speechTimeoutsRef.current;
 
       return () => {
+        const ownedPlayback = playbackActiveRef.current;
         autoplayControllerRef.current.cancel({
           stopActivePlayback: false
         });
@@ -671,7 +675,7 @@ export default function ExpressionLoopPanel({
         playbackActiveRef.current = false;
         speechTimeouts.forEach(timeoutId => window.clearTimeout(timeoutId));
         speechTimeouts.clear();
-        onCancelSpeech();
+        if (ownedPlayback) onCancelSpeech();
       };
     },
     [onCancelSpeech]
@@ -712,7 +716,7 @@ export default function ExpressionLoopPanel({
   }
 
   async function playCandidates(state) {
-    if (candidatesRejectedRef.current || !state.candidateSentences.length) {
+    if (!active || document.hidden || candidatesRejectedRef.current || !state.candidateSentences.length) {
       return;
     }
 
@@ -768,16 +772,19 @@ export default function ExpressionLoopPanel({
   }
 
   useEffect(() => {
-    const interrupt = () => {
-      if (!document.hidden) return;
+    const interrupt = event => {
+      if (event.type !== 'pause' && !document.hidden) return;
       cancelPendingAi();
       cancelExpressionShare();
       restoredAutoplayPausedRef.current = true;
       handlePatientInteraction();
-      onCancelSpeech();
     };
     document.addEventListener('visibilitychange', interrupt);
-    return () => document.removeEventListener('visibilitychange', interrupt);
+    document.addEventListener('pause', interrupt);
+    return () => {
+      document.removeEventListener('visibilitychange', interrupt);
+      document.removeEventListener('pause', interrupt);
+    };
     // The callback uses the same generation refs as explicit patient cancellation.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [onCancelSpeech]);
@@ -816,6 +823,9 @@ export default function ExpressionLoopPanel({
   }
 
   function handleRemoveOutput(index) {
+    if (outputActions) {
+      handleStopPlayback(); outputActions.remove(index); return;
+    }
     handleEditedOutput(removeExpressionOutputItem(output, index));
   }
 
@@ -1381,6 +1391,14 @@ export default function ExpressionLoopPanel({
           {output.map(item => item.label).join(' / ') ||
             copy.selectSymbolsFirst}
         </div>
+        {outputActions && <div className="CommunicationSupportPanel__toolbar" aria-label="当前表达删除与恢复">
+          <PatientActionButton action={PATIENT_ACTION_IDS.remove} label="退格" ariaLabel="删除最后一张图片"
+            disabled={!output.length} onClick={() => { handleStopPlayback(); outputActions.backspace(); }} />
+          <PatientActionButton action={PATIENT_ACTION_IDS.clear} disabled={!output.length}
+            onClick={() => { handleStopPlayback(); outputActions.clear(); }} />
+          <PatientActionButton action={PATIENT_ACTION_IDS.undo} label="撤销删除" ariaLabel="撤销最近一次图片删除"
+            disabled={!outputActions.canUndo} onClick={() => { handleStopPlayback(); outputActions.undo(); }} />
+        </div>}
         {pictogramSuggestions.tiles.length > 0 && (
           <div
             className="CommunicationSupportPanel__pictogramSuggestions"

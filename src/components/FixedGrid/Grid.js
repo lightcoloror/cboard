@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import classNames from 'classnames';
 
 import GridBase from './GridBase';
+import { getFixedGridPages } from './utils.ts';
 import styles from './Grid.module.css';
 
 function chunks(array, size) {
@@ -29,13 +30,18 @@ function Grid(props) {
     fixedRef,
     isBigScrollBtns,
     isNavigationButtonsOnTheSide,
+    preserveEmptySlots = false,
     ...other
   } = props;
 
-  const pages = useMemo(() => chunks(items, other.rows * other.columns), [
+  const pages = useMemo(() => preserveEmptySlots
+    ? getFixedGridPages(items, other.order || [], other.rows * other.columns)
+    : chunks(items, other.rows * other.columns), [
     items,
     other.rows,
-    other.columns
+    other.columns,
+    other.order,
+    preserveEmptySlots
   ]);
 
   const gridClassName = classNames(styles.grid, className);
@@ -222,13 +228,17 @@ function Grid(props) {
     >
       {pages.length > 0 ? (
         pages.map((pageItems, i) => (
+          <React.Fragment key={i}>
+          {preserveEmptySlots && i > 0 && <p>未定位图卡；原有固定空位保持不变。</p>}
           <GridBase
             {...other}
             className={gridClassName}
             items={pageItems}
-            key={i}
+            order={preserveEmptySlots && i > 0 ? [] : other.order}
+            preserveEmptySlots={preserveEmptySlots && i === 0}
             page={i}
           />
+          </React.Fragment>
         ))
       ) : (
         <GridBase {...other} className={gridClassName} page={0} />

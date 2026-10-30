@@ -10,7 +10,8 @@ export default function CommunicationSupportFeature({
   variant,
   demoMode,
   pictogramOrdering,
-  onPictogramUsed
+  onPictogramUsed,
+  outputActions
 }) {
   if (variant === COMMUNICATION_SUPPORT_VARIANTS.tuyujia) {
     return (
@@ -21,6 +22,7 @@ export default function CommunicationSupportFeature({
         autoExpandOnOutput
         pictogramOrdering={pictogramOrdering}
         onPictogramUsed={onPictogramUsed}
+        outputActions={outputActions}
       />
     );
   }
@@ -30,6 +32,7 @@ export default function CommunicationSupportFeature({
       demoMode={demoMode}
       pictogramOrdering={pictogramOrdering}
       onPictogramUsed={onPictogramUsed}
+      outputActions={outputActions}
     />
   );
 }

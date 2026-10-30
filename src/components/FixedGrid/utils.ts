@@ -59,12 +59,14 @@ export function sortGrid({
   columns,
   rows,
   order,
-  items
+  items,
+  preserveEmptySlots = false
 }: {
   columns: number;
   rows: number;
   order: GridOrder;
   items: { id: string;[key: string]: any }[];
+  preserveEmptySlots?: boolean;
 }) {
   const grid = createMatrix(rows, columns);
   const itemsToSort = [...items];
@@ -81,7 +83,17 @@ export function sortGrid({
     }
   });
 
-  return fillEmptyGridCells(grid, itemsToSort);
+  return preserveEmptySlots ? grid : fillEmptyGridCells(grid, itemsToSort);
+}
+
+// Unpositioned cards stay reachable on a separate page; they do not occupy
+// intentional holes in the fixed first page until explicitly placed there.
+export function getFixedGridPages(items: { id: string }[], order: GridOrder, size: number) {
+  const positioned = new Set(order.flat().filter(Boolean));
+  const pages = [items.filter(item => positioned.has(item.id))];
+  const pending = items.filter(item => !positioned.has(item.id));
+  while (pending.length) pages.push(pending.splice(0, Math.max(1, size)));
+  return pages;
 }
 
 function iterateGridItems(

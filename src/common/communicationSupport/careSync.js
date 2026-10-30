@@ -183,6 +183,9 @@ export function createCareSync({
     edit: (kind, resourceId, value, action = 'put', options = {}) =>
       serial(async () => {
         checkEdit(kind);
+        if (kind === 'board' && action === 'put' && value?.layout?.cells && !state.localArchive && state.capabilities?.fixedBoardLayout !== 1) {
+          throw new Error('服务器尚不支持固定格位写入，原图板和待办已保留。');
+        }
         const next = copy(state);
         const k = `${kind}:${resourceId}`;
         if (next.conflicts.some(c => resourceKey(c.operation) === k))
@@ -296,6 +299,7 @@ export function createCareSync({
           if (snapshot.familyId !== familyId) throw new Error('档案空间不匹配');
           let next = copy(state);
           next.permissions = snapshot.permissions;
+          next.capabilities = snapshot.capabilities || {};
           next.owner = snapshot.owner === true;
           next.localArchive = false;
           next.locked = false;
@@ -377,6 +381,9 @@ export function createCareSync({
           );
           for (const op of [...state.queue]) {
             if (!canUpload) break;
+            if (op.kind === 'board' && op.action === 'put' && op.value?.layout?.cells && state.capabilities?.fixedBoardLayout !== 1) {
+              throw new Error('服务器尚不支持固定格位写入，待办已保留。');
+            }
             if (blocked.has(resourceKey(op))) continue;
             if (
               op.action !== 'delete' &&

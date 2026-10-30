@@ -45,9 +45,15 @@ export function projectCareBoards(
 // Called against the cached base before fetching new server revisions. Thus an
 // offline edit cannot silently acquire the newest version and overwrite it.
 export async function queueCareBoards(engine, boards, readImage) {
+  // Complete preflight before queuing tiles/media. Older servers must not get a
+  // partial board edit with its geometry silently removed.
+  const preparedBoards = boards.map(source => createBoardDTO(source));
+  if (preparedBoards.some(board => board.layout.cells) && !engine.view().localArchive && engine.view().capabilities?.fixedBoardLayout !== 1) {
+    throw new Error('服务器尚不支持固定格位写入，原图板已保留，请先升级服务端。');
+  }
   const wantedBoards = new Set(),
     wantedTiles = new Set();
-  for (const sourceBoard of boards) {
+  for (const sourceBoard of preparedBoards) {
     // CBoard UI callbacks return native boards with flat communication hints.
     // Reuse the shared DTO adapter before queuing, so private people retain
     // their category and cannot fall through to public matching after restore.

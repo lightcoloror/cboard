@@ -10,6 +10,19 @@ import {
 } from './dto';
 
 describe('communication support DTO v1', () => {
+  test('fixed v2 keeps intentional holes; new cards append rather than occupy them; future versions fail closed', () => {
+    const source = { id:'fixed', name:'合成固定板', isFixed:true,
+      grid:{ rows:2, columns:3, order:[['a',null,'b'],[null,'c',null]] },
+      tiles:['a','b','c'].map(id=>({id,label:id})) };
+    const board = createBoardDTO(source);
+    expect(board.version).toBe(2);
+    expect(board.layout.cells).toEqual(['a',null,'b',null,'c',null]);
+    const next = createBoardDTO({...source, tiles:[...source.tiles,{id:'d',label:'新增'}]});
+    expect(next.layout.cells.slice(0,6)).toEqual(board.layout.cells);
+    expect(next.layout.cells.slice(6)).toEqual(['d',null,null]);
+    expect(() => createBoardDTO({...board,version:999})).toThrow('Unsupported');
+    expect(() => createBoardDTO({...source,grid:{rows:2001,columns:3,order:[]}})).toThrow('cell limit');
+  });
   test('normalizes a CBoard board and preserves display order and matching data', () => {
     const source = {
       id: 'daily-needs',
@@ -48,7 +61,7 @@ describe('communication support DTO v1', () => {
     expect(board).toEqual(
       expect.objectContaining({
         dtoType: BOARD_DTO_TYPE,
-        version: COMMUNICATION_DTO_VERSION,
+        version: 2,
         id: 'daily-needs',
         name: '日常需求',
         category: 'needs'

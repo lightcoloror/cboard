@@ -4,6 +4,7 @@ import { clearSavedPhraseUndoSession } from '../../../common/communicationSuppor
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { currentImageOperationEpoch } from '../../../common/communicationSupport/imageOperationEpoch';
 import CareExpressionBoard from '../../Care/CareExpressionBoard';
+import { OutputContainer } from '../Output/Output.container';
 import PropTypes from 'prop-types';
 import { CboardScanButton as Button } from '../../UI/CboardScan';
 import shortid from 'shortid';
@@ -256,6 +257,7 @@ function CommunicationSupportWorkspace({
   output,
   activeBoardId,
   onApplyOutput,
+  outputActions,
   onJumpBoard,
   onSpeak,
   onCancelSpeech,
@@ -284,10 +286,16 @@ function CommunicationSupportWorkspace({
   careDataVersion
 }) {
   const copy = { ...DEFAULT_COPY, ...(copyOverrides || {}) };
+  const nativeOutputIntl = useMemo(() => ({
+    messages: {}, formatMessage: ({ defaultMessage, id }) => defaultMessage || id, ...(intl || {})
+  }), [intl]);
   const scopeKey = getCommunicationStorageScopeKey();
   const panelMounted = useRef(true);
+  const pendingSettingsSync = useRef(null);
+  useEffect(() => { pendingSettingsSync.current = null; }, [scopeKey, accountId]);
   useEffect(() => () => { panelMounted.current = false; }, []);
   const [expressionDraftEpoch, setExpressionDraftEpoch] = useState(0);
+  const [careOutputActions, setCareOutputActions] = useState(null);
   const expressionDraftService = useMemo(() => {
     if (typeof createLocalExpressionDraft !== 'function') return null;
     try { return createLocalExpressionDraft(); }
@@ -1062,15 +1070,15 @@ function CommunicationSupportWorkspace({
     if (!careSave && displayChanged) await onChangeDisplaySettings(nextDisplaySettings);
     setPreferences(savedPreferences);
 
-    if (isLogged && !careMode && (speechChanged || displayChanged)) {
+    if (isLogged && !careMode && (speechChanged || displayChanged || pendingSettingsSync.current)) {
+      const payload = {
+        display: nextDisplaySettings,
+        speech: { ...speechSettings, rate: savedPreferences.speechRate }
+      };
+      pendingSettingsSync.current = payload;
       try {
-        await API.updateSettings({
-          display: nextDisplaySettings,
-          speech: {
-            ...speechSettings,
-            rate: savedPreferences.speechRate
-          }
-        });
+        await API.updateSettings(payload);
+        if (pendingSettingsSync.current === payload) pendingSettingsSync.current = null;
       } catch (error) {
         return { syncFailed: true };
       }
@@ -1122,6 +1130,15 @@ function CommunicationSupportWorkspace({
         preferences.gridColumns
       }`}
     >
+      {careMode && <div hidden={!isExpanded} aria-label="当前表达与撤销">
+        <OutputContainer key={`care-output-${scopeKey}`} intl={nativeOutputIntl} output={output}
+          outputScope={`${scopeKey}:${accountId}`} active={isExpanded} isLiveMode={false}
+          changeOutput={onApplyOutput} cancelSpeech={onCancelSpeech}
+          clickOutput={() => {}} showNotification={setSessionNotice}
+          speak={(text, done) => onSpeak(text, done, [])}
+          navigationSettings={{removeOutputActive:false}} increaseOutputButtons={preferences.fontSize !== 'normal'}
+          onOutputActionsChange={setCareOutputActions} />
+      </div>}
       <div className="CommunicationSupportPanel__header">
         <div>
           <h3 className="CommunicationSupportPanel__title">{copy.title}</h3>
@@ -1208,6 +1225,7 @@ function CommunicationSupportWorkspace({
 
           {careMode && isExpanded && (
             <CareExpressionBoard
+              hideDeletionControls
               preferences={preferences}
               pictogramOrdering={pictogramOrdering}
               onPictogramUsed={onPictogramUsed}
@@ -1245,6 +1263,7 @@ function CommunicationSupportWorkspace({
             onPictogramUsed={onPictogramUsed}
             onSpeak={onSpeak}
             onCancelSpeech={onCancelSpeech}
+            outputActions={outputActions || careOutputActions}
             onSavePhrase={handleSavePhrase}
             onAppendHistory={handleAppendExpressionHistory}
             onSaveCandidateFeedbackDraft={
@@ -1471,6 +1490,7 @@ function CommunicationSupportWorkspace({
           setShowPreparation(false); setShowManagement(true);
         }} />}
       <CommunicationAccessibilityDialog
+        key={`preferences-${scopeKey}`}
         key={getCommunicationStorageScopeKey()}
         open={showAccessibility}
         onClose={() => setShowAccessibility(false)}

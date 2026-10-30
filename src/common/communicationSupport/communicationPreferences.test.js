@@ -7,6 +7,17 @@ import {
 } from './communicationPreferences';
 
 describe('communication preferences', () => {
+  test('hiding fixed navigation preserves both native and DTO positions and leaves the source intact', () => {
+    const home={id:'home',isFixed:true,grid:{rows:2,columns:3,order:[['a',null,'nav'],[null,'b',null]]},
+      layout:{rows:2,columns:3,tileIds:['a','nav','b'],cells:['a',null,'nav',null,'b',null]},
+      tiles:[{id:'a',label:'甲'},{id:'nav',label:'子板',loadBoardId:'child'},{id:'b',label:'乙'}]};
+    const boards=[home,{id:'child',tiles:[]}],original=JSON.stringify(boards);
+    const hidden=projectVisibleCommunicationBoards(boards,['child']);
+    expect(hidden[0].grid.order).toEqual([['a',null,null],[null,'b',null]]);
+    expect(hidden[0].layout.cells).toEqual(['a',null,null,null,'b',null]);
+    expect(JSON.stringify(boards)).toBe(original);
+    expect(projectVisibleCommunicationBoards(boards,[])[0].grid.order).toEqual(home.grid.order);
+  });
   test('normalizes display, speech and onboarding values', () => {
     expect(
       normalizeCommunicationPreferences({

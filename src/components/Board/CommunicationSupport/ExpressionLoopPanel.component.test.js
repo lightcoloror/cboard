@@ -71,6 +71,38 @@ describe('ExpressionLoopPanel', () => {
     candidateAutoplayDelaySeconds: 0
   };
 
+  test('hidden or unmounted inactive expression does not cancel another panel playback', () => {
+    const cancel=jest.fn();
+    const descriptor=Object.getOwnPropertyDescriptor(document,'hidden');
+    const wrapper=mount(<ExpressionLoopPanel {...props} active={false} onCancelSpeech={cancel} />);
+    const before=cancel.mock.calls.length;
+    Object.defineProperty(document,'hidden',{configurable:true,value:true});
+    act(()=>document.dispatchEvent(new Event('visibilitychange')));
+    wrapper.unmount();
+    expect(cancel).toHaveBeenCalledTimes(before);
+    if(descriptor) Object.defineProperty(document,'hidden',descriptor); else delete document.hidden;
+  });
+
+  test('hidden edits and Cordova pause do not schedule old candidates; visibility alone does not replay', () => {
+    jest.useFakeTimers();
+    const descriptor=Object.getOwnPropertyDescriptor(document,'hidden');let hidden=false;
+    Object.defineProperty(document,'hidden',{configurable:true,get:()=>hidden});
+    const speak=jest.fn(),wrapper=mount(<ExpressionLoopPanel {...props} onSpeak={speak} candidateAutoplayDelaySeconds={15} />);
+    try {
+      act(()=>{document.dispatchEvent(new Event('pause'));jest.advanceTimersByTime(16000);});
+      expect(speak).not.toHaveBeenCalled();
+      hidden=true;
+      act(()=>{document.dispatchEvent(new Event('visibilitychange'));wrapper.setProps({output:[...output,{id:'no',label:'不'}]});});
+      act(()=>jest.advanceTimersByTime(16000));
+      expect(speak).not.toHaveBeenCalled();
+      act(()=>{hidden=false;document.dispatchEvent(new Event('visibilitychange'));jest.advanceTimersByTime(16000);});
+      expect(speak).not.toHaveBeenCalled();
+    } finally {
+      wrapper.unmount();if(descriptor)Object.defineProperty(document,'hidden',descriptor);else delete document.hidden;
+      jest.useRealTimers();
+    }
+  });
+
   test('favorite capacity and persistence errors stay visible without losing the expression, then retry succeeds', () => {
     const save = jest.fn().mockImplementationOnce(() => {
       const error = new Error('常用语已达到容量上限（100条），请先整理已有收藏。');

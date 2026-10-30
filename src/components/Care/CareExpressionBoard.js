@@ -9,6 +9,7 @@ export default function CareExpressionBoard({
   output,
   onApplyOutput,
   onJumpBoard,
+  hideDeletionControls = false,
   preferences = {},
   pictogramOrdering = {},
   onPictogramUsed = () => {}
@@ -116,15 +117,15 @@ export default function CareExpressionBoard({
         {output.map(tile => tile.label || tile.vocalization).join(' · ') ||
           '尚未选图'}
       </p>
-      <Button
+      {!hideDeletionControls && <Button
         disabled={!output.length}
         onClick={() => onApplyOutput(output.slice(0, -1))}
       >
         撤回最后一张
-      </Button>
-      <Button disabled={!output.length} onClick={() => onApplyOutput([])}>
+      </Button>}
+      {!hideDeletionControls && <Button disabled={!output.length} onClick={() => onApplyOutput([])}>
         清空已选图卡
-      </Button>
+      </Button>}
     </section>
   );
 }

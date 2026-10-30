@@ -6,6 +6,8 @@ import {
 } from './pictogramAttribution';
 
 export const COMMUNICATION_DTO_VERSION = 1;
+export const FIXED_BOARD_DTO_VERSION = 2;
+export const MAX_FIXED_BOARD_CELLS = 2000;
 export const BOARD_DTO_TYPE = 'BoardDTO';
 export const TILE_DTO_TYPE = 'TileDTO';
 export const DEFAULT_BOARD_DTO_COLUMNS = 4;
@@ -116,8 +118,8 @@ function buildOrderedTileIds(source, tiles) {
 }
 
 // Keep sparse native grid positions separate from the compact matching order.
-// Deleted cards leave holes; newly inserted cards use a free cell without moving
-// existing cards. DTO v1 readers without fixed cells retain their old behavior.
+// Deleted cards leave holes; new cards append on a new row. DTO v2 makes old
+// readers fail closed instead of silently compressing fixed positions.
 function buildFixedCells(board, columns, rows, orderedTileIds) {
   const layout = board.layout || {};
   const grid = board.grid || {};
@@ -131,6 +133,9 @@ function buildFixedCells(board, columns, rows, orderedTileIds) {
       return flat.concat(Array.from({ length: columns }, (_, index) => row[index] || null));
     }, []);
   } else return null;
+  if (rows * columns > MAX_FIXED_BOARD_CELLS || input.length > MAX_FIXED_BOARD_CELLS) {
+    throw new TypeError('Fixed grid exceeds the supported cell limit');
+  }
   const validIds = new Set(orderedTileIds);
   const seen = new Set();
   const cells = input.map(value => {
@@ -144,9 +149,9 @@ function buildFixedCells(board, columns, rows, orderedTileIds) {
   while (cells.length < rows * columns) cells.push(null);
   orderedTileIds.forEach(id => {
     if (seen.has(id)) return;
-    const free = cells.indexOf(null);
-    if (free < 0) cells.push(id);
-    else cells[free] = id;
+    // Existing empty positions are intentional. New unpositioned cards are
+    // appended on new rows; never assign them to an old empty cell implicitly.
+    cells.push(id);
     seen.add(id);
   });
   while (cells.length % columns) cells.push(null);
@@ -218,6 +223,12 @@ export function createTileDTO(source, options = {}) {
 
 export function createBoardDTO(source, options = {}) {
   const board = source || {};
+  if (board.dtoType === BOARD_DTO_TYPE && ![COMMUNICATION_DTO_VERSION, FIXED_BOARD_DTO_VERSION].includes(board.version)) {
+    throw new TypeError('Unsupported BoardDTO version; original data must be preserved');
+  }
+  if (board.dtoType === BOARD_DTO_TYPE && board.version === FIXED_BOARD_DTO_VERSION && !Array.isArray(board.layout && board.layout.cells)) {
+    throw new TypeError('Unsupported fixed BoardDTO layout; original data must be preserved');
+  }
   const id = requireText(board.id, 'BoardDTO.id');
   const sourceTiles = Array.isArray(board.tiles) ? board.tiles : [];
   const tiles = sourceTiles.map(tile =>
@@ -255,7 +266,7 @@ export function createBoardDTO(source, options = {}) {
   ]);
   const dto = {
     dtoType: BOARD_DTO_TYPE,
-    version: COMMUNICATION_DTO_VERSION,
+    version: cells ? FIXED_BOARD_DTO_VERSION : COMMUNICATION_DTO_VERSION,
     id,
     name: requireText(name, 'BoardDTO.name'),
     nameKey: normalizeText(board.nameKey),
@@ -323,6 +334,7 @@ function hasCoherentBoardLayout(value) {
   const occupied = Array.isArray(cells) ? cells.filter(id => id !== null) : [];
   const coherentCells = cells === undefined || (
     Array.isArray(cells) &&
+    cells.length <= MAX_FIXED_BOARD_CELLS &&
     cells.length === value.layout.rows * value.layout.columns &&
     occupied.length === tileIds.length &&
     new Set(occupied).size === occupied.length &&
@@ -343,7 +355,8 @@ export function isBoardDTO(value) {
   return Boolean(
     value &&
       value.dtoType === BOARD_DTO_TYPE &&
-      value.version === COMMUNICATION_DTO_VERSION &&
+      [COMMUNICATION_DTO_VERSION, FIXED_BOARD_DTO_VERSION].includes(value.version) &&
+      (value.version !== FIXED_BOARD_DTO_VERSION || Array.isArray(value.layout && value.layout.cells)) &&
       isNonEmptyString(value.id) &&
       isNonEmptyString(value.name) &&
       typeof value.nameKey === 'string' &&

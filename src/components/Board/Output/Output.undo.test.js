@@ -29,7 +29,8 @@ function Harness({
   outputScope = 'synthetic:one',
   isLiveMode = false,
   seed = initial,
-  increaseOutputButtons = false
+  increaseOutputButtons = false,
+  onOutputActionsChange
 }) {
   const [output, update] = useState(seed);
   setOutput = update;
@@ -46,6 +47,7 @@ function Harness({
           clickOutput={jest.fn()}
           navigationSettings={{ removeOutputActive: false }}
           increaseOutputButtons={increaseOutputButtons}
+          onOutputActionsChange={onOutputActionsChange}
         />
       </Scanner>
     </IntlProvider>
@@ -62,6 +64,25 @@ const undo = wrapper => {
   wrapper.update();
 };
 let wrapper;
+
+test('panel bridge uses the same deletion stack and rejects stale scope callbacks', () => {
+  let actions;
+  wrapper = mount(<Harness onOutputActionsChange={value => { actions = value; }} />);
+  const stale = actions;
+  actions.remove(1); wrapper.update();
+  expect(symbols(wrapper).map(item=>item.id)).toEqual(['a','c']);
+  expect(actions.canUndo).toBe(true);
+  actions.clear(); wrapper.update();
+  expect(symbols(wrapper)).toEqual([]);
+  actions.undo(); wrapper.update();
+  expect(symbols(wrapper).map(item=>item.id)).toEqual(['a','c']);
+  actions.undo(); wrapper.update();
+  expect(symbols(wrapper)).toEqual(initial);
+  wrapper.setProps({outputScope:'synthetic:two'});
+  stale.remove(0); wrapper.update();
+  expect(symbols(wrapper)).toEqual(initial);
+  expect(actions.canUndo).toBe(false);
+});
 afterEach(() => {
   if (wrapper) wrapper.unmount();
   wrapper = null;

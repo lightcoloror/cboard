@@ -7,6 +7,18 @@ import CommunicationAccessibilityDialog from './CommunicationAccessibilityDialog
 const boards = [{ id: 'home', name: '首页' }, { id: 'food', name: '食物' }];
 
 describe('CommunicationAccessibilityDialog', () => {
+  test('local success with cloud failure keeps a separate explicit sync retry', async () => {
+    const change=jest.fn().mockResolvedValueOnce({syncFailed:true}).mockResolvedValueOnce({syncFailed:false});
+    const wrapper=mount(<CommunicationAccessibilityDialog open onClose={jest.fn()} boards={boards}
+      value={DEFAULT_COMMUNICATION_PREFERENCES} onChange={change} />);
+    await act(async()=>{ wrapper.find('ForwardRef(Button)').filterWhere(node=>node.text()==='大').first().simulate('click'); });
+    wrapper.update(); expect(wrapper.text()).toContain('已保存到本机');
+    await act(async()=>{ wrapper.find('ForwardRef(Button)').filterWhere(node=>node.text()==='重试同步设置').simulate('click'); });
+    wrapper.update(); expect(change).toHaveBeenCalledTimes(2);
+    expect(change.mock.calls[0]).toEqual(change.mock.calls[1]);
+    expect(wrapper.text()).not.toContain('账号同步失败');
+    wrapper.unmount();
+  });
   test('names each choice group and exposes exactly one pressed option without changing button or scan semantics', () => {
     const wrapper = mount(<CommunicationAccessibilityDialog open onClose={jest.fn()}
       boards={boards} value={DEFAULT_COMMUNICATION_PREFERENCES} onChange={jest.fn()} />);

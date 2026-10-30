@@ -1,5 +1,14 @@
 import React from 'react';
-import { mount } from 'enzyme';
+import { mount as mountReact } from 'enzyme';
+import { IntlProvider } from 'react-intl';
+import zhMessages from '../../../translations/zh-CN.json';
+jest.unmock('react-intl');
+
+// Care now uses CBoard's actual output widget, whose messages require the same
+// IntlProvider supplied by App. Keep Enzyme's root setProps on the panel.
+const mount = element => mountReact(element, {
+  wrappingComponent: ({ children }) => <IntlProvider locale="zh-CN" messages={zhMessages}>{children}</IntlProvider>
+});
 import { act } from 'react-dom/test-utils';
 import CommunicationSupportPanel from './CommunicationSupportPanel.component';
 import PatientActionButton from './PatientActionButton.component';
@@ -1828,6 +1837,25 @@ describe('CommunicationSupportPanel receiver flow', () => {
         uiSize: 'ExtraLarge'
       })
     );
+  });
+
+  test('cloud retry still writes the desired settings after Redux already applied them', async () => {
+    let wrapper;
+    await act(async()=>{wrapper=mount(<CommunicationSupportPanel {...props} isLogged />);});
+    API.updateSettings.mockClear();
+    API.updateSettings.mockRejectedValueOnce(new Error('合成同步失败'));
+    const value={...wrapper.find('CommunicationAccessibilityDialog').prop('value'),fontSize:'extra-large',speechRate:0.7};
+    let result;
+    await act(async()=>{result=await wrapper.find('CommunicationAccessibilityDialog').prop('onChange')(value);});
+    expect(result.syncFailed).toBe(true);
+    const display=props.onChangeDisplaySettings.mock.calls.slice(-1)[0][0];
+    wrapper.setProps({displaySettings:display,speechSettings:{...props.speechSettings,rate:0.7}});
+    API.updateSettings.mockResolvedValueOnce({});
+    await act(async()=>{result=await wrapper.find('CommunicationAccessibilityDialog').prop('onChange')(value);});
+    expect(result.syncFailed).toBe(false);
+    expect(API.updateSettings).toHaveBeenCalledTimes(2);
+    expect(API.updateSettings.mock.calls[0]).toEqual(API.updateSettings.mock.calls[1]);
+    wrapper.unmount();
   });
 
   test('loads legacy tuyujia remote settings and syncs them back through communicationSupport', async () => {

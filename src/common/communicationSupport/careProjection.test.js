@@ -5,8 +5,23 @@ import { buildPersonalPictogramTileDTO } from './pictogramMetadataSuggestion';
 import { buildCommunicationTileCatalog } from './symbolMatching';
 import { getPersonalPeople, filterPublicPictureTokens } from './personalPeople';
 
+test('fixed geometry requires server capability before any queue mutation, then round-trips exact holes', async () => {
+  const board=createBoardDTO({id:'fixed',name:'合成固定板',grid:{rows:2,columns:3,order:[['a',null,'b'],[null,'c',null]]},
+    tiles:['a','b','c'].map(id=>({id,label:id}))});
+  const state={resources:{},media:{},locked:false,capabilities:{}};
+  const edit=jest.fn(async (kind,id,value)=>{ state.resources[`${kind}:${id}`]={kind,id,value}; });
+  const engine={view:()=>state,edit};
+  await expect(queueCareBoards(engine,[board])).rejects.toThrow('服务器尚不支持');
+  expect(edit).not.toHaveBeenCalled();
+  state.capabilities.fixedBoardLayout=1;
+  await queueCareBoards(engine,[board]);
+  const restored=projectCareBoards(state)[0];
+  expect(restored.layout.cells).toEqual(['a',null,'b',null,'c',null]);
+  expect(boardDTOToCboardBoard(restored).grid.order).toEqual([['a',null,'b'],[null,'c',null]]);
+});
+
 test('native CBoard person cards retain their identity category across queued offline projection', async () => {
-  const snapshot = { resources: {}, media: {}, locked: false };
+  const snapshot = { resources: {}, media: {}, locked: false, capabilities: { fixedBoardLayout: 1 } };
   const engine = {
     view: () => snapshot,
     edit: async (kind, id, value) => {
@@ -56,7 +71,7 @@ test('native CBoard person cards retain their identity category across queued of
 });
 
 test('shared boards preserve expression, navigation, matching hints and manual order through a round trip', async () => {
-  const snapshot = { resources: {}, media: {}, locked: false };
+  const snapshot = { resources: {}, media: {}, locked: false, capabilities: { fixedBoardLayout: 1 } };
   const engine = {
     view: () => snapshot,
     edit: jest.fn(async (kind, id, value) => {

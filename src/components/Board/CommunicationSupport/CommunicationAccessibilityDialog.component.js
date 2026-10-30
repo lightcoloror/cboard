@@ -49,6 +49,7 @@ export default function CommunicationAccessibilityDialog({
   const [pendingValue, setPendingValue] = useState(null);
   const [saveNotice, setSaveNotice] = useState('');
   const [saveFailed, setSaveFailed] = useState(false);
+  const [syncRetryValue, setSyncRetryValue] = useState(null);
   const saveRun = useRef(0);
   const noticeRef = useRef(null);
   const value = pendingValue || savedValue;
@@ -56,7 +57,7 @@ export default function CommunicationAccessibilityDialog({
     if (!open) {
       saveRun.current += 1;
       setPendingValue(null);
-      setSaveNotice('');
+      setSaveNotice(syncRetryValue ? '已保存到本机；账号设置尚未同步，可重试。' : '');
       setSaveFailed(false);
     }
     return () => { saveRun.current += 1; };
@@ -78,6 +79,7 @@ export default function CommunicationAccessibilityDialog({
       if (run !== saveRun.current) return;
       if (result === false) throw new Error('本机写入未完成');
       setPendingValue(null);
+      setSyncRetryValue(result && result.syncFailed ? next : null);
       setSaveNotice(result && result.syncFailed
         ? '已保存到本机；账号同步失败，请稍后重试同步。'
         : '已保存到本机。');
@@ -110,6 +112,7 @@ export default function CommunicationAccessibilityDialog({
         <div ref={noticeRef} role={saveFailed ? 'alert' : 'status'} aria-live={saveFailed ? 'assertive' : 'polite'} aria-atomic="true">
           {saveNotice}
           {saveFailed && <Button onClick={() => save(pendingValue)} color="primary">重试保存设置</Button>}
+          {!saveFailed && syncRetryValue && <Button onClick={() => save(syncRetryValue)} disabled={Boolean(pendingValue)} color="primary">重试同步设置</Button>}
         </div>
         <section className="CommunicationSupportPanel__preferenceSection">
           <h4>视觉显示</h4>
