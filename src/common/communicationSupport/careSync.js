@@ -16,7 +16,7 @@ export function createCareSync({
   changed = () => {}
 }) {
   const key = `care-v1:${accountId}:${familyId}:${profileId}`;
-  let state = {
+  const emptyState = () => ({
     cursor: -1,
     resources: {},
     queue: [],
@@ -24,14 +24,22 @@ export function createCareSync({
     media: {},
     permissions: [],
     locked: false
+  });
+  let state = emptyState();
+  let expectedRaw = null;
+  const storedValue = value => value == null ? null : value;
+  const load = raw => {
+    state = raw === null ? emptyState() : JSON.parse(raw);
+    expectedRaw = raw;
   };
   if (!storageQueues.has(storage)) storageQueues.set(storage, new Map());
   const queues = storageQueues.get(storage);
   const serial = fn => {
     const run = async () => {
       checkAccount();
-      const raw = await storage.get(key);
-      if (raw) state = JSON.parse(raw);
+      const raw = storedValue(await storage.get(key));
+      checkAccount();
+      load(raw);
       return fn();
     };
     const job = (queues.get(key) || Promise.resolve()).then(() =>
@@ -49,7 +57,28 @@ export function createCareSync({
   };
   async function persist(next) {
     checkAccount();
-    await storage.set(key, JSON.stringify(next));
+    const serialized = JSON.stringify(next);
+    let committed;
+    if (storage.setIfUnchanged) {
+      committed = await storage.setIfUnchanged(key, expectedRaw, serialized);
+    } else {
+      const current = storedValue(await storage.get(key));
+      checkAccount();
+      committed = current === expectedRaw;
+      if (committed && await storage.set(key, serialized) === false)
+        throw Object.assign(new Error('本机协作资料尚未确认保存，请重试。'), { code: 'CARE_LOCAL_STORAGE_UNAVAILABLE' });
+    }
+    checkAccount();
+    if (!committed) {
+      const current = storedValue(await storage.get(key));
+      checkAccount();
+      load(current);
+      // Observers already consume this notification for init/read changes too;
+      // refresh the current snapshot without reporting a successful commit.
+      changed({ reason: 'local-state-changed' });
+      throw Object.assign(new Error('本机协作资料已被清除或更新，旧操作已停止；请重新查看当前档案。'), { code: 'CARE_LOCAL_STATE_CHANGED' });
+    }
+    expectedRaw = serialized;
     state = next;
     changed();
   }
@@ -89,6 +118,45 @@ export function createCareSync({
     return result;
   }
   const api = `/care/profiles/${encodeURIComponent(profileId)}`;
+  async function applySnapshot(snapshot, full) {
+    checkAccount();
+    if (snapshot.familyId !== familyId) throw new Error('档案空间不匹配');
+    const next = copy(state);
+    next.permissions = snapshot.permissions;
+    next.capabilities = snapshot.capabilities || {};
+    next.owner = snapshot.owner === true;
+    next.localArchive = false;
+    next.locked = false;
+    next.status = 'ready';
+    next.entitlements = snapshot.entitlements || null;
+    next.relationship = snapshot.relationship || null;
+    next.cursor = snapshot.cursor;
+    if (full) next.resources = {};
+    if (full && next.archiveResources)
+      next.resources = { ...next.archiveResources };
+    snapshot.resources.forEach(r => {
+      next.resources[resourceKey(r)] = r;
+    });
+    await persist(next);
+  }
+  async function recheckDeniedWrite(error) {
+    checkAccount();
+    try {
+      // A denied write does not establish that read access was also revoked.
+      // Reuse the existing full-read endpoint once; never replay the write here.
+      await applySnapshot(await request(api, 'GET'), true);
+    } catch (checkError) {
+      if (
+        currentAccount() === accountId &&
+        checkError.code !== 'CARE_LOCAL_STATE_CHANGED' &&
+        !(checkError.status === 403 && checkError.data?.code === 'PROFILE_ACCESS_DENIED')
+      ) {
+        await persist({ ...copy(state), locked: true, status: 'access_check_required' });
+      }
+      throw checkError;
+    }
+    return Object.assign(new Error(error.message), error, { profileReadAllowed: true });
+  }
   return {
     newMediaId: newId,
     view: visible,
@@ -172,11 +240,6 @@ export function createCareSync({
     init: () =>
       serial(async () => {
         checkAccount();
-        const raw = await storage.get(key);
-        if (raw) {
-          const loaded = JSON.parse(raw);
-          state = loaded;
-        }
         changed();
         return visible();
       }),
@@ -193,6 +256,15 @@ export function createCareSync({
         const current = visible().resources[k];
         if (current && current.deleted)
           throw new Error('已删除内容不能恢复，请新建图卡');
+        // These preferences describe state, not repeated events. Reuse only the
+        // latest still-pending identical intention after the serial storage read;
+        // do not merge across an intervening different value or bypass grants.
+        if (kind === 'preference' && action === 'put' && !options.updateOriginal &&
+            ['fontSize', 'cardDensity', 'speechRate'].includes(resourceId)) {
+          const latest = [...next.queue].reverse().find(op =>
+            op.kind === kind && op.resourceId === resourceId);
+          if (latest?.action === 'put' && JSON.stringify(latest.value) === JSON.stringify(value)) return;
+        }
         const operationId = await newId();
         if (options.updateOriginal) {
           if (!state.owner || kind !== 'favorite' || !current?.source)
@@ -295,25 +367,8 @@ export function createCareSync({
             full = true;
             snapshot = await request(api, 'GET');
           }
-          checkAccount();
-          if (snapshot.familyId !== familyId) throw new Error('档案空间不匹配');
+          await applySnapshot(snapshot, full);
           let next = copy(state);
-          next.permissions = snapshot.permissions;
-          next.capabilities = snapshot.capabilities || {};
-          next.owner = snapshot.owner === true;
-          next.localArchive = false;
-          next.locked = false;
-          next.status = 'ready';
-          next.entitlements = snapshot.entitlements || null;
-          next.relationship = snapshot.relationship || null;
-          next.cursor = snapshot.cursor;
-          if (full) next.resources = {};
-          if (full && next.archiveResources)
-            next.resources = { ...next.archiveResources };
-          snapshot.resources.forEach(r => {
-            next.resources[resourceKey(r)] = r;
-          });
-          await persist(next);
           if (personalFavorites) {
             const own = await request(`${api}/favorites`, 'GET');
             checkAccount();
@@ -403,6 +458,8 @@ export function createCareSync({
               if (result.resource && op.kind === 'personalFavorite')
                 result.resource.kind = 'personalFavorite';
             } catch (error) {
+              if (error.status === 403 && error.data?.code === 'PROFILE_ACCESS_DENIED')
+                throw await recheckDeniedWrite(error);
               if (error.status === 409 && error.data && error.data.conflict)
                 result = error.data;
               else if (
@@ -532,7 +589,8 @@ export function createCareSync({
               });
             } else if (
               error.status === 403 &&
-              code === 'PROFILE_ACCESS_DENIED'
+              code === 'PROFILE_ACCESS_DENIED' &&
+              !error.profileReadAllowed
             ) {
               await persist({
                 ...copy(state),

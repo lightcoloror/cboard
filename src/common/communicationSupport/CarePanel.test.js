@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { act, Simulate } from 'react-dom/test-utils';
-import CarePanel from './CarePanel';
+import CarePanel, { careSharedPreferenceMessage } from './CarePanel';
 import { previewCareArchive } from './careArchiveImport';
 
 jest.mock('./careArchiveImport', () => ({ previewCareArchive: jest.fn() }));
@@ -1132,4 +1132,102 @@ describe('shared patient collaboration UI', () => {
     expect(host.textContent).toContain('请先在现有账号页面登录');
     expect(host.textContent).not.toContain('合成患者');
   });
+  it('read-only loading is not reported as saved; shared retry keeps one command and selected/pending state', async () => {
+    const original=runtime.request.getMockImplementation();let fail=true;
+    const commands=[];
+    runtime.request.mockImplementation(async(path,method,body)=>{
+      if(method==='POST'&&path.endsWith('/commands')){
+        if(fail){fail=false;throw Object.assign(Error('synthetic unavailable'),{status:503,data:{code:'CARE_STORAGE_UNAVAILABLE'}});}
+        commands.push(body);
+      }
+      return original(path,method,body);
+    });
+    await act(async()=>{ReactDOM.render(<CarePanel runtime={runtime} ui={ui}/>,host);await flush();});
+    await act(async()=>{Simulate.click(button('合成患者'));await flush();});
+    expect(host.textContent).not.toContain('已保存；本地待同步');
+    const rate=()=>[...host.querySelectorAll('button')].find(b=>b.textContent.startsWith('1.3 倍'));
+    await act(async()=>{Simulate.click(rate());await flush();});
+    expect(host.textContent).toContain('已保存到本机，但尚未同步');
+    expect(rate().getAttribute('aria-pressed')).toBe('true');
+    expect(rate().textContent).toContain('待同步');
+    const pending=JSON.parse(disk['care-v1:owner:family:patient']).queue;
+    expect(pending).toHaveLength(1);
+    await act(async()=>{Simulate.click(rate());await flush();});
+    expect(commands).toHaveLength(1);expect(commands[0].operationId).toBe(pending[0].operationId);
+    expect(host.textContent).toContain('患者共同设置已核对同步');
+    expect(rate().textContent).toContain('当前');expect(rate().textContent).not.toContain('待同步');
+    expect(JSON.parse(disk['care-v1:owner:family:patient']).queue).toHaveLength(0);
+  });
+
+  it('reconciles an earlier failure notice after the existing automatic watch sync succeeds', async () => {
+    const original=runtime.request.getMockImplementation();let fail=true;const commands=[];
+    runtime.request.mockImplementation(async(path,method,body)=>{
+      if(method==='POST'&&path.endsWith('/commands')){
+        if(fail){fail=false;throw Object.assign(Error('synthetic unavailable'),{status:503,data:{code:'CARE_STORAGE_UNAVAILABLE'}});}
+        commands.push(body);
+      }
+      return original(path,method,body);
+    });
+    await act(async()=>{ReactDOM.render(<CarePanel runtime={runtime} ui={ui}/>,host);await flush();});
+    await act(async()=>{Simulate.click(button('合成患者'));await flush();});
+    const rate=()=>[...host.querySelectorAll('button')].find(b=>b.textContent.startsWith('1.3 倍'));
+    await act(async()=>{Simulate.click(rate());await flush();});
+    expect(host.textContent).toContain('已保存到本机，但尚未同步');
+    const pending=JSON.parse(disk['care-v1:owner:family:patient']).queue[0].operationId;
+    await act(async()=>{tick();await flush();});
+    expect(commands).toHaveLength(1);expect(commands[0].operationId).toBe(pending);
+    expect(host.textContent).toContain('患者共同设置已核对同步');
+    expect(host.textContent).not.toContain('但尚未同步');
+    expect(JSON.parse(disk['care-v1:owner:family:patient']).queue).toHaveLength(0);
+    expect(runtime.speak).not.toHaveBeenCalled();
+  });
+  it('does not restore an old shared notice after account removal during automatic sync', async () => {
+    const original=runtime.request.getMockImplementation();let fail=true,release;
+    runtime.request.mockImplementation(async(path,method,body)=>{
+      if(method==='POST'&&path.endsWith('/commands')){
+        if(fail){fail=false;throw Object.assign(Error('synthetic unavailable'),{status:503});}
+        await new Promise(resolve=>{release=resolve;});
+      }
+      return original(path,method,body);
+    });
+    await act(async()=>{ReactDOM.render(<CarePanel runtime={runtime} ui={ui}/>,host);await flush();});
+    await act(async()=>{Simulate.click(button('合成患者'));await flush();});
+    await act(async()=>{Simulate.click(button('1.3 倍'));await flush();});
+    await act(async()=>{tick();await flush();});expect(release).toBeDefined();
+    await act(async()=>{who=null;tick();await flush();});
+    await act(async()=>{release();await flush();});
+    expect(host.textContent).toContain('请先在现有账号页面登录');
+    expect(host.textContent).not.toContain('患者共同设置已核对同步');
+    expect(host.textContent).not.toContain('已保存到本机，但尚未同步');
+  });
+  it.each(['before-write','after-write'])('local save failure %s is not reported as saved and can retry safely',async phase=>{
+    await act(async()=>{ReactDOM.render(<CarePanel runtime={runtime} ui={ui}/>,host);await flush();});
+    await act(async()=>{Simulate.click(button('合成患者'));await flush();});
+    const set=runtime.storage.set;let fail=true;
+    runtime.storage.set=async(key,value)=>{
+      if(fail&&key==='care-v1:owner:family:patient'&&JSON.parse(value).queue.length){
+        fail=false;if(phase==='after-write')await set(key,value);
+        throw Object.assign(Error('synthetic local readback failure'),{code:'CARE_LOCAL_STORAGE_UNAVAILABLE'});
+      }
+      return set(key,value);
+    };
+    await act(async()=>{Simulate.click(button('1.3 倍'));await flush();});
+    expect(host.textContent).toContain('当前编辑尚未确认保存');
+    expect(host.textContent).not.toContain('已保存到本机');
+    expect(runtime.request.mock.calls.filter(c=>c[1]==='POST')).toHaveLength(0);
+    const before=JSON.parse(disk['care-v1:owner:family:patient']).queue;
+    expect(before).toHaveLength(phase==='after-write'?1:0);
+    await act(async()=>{Simulate.click(button('1.3 倍'));await flush();});
+    const sent=runtime.request.mock.calls.filter(c=>c[1]==='POST');expect(sent).toHaveLength(1);
+    if(phase==='after-write')expect(sent[0][2].operationId).toBe(before[0].operationId);
+    expect(host.textContent).toContain('患者共同设置已核对同步');
+    expect(runtime.speak).not.toHaveBeenCalled();
+  });
+  it('never calls a missing or different confirmed value synchronized solely because the queue is empty',()=>{
+    const notice={resourceId:'speechRate',value:1.3};
+    expect(careSharedPreferenceMessage(notice,{queue:[],resources:{}})).not.toContain('已核对同步');
+    expect(careSharedPreferenceMessage(notice,{queue:[],resources:{'preference:speechRate':{value:{value:.7}}}})).not.toContain('已核对同步');
+    expect(careSharedPreferenceMessage(notice,{queue:[],resources:{'preference:speechRate':{value:{value:1.3},pending:true}}})).not.toContain('已核对同步');
+  });
+
 });

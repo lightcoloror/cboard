@@ -329,10 +329,15 @@ it('retains denied favorite edits across restart without blocking or retrying un
   expect(restarted.view().locked).toBe(false);
 });
 
-it('still stops all writes and locks the profile when access is revoked during upload', async () => {
+it('stops all writes and locks the profile when command denial and a fresh read both confirm revoked access', async () => {
   const writes = [];
   const request = async (path, method, body) => {
-    if (method === 'GET') return snapshot;
+    if (method === 'GET' && !writes.length) return snapshot;
+    if (method === 'GET')
+      throw Object.assign(new Error('read revoked'), {
+        status: 403,
+        data: { code: 'PROFILE_ACCESS_DENIED' }
+      });
     writes.push(body);
     throw Object.assign(new Error('revoked'), {
       status: 403,

@@ -9,6 +9,22 @@ import CareOfflineImport from './CareOfflineImport';
 
 // UI primitives and device APIs are supplied by each client. No patient content
 // is copied into the old global CBoard settings or guest library.
+// This is presentation state only. The queue/resource snapshot remains the
+// authority when an existing background sync completes after an earlier error.
+export function careSharedPreferenceMessage(notice, data) {
+  if (!notice) return null;
+  const matches = op => op.kind === 'preference' && op.resourceId === notice.resourceId;
+  if ((data?.conflicts || []).some(c => matches(c.operation)))
+    return '患者共同设置存在同步冲突，请先核对；本机覆盖不变。';
+  if ((data?.queue || []).some(matches))
+    return '患者共同设置已保存到本机，但尚未同步。请点“立即同步”重试；本机覆盖不变。' + (notice.error || '');
+  const resource = data?.resources?.[`preference:${notice.resourceId}`];
+  if (resource && !resource.pending && !resource.deleted &&
+      JSON.stringify(resource.value) === JSON.stringify({ value: notice.value }))
+    return '患者共同设置已核对同步；已设置的本机覆盖保持不变。';
+  return '患者共同设置状态已变化，请核对当前值；本机覆盖不变。';
+}
+
 export default function CarePanel({ runtime, ui }) {
   const { Box, Text, Button, Input, Image } = ui;
   const [identity, setIdentity] = useState(runtime.identity());
@@ -21,6 +37,7 @@ export default function CarePanel({ runtime, ui }) {
   const [label, setLabel] = useState('');
   const [invitation, setInvitation] = useState('');
   const [message, setMessage] = useState('');
+  const [sharedPreferenceNotice, setSharedPreferenceNotice] = useState(null);
   const [busy, setBusy] = useState(false);
   const [sessions, setSessions] = useState([]);
   const [logoutAllAccount, setLogoutAllAccount] = useState(null);
@@ -70,6 +87,7 @@ export default function CarePanel({ runtime, ui }) {
   );
   async function run(fn) {
     if (busy) return;
+    setSharedPreferenceNotice(null);
     const epoch = accountEpoch.current;
     const current = () =>
       mounted.current &&
@@ -80,7 +98,7 @@ export default function CarePanel({ runtime, ui }) {
     try {
       const result = await fn();
       if (current() && result !== false)
-        setMessage('已保存；本地待同步修改会保留。');
+        setMessage('操作已完成；请核对下方的本机保存与同步状态。');
     } catch (e) {
       if (current()) setMessage(careErrorMessage(e));
     } finally {
@@ -146,6 +164,7 @@ export default function CarePanel({ runtime, ui }) {
           setRole('relative');
           setInvitation('');
           setMessage('');
+          setSharedPreferenceNotice(null);
           setMigration(null);
           setLabel('');
           setBoardName('');
@@ -191,6 +210,7 @@ export default function CarePanel({ runtime, ui }) {
       runtime.identity()?.id === identity?.id &&
       runtime.identity()?.token === identity?.token;
     setPendingRestore(null);
+    setSharedPreferenceNotice(null);
     setData(null);
     setActive(profile);
     setMembers({});
@@ -241,6 +261,40 @@ export default function CarePanel({ runtime, ui }) {
         setRights(entitlement);
       }
     }
+  }
+  async function saveSharedPreference(resourceId, value) {
+    const target = engine.current;
+    const epoch = accountEpoch.current;
+    const current = () => mounted.current && engine.current === target &&
+      epoch === accountEpoch.current && runtime.identity()?.id === identity?.id &&
+      runtime.identity()?.token === identity?.token;
+    if (!target || !current()) throw new Error('当前档案已切换，请重新打开设置。');
+    const existing = target.view().resources[`preference:${resourceId}`];
+    // A pending identical value is still passed to the serial engine so it can
+    // re-read durable state and retain its original operation identity.
+    if (!existing || existing.deleted || existing.pending ||
+        JSON.stringify(existing.value) !== JSON.stringify({ value })) {
+      await target.edit('preference', resourceId, { value });
+    }
+    if (!current()) return false;
+    const notice = { resourceId, value };
+    setSharedPreferenceNotice(notice);
+    try {
+      await target.sync();
+    } catch (error) {
+      if (!current()) return false;
+      const result = target.view();
+      const resource = result.resources[`preference:${resourceId}`];
+      const tracked = result.queue.some(op => op.kind === 'preference' && op.resourceId === resourceId) ||
+        result.conflicts.some(c => c.operation.kind === 'preference' && c.operation.resourceId === resourceId) ||
+        (resource && !resource.pending && !resource.deleted &&
+         JSON.stringify(resource.value) === JSON.stringify({ value }));
+      if (!tracked) { setSharedPreferenceNotice(null); throw error; }
+      setSharedPreferenceNotice({ ...notice, error: careErrorMessage(error) });
+    }
+    // changed() supplies the latest verified queue/resources, including a later
+    // automatic success. Do not freeze a failed status string here.
+    return false;
   }
   async function saveTile(tile) {
     const tileId = tile ? tile.id : await runtime.newId();
@@ -414,7 +468,7 @@ export default function CarePanel({ runtime, ui }) {
       <Text>
         只与获授权成员共享。离线修改会在联网后同步；离线设备不能即时获知撤权。
       </Text>
-      <Text>{message}</Text>
+      <Text role="status" aria-live="polite" aria-atomic="true">{careSharedPreferenceMessage(sharedPreferenceNotice, data) ?? message}</Text>
       <Button disabled={busy} onClick={() => run(reload)}>
         刷新家庭与档案
       </Button>
@@ -634,16 +688,12 @@ export default function CarePanel({ runtime, ui }) {
                     <Button
                       key={value}
                       disabled={busy}
+                      aria-pressed={data.resources['preference:fontSize']?.value?.value === value}
                       onClick={() =>
-                        run(async () => {
-                          await engine.current.edit('preference', 'fontSize', {
-                            value
-                          });
-                          await engine.current.sync();
-                        })
+                        run(() => saveSharedPreference('fontSize', value))
                       }
                     >
-                      {['标准', '大号', '特大'][i]}
+                      {['标准', '大号', '特大'][i]}{data.resources['preference:fontSize']?.value?.value === value ? (data.resources['preference:fontSize'].pending ? '（当前，待同步）' : '（当前）') : ''}
                     </Button>
                   ))}
                   <Text>患者默认每行图卡数</Text>
@@ -651,18 +701,12 @@ export default function CarePanel({ runtime, ui }) {
                     <Button
                       key={value}
                       disabled={busy}
+                      aria-pressed={data.resources['preference:cardDensity']?.value?.value === value}
                       onClick={() =>
-                        run(async () => {
-                          await engine.current.edit(
-                            'preference',
-                            'cardDensity',
-                            { value }
-                          );
-                          await engine.current.sync();
-                        })
+                        run(() => saveSharedPreference('cardDensity', value))
                       }
                     >
-                      {value} 张
+                      {value} 张{data.resources['preference:cardDensity']?.value?.value === value ? (data.resources['preference:cardDensity'].pending ? '（当前，待同步）' : '（当前）') : ''}
                     </Button>
                   ))}
                 </Box>
@@ -1009,22 +1053,17 @@ export default function CarePanel({ runtime, ui }) {
               {permissions.includes('preferences.edit') && (
                 <Box>
                   <Text>患者语速（设备具体语音保留本机设置）</Text>
+                  <Text>这里修改患者共同默认；已有本机覆盖不随本次修改改变。待同步时可用“立即同步”核对原待办。</Text>
                   {[0.7, 1, 1.3].map(rate => (
                     <Button
                       key={rate}
                       disabled={busy}
+                      aria-pressed={data.resources['preference:speechRate']?.value?.value === rate}
                       onClick={() =>
-                        run(async () => {
-                          await engine.current.edit(
-                            'preference',
-                            'speechRate',
-                            { value: rate }
-                          );
-                          await engine.current.sync();
-                        })
+                        run(() => saveSharedPreference('speechRate', rate))
                       }
                     >
-                      {rate} 倍
+                      {rate} 倍{data.resources['preference:speechRate']?.value?.value === rate ? (data.resources['preference:speechRate'].pending ? '（当前，待同步）' : '（当前）') : ''}
                     </Button>
                   ))}
                 </Box>

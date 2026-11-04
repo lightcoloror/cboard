@@ -1,7 +1,7 @@
 import { createCommunicationLocalDataStore } from './localDataStore';
 import { assertCommunicationRepositorySchemaReadable } from './repository';
 import { createSavedPhrasePreparationService } from './savedPhrasePreparation';
-import { createExpressionDraftService } from './expressionDraft';
+import { createExpressionDraftService, createExpressionDraftSession } from './expressionDraft';
 import { createSavedPhraseImportService } from './savedPhraseManagement';
 import { createSavedPhraseUndoService, clearSavedPhraseUndoSession } from './savedPhraseUse';
 import { createBrowserStoragePort } from './storagePorts';
@@ -18,6 +18,12 @@ import { buildPrivatePictogramClearPlan } from './localDeviceData';
 import { createMemoryKeyValueStorage, isDemoMode } from '../../demoMode';
 import { createScopedCommunicationStorage } from './scopedCommunicationStorage';
 let resolveCareAccount = () => null;
+const expressionDraftSession = createExpressionDraftSession();
+export function clearLocalExpressionDraftSession() { expressionDraftSession.clear(); }
+if (typeof window !== 'undefined') {
+  window.addEventListener('care-profile-selected', clearLocalExpressionDraftSession);
+  window.addEventListener('storage', clearLocalExpressionDraftSession);
+}
 export function configureCareLocalAccount(resolve) {
   resolveCareAccount = resolve;
 }
@@ -25,6 +31,7 @@ export function configureCareLocalAccount(resolve) {
 const demoCommunicationStorage = createMemoryKeyValueStorage();
 
 export function resetDemoCommunicationStorage() {
+  clearLocalExpressionDraftSession();
   clearSavedPhraseUndoSession();
   demoCommunicationStorage.clear();
 }
@@ -74,7 +81,7 @@ export function getCommunicationStorageScopeKey() {
 }
 
 export function createLocalExpressionDraft() {
-  return createExpressionDraftService({ repository: createDefaultStore(), getScopeKey: getCommunicationStorageScopeKey });
+  return createExpressionDraftService({ repository: createDefaultStore(), getScopeKey: getCommunicationStorageScopeKey, session: expressionDraftSession });
 }
 
 export function createLocalSavedPhrasePreparation() {
@@ -371,6 +378,7 @@ export function overwriteCommunicationSettings(value) {
 }
 
 export function clearPrivatePictograms(now = Date.now()) {
+  clearLocalExpressionDraftSession();
   clearSavedPhraseUndoSession();
   const store = createDefaultStore();
   store.clearExpressionDrafts();

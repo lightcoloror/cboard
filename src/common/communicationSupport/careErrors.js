@@ -4,6 +4,8 @@ export function careErrorMessage(error) {
     error?.response?.data?.code ||
     error?.response?.data?.error?.code ||
     error?.code;
+  if (code === 'PROFILE_ACCESS_DENIED' && error?.profileReadAllowed)
+    return '本次编辑未获授权；已重新核对，仍可查看此档案。本机修改和待办保留，请联系家庭管理员。';
   const messages = {
     LOGIN_REQUIRED: '登录已失效，请重新登录；本地内容仍保留。',
     USER_ACCESS_FORBIDDEN: '您没有执行此操作的权限；请核对当前账号和家庭授权。',
@@ -13,6 +15,12 @@ export function careErrorMessage(error) {
       '云端暂时无法完成此操作，请稍后重试；本地内容和待同步修改仍保留。',
     CARE_STORAGE_UNAVAILABLE:
       '云端存储暂时不可用；本地内容和待同步修改仍保留，请稍后重试。',
+    CARE_LOCAL_STORAGE_UNAVAILABLE:
+      '本机协作资料暂时无法可靠读取或保存，请重试；当前编辑尚未确认保存。',
+    CARE_LOCAL_DATA_INVALID:
+      '本机协作资料格式异常，原文件已保留，请联系支持人员核对。',
+    CARE_LOCAL_STATE_CHANGED:
+      '本机协作资料已被清除或更新，旧操作已停止；请重新查看当前档案。',
     SESSION_STORAGE_UNAVAILABLE:
       '登录服务暂时不可用，请稍后重试；本地内容仍保留。',
     FAVORITE_ADMIN_REQUIRED:

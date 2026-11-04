@@ -1,5 +1,20 @@
 import { careErrorMessage } from './careErrors';
 
+test('local state conflict says the obsolete operation stopped rather than reporting success or login expiry', () => {
+  expect(careErrorMessage({ code: 'CARE_LOCAL_STATE_CHANGED' })).toContain('旧操作已停止');
+});
+
+test('local Care readback and invalid-data errors do not claim cloud failure, login loss or completed save', () => {
+  const retry = careErrorMessage({ code: 'CARE_LOCAL_STORAGE_UNAVAILABLE' });
+  expect(retry).toContain('本机协作资料');
+  expect(retry).toContain('当前编辑尚未确认保存');
+  expect(retry).not.toMatch(/云端|重新登录|已保存到本机/);
+  const invalid = careErrorMessage({ code: 'CARE_LOCAL_DATA_INVALID' });
+  expect(invalid).toContain('原文件已保留');
+  expect(invalid).toContain('联系支持人员');
+  expect(invalid).not.toMatch(/重新登录|自动修复|已保存到本机/);
+});
+
 test('invitation throttles do not imply loss of existing access or successful joining', () => {
   expect(
     careErrorMessage({ data: { code: 'CARE_INVITATION_ACCEPT_RATE_LIMITED' } })

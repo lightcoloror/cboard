@@ -26,6 +26,7 @@ export {
   RECEIVER_PIPELINE_CONTRACT_VERSION,
   buildReceiverMatchQuality,
   buildReceiverMeaningAssessment,
+  buildReceiverDisplayMeaningAssessment,
   isReceiverPunctuation,
   getReceiverMatchConfidence,
   normalizeReceiverMatchType

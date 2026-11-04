@@ -4,7 +4,7 @@ import { buildCommunicationAiSentenceRequest } from './communicationAi';
 import { getPrivatePersonRequestIdentity, restorePrivatePersonAiResponse } from './privatePersonAi';
 import { createCareAiRequestJournal } from './careAiRequestJournal';
 import { createExpressionDraftService, EXPRESSION_DRAFT_STORAGE_KEY,
-  attachExpressionDraftRequest, getExpressionDraftRequestContext, hasResumableExpressionDraft } from './expressionDraft';
+  attachExpressionDraftRequest, getExpressionDraftRequestContext, hasResumableExpressionDraft, createExpressionDraftSession } from './expressionDraft';
 
 const tile = (name = '林小明', personId = 'synthetic-a') => ({
   id: 'same-tile', boardId: 'private-synthetic', personId, label: name,
@@ -47,6 +47,39 @@ function saveWithLostReadbacks(f, service, value) {
   }
   return f.make().load();
 }
+
+test('runtime acknowledgement follows verified revisions without becoming a restore source', () => {
+  const f = fixture(), session = createExpressionDraftSession();
+  const make = () => createExpressionDraftService({ repository: f.repo, getScopeKey: () => 'account-a', session });
+  const first = make(), saved = first.save(snapshot());
+  const returned = make(), read = returned.load();
+  expect(returned.canContinue(read)).toBe(true);
+  expect(returned.resume(read)).toEqual(saved);
+  expect(f.make().load()).toEqual(saved);
+  session.clear();
+  expect(make().canContinue(saved)).toBe(false);
+  expect(make().resume(saved)).toEqual(saved);
+  expect(make().canContinue(saved)).toBe(true);
+  const foreign = { ...saved, revision: saved.revision + 1 };
+  expect(() => make().resume(foreign)).toThrow('其他页面更新');
+});
+
+test('different authoritative bytes and failed saves revoke runtime continuation', () => {
+  const f = fixture(), session = createExpressionDraftSession();
+  const make = () => createExpressionDraftService({ repository: f.repo, getScopeKey: () => 'account-a', session });
+  const s = make(), saved = s.save(snapshot());
+  const different = { ...saved, snapshot: { ...saved.snapshot, rejected: true } };
+  const values = JSON.parse(f.data.get(EXPRESSION_DRAFT_STORAGE_KEY));
+  values[Object.keys(values)[0]] = different;
+  f.data.set(EXPRESSION_DRAFT_STORAGE_KEY, JSON.stringify(values));
+  const returned = make();expect(returned.load()).toEqual(different);expect(returned.canContinue(different)).toBe(false);
+  returned.resume(different);expect(returned.canContinue(different)).toBe(true);
+  const original = f.storage.setItem;f.storage.setItem = () => true;
+  expect(() => returned.save({ ...different.snapshot, rejected: false })).toThrow('未能保存');
+  f.storage.setItem = original;
+  expect(make().canContinue(different)).toBe(false);
+  expect(f.make().load()).toEqual(different);
+});
 test('cold restore retains ordered same-name identities, exact candidates, selection and refusal without history', () => {
   const f = fixture(), service = f.make(), value = snapshot();
   value.rejected = true;

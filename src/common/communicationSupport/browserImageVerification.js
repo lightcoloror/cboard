@@ -2,6 +2,23 @@
 import { classifyImageReference } from './imageAvailability';
 import { isPrivatePerson } from './personalPeople';
 
+function isBundledSymbolImage(source) {
+  return typeof source === 'string' &&
+    /^\/symbols\/(arasaac|mulberry|cboard)\/[A-Za-z0-9_.,()' /-]+\.(png|jpe?g|gif|webp|svg)$/i.test(source) &&
+    !source.split('/').includes('..');
+}
+
+// Reuse Symbol's Cordova package-relative path convention. Installed public
+// package files are already local; Cache.put cannot accept file: requests.
+// Do not widen this to private files, arbitrary root paths or remote URLs.
+export function resolveNativePackagedImageSource(source, {
+  location = globalThis.location, cordova = globalThis.cordova
+} = {}) {
+  return location && location.protocol === 'file:' && cordova &&
+    cordova.platformId === 'electron' && isBundledSymbolImage(source)
+    ? `.${source}` : null;
+}
+
 export function decodeBrowserImage(source, ImageClass = globalThis.Image) {
   return new Promise((resolve, reject) => {
     if (typeof ImageClass !== 'function') return reject(new Error('Image decoder unavailable'));
@@ -20,8 +37,13 @@ export function decodeBrowserImage(source, ImageClass = globalThis.Image) {
   });
 }
 
-export async function verifyBrowserLocalImage(source, { decode = decodeBrowserImage, cacheStorage = globalThis.caches } = {}) {
+export async function verifyBrowserLocalImage(source, { decode = decodeBrowserImage, cacheStorage = globalThis.caches, nativeContext } = {}) {
   const kind = classifyImageReference(source);
+  const nativeSource = resolveNativePackagedImageSource(source, nativeContext);
+  if (nativeSource) {
+    try { return { status: 'available', ...(await decode(nativeSource)) }; }
+    catch (error) { return { status: /decode|dimensions/i.test(String(error)) ? 'corrupt' : 'check-failed' }; }
+  }
   if (kind === 'embedded') {
     try { return { status: 'available', ...(await decode(source)) }; }
     catch (error) { return { status: /decode|dimensions/i.test(String(error)) ? 'corrupt' : 'check-failed' }; }
@@ -49,21 +71,25 @@ export async function verifyBrowserLocalImage(source, { decode = decodeBrowserIm
 // availability checks must remain local-only. Reuse the existing symbol cache.
 export async function prepareSelectedPackagedImages(items, {
   cacheStorage = globalThis.caches, fetchImage = globalThis.fetch,
-  decode = decodeBrowserImage, isCurrent = () => true
+  decode = decodeBrowserImage, isCurrent = () => true, nativeContext
 } = {}) {
-  if (!cacheStorage || typeof fetchImage !== 'function') return [];
   const sources = [...new Set((items || []).map(item => item.tile && (item.tile.tile || item.tile))
     .filter(tile => tile && !isPrivatePerson(tile) &&
       (!tile.pictogramAttribution || tile.pictogramAttribution.provider !== 'device-private'))
     .map(tile => tile.image)
-    .filter(source => typeof source === 'string' &&
-      /^\/symbols\/(arasaac|mulberry|cboard)\/[A-Za-z0-9_.,()' /-]+\.(png|jpe?g|gif|webp|svg)$/i.test(source) &&
-      !source.split('/').includes('..')))];
+    .filter(isBundledSymbolImage))];
   const results = [];
   for (const source of sources) {
     if (!isCurrent()) break;
     let objectUrl, timer;
     try {
+      if (resolveNativePackagedImageSource(source, nativeContext)) {
+        const result = await verifyBrowserLocalImage(source, { decode, cacheStorage, nativeContext });
+        if (!isCurrent()) break;
+        results.push({ source, ...result });
+        continue;
+      }
+      if (!cacheStorage || typeof fetchImage !== 'function') continue;
       const cached = await cacheStorage.match(source);
       if (!isCurrent()) break;
       // A corrupt existing item needs the explicit repair flow; never silently

@@ -5,10 +5,16 @@ export const RECEIVER_READING_FALLBACK =
 export function buildReceiverReading(inputText, sequence = [], items = []) {
   const points = Array.from(String(inputText || ''));
   const fallback = { segments: [], canSegment: false, reason: RECEIVER_READING_FALLBACK };
-  if (!points.length || !sequence.length || sequence.length !== items.length) return fallback;
+  if (!points.length || !Array.isArray(sequence) || !Array.isArray(items) || !sequence.length || sequence.length !== items.length) return fallback;
   let cursor = 0;
   const spans = [];
-  for (const item of sequence) {
+  for (const [index, item] of sequence.entries()) {
+    const output = items[index];
+    // Source positions belong to an occurrence, not to a label search. A
+    // separately reordered picture list must not inherit the old positions.
+    if (!item || !output || (item.textOnly
+      ? !output.textOnly || output.label !== item.originalToken
+      : output.textOnly || !item.pictogramId || String(output.id) !== String(item.pictogramId))) return fallback;
     const span = item && item.sourceSpan;
     if (!span || span.offsetUnit !== 'unicode-code-point' ||
         !Number.isInteger(span.start) || !Number.isInteger(span.end) ||

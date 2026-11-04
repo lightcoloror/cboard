@@ -78,12 +78,23 @@ export function hasResumableExpressionDraft(record) {
     (record.snapshot.pipeline.outputSnapshot.length || record.snapshot.pipeline.candidateSentences.length));
 }
 
+// A runtime-only acknowledgement, not another restore payload. The repository
+// remains authoritative. A new process, scope change or privacy clear drops it.
+export function createExpressionDraftSession() {
+  let accepted = null;
+  return {
+    clear() { accepted = null; },
+    accept(record) { accepted = hasResumableExpressionDraft(record) ? JSON.stringify(record) : null; },
+    matches(record) { return accepted !== null && accepted === JSON.stringify(record); }
+  };
+}
+
 function historyContent(entry) {
   const normalized = normalizeCommunicationHistory([{ ...entry, id: 'comparison', createdAt: 1 }])[0];
   return { sentence: (normalized && normalized.sentence) || '', output: (normalized && normalized.output) || [] };
 }
 
-export function createExpressionDraftService({ repository, getScopeKey = () => 'local', now = Date.now,
+export function createExpressionDraftService({ repository, getScopeKey = () => 'local', now = Date.now, session = null,
   createId = () => `ed_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 12)}` }) {
   const readScope = () => {
     const identity = repository.loadCommunicationIdentity();
@@ -98,7 +109,13 @@ export function createExpressionDraftService({ repository, getScopeKey = () => '
   const read = () => { assertScope(); const value = normalizeExpressionDraft(repository.loadExpressionDraft());
     if (value && value.scope !== scope) throw failure('草稿所属档案不一致，请重新打开。');
     return value; };
-  const load = () => { head = read(); attemptedWrite = undefined; return head && clone(head); };
+  const load = () => {
+    try {
+      head = read(); attemptedWrite = undefined;
+      if (session && !session.matches(head)) session.clear();
+      return head && clone(head);
+    } catch (error) { if (session) session.clear(); throw error; }
+  };
   const current = () => {
     const value = read();
     if (head === undefined) head = value;
@@ -132,6 +149,7 @@ export function createExpressionDraftService({ repository, getScopeKey = () => '
     return clone(head);
   };
   const save = (value, { startNew = false } = {}) => {
+    try {
     const previous = current();
     const snapshot = normalizeExpressionDraftSnapshot(value);
     if (!Object.prototype.hasOwnProperty.call(value, 'pendingAi') && (previous && previous.snapshot.pendingAi) &&
@@ -140,20 +158,28 @@ export function createExpressionDraftService({ repository, getScopeKey = () => '
     }
     const isEmpty = !snapshot.pipeline.outputSnapshot.length && !snapshot.pipeline.candidateSentences.length;
     if (previous && equal(previous.snapshot, snapshot) &&
-        !(startNew && previous.status === 'confirmed')) return clone(previous);
+        !(startNew && previous.status === 'confirmed')) {
+      if (session) session.accept(previous);
+      return clone(previous);
+    }
     const continuing = previous && previous.status === 'draft';
-    return write({ version: 1, id: continuing ? previous.id : createId(),
+    const saved = write({ version: 1, id: continuing ? previous.id : createId(),
       revision: previous ? previous.revision + 1 : 1, scope,
       status: isEmpty ? 'cleared' : 'draft', snapshot,
       createdAt: continuing ? previous.createdAt : now(), updatedAt: now() });
+    if (session) session.accept(saved);
+    return saved;
+    } catch (error) { if (session) session.clear(); throw error; }
   };
   const discard = () => {
+    if (session) session.clear();
     const previous = current();
     return write({ version: 1, id: (previous && previous.id) || createId(),
       revision: previous ? previous.revision + 1 : 1, scope, status: 'cleared',
       snapshot: emptySnapshot(), createdAt: (previous && previous.createdAt) || now(), updatedAt: now() });
   };
   const confirm = entry => {
+    if (session) session.clear();
     const previous = current();
     if (!previous || previous.status === 'cleared') throw failure('请先保存当前表达再确认。');
     if (!(entry && entry.sentence) || previous.snapshot.rejected)
@@ -182,6 +208,16 @@ export function createExpressionDraftService({ repository, getScopeKey = () => '
     return repository.loadCommunicationHistory().find(item => item.id === id);
   };
   return { load, save, discard, confirm, getCurrent: () => head ? clone(head) : null,
+    canContinue(record) {
+      return Boolean(session && session.matches(record) && equal(current(), record));
+    },
+    resume(record) {
+      const value = current();
+      if (!hasResumableExpressionDraft(value) || !equal(value, record))
+        throw failure('表达已在其他页面更新，请重新读取后选择继续。');
+      if (session) session.accept(value);
+      return clone(value);
+    },
     prepareAi(ticket) {
       const previous = current();
       if (!hasResumableExpressionDraft(previous)) throw failure('请先可靠保存当前表达。', 'AI_REQUEST_STORAGE_UNAVAILABLE');

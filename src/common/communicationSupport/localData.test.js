@@ -3,6 +3,7 @@ import {
   buildCommunicationCloudSettingsPayload,
   buildCommunicationSettingsPayload,
   configureCareLocalAccount,
+  createLocalExpressionDraft,
   getAnonymousAccountMergeState,
   loadCommunicationHistory,
   loadPersonalImagePreferences,
@@ -16,8 +17,18 @@ import {
   savePersonalImagePreference
 } from './localData';
 import { setDemoModeOverride } from '../../demoMode';
+import { buildExpressionLoopState } from './expressionPipeline';
 
 describe('communication support local data', () => {
+  test('local route continuity is cleared by profile selection and other-window storage changes', () => {
+    const saved = createLocalExpressionDraft().save({ pipeline: buildExpressionLoopState([{ id: 'synthetic', label: '是' }]) });
+    const returned = createLocalExpressionDraft();expect(returned.canContinue(returned.load())).toBe(true);
+    window.dispatchEvent(new Event('care-profile-selected'));
+    expect(createLocalExpressionDraft().canContinue(saved)).toBe(false);
+    createLocalExpressionDraft().resume(saved);
+    window.dispatchEvent(new Event('storage'));
+    expect(createLocalExpressionDraft().canContinue(saved)).toBe(false);
+  });
   test('unreadable private preferences render originals with an explicit error and never overwrite the list', () => {
     const key = 'cboard_communication_personal_image_preferences';
     window.localStorage.setItem(key, '{broken');

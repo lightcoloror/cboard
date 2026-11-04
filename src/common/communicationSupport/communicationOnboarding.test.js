@@ -16,5 +16,8 @@ describe('communication onboarding content', () => {
         step => step.description.length > 0
       )
     ).toBe(true);
+    expect(COMMUNICATION_ONBOARDING_CONTENT.steps[0].description).toContain('需要或意见');
+    expect(COMMUNICATION_ONBOARDING_CONTENT.steps[1].description).toContain('不懂');
+    expect(COMMUNICATION_ONBOARDING_CONTENT.steps[2].description).toContain('语音取决于当前系统');
   });
 });

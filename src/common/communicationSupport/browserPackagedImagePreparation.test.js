@@ -1,4 +1,4 @@
-import { prepareSelectedPackagedImages, verifyBrowserLocalImage } from './browserImageVerification';
+import { prepareSelectedPackagedImages, verifyBrowserLocalImage, resolveNativePackagedImageSource } from './browserImageVerification';
 
 const source = '/symbols/mulberry/no.svg';
 const item = { tile: { id: 'no', image: source } };
@@ -61,5 +61,38 @@ test('a cache entry added during download is preserved',async()=>{
 });
 test('restore availability checks remain local-only even when fetch is available', async () => {
   const p=ports();await verifyBrowserLocalImage(source,p);
+  expect(p.fetchImage).not.toHaveBeenCalled();expect(p.put).not.toHaveBeenCalled();
+});
+
+const nativeContext={location:{protocol:'file:'},cordova:{platformId:'electron'}};
+test('Windows packaged verification decodes the final package-relative file without Cache API or fetch', async()=>{
+  const p=ports();
+  expect(await verifyBrowserLocalImage(source,{...p,nativeContext})).toEqual({status:'available',width:8,height:8});
+  expect(p.decode).toHaveBeenCalledWith('.'+source);expect(p.fetchImage).not.toHaveBeenCalled();
+  expect(p.cacheStorage.match).not.toHaveBeenCalled();expect(p.put).not.toHaveBeenCalled();
+});
+test('Windows explicit matching uses installed package files even without a Cache API',async()=>{
+  const p=ports();
+  expect(await prepareSelectedPackagedImages([item,item],{...p,cacheStorage:null,nativeContext})).toEqual([{source,status:'available',width:8,height:8}]);
+  expect(p.fetchImage).not.toHaveBeenCalled();expect(p.put).not.toHaveBeenCalled();
+});
+test('Windows missing or corrupt packaged files never become offline success',async()=>{
+  const p=ports();p.decode.mockRejectedValue(new Error('Image decode failed'));
+  expect((await prepareSelectedPackagedImages([item],{...p,nativeContext}))[0].status).toBe('corrupt');
+  expect(p.fetchImage).not.toHaveBeenCalled();expect(p.put).not.toHaveBeenCalled();
+});
+test.each(['https://private.invalid/person.png','/api/private/person.png','/symbols/cboard/../private.png','/symbols/cboard/a.png?person=secret','//private.invalid/a.png','file:///private/person.png','/symbols/cboard/%2e%2e/private.png'])('native packaged resolution refuses %s',value=>{
+  expect(resolveNativePackagedImageSource(value,nativeContext)).toBeNull();
+});
+test('the native path is limited to the tested Electron file runtime, not HTTP or unverified platforms',async()=>{
+  expect(resolveNativePackagedImageSource(source,nativeContext)).toBe('.'+source);
+  for(const context of [{location:{protocol:'https:'},cordova:{platformId:'electron'}},{location:{protocol:'file:'},cordova:{platformId:'android'}},{location:{protocol:'file:'}}]){
+    expect(resolveNativePackagedImageSource(source,context)).toBeNull();
+    const p=ports();await prepareSelectedPackagedImages([item],{...p,nativeContext:context});expect(p.fetchImage).toHaveBeenCalledWith(source,expect.anything());
+  }
+});
+test('cancellation during native decoding cannot publish a late availability result',async()=>{
+  const p=ports();let current=true;p.decode.mockImplementation(async()=>{current=false;return {width:8,height:8};});
+  expect(await prepareSelectedPackagedImages([item],{...p,nativeContext,isCurrent:()=>current})).toEqual([]);
   expect(p.fetchImage).not.toHaveBeenCalled();expect(p.put).not.toHaveBeenCalled();
 });

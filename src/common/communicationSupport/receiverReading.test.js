@@ -3,9 +3,9 @@ import { buildReceiverLoopState, buildReceiverHistoryEntry, retainReceiverReview
 
 function fixture(tokens) {
   let start = 0;
-  const sequence = tokens.map(originalToken => {
+  const sequence = tokens.map((originalToken, index) => {
     const end = start + Array.from(originalToken).length;
-    const item = { originalToken, sourceSpan: { start, end, offsetUnit: 'unicode-code-point' } };
+    const item = { pictogramId: `synthetic-${index}`, originalToken, sourceSpan: { start, end, offsetUnit: 'unicode-code-point' } };
     start = end;
     return item;
   });
@@ -28,10 +28,11 @@ test('a compound card spanning punctuation remains whole', () => {
   const f = fixture(['不，不去', '。', '回家']);
   expect(buildReceiverReading(f.text, f.sequence, f.items).segments.map(s => s.text)).toEqual(['不，不去。', '回家']);
 });
-test.each(['missing', 'reorder', 'insert', 'wrong-token', 'utf16', 'delete'])('fails closed for %s', failure => {
+test.each(['missing', 'reorder', 'output-reorder', 'insert', 'wrong-token', 'utf16', 'delete'])('fails closed for %s', failure => {
   const f = fixture(['林小明', '，', '喝水']);
   if (failure === 'missing') delete f.sequence[0].sourceSpan;
   if (failure === 'reorder') f.sequence.reverse();
+  if (failure === 'output-reorder') f.items.reverse();
   if (failure === 'insert') f.items.push({ label: '合成新增' });
   if (failure === 'wrong-token') f.sequence[0].originalToken = '另一个人';
   if (failure === 'utf16') f.sequence[0].sourceSpan.offsetUnit = 'utf-16';

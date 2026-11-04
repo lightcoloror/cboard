@@ -1,4 +1,5 @@
 import { getLocalPictogramCandidates } from './pictogramSemantics';
+import { buildReceiverReading } from './receiverReading';
 
 export const RECEIVER_PIPELINE_CONTRACT_VERSION = 2;
 export const RECEIVER_LOW_CONFIDENCE_THRESHOLD = 0.6;
@@ -56,6 +57,26 @@ export function buildReceiverMeaningAssessment(inputText, reviewItems = []) {
     unresolvedMeaningItems: gaps,
     requiresAssistance: gaps.length > 0
   };
+}
+
+// Display is a projection of the confirmed source/snapshot pair. Rebuilding
+// from image labels loses qualifiers such as 今晚 -> 夜晚 and repeats can mix.
+// No matching, persistence, network access, or patient feedback occurs here.
+export function buildReceiverDisplayMeaningAssessment(inputText, sequence = [], output = []) {
+  const reading = buildReceiverReading(inputText, sequence, output);
+  if (!reading.segments.length) {
+    const assessment = buildReceiverMeaningAssessment(inputText, []);
+    return { ...assessment, alignmentReliable: false };
+  }
+  const review = sequence.map((source, index) => ({
+    id: `display-occurrence-${index}`,
+    token: source.originalToken,
+    matchType: source.matchType,
+    sourceSpan: source.sourceSpan,
+    personalReference: Boolean(output[index].personId),
+    tile: { textOnly: Boolean(output[index].textOnly), tile: output[index] }
+  }));
+  return { ...buildReceiverMeaningAssessment(inputText, review), alignmentReliable: true };
 }
 
 const RECEIVER_MATCH_CONFIDENCE = {

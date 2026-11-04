@@ -6,6 +6,7 @@ import {
   normalizeExpressionCandidates,
   toggleExpressionCandidateFeedback
 } from './candidateFeedback';
+import { normalizeOpenBoardLogRole } from './openBoardLogRole';
 
 export const DEFAULT_COMMUNICATION_HISTORY_LIMIT = 100;
 export const OPEN_BOARD_LOG_FORMAT = 'open-board-log-0.1';
@@ -302,14 +303,21 @@ function buildOpenBoardLogEvent(entry, index, exportedAt) {
     getCommunicationHistoryReplayText(entry) || (entry.labels || []).join(' ');
   if (!text) return null;
 
+  const importedRole = normalizeOpenBoardLogRole(entry);
   const event = {
     id: 'event-' + (index + 1),
     timestamp: toIsoTimestamp(entry.createdAt, exportedAt),
     type: 'utterance',
     text,
-    modeling: entry.direction === 'receive',
+    // Preserve imported actor facts even when the declared direction differs.
+    // Legacy native receive records retain the established support-operation mapping.
+    modeling: importedRole ? importedRole.modeling : entry.direction === 'receive',
     ext_picinterpreter_direction: entry.direction
   };
+
+  if (importedRole && importedRole.directionSource === 'compatibility') {
+    event.ext_picinterpreter_direction_source = 'compatibility';
+  }
 
   if (entry.labels.length) {
     event.ext_picinterpreter_labels = [...entry.labels];
@@ -689,8 +697,9 @@ export function importCommunicationHistoryOpenBoardLog(
       const declaredDirection = normalizeText(
         event.ext_picinterpreter_direction
       );
+      const hasDeclaredDirection = declaredDirection === 'express' || declaredDirection === 'receive';
       const direction =
-        declaredDirection === 'express' || declaredDirection === 'receive'
+        hasDeclaredDirection
           ? declaredDirection
           : event.modeling === true
           ? 'receive'
@@ -713,7 +722,12 @@ export function importCommunicationHistoryOpenBoardLog(
         updatedAt: createdAt,
         isFavorite: false,
         localOnly: true,
-        importSource: 'open-board-log'
+        importSource: 'open-board-log',
+        openBoardLogRole: {
+          modeling: event.modeling === true,
+          directionSource: hasDeclaredDirection && event.ext_picinterpreter_direction_source !== 'compatibility'
+            ? 'extension' : 'compatibility'
+        }
       };
       const patientFeedback =
         direction === 'receive'

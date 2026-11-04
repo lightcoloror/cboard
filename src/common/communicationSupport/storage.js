@@ -19,6 +19,7 @@ import {
   normalizePublicPictogramAttribution
 } from './pictogramAttribution';
 import { normalizeExpressionCandidates } from './candidateFeedback';
+import { normalizeOpenBoardLogRole } from './openBoardLogRole';
 import { normalizeLifeContext, preserveLocalPhraseLifeContext } from './savedPhraseManagement';
 const MAX_COMMUNICATION_ITEMS = 100;
 
@@ -267,6 +268,8 @@ function normalizeHistoryEntry(entry) {
   if (entry.importSource === 'open-board-log') {
     normalized.importSource = 'open-board-log';
   }
+  const importedRole = normalizeOpenBoardLogRole(entry);
+  if (importedRole) normalized.openBoardLogRole = importedRole;
 
   if (
     typeof entry.confirmedAt === 'number' &&
