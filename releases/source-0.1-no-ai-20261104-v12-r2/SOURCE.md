@@ -4,7 +4,11 @@
 
 准确源码归档：https://github.com/lightcoloror/picinterpreter-wechat/releases/tag/source-0.1-no-ai-20261104-v12-r2
 
-归档SHA-256：`7c4709ca0f10e771d784f81491c4cc765ef479e685a9088dbc581fc2cd75268f`。
+首选源码附件：`tuyujia-0.1-v12-r2-corresponding-source-index-r2.zip`。
+
+首选归档SHA-256：`479318fa427798ef4be7c607368360a6985327a2ea0251e022fdc2b3e97bf39a`。
+
+初版附件SHA-256 `7c4709ca0f10e771d784f81491c4cc765ef479e685a9088dbc581fc2cd75268f` 保留审计；首选附件只修正README交付索引，1600项构建源码和预览产物未改变。固定源码标签保持不动。
 
 构建产物：`3ff3349602ec255cb798a203686d3b428284c704d00b51452fc1a3aa4eed6de2`；完整构建输入1600项，指纹`175884216d3f0797b343279c023eda85741ec59ff443d23d1e142b967dc3b706`。
 
